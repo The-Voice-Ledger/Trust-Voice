@@ -1,0 +1,105 @@
+# ============================================
+# TrustVoice Git Ignore
+# ============================================
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environment Variables (CRITICAL - NEVER COMMIT!)
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Database
+*.db
+*.sqlite3
+database/migrations/versions/*.py
+!database/migrations/versions/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+coverage.xml
+*.cover
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+*.ipynb
+
+# Temporary Files
+*.tmp
+*.bak
+*.swp
+*~.nib
+tmp/
+temp/
+
+# Audio/Media Files (large files)
+*.wav
+*.mp3
+*.m4a
+uploads/
+media/
+
+# Documentation (generated)
+docs/_build/
+
+# Blockchain
+.secret
+*.pem
+contracts/artifacts/
+contracts/cache/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Redis dumps
+dump.rdb
+
+# Node (if using any JS tooling)
+node_modules/
+package-lock.json
+yarn.lock

@@ -1,0 +1,48 @@
+# ============================================
+# TrustVoice Core Dependencies
+# ============================================
+
+# Web Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Database
+sqlalchemy==2.0.25
+psycopg2-binary==2.9.9
+alembic==1.13.1
+
+# Caching & Task Queue
+redis==5.0.1
+celery==5.3.6
+
+# Environment & Configuration
+python-dotenv==1.0.0
+
+# AI/ML
+openai==1.10.0
+langchain==0.1.4
+langchain-openai==0.0.5
+pinecone-client==3.0.2
+
+# Payment Processing
+stripe==7.9.0
+# paypal-sdk==1.13.1  # Uncomment when adding PayPal (Lab 3)
+web3==6.15.1
+
+# Communication
+twilio==8.11.0
+python-telegram-bot==20.7
+
+# HTTP & Utilities
+httpx>=0.25.0  # Let dependencies resolve compatible version
+requests==2.31.0
+python-multipart==0.0.6
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+
+# Logging & Monitoring
+# sentry-sdk==1.40.0  # Uncomment for production monitoring (Lab 10)
