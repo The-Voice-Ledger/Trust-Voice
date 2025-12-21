@@ -15,7 +15,7 @@ Architecture:
 
 from sqlalchemy import (
     Column, Integer, String, Float, Boolean, DateTime, 
-    Text, ForeignKey, ARRAY
+    Text, ForeignKey, JSON
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -62,6 +62,7 @@ class Donor(Base):
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_interaction = Column(DateTime)
     
     # Relationships
@@ -83,6 +84,8 @@ class NGOOrganization(Base):
     
     # Basic Info
     name = Column(String(255), nullable=False)
+    description = Column(Text)  # What the NGO does
+    website_url = Column(String(255))  # NGO website
     registration_number = Column(String(100))  # Government registration
     country = Column(String(100))
     contact_email = Column(String(255))
@@ -95,6 +98,7 @@ class NGOOrganization(Base):
     # Status
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     campaigns = relationship("Campaign", back_populates="ngo")
@@ -253,7 +257,7 @@ class ImpactVerification(Base):
     
     # Media
     audio_recording_url = Column(Text)  # IPFS URL
-    photo_urls = Column(ARRAY(Text))  # Array of IPFS URLs
+    photo_urls = Column(JSON)  # Array of IPFS URLs stored as JSON
     
     # Location & Impact
     gps_coordinates = Column(String(100))  # "latitude,longitude"

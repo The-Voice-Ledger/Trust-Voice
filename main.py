@@ -10,6 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import logging
 
+# Import routers
+from voice.routers import campaigns, donors, ngos
+
 # Load environment variables
 load_dotenv()
 
@@ -36,6 +39,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ============================================
+# Register Routers
+# ============================================
+
+app.include_router(campaigns.router)
+app.include_router(donors.router)
+app.include_router(ngos.router)
 
 
 # ============================================

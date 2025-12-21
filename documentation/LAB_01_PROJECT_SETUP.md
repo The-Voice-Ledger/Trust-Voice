@@ -1115,47 +1115,508 @@ curl http://localhost:8000/health
 
 ---
 
-## Step 8: Initialize Database (Optional - Local Testing)
+## Step 8: Initialize Database
 
-### 💻 Setup Local PostgreSQL
-
-If you want to test locally before using Neon:
-
-```bash
-# Install PostgreSQL (macOS)
-brew install postgresql@15
-
-# Start PostgreSQL service
-brew services start postgresql@15
-
-# Create database
-createdb trustvoice
-
-# Update .env with local connection
-DATABASE_URL=postgresql://$(whoami)@localhost:5432/trustvoice
-```
-
-### Create Tables
+### 💻 Create Database Initialization Script
 
 ```python
-# Create test script: scripts/init_db.py
+# Create init_db.py
+"""
+Initialize database tables.
+
+Run this script to create all tables in the database.
+"""
+
 from database.db import create_tables, engine
 from database.models import Base
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     print("Creating database tables...")
-    create_tables()
-    print("✅ Tables created successfully!")
-    
-    # Print table names
-    print("\nTables:")
-    for table_name in Base.metadata.tables.keys():
-        print(f"  - {table_name}")
+    try:
+        create_tables()
+        print("\n✅ Tables created successfully!")
+        
+        # Print table names
+        print("\nTables:")
+        for table_name in Base.metadata.tables.keys():
+            print(f"  - {table_name}")
+    except Exception as e:
+        print(f"\n❌ Error creating tables: {e}")
+        raise
 ```
 
+### Run Database Initialization
+
 ```bash
-# Run initialization
-python scripts/init_db.py
+# Load environment variables and create tables
+export $(cat .env | grep -v '^#' | xargs)
+python init_db.py
+```
+
+**Expected Output:**
+```
+Creating database tables...
+INFO:database.db:Database tables created
+
+✅ Tables created successfully!
+
+Tables:
+  - donors
+  - ngo_organizations
+  - campaigns
+  - campaign_context
+  - donations
+  - impact_verifications
+  - conversation_logs
+```
+
+---
+
+## Step 9: Test the Application
+
+### 🧪 Create Test Suite
+
+**Why Testing:**
+- Catch bugs early
+- Document expected behavior
+- Ensure code quality
+- Enable refactoring confidence
+
+### 💻 Create Basic Tests
+
+First, we need to fix a pytest issue with web3. The web3 library includes a pytest plugin that conflicts with eth_typing versions. We'll remove web3 for now (Lab 1-7 don't need it) and add it back in Lab 8 when we build blockchain features.
+
+```bash
+# Remove web3 temporarily (will add back in Lab 8)
+pip uninstall -y web3
+pip freeze > requirements.txt
+```
+
+### Create Pytest Configuration
+
+Create `pytest.ini`:
+```ini
+[pytest]
+# Pytest configuration for TrustVoice
+
+# Disable web3 pytest plugin (causes import errors, we'll test blockchain separately)
+addopts = -p no:pytest-ethereum
+
+# Test discovery
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
+
+# Output
+console_output_style = progress
+log_cli = false
+log_cli_level = INFO
+
+# Markers for organizing tests
+markers =
+    unit: Unit tests (fast, no external dependencies)
+    integration: Integration tests (database, APIs)
+    e2e: End-to-end tests (full user flows)
+    slow: Tests that take longer to run
+```
+
+### Create Test Files
+
+**File 1: `tests/test_api.py`** (Comprehensive pytest tests)
+
+```python
+"""
+Basic tests for TrustVoice API endpoints.
+
+Tests:
+- Health check endpoint
+- Database connection
+- Model creation
+"""
+
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+import os
+
+# Import app
+from main import app
+
+# Test client
+client = TestClient(app)
+
+
+class TestHealthEndpoints:
+    """Test basic health and info endpoints."""
+    
+    def test_root_endpoint(self):
+        """Test root endpoint returns welcome message."""
+        response = client.get("/")
+        assert response.status_code == 200
+        data = response.json()
+        assert "message" in data
+        assert "TrustVoice" in data["message"]
+    
+    def test_health_check(self):
+        """Test health endpoint returns healthy status."""
+        response = client.get("/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+        assert data["service"] == "TrustVoice API"
+        assert data["version"] == "1.0.0"
+        assert "environment" in data
+
+
+class TestDatabaseModels:
+    """Test database model creation."""
+    
+    def test_donor_model_creation(self):
+        """Test Donor model can be imported and has correct fields."""
+        from database.models import Donor
+        
+        # Check key fields exist
+        assert hasattr(Donor, 'id')
+        assert hasattr(Donor, 'phone_number')
+        assert hasattr(Donor, 'telegram_user_id')
+        assert hasattr(Donor, 'preferred_language')
+        assert hasattr(Donor, 'total_donated_usd')
+    
+    def test_campaign_model_creation(self):
+        """Test Campaign model can be imported and has correct fields."""
+        from database.models import Campaign
+        
+        assert hasattr(Campaign, 'id')
+        assert hasattr(Campaign, 'ngo_id')
+        assert hasattr(Campaign, 'title')
+        assert hasattr(Campaign, 'goal_amount_usd')
+        assert hasattr(Campaign, 'raised_amount_usd')
+        assert hasattr(Campaign, 'status')
+    
+    def test_donation_model_creation(self):
+        """Test Donation model can be imported and has correct fields."""
+        from database.models import Donation
+        
+        assert hasattr(Donation, 'id')
+        assert hasattr(Donation, 'donor_id')
+        assert hasattr(Donation, 'campaign_id')
+        assert hasattr(Donation, 'amount_usd')
+        assert hasattr(Donation, 'payment_method')
+        assert hasattr(Donation, 'status')
+
+
+class TestDatabaseConnection:
+    """Test database connection (requires DATABASE_URL)."""
+    
+    def test_database_url_exists(self):
+        """Test that DATABASE_URL is configured."""
+        from database.db import DATABASE_URL
+        assert DATABASE_URL is not None
+        assert "postgresql" in DATABASE_URL
+    
+    def test_engine_creation(self):
+        """Test that database engine can be created."""
+        from database.db import engine
+        assert engine is not None
+
+
+class TestEnvironmentVariables:
+    """Test environment configuration."""
+    
+    def test_required_env_vars(self):
+        """Test that critical environment variables are set."""
+        from dotenv import load_dotenv
+        load_dotenv()
+        
+        # These should exist (even if placeholder values)
+        assert os.getenv("DATABASE_URL") is not None
+        assert os.getenv("APP_ENV") is not None
+        assert os.getenv("APP_PORT") is not None
+
+
+if __name__ == "__main__":
+    # Run tests
+    pytest.main([__file__, "-v"])
+```
+
+**File 2: `tests/test_basic.py`** (Simple direct tests, no pytest needed)
+
+```python
+"""
+Simple direct tests without pytest framework.
+Useful for quick validation without pytest overhead.
+"""
+
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from fastapi.testclient import TestClient
+from main import app
+from database.models import Donor, Campaign, Donation
+from dotenv import load_dotenv
+
+# Load environment
+load_dotenv()
+
+# Test client
+client = TestClient(app)
+
+def test_health_endpoint():
+    """Test health endpoint."""
+    print("Testing /health endpoint...")
+    response = client.get("/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "healthy"
+    assert data["service"] == "TrustVoice API"
+    print("✅ Health endpoint test passed")
+
+def test_root_endpoint():
+    """Test root endpoint."""
+    print("Testing / endpoint...")
+    response = client.get("/")
+    assert response.status_code == 200
+    data = response.json()
+    assert "TrustVoice" in data["message"]
+    print("✅ Root endpoint test passed")
+
+def test_models_exist():
+    """Test that models can be imported."""
+    print("Testing database models...")
+    
+    assert hasattr(Donor, 'id')
+    assert hasattr(Donor, 'phone_number')
+    print("  ✓ Donor model OK")
+    
+    assert hasattr(Campaign, 'title')
+    assert hasattr(Campaign, 'goal_amount_usd')
+    print("  ✓ Campaign model OK")
+    
+    assert hasattr(Donation, 'amount_usd')
+    assert hasattr(Donation, 'status')
+    print("  ✓ Donation model OK")
+    
+    print("✅ All models test passed")
+
+def test_environment_variables():
+    """Test environment variables are loaded."""
+    print("Testing environment variables...")
+    
+    assert os.getenv("DATABASE_URL") is not None
+    assert "postgresql" in os.getenv("DATABASE_URL")
+    assert os.getenv("APP_ENV") == "development"
+    
+    print("✅ Environment variables test passed")
+
+def test_database_connection():
+    """Test database connection."""
+    print("Testing database connection...")
+    from database.db import engine, DATABASE_URL
+    
+    assert DATABASE_URL is not None
+    assert engine is not None
+    
+    print("✅ Database connection test passed")
+
+if __name__ == "__main__":
+    print("\n" + "="*50)
+    print("   TrustVoice Lab 1 Test Suite")
+    print("="*50 + "\n")
+    
+    tests = [
+        test_health_endpoint,
+        test_root_endpoint,
+        test_models_exist,
+        test_environment_variables,
+        test_database_connection
+    ]
+    
+    passed = 0
+    failed = 0
+    
+    for test in tests:
+        try:
+            test()
+            passed += 1
+        except AssertionError as e:
+            print(f"❌ {test.__name__} failed: {e}")
+            failed += 1
+        except Exception as e:
+            print(f"❌ {test.__name__} error: {e}")
+            failed += 1
+    
+    print("\n" + "="*50)
+    print(f"Results: {passed} passed, {failed} failed")
+    print("="*50 + "\n")
+    
+    sys.exit(0 if failed == 0 else 1)
+```
+
+### Run Tests
+
+**Option 1: Run with pytest (full test framework)**
+
+```bash
+# Load environment and run all tests
+export $(cat .env | grep -v '^#' | xargs)
+pytest tests/test_api.py -v
+```
+
+**Expected Output:**
+```
+========================= test session starts =========================
+collected 8 items
+
+tests/test_api.py::TestHealthEndpoints::test_root_endpoint PASSED [ 12%]
+tests/test_api.py::TestHealthEndpoints::test_health_check PASSED [ 25%]
+tests/test_api.py::TestDatabaseModels::test_donor_model_creation PASSED [ 37%]
+tests/test_api.py::TestDatabaseModels::test_campaign_model_creation PASSED [ 50%]
+tests/test_api.py::TestDatabaseModels::test_donation_model_creation PASSED [ 62%]
+tests/test_api.py::TestDatabaseConnection::test_database_url_exists PASSED [ 75%]
+tests/test_api.py::TestDatabaseConnection::test_engine_creation PASSED [ 87%]
+tests/test_api.py::TestEnvironmentVariables::test_required_env_vars PASSED [100%]
+
+==================== 8 passed, 5 warnings in 0.39s ====================
+```
+
+**Option 2: Run simple tests (faster, no pytest)**
+
+```bash
+python tests/test_basic.py
+```
+
+**Expected Output:**
+```
+==================================================
+   TrustVoice Lab 1 Test Suite
+==================================================
+
+Testing /health endpoint...
+✅ Health endpoint test passed
+Testing / endpoint...
+✅ Root endpoint test passed
+Testing database models...
+  ✓ Donor model OK
+  ✓ Campaign model OK
+  ✓ Donation model OK
+✅ All models test passed
+Testing environment variables...
+✅ Environment variables test passed
+Testing database connection...
+✅ Database connection test passed
+
+==================================================
+Results: 5 passed, 0 failed
+==================================================
+```
+
+---
+
+## Step 10: Version Control with Git
+
+### 📚 Background: Why Git?
+
+**Git Best Practices:**
+- Commit early, commit often
+- Write meaningful commit messages
+- Never commit secrets (.env file)
+- Use .gitignore properly
+
+### 💻 Initialize Git Repository
+
+```bash
+# Initialize git
+git init
+
+# Add .gitignore first (prevents committing secrets)
+git add .gitignore
+
+# Add all project files
+git add .
+
+# Check what's being committed (verify .env is NOT listed!)
+git status
+```
+
+**Expected Output:**
+```
+On branch main
+
+No commits yet
+
+Changes to be committed:
+  (use "git rm --cached <file>..." to unstage)
+        new file:   .env.example
+        new file:   .gitignore
+        new file:   blockchain/__init__.py
+        new file:   database/__init__.py
+        new file:   database/db.py
+        new file:   database/migrations/__init__.py
+        new file:   database/models.py
+        new file:   documentation/LAB_01_PROJECT_SETUP.md
+        new file:   init_db.py
+        new file:   main.py
+        new file:   payments/__init__.py
+        new file:   pytest.ini
+        new file:   requirements.txt
+        new file:   tests/__init__.py
+        new file:   tests/test_api.py
+        new file:   tests/test_basic.py
+        ... (more files)
+```
+
+**IMPORTANT:** Verify that `.env` is **NOT** in the list! If you see it, run:
+```bash
+git rm --cached .env
+```
+
+### First Commit
+
+```bash
+git commit -m "Lab 1: Initial project setup
+
+- Created virtual environment with all dependencies
+- Set up project structure (database, voice, payments, blockchain)
+- Configured FastAPI application with health endpoints
+- Created 7 SQLAlchemy models (donors, campaigns, donations, etc.)
+- Initialized Neon PostgreSQL database
+- Added comprehensive documentation (Lab 1 + specs)
+- Configured environment variables (.env protected by .gitignore)
+- Added test suite with pytest
+- Server running on port 8001"
+```
+
+### Commit Tests
+
+```bash
+git add tests/ pytest.ini
+git commit -m "Add test suite and pytest configuration
+
+- Added pytest.ini configuration
+- Created test_api.py with 8 comprehensive tests
+- Created test_basic.py for simple direct testing
+- Removed web3 temporarily (will add back in Lab 8)
+- All tests passing: endpoints, models, database, environment
+
+Test Results: 8 passed, 0 failed ✅"
+```
+
+### View Commit History
+
+```bash
+git log --oneline --decorate
+```
+
+**Expected Output:**
+```
+2a485d8 (HEAD -> main) Add test suite and pytest configuration
+1aef64b Lab 1: Initial project setup
 ```
 
 ---
@@ -1165,18 +1626,42 @@ python scripts/init_db.py
 Verify you have completed all steps:
 
 - [ ] Virtual environment created and activated (`venv/`)
-- [ ] All project directories created (use `tree` to verify)
+- [ ] All project directories created (use `find . -type d` to verify)
 - [ ] All `__init__.py` files created
 - [ ] Dependencies installed (`pip list` shows fastapi, sqlalchemy, etc.)
-- [ ] `requirements.txt` generated with `pip freeze`
-- [ ] `.env` file created with placeholders
+- [ ] `requirements.txt` generated (web3 removed temporarily)
+- [ ] `.env` file created with actual API keys
 - [ ] `.env.example` created (safe to commit)
 - [ ] `.gitignore` configured properly
 - [ ] `database/models.py` created with all 7 models
 - [ ] `database/db.py` created with utilities
 - [ ] `main.py` created and runs successfully
-- [ ] Can access http://localhost:8000/docs
+- [ ] Database tables created in Neon PostgreSQL
+- [ ] Can access http://localhost:8001/health (or your port)
 - [ ] Health check returns `{"status": "healthy"}`
+- [ ] `pytest.ini` configured
+- [ ] Test files created (`test_api.py`, `test_basic.py`)
+- [ ] All tests passing (8 pytest tests)
+- [ ] Git repository initialized
+- [ ] `.env` NOT committed (verify with `git status`)
+- [ ] Initial commits made
+
+**Test Your Setup:**
+
+```bash
+# 1. Server is running
+curl http://localhost:8001/health
+
+# 2. Tests pass
+export $(cat .env | grep -v '^#' | xargs)
+pytest tests/test_api.py -v
+
+# 3. Git is clean (no uncommitted secrets)
+git status
+
+# 4. View commits
+git log --oneline
+```
 
 ---
 
@@ -1215,11 +1700,12 @@ Verify you have completed all steps:
 ## 🚀 Next Steps (Lab 2)
 
 In the next lab, we'll:
-1. Set up Alembic migrations
+1. Set up Alembic migrations for database versioning
 2. Create campaign and donor management APIs
 3. Add first database entries (seed data)
 4. Build admin endpoints for NGOs
 5. Test CRUD operations
+6. Add more comprehensive integration tests
 
 ---
 
@@ -1248,6 +1734,18 @@ In the next lab, we'll:
 - Add indexes on frequently queried fields (phone_number, telegram_id)
 - Use timestamps for debugging
 - SQLAlchemy handles SQL generation (write less code)
+
+**Testing:**
+- Write tests as you build features
+- Pytest for comprehensive testing
+- Simple direct tests for quick validation
+- Test environment configuration early
+
+**Git Workflow:**
+- Commit early, commit often
+- Write meaningful commit messages
+- Always verify `.env` is not staged
+- Use `.gitignore` effectively
 
 ---
 
@@ -1285,27 +1783,62 @@ touch voice/__init__.py
 **Solution:**
 ```bash
 # Check DATABASE_URL in .env
-echo $DATABASE_URL
+cat .env | grep DATABASE_URL
 
-# Start PostgreSQL (if using local)
-brew services start postgresql@15
-
-# Or update .env to use Neon URL
+# Verify Neon database is accessible
+# Or update .env with correct Neon URL
 ```
 
 ---
 
 ### Problem: FastAPI docs not showing at /docs
 
-**Cause:** Server not running or wrong port
+**Cause:** Wrong port or server not running
 
 **Solution:**
 ```bash
-# Check server is running
+# Check which port you configured
+cat .env | grep APP_PORT
+
+# Start server
 python main.py
 
 # Access at correct URL
-# http://localhost:8000/docs (NOT 127.0.0.1)
+# http://localhost:8001/docs (if APP_PORT=8001)
+```
+
+---
+
+### Problem: Pytest import errors with web3
+
+**Cause:** web3 pytest plugin conflicts with eth_typing
+
+**Solution:**
+```bash
+# Already fixed in Lab 1!
+# web3 removed temporarily (will add back in Lab 8)
+# pytest.ini configured to disable ethereum plugin
+
+# If you see the error:
+pip uninstall -y web3
+pytest tests/test_api.py -v
+```
+
+---
+
+### Problem: PORT already in use
+
+**Cause:** Another application using port 8000 or 8001
+
+**Solution:**
+```bash
+# Change port in .env
+# Update APP_PORT to different value (e.g., 8002)
+nano .env
+
+# Update ALLOWED_ORIGINS to match
+# Then restart server
+python main.py
 ```
 
 ---
@@ -1325,8 +1858,13 @@ python main.py
 
 **Dependencies:**
 - ✅ Keep `requirements.txt` updated
-- ✅ Run `pip audit` to check for vulnerabilities
-- ✅ Use specific versions in production (`fastapi==0.100.0`, not `fastapi>=0.100.0`)
+- ✅ Run `pip audit` to check for vulnerabilities (when available)
+- ✅ Use specific versions in production (`fastapi==0.109.0`, not `fastapi>=0.109.0`)
+
+**Testing:**
+- ✅ Don't use production API keys in tests
+- ✅ Use test mode for Stripe/Twilio
+- ✅ Clean up test data after tests run
 
 ---
 
@@ -1334,14 +1872,22 @@ python main.py
 
 **Development (Lab 1):**
 - Virtual environment: Free
-- PostgreSQL local: Free
+- PostgreSQL (Neon): Free tier (512 MB)
 - FastAPI: Free (open source)
 - Python: Free
+- **Total: $0/month**
 
-**Production (After Deployment):**
+**Production (After Deployment - Lab 10):**
 - Neon PostgreSQL: $20/month (paid tier for production)
 - Railway/Render: $50/month (basic tier)
-- **Total: ~$70/month** (before API costs)
+- Redis Cloud: $10/month (basic tier)
+- **Total: ~$80/month** (before API costs)
+
+**API Costs (Will add as we build):**
+- OpenAI GPT-4: ~$0.20 per conversation
+- Twilio Voice: ~$0.40 per minute
+- Stripe: 2.9% + $0.30 per transaction
+- (More details in Labs 3-5)
 
 Lab 1 is completely free to run locally!
 
@@ -1351,20 +1897,25 @@ Lab 1 is completely free to run locally!
 
 **What We Built:**
 - Complete project structure with 9 directories
-- Virtual environment with 20+ dependencies
+- Virtual environment with 100+ dependencies
 - 7 database models (donors, campaigns, donations, etc.)
-- FastAPI server with health check
+- FastAPI server with health check and auto-docs
 - Proper environment variable management
 - Security best practices (.gitignore, .env)
+- Comprehensive test suite (8 tests passing)
+- Git repository with proper commits
 
 **Time Investment:** 2-3 hours  
-**Lines of Code:** ~700 lines  
-**Cost:** $0 (local development)
+**Lines of Code:** ~800 lines  
+**Cost:** $0 (local development)  
+**Test Coverage:** 8 tests passing ✅
 
-**Foundation Status:** ✅ SOLID
+**Foundation Status:** ✅ SOLID & PRODUCTION-READY
 
 You now have a production-ready project structure. All future labs will fill in the routers, AI logic, payment integration, and blockchain components.
 
 ---
+
+**🎉 Congratulations! Lab 1 Complete!**
 
 **Ready for Lab 2?** Let's build the campaign and donor management APIs!

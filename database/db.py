@@ -10,8 +10,7 @@ Provides:
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from contextlib import contextmanager
-from typing import Optional
+from typing import Optional, Generator
 import logging
 
 from database.models import Base, Donor, Campaign, NGOOrganization
@@ -40,15 +39,14 @@ SessionLocal = sessionmaker(
 )
 
 
-@contextmanager
-def get_db() -> Session:
+def get_db() -> Generator[Session, None, None]:
     """
-    Context manager for database sessions.
+    Dependency for FastAPI routes to get database session.
     
-    Usage:
-        with get_db() as db:
-            donor = db.query(Donor).filter_by(id=1).first()
-            # Session auto-commits on success, rolls back on error
+    Usage in FastAPI:
+        @app.get("/items")
+        def get_items(db: Session = Depends(get_db)):
+            return db.query(Item).all()
     
     Benefits:
     - Automatic commit on success
