@@ -2,7 +2,7 @@
 
 **Project:** Voice-based donation platform for African NGOs  
 **Last Updated:** 21 December 2025  
-**Current Phase:** Lab 2 Complete, Lab 3 Planning
+**Current Phase:** Lab 3 Complete, Lab 4 Planning
 
 ---
 
@@ -11,7 +11,7 @@
 | Phase | Labs | Status | Branch | Progress |
 |-------|------|--------|--------|----------|
 | Foundation | 1-2 | ✅ Complete | `main` | 100% |
-| Core Features | 3-5 | ⏳ Planned | TBD | 0% |
+| Core Features | 3-5 | 🚧 In Progress | `lab-03-payments` | 33% |
 | Advanced Features | 6-9 | ⏳ Planned | TBD | 0% |
 | Production Ready | 10-12 | ⏳ Planned | TBD | 0% |
 
@@ -77,9 +77,48 @@
 ### Phase 2: Core Features (⏳ Planned)
 
 #### Lab 3: Payment Processing & Donation Flow
+**Status:** ✅ Complete  
+**Branch:** `lab-03-payments`  
+**Completed:** 21 December 2025
+
+**Deliverables:**
+- ✅ Donation router with full CRUD (7 endpoints)
+- ✅ Multi-currency support (31+ currencies via Frankfurter API)
+- ✅ Per-currency tracking with dynamic USD conversion
+- ✅ M-Pesa integration (STK Push + webhook)
+- ✅ Stripe integration (PaymentIntent + webhook with signature verification)
+- ✅ Cryptocurrency support (basic address tracking)
+- ✅ Currency conversion service with 24h caching
+- ✅ Campaign total updates (per-currency buckets + cached USD)
+- ✅ 22 comprehensive integration tests (100% passing)
+
+**Key Files:**
+- `voice/routers/donations.py` (333 lines)
+- `voice/routers/webhooks.py` (215 lines)
+- `services/currency_service.py` (200 lines)
+- `services/mpesa.py` (M-Pesa integration)
+- `services/stripe_service.py` (Stripe integration)
+- `tests/test_lab3_donations.py` (533 lines, 22 tests)
+
+**Architecture Highlights:**
+- **Per-currency tracking:** Donations tracked in original currencies with dynamic USD conversion
+- **Campaign.raised_amounts:** JSON field storing `{"USD": 2000, "EUR": 1000, "GBP": 500}`
+- **Campaign.raised_amount_usd:** Cached USD total for quick queries
+- **Campaign.get_current_usd_total():** Real-time USD calculation with live rates
+- **Benefits:** No exchange rate lock-in, better reporting, refund in original currency
+
+**API Endpoints:** 7 donation endpoints + 3 webhook endpoints
+
+**Testing:** 22 integration tests passing (donation CRUD, webhooks, multi-currency)
+
+**Documentation:** [LAB_03_PAYMENT_PROCESSING.md](labs/LAB_03_PAYMENT_PROCESSING.md)
+
+---
+
+#### Lab 4: Voice AI Integration (Vapi.ai)
 **Status:** ⏳ Planned  
-**Branch:** `lab-03-payments` (to be created)  
-**Prerequisites:** Lab 1, Lab 2  
+**Branch:** `lab-04-voice-ai` (to be created)  
+**Prerequisites:** Lab 1, Lab 2, Lab 3  
 **Estimated Effort:** 6-8 hours
 
 **Objectives:**

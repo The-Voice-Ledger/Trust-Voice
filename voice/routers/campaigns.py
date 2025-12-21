@@ -14,12 +14,40 @@ from database.models import Campaign, NGOOrganization
 router = APIRouter(prefix="/campaigns", tags=["Campaigns"])
 
 
+def enrich_campaign_response(campaign: Campaign) -> dict:
+    """
+    Enrich campaign data with dynamic USD total calculation.
+    
+    Args:
+        campaign: Campaign model instance
+        
+    Returns:
+        dict: Campaign data with current_usd_total added
+    """
+    campaign_dict = {
+        "id": campaign.id,
+        "ngo_id": campaign.ngo_id,
+        "title": campaign.title,
+        "description": campaign.description,
+        "goal_amount_usd": campaign.goal_amount_usd,
+        "raised_amount_usd": campaign.raised_amount_usd,
+        "raised_amounts": campaign.raised_amounts or {},
+        "current_usd_total": campaign.get_current_usd_total(),
+        "status": campaign.status,
+        "location_gps": campaign.location_gps,
+        "created_at": campaign.created_at,
+        "updated_at": campaign.updated_at,
+    }
+    return campaign_dict
+
+
 # Pydantic schemas for request/response
 class CampaignCreate(BaseModel):
     ngo_id: int
     title: str = Field(..., min_length=3, max_length=200)
     description: str
     goal_amount_usd: float = Field(..., gt=0)
+    status: Optional[str] = Field("active", pattern="^(active|paused|completed)$")
     location_gps: Optional[str] = None
     
     class Config:
@@ -29,6 +57,7 @@ class CampaignCreate(BaseModel):
                 "title": "Clean Water for Rural Kenya",
                 "description": "Install 10 water wells in drought-affected villages",
                 "goal_amount_usd": 50000.0,
+                "status": "active",
                 "location_gps": "-1.286389,36.817223"
             }
         }
@@ -48,7 +77,9 @@ class CampaignResponse(BaseModel):
     title: str
     description: str
     goal_amount_usd: float
-    raised_amount_usd: float
+    raised_amount_usd: float  # Cached USD total
+    raised_amounts: Optional[dict] = {}  # Per-currency breakdown: {"USD": 1000, "EUR": 500}
+    current_usd_total: Optional[float] = None  # Dynamic USD total with current rates
     status: str
     location_gps: Optional[str]
     created_at: datetime
@@ -75,7 +106,7 @@ def create_campaign(campaign: CampaignCreate, db: Session = Depends(get_db)):
         description=campaign.description,
         goal_amount_usd=campaign.goal_amount_usd,
         raised_amount_usd=0.0,
-        status="active",
+        status=campaign.status,
         location_gps=campaign.location_gps
     )
     
@@ -83,7 +114,7 @@ def create_campaign(campaign: CampaignCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_campaign)
     
-    return db_campaign
+    return enrich_campaign_response(db_campaign)
 
 
 @router.get("/", response_model=List[CampaignResponse])
@@ -108,7 +139,7 @@ def list_campaigns(
         query = query.filter(Campaign.ngo_id == ngo_id)
     
     campaigns = query.offset(skip).limit(limit).all()
-    return campaigns
+    return [enrich_campaign_response(c) for c in campaigns]
 
 
 @router.get("/{campaign_id}", response_model=CampaignResponse)
@@ -120,7 +151,7 @@ def get_campaign(campaign_id: int, db: Session = Depends(get_db)):
     if not campaign:
         raise HTTPException(status_code=404, detail=f"Campaign with id {campaign_id} not found")
     
-    return campaign
+    return enrich_campaign_response(campaign)
 
 
 @router.patch("/{campaign_id}", response_model=CampaignResponse)
@@ -140,7 +171,7 @@ def update_campaign(campaign_id: int, updates: CampaignUpdate, db: Session = Dep
     db.commit()
     db.refresh(campaign)
     
-    return campaign
+    return enrich_campaign_response(campaign)
 
 
 @router.delete("/{campaign_id}", status_code=204)

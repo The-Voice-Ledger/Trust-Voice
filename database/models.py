@@ -11,17 +11,51 @@ Architecture:
 - Impact Verifications: Field officer reports proving project completion
 - Conversation Logs: AI conversation history for debugging/improvement
 - Campaign Context: FAQ/story content for RAG (vector search)
+- Users: Admin users who can approve payouts
 """
 
 from sqlalchemy import (
     Column, Integer, String, Float, Boolean, DateTime, 
-    Text, ForeignKey, JSON
+    Text, ForeignKey, JSON, Enum as SQLEnum
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
+import enum
 
 Base = declarative_base()
+
+
+class UserRole(enum.Enum):
+    """User roles for access control."""
+    SUPER_ADMIN = "super_admin"  # Platform admins (approve all)
+    NGO_ADMIN = "ngo_admin"      # NGO admins (approve own payouts)
+    VIEWER = "viewer"            # Read-only access
+
+
+class User(Base):
+    """
+    Admin users who can approve payouts and manage the platform.
+    
+    Roles:
+    - super_admin: Can approve all payouts, manage all NGOs
+    - ngo_admin: Can approve payouts for their assigned NGO
+    - viewer: Read-only access
+    """
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    full_name = Column(String(255))
+    role = Column(SQLEnum(UserRole), default=UserRole.VIEWER, nullable=False)
+    ngo_id = Column(Integer, ForeignKey('ngo_organizations.id'))  # For ngo_admin
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_login = Column(DateTime)
+    
+    # Relationships
+    ngo = relationship("NGOOrganization", backref="admin_users")
 
 
 class Donor(Base):
@@ -123,7 +157,8 @@ class Campaign(Base):
     title = Column(String(255), nullable=False)
     description = Column(Text)
     goal_amount_usd = Column(Float, nullable=False)
-    raised_amount_usd = Column(Float, default=0.0)
+    raised_amount_usd = Column(Float, default=0.0)  # Cached USD total (denormalized)
+    raised_amounts = Column(JSON, default=dict)  # Per-currency totals: {"USD": 1000, "EUR": 500}
     
     # Classification
     category = Column(String(50))  # water, education, health, infrastructure
@@ -147,6 +182,36 @@ class Campaign(Base):
     donations = relationship("Donation", back_populates="campaign")
     verifications = relationship("ImpactVerification", back_populates="campaign")
     context_items = relationship("CampaignContext", back_populates="campaign")
+    
+    def get_current_usd_total(self):
+        """
+        Calculate current USD total from all currency buckets using live rates.
+        
+        This provides dynamic conversion - the USD total updates with exchange rates.
+        The cached raised_amount_usd field is for quick queries but may be stale.
+        
+        Returns:
+            float: Current USD equivalent of all donations
+        """
+        if not self.raised_amounts:
+            return 0.0
+        
+        from services.currency_service import currency_service
+        total_usd = 0.0
+        
+        for currency, amount in self.raised_amounts.items():
+            if currency == "USD":
+                total_usd += amount
+            else:
+                try:
+                    usd_amount = currency_service.convert_to_usd(amount, currency)
+                    total_usd += usd_amount
+                except Exception as e:
+                    # Log error but don't fail - use cached rate
+                    print(f"Warning: Could not convert {currency} to USD: {e}")
+                    continue
+        
+        return total_usd
 
 
 class CampaignContext(Base):
@@ -196,14 +261,13 @@ class Donation(Base):
     donor_id = Column(Integer, ForeignKey("donors.id"), nullable=False)
     campaign_id = Column(Integer, ForeignKey("campaigns.id"), nullable=False)
     
-    # Amount
-    amount_usd = Column(Float, nullable=False)
-    currency_code = Column(String(10), default="USD")  # EUR, GBP, USD
-    original_amount = Column(Float)  # If currency != USD, store original
+    # Amount in donor's chosen currency
+    amount = Column(Float, nullable=False)
+    currency = Column(String(3), nullable=False, default="USD")  # ISO 4217: USD, EUR, KES, GBP, etc.
     
     # Payment Method
-    payment_method = Column(String(20))  # stripe, paypal, crypto
-    payment_intent_id = Column(String(255))  # Stripe Payment Intent ID
+    payment_method = Column(String(20))  # mpesa, stripe, crypto
+    payment_intent_id = Column(String(255))  # Stripe Payment Intent ID or M-Pesa transaction ID
     transaction_hash = Column(String(66))  # If crypto, blockchain tx hash
     
     # Blockchain Receipt
@@ -304,3 +368,83 @@ class ConversationLog(Base):
     
     # Timestamp
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Payout(Base):
+    """
+    Tracks payments FROM platform TO NGOs/beneficiaries.
+    
+    Supported payment methods:
+    - mpesa_b2c: M-Pesa Business to Customer (Kenya mobile money)
+    - bank_transfer: Direct bank transfer (SEPA, SWIFT, local)
+    - stripe_payout: Stripe Payouts (to bank account or debit card)
+    
+    Use cases:
+    - Transfer raised funds to NGO after campaign completion
+    - Refund donor if campaign fails
+    - Bulk disbursements to beneficiaries
+    - Cross-border payments (EUR to European NGO, KES to Kenyan NGO)
+    
+    Status flow:
+    - pending: Payout initiated, waiting for processing
+    - processing: Payment processor accepted request, in queue
+    - completed: Money successfully sent
+    - failed: Payout failed (insufficient balance, invalid account, etc.)
+    """
+    __tablename__ = "payouts"
+    
+    id = Column(Integer, primary_key=True)
+    
+    # Recipient
+    campaign_id = Column(Integer, ForeignKey('campaigns.id'), nullable=True)
+    ngo_id = Column(Integer, ForeignKey('ngo_organizations.id'), nullable=True)
+    recipient_name = Column(String(200))
+    
+    # Payment details
+    amount = Column(Float, nullable=False)
+    currency = Column(String(3), default='USD')  # USD, EUR, GBP, KES, etc.
+    payment_method = Column(String(20), default='bank_transfer')  # mpesa_b2c, bank_transfer, stripe_payout
+    
+    # Mobile money (M-Pesa, etc.)
+    recipient_phone = Column(String(20))  # For M-Pesa B2C
+    conversation_id = Column(String(100))  # M-Pesa ConversationID
+    originator_conversation_id = Column(String(100))  # M-Pesa OriginatorConversationID
+    
+    # Bank account details
+    bank_account_number = Column(String(100))  # Account number or IBAN
+    bank_routing_number = Column(String(100))  # Routing/Sort code/SWIFT
+    bank_name = Column(String(200))
+    bank_country = Column(String(2))  # ISO country code (DE, KE, US)
+    
+    # Stripe Payouts
+    stripe_payout_id = Column(String(100))  # Stripe Payout ID
+    stripe_transfer_id = Column(String(100))  # Stripe Transfer ID
+    
+    # Transaction receipt (universal)
+    transaction_id = Column(String(100))  # M-Pesa TransactionID or bank reference
+    
+    # Status tracking
+    status = Column(String(20), default='pending')  # pending, approved, processing, completed, failed, rejected
+    status_message = Column(Text)
+    
+    # Admin approval (for bank transfers)
+    approved_by = Column(Integer, ForeignKey('users.id'))  # Admin who approved
+    approved_at = Column(DateTime)
+    rejection_reason = Column(Text)
+    
+    # Metadata
+    purpose = Column(String(200))  # "Campaign disbursement", "Refund", etc.
+    remarks = Column(Text)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime, nullable=True)
+    
+    # Relationships
+    campaign = relationship("Campaign", backref="payouts", foreign_keys=[campaign_id])
+    ngo = relationship("NGOOrganization", backref="payouts", foreign_keys=[ngo_id])
+    approver = relationship("User", backref="approved_payouts", foreign_keys=[approved_by])
+    
+    def __repr__(self):
+        return f"<Payout(id={self.id}, amount={self.amount} {self.currency}, status={self.status})>"
+

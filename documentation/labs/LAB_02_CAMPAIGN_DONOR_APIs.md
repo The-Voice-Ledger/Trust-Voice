@@ -2406,4 +2406,820 @@ git push origin main
 
 ---
 
+## 📋 Why This Design?
+
+Let's examine the key architectural decisions we made in Lab 2 and understand why they matter for building production-ready REST APIs.
+
+### Decision 1: RESTful API Structure vs GraphQL
+
+**What We Chose:** RESTful API with resource-based endpoints
+
+**Why?**
+- **Simplicity:** REST is easier to learn and debug (just HTTP verbs + URLs)
+- **Caching:** HTTP caching works out-of-the-box (`GET` requests are cacheable)
+- **Tooling:** Swagger/OpenAPI documentation automatic with FastAPI
+- **Stateless:** Each request is independent (easier to scale horizontally)
+- **Industry Standard:** Most third-party integrations expect REST APIs
+
+**Alternatives Considered:**
+- **GraphQL:** Flexible queries but adds complexity (schema, resolvers, N+1 problem)
+- **RPC (gRPC):** Faster but requires .proto files and isn't browser-friendly
+- **SOAP:** Legacy, verbose XML, overkill for modern apps
+
+**Trade-offs:**
+- ✅ Simple HTTP verbs: GET, POST, PUT, DELETE
+- ❌ Over-fetching (GET /campaigns returns all fields even if you only need name)
+- ✅ Easy to test with curl/Postman
+- ❌ Multiple requests for nested data (get campaign, then get its donations)
+
+**REST Structure:**
+```
+GET    /campaigns          # List all (read many)
+POST   /campaigns          # Create one (write)
+GET    /campaigns/{id}     # Read one (read single)
+PUT    /campaigns/{id}     # Update one (write)
+DELETE /campaigns/{id}     # Delete one (write)
+```
+
+**When to Reconsider:** If mobile clients need highly optimized queries (fetch only specific fields), GraphQL becomes worth the complexity.
+
+---
+
+### Decision 2: Pydantic Schemas vs Plain Dicts
+
+**What We Chose:** Pydantic schemas for request/response validation
+
+**Why?**
+- **Type Safety:** IDE autocomplete + type checking catch errors before runtime
+- **Validation:** Automatic email format, min/max length, required fields
+- **Documentation:** FastAPI auto-generates OpenAPI docs from schemas
+- **Serialization:** Automatic conversion between JSON and Python objects
+- **Error Messages:** Clear validation errors ("email is not valid") vs generic 500 errors
+
+**Alternatives Considered:**
+- **Plain Dicts:** No validation, any field accepted (security risk)
+- **Marshmallow:** Good validation but requires separate schema + serialization
+- **Dataclasses:** Type hints but no validation or JSON serialization
+
+**Trade-offs:**
+- ✅ Catch invalid data before it hits the database
+- ❌ More code (create schema + model for each resource)
+- ✅ Self-documenting code (schema shows exactly what fields are accepted)
+- ❌ Learning curve (validators, Field(), Config)
+
+**Code Comparison:**
+
+```python
+# ❌ Plain Dict (no validation)
+@app.post("/campaigns")
+def create_campaign(campaign: dict):
+    # What fields are allowed? What's required? Unknown!
+    db.add(Campaign(**campaign))  # Crashes if required field missing
+
+# ✅ Pydantic Schema (validated)
+@app.post("/campaigns")
+def create_campaign(campaign: CampaignCreate):
+    # FastAPI validates:
+    # - name is string, 1-200 chars
+    # - goal_amount is positive number
+    # - email is valid format
+    # All BEFORE function runs!
+    db.add(Campaign(**campaign.dict()))
+```
+
+**Real-World Impact:** A client sends `{"name": "", "goal_amount": -100}`. With Pydantic, FastAPI returns `422 Unprocessable Entity` with clear error messages. Without Pydantic, this creates invalid database records.
+
+---
+
+### Decision 3: Soft Delete vs Hard Delete
+
+**What We Chose:** Soft delete (set `is_deleted=True`, keep data)
+
+**Why?**
+- **Audit Trail:** See what was deleted and when (compliance requirement)
+- **Undo:** Restore accidentally deleted campaigns
+- **Analytics:** Historical data for "campaigns created vs deleted" metrics
+- **Foreign Keys:** Donations still reference deleted campaigns (data integrity)
+- **Legal:** Some jurisdictions require data retention (GDPR, SOX)
+
+**Alternatives Considered:**
+- **Hard Delete:** Permanently remove rows (simpler but irreversible)
+- **Archive Table:** Move deleted rows to separate table (complex to query)
+- **Versioning:** Keep all versions of every record (storage-intensive)
+
+**Trade-offs:**
+- ✅ Reversible deletes (restore by setting `is_deleted=False`)
+- ❌ Every query needs `.filter(is_deleted=False)`
+- ✅ Maintain referential integrity (foreign keys don't break)
+- ❌ Database grows larger over time (need periodic cleanup)
+
+**Implementation Pattern:**
+
+```python
+# Base model mixin (all tables get this)
+class SoftDeleteMixin:
+    is_deleted = Column(Boolean, default=False)
+    deleted_at = Column(DateTime, nullable=True)
+
+# Usage in queries
+campaigns = db.query(Campaign).filter(Campaign.is_deleted == False).all()
+
+# Delete operation
+campaign.is_deleted = True
+campaign.deleted_at = datetime.utcnow()
+db.commit()
+```
+
+**When to Use Hard Delete:** Personal data after user requests deletion (GDPR "right to be forgotten") or sensitive data that must be permanently erased.
+
+---
+
+### Decision 4: Separate Schemas for Create/Update/Response
+
+**What We Chose:** Three schemas per resource (Create, Update, Response)
+
+**Why?**
+- **Security:** Clients can't set `id`, `created_at`, `updated_at` (auto-generated)
+- **Flexibility:** Update allows partial updates (only send changed fields)
+- **Documentation:** Clear what's required for create vs update
+- **Response Control:** Return computed fields (e.g., `total_raised`) not in database
+
+**Alternatives Considered:**
+- **Single Schema:** Simple but allows clients to overwrite auto-generated fields
+- **Two Schemas:** Create + Response (no update schema, less flexible)
+- **Inheritance:** Base schema + specific overrides (works but more complex)
+
+**Trade-offs:**
+- ✅ Explicit control over what clients can send/receive
+- ❌ More boilerplate (3 classes per resource)
+- ✅ Prevents security issues (clients can't set `is_admin=True`)
+- ❌ Need to sync schemas when model changes
+
+**Schema Pattern:**
+
+```python
+# Create: Required fields only, no auto-generated fields
+class CampaignCreate(BaseModel):
+    name: str
+    goal_amount: float
+    # No id, created_at (auto-generated)
+
+# Update: All fields optional (partial updates)
+class CampaignUpdate(BaseModel):
+    name: Optional[str] = None
+    goal_amount: Optional[float] = None
+
+# Response: All fields including computed
+class CampaignResponse(BaseModel):
+    id: int
+    name: str
+    goal_amount: float
+    created_at: datetime
+    total_raised: float  # Computed from donations
+```
+
+**Security Example:**
+```python
+# ❌ Without separate schemas
+class Campaign(BaseModel):
+    id: int  # Client could set id=999 and overwrite existing campaign!
+    
+# ✅ With separate schemas
+class CampaignCreate(BaseModel):
+    # id not in schema, FastAPI rejects if client sends it
+    name: str
+```
+
+---
+
+### Decision 5: `/campaigns?skip=0&limit=100` vs `/campaigns/page/1`
+
+**What We Chose:** Offset-based pagination with `skip` and `limit` query params
+
+**Why?**
+- **Simplicity:** Easy to understand (`skip=20&limit=10` = page 3)
+- **Flexible:** Client controls page size (10 for mobile, 100 for admin dashboard)
+- **Standard:** Most REST APIs use this pattern
+- **Stateless:** No server-side cursor storage needed
+
+**Alternatives Considered:**
+- **Page Number:** `/campaigns/page/3` (simpler but less flexible)
+- **Cursor-Based:** `/campaigns?cursor=abc123` (better for real-time data)
+- **Infinite Scroll:** Return `next_url` in response (more complex)
+
+**Trade-offs:**
+- ✅ Client has full control over pagination
+- ❌ Inconsistent results if data changes during pagination (item added on page 1 shifts page 2)
+- ✅ Easy to jump to specific page
+- ❌ Performance degrades with large offsets (`OFFSET 1000000` is slow)
+
+**Implementation:**
+
+```python
+@app.get("/campaigns")
+def list_campaigns(skip: int = 0, limit: int = 100):
+    campaigns = db.query(Campaign).offset(skip).limit(limit).all()
+    return campaigns
+
+# Usage:
+# GET /campaigns?skip=0&limit=10   → First 10 campaigns
+# GET /campaigns?skip=10&limit=10  → Next 10 campaigns
+```
+
+**When to Use Cursor Pagination:** Real-time feeds (Twitter, Facebook) where new items appear constantly. Cursor ensures no duplicates/skips.
+
+---
+
+### Decision 6: JSON Array vs Relational Join Table
+
+**What We Chose:** JSON array for `social_media_links` (simple data)
+
+**Why?**
+- **Simplicity:** No extra table, no JOINs needed
+- **Flexibility:** Schema-less (add new platforms without migration)
+- **Performance:** Fewer queries (single SELECT vs SELECT + JOIN)
+- **Modern Databases:** PostgreSQL has rich JSON query support
+
+**When We Use Join Tables:** Donations → Campaigns (complex relationship with filters, aggregations)
+
+**Trade-offs:**
+- ✅ Less database complexity (fewer tables)
+- ❌ Can't query "all campaigns with Twitter link" easily
+- ✅ Perfect for small, simple lists
+- ❌ Risk of JSON getting too large (use join table if >50 items)
+
+**Guidelines:**
+
+```python
+# ✅ Good for JSON:
+social_media_links = Column(JSON)  # ["twitter.com/ngo", "fb.com/ngo"]
+# Simple, rarely queried, small list
+
+# ❌ Bad for JSON:
+donations = Column(JSON)  # [{"donor": "John", "amount": 100}, ...]
+# Use join table instead! Need to query, aggregate, filter
+```
+
+---
+
+## 🚀 Production Considerations
+
+Lab 2 built CRUD APIs. Here's what changes for production:
+
+### Security Hardening
+
+**Input Validation:**
+```python
+# ❌ Development (trusts client)
+@app.post("/campaigns")
+def create_campaign(campaign: CampaignCreate):
+    return db.add(Campaign(**campaign.dict()))
+
+# ✅ Production (defense in depth)
+from fastapi import HTTPException
+from html import escape
+
+@app.post("/campaigns")
+def create_campaign(campaign: CampaignCreate):
+    # Sanitize HTML (prevent XSS)
+    campaign.name = escape(campaign.name)
+    
+    # Business rules
+    if campaign.goal_amount > 10_000_000:
+        raise HTTPException(400, "Goal exceeds maximum ($10M)")
+    
+    # Check for duplicates
+    existing = db.query(Campaign).filter(
+        Campaign.name == campaign.name,
+        Campaign.is_deleted == False
+    ).first()
+    if existing:
+        raise HTTPException(409, "Campaign name already exists")
+    
+    return db.add(Campaign(**campaign.dict()))
+```
+
+**Rate Limiting:**
+```python
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.post("/campaigns")
+@limiter.limit("10/minute")  # Max 10 campaign creates per minute
+def create_campaign(request: Request, campaign: CampaignCreate):
+    # Prevents spam/abuse
+    pass
+```
+
+**SQL Injection (ORM still needs care):**
+```python
+# ❌ Vulnerable (raw SQL with user input)
+campaign_id = request.query_params.get("id")
+db.execute(f"SELECT * FROM campaigns WHERE id = {campaign_id}")
+
+# ✅ Safe (parameterized query)
+db.query(Campaign).filter(Campaign.id == campaign_id).first()
+```
+
+---
+
+### Scaling Strategies
+
+**Database Query Optimization:**
+```python
+# ❌ N+1 Query Problem
+campaigns = db.query(Campaign).all()  # 1 query
+for campaign in campaigns:
+    print(campaign.ngo.name)  # N queries (one per campaign)!
+
+# ✅ Eager Loading (single JOIN)
+from sqlalchemy.orm import joinedload
+
+campaigns = db.query(Campaign).options(
+    joinedload(Campaign.ngo)
+).all()  # 1 query with JOIN
+```
+
+**Caching:**
+```python
+from functools import lru_cache
+import time
+
+@lru_cache(maxsize=100)
+def get_campaign(campaign_id: int):
+    # Cached for 5 minutes
+    return db.query(Campaign).filter(Campaign.id == campaign_id).first()
+
+# Or use Redis
+import redis
+cache = redis.Redis(host='localhost', port=6379)
+
+@app.get("/campaigns/{id}")
+def get_campaign(id: int):
+    # Check cache first
+    cached = cache.get(f"campaign:{id}")
+    if cached:
+        return json.loads(cached)
+    
+    # Cache miss - query database
+    campaign = db.query(Campaign).filter(Campaign.id == id).first()
+    cache.setex(f"campaign:{id}", 300, json.dumps(campaign.dict()))
+    return campaign
+```
+
+**Connection Pooling:**
+```python
+# config/database.py
+from sqlalchemy import create_engine
+from sqlalchemy.pool import QueuePool
+
+engine = create_engine(
+    os.getenv("DATABASE_URL"),
+    poolclass=QueuePool,
+    pool_size=20,          # Normal connections
+    max_overflow=10,       # Burst capacity
+    pool_timeout=30,       # Wait time for connection
+    pool_recycle=3600,     # Reconnect after 1 hour
+    pool_pre_ping=True,    # Check connection health before use
+)
+```
+
+---
+
+### API Versioning
+
+**Why Version?** Breaking changes shouldn't break existing clients.
+
+**Strategy 1: URL Versioning (We Use This)**
+```python
+# v1 API
+@app.get("/api/v1/campaigns")
+def list_campaigns_v1():
+    # Old behavior
+    return campaigns
+
+# v2 API (breaking change: different response format)
+@app.get("/api/v2/campaigns")
+def list_campaigns_v2():
+    # New behavior
+    return {"data": campaigns, "meta": {"total": len(campaigns)}}
+```
+
+**Strategy 2: Header Versioning**
+```python
+from fastapi import Header
+
+@app.get("/campaigns")
+def list_campaigns(api_version: str = Header(default="v1")):
+    if api_version == "v2":
+        return new_format()
+    return old_format()
+```
+
+**Deprecation Notice:**
+```python
+from fastapi import Response
+
+@app.get("/api/v1/campaigns")
+def list_campaigns_v1(response: Response):
+    response.headers["X-API-Deprecation"] = "This version will be sunset on 2025-12-31"
+    response.headers["X-API-Upgrade"] = "Use /api/v2/campaigns"
+    return campaigns
+```
+
+---
+
+### Monitoring & Logging
+
+**Structured Logging:**
+```python
+import logging
+import json
+
+logger = logging.getLogger(__name__)
+
+@app.post("/campaigns")
+def create_campaign(campaign: CampaignCreate):
+    logger.info(json.dumps({
+        "event": "campaign_created",
+        "campaign_name": campaign.name,
+        "goal_amount": campaign.goal_amount,
+        "ngo_id": campaign.ngo_id,
+        "timestamp": datetime.utcnow().isoformat()
+    }))
+    # Easily parseable by log aggregation tools
+```
+
+**Error Tracking:**
+```python
+import sentry_sdk
+
+sentry_sdk.init(dsn=os.getenv("SENTRY_DSN"))
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    # Send to Sentry
+    sentry_sdk.capture_exception(exc)
+    
+    # Log with context
+    logger.error(f"Unhandled exception: {exc}", extra={
+        "request_path": request.url.path,
+        "request_method": request.method,
+        "client_ip": request.client.host
+    })
+    
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Internal server error"}
+    )
+```
+
+**Health Check Endpoint:**
+```python
+@app.get("/health")
+def health_check():
+    # Check database connection
+    try:
+        db.execute("SELECT 1")
+        db_status = "healthy"
+    except Exception:
+        db_status = "unhealthy"
+    
+    return {
+        "status": "healthy" if db_status == "healthy" else "degraded",
+        "database": db_status,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+```
+
+---
+
+### Cost Optimization
+
+**Database Costs:**
+```python
+# ❌ Expensive query (full table scan)
+campaigns = db.query(Campaign).filter(Campaign.name.like("%trust%")).all()
+
+# ✅ Add index (speeds up LIKE queries)
+# In migration:
+op.create_index('idx_campaign_name', 'campaigns', ['name'])
+
+# Result: $50/month database can handle 10x more traffic
+```
+
+**Compute Costs:**
+```python
+# ❌ Synchronous blocking (ties up worker thread)
+@app.post("/campaigns")
+def create_campaign(campaign: CampaignCreate):
+    send_email_to_admins(campaign)  # Blocks for 2-3 seconds
+    return campaign
+
+# ✅ Background task (returns immediately)
+from fastapi import BackgroundTasks
+
+@app.post("/campaigns")
+def create_campaign(campaign: CampaignCreate, background_tasks: BackgroundTasks):
+    background_tasks.add_task(send_email_to_admins, campaign)
+    return campaign  # Returns in <50ms
+```
+
+**Bandwidth Costs:**
+```python
+# ❌ Return all fields (wasteful for list endpoints)
+@app.get("/campaigns")
+def list_campaigns():
+    return db.query(Campaign).all()  # Returns description (10KB per campaign)
+
+# ✅ Return only necessary fields
+@app.get("/campaigns")
+def list_campaigns():
+    return db.query(Campaign.id, Campaign.name, Campaign.goal_amount).all()
+    # 10x less data transferred
+```
+
+---
+
+## 🐛 Common Gotchas
+
+### Gotcha 1: Pydantic Validation Doesn't Run
+
+**Symptom:**
+```python
+# Invalid data gets through
+campaign = CampaignCreate(name="", goal_amount=-100)  # Should fail!
+```
+
+**Why It Happens:** Using `.dict()` to bypass validation, or not defining validators.
+
+**Solution:**
+```python
+from pydantic import BaseModel, validator, Field
+
+class CampaignCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=200)
+    goal_amount: float = Field(..., gt=0)  # gt = greater than
+    
+    @validator('name')
+    def name_must_not_be_empty(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Name cannot be empty or whitespace')
+        return v.strip()
+    
+    @validator('goal_amount')
+    def goal_must_be_reasonable(cls, v):
+        if v > 10_000_000:
+            raise ValueError('Goal cannot exceed $10 million')
+        return v
+```
+
+**Test Validation:**
+```python
+# This will raise ValidationError
+try:
+    CampaignCreate(name="", goal_amount=-100)
+except ValidationError as e:
+    print(e.json())  # See exactly what failed
+```
+
+---
+
+### Gotcha 2: Soft Delete Leaking Deleted Records
+
+**Symptom:**
+```python
+# Query returns deleted campaigns
+campaigns = db.query(Campaign).all()  # Includes is_deleted=True
+```
+
+**Why It Happens:** Forgot to filter `is_deleted=False` in query.
+
+**Solution 1: Query Filter (Manual)**
+```python
+campaigns = db.query(Campaign).filter(Campaign.is_deleted == False).all()
+```
+
+**Solution 2: Global Filter (Automatic)**
+```python
+# models/base.py
+from sqlalchemy import event
+from sqlalchemy.orm import Session
+
+@event.listens_for(Session, "after_attach")
+def receive_after_attach(session, instance):
+    @event.listens_for(session, "before_flush")
+    def before_flush(session, flush_context, instances):
+        # Auto-filter deleted records
+        for obj in session.query(Campaign):
+            if obj.is_deleted:
+                session.expunge(obj)
+```
+
+**Solution 3: Custom Query Class**
+```python
+from sqlalchemy.orm import Query
+
+class SoftDeleteQuery(Query):
+    def __iter__(self):
+        return Query.__iter__(self.filter_by(is_deleted=False))
+
+# Usage:
+campaigns = db.query(Campaign).all()  # Auto-filters is_deleted=False
+```
+
+---
+
+### Gotcha 3: Database Session Not Closed
+
+**Symptom:**
+```
+sqlalchemy.exc.ResourceClosedError: This Connection is closed
+# Or connection pool exhausted
+```
+
+**Why It Happens:** Not using `try-finally` or context managers for database sessions.
+
+**Solution:**
+```python
+# ❌ Session not closed on error
+def create_campaign(campaign: CampaignCreate):
+    db = SessionLocal()
+    db.add(Campaign(**campaign.dict()))
+    db.commit()
+    # If exception occurs, db.close() never runs!
+
+# ✅ Always close with try-finally
+def create_campaign(campaign: CampaignCreate):
+    db = SessionLocal()
+    try:
+        db.add(Campaign(**campaign.dict()))
+        db.commit()
+        return campaign
+    finally:
+        db.close()  # Always runs
+
+# ✅✅ Use FastAPI Depends (auto-cleanup)
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.post("/campaigns")
+def create_campaign(campaign: CampaignCreate, db: Session = Depends(get_db)):
+    # db.close() happens automatically
+    db.add(Campaign(**campaign.dict()))
+    db.commit()
+    return campaign
+```
+
+---
+
+### Gotcha 4: Returning SQLAlchemy Models Directly
+
+**Symptom:**
+```python
+@app.get("/campaigns/{id}")
+def get_campaign(id: int):
+    campaign = db.query(Campaign).filter(Campaign.id == id).first()
+    return campaign  # Error: Object of type Campaign is not JSON serializable
+```
+
+**Why It Happens:** SQLAlchemy models aren't JSON-serializable by default.
+
+**Solution 1: Pydantic Schema (Recommended)**
+```python
+from pydantic import BaseModel
+
+class CampaignResponse(BaseModel):
+    id: int
+    name: str
+    goal_amount: float
+    
+    class Config:
+        orm_mode = True  # Allow loading from ORM objects
+
+@app.get("/campaigns/{id}", response_model=CampaignResponse)
+def get_campaign(id: int):
+    campaign = db.query(Campaign).filter(Campaign.id == id).first()
+    return campaign  # Pydantic auto-converts
+```
+
+**Solution 2: Manual Dict Conversion**
+```python
+@app.get("/campaigns/{id}")
+def get_campaign(id: int):
+    campaign = db.query(Campaign).filter(Campaign.id == id).first()
+    return {
+        "id": campaign.id,
+        "name": campaign.name,
+        "goal_amount": campaign.goal_amount
+    }
+```
+
+---
+
+### Gotcha 5: N+1 Query Problem
+
+**Symptom:**
+```python
+# Slow! Runs 101 database queries
+campaigns = db.query(Campaign).all()  # 1 query
+for campaign in campaigns:
+    print(campaign.ngo.name)  # 100 queries (one per campaign)
+```
+
+**Why It Happens:** Lazy loading (SQLAlchemy loads relationships only when accessed).
+
+**Solution:**
+```python
+from sqlalchemy.orm import joinedload
+
+# ✅ Single query with JOIN
+campaigns = db.query(Campaign).options(
+    joinedload(Campaign.ngo)
+).all()
+
+for campaign in campaigns:
+    print(campaign.ngo.name)  # No additional query
+```
+
+**Debug N+1:**
+```python
+import logging
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
+# Run endpoint - you'll see every SQL query logged
+```
+
+---
+
+### Gotcha 6: Race Conditions in Updates
+
+**Symptom:**
+```python
+# Two requests update the same campaign simultaneously
+# Last write wins, data loss occurs
+```
+
+**Why It Happens:** No locking mechanism.
+
+**Solution 1: Optimistic Locking (Version Column)**
+```python
+class Campaign(Base):
+    __tablename__ = "campaigns"
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    version = Column(Integer, default=1)  # Track version
+
+@app.put("/campaigns/{id}")
+def update_campaign(id: int, campaign: CampaignUpdate, expected_version: int):
+    db_campaign = db.query(Campaign).filter(
+        Campaign.id == id,
+        Campaign.version == expected_version  # Check version
+    ).first()
+    
+    if not db_campaign:
+        raise HTTPException(409, "Campaign was modified by another user")
+    
+    db_campaign.name = campaign.name
+    db_campaign.version += 1  # Increment version
+    db.commit()
+```
+
+**Solution 2: Pessimistic Locking (Database Lock)**
+```python
+from sqlalchemy import select
+
+@app.put("/campaigns/{id}")
+def update_campaign(id: int, campaign: CampaignUpdate):
+    # Lock row for update
+    db_campaign = db.query(Campaign).filter(Campaign.id == id).with_for_update().first()
+    
+    db_campaign.name = campaign.name
+    db.commit()  # Lock released
+```
+
+---
+
+## 📊 Summary: Lab 2 API Patterns
+
+| Pattern | Why | When to Reconsider |
+|---------|-----|-------------------|
+| **RESTful URLs** | Simple, cacheable, standard | High complexity → GraphQL |
+| **Pydantic Schemas** | Type safety, validation, docs | Never (always use) |
+| **Soft Delete** | Audit trail, undo, compliance | Personal data (GDPR) |
+| **3 Schemas per Resource** | Security, flexibility | Simple internal APIs |
+| **Offset Pagination** | Simple, flexible | Real-time feeds → cursor |
+| **JSON for Simple Arrays** | No JOINs, flexible schema | Complex queries → join table |
+
+---
+
 **End of Lab 2**

@@ -10,7 +10,9 @@ from sqlalchemy.orm import Session
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database.db import SessionLocal
-from database.models import NGOOrganization, Campaign, Donor
+from database.models import NGOOrganization, Campaign, Donor, Donation
+from decimal import Decimal
+from datetime import datetime, timedelta
 
 
 def seed_ngos(db: Session):
@@ -200,13 +202,109 @@ def main():
         print("\n📦 Seeding Donors...")
         donors = seed_donors(db)
         
+        print("\n📦 Seeding Donations...")
+        donations = seed_donations(db, donors, campaigns)
+        
         print(f"\n✅ Seed complete!")
         print(f"   - {len(ngos)} NGOs")
         print(f"   - {len(campaigns)} Campaigns")
         print(f"   - {len(donors)} Donors")
+        print(f"   - {len(donations)} Donations")
         print("\nYou can now test the API with real data!\n")
     finally:
         db.close()
+
+
+def seed_donations(db: Session, donors, campaigns):
+    """Create sample donations"""
+    donations_data = [
+        # John donated via M-Pesa to water well campaign
+        {
+            "donor_id": donors[0].id,
+            "campaign_id": campaigns[0].id,
+            "amount": 500.00,
+            "currency": "USD",
+            "payment_method": "mpesa",
+            "status": "completed",
+            "payment_intent_id": "MPESA123NLJ7RT61SV",
+            "created_at": datetime.utcnow() - timedelta(days=10)
+        },
+        # Abeba donated via Stripe to school construction
+        {
+            "donor_id": donors[1].id,
+            "campaign_id": campaigns[2].id,
+            "amount": 1000.00,
+            "currency": "USD",
+            "payment_method": "stripe",
+            "status": "completed",
+            "payment_intent_id": "STRIPE456pi_1A2B3C4D5E",
+            "created_at": datetime.utcnow() - timedelta(days=8)
+        },
+        # Amani donated via M-Pesa to filtration systems
+        {
+            "donor_id": donors[2].id,
+            "campaign_id": campaigns[1].id,
+            "amount": 250.00,
+            "currency": "USD",
+            "payment_method": "mpesa",
+            "status": "completed",
+            "payment_intent_id": "MPESA789PLM3KT82WQ",
+            "created_at": datetime.utcnow() - timedelta(days=5)
+        },
+        # Marie donated via Stripe to teacher training
+        {
+            "donor_id": donors[3].id,
+            "campaign_id": campaigns[3].id,
+            "amount": 750.00,
+            "currency": "USD",
+            "payment_method": "stripe",
+            "status": "completed",
+            "payment_intent_id": "STRIPE890pi_9X8Y7Z6W5V",
+            "created_at": datetime.utcnow() - timedelta(days=3)
+        },
+        # Hans donated via Stripe to mobile clinic
+        {
+            "donor_id": donors[4].id,
+            "campaign_id": campaigns[4].id,
+            "amount": 2000.00,
+            "currency": "USD",
+            "payment_method": "stripe",
+            "status": "completed",
+            "payment_intent_id": "STRIPE234pi_5T4U3V2W1X",
+            "created_at": datetime.utcnow() - timedelta(days=2)
+        },
+        # John's second donation (pending)
+        {
+            "donor_id": donors[0].id,
+            "campaign_id": campaigns[1].id,
+            "amount": 300.00,
+            "currency": "USD",
+            "payment_method": "mpesa",
+            "status": "pending",
+            "payment_intent_id": "MPESA_PENDING_001",
+            "created_at": datetime.utcnow() - timedelta(hours=2)
+        },
+        # Marie's crypto donation (processing)
+        {
+            "donor_id": donors[3].id,
+            "campaign_id": campaigns[0].id,
+            "amount": 5000.00,
+            "currency": "USD",
+            "payment_method": "crypto",
+            "status": "processing",
+            "transaction_hash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+            "created_at": datetime.utcnow() - timedelta(hours=1)
+        }
+    ]
+    
+    donations = []
+    for data in donations_data:
+        donation = Donation(**data)
+        db.add(donation)
+        donations.append(donation)
+    
+    db.commit()
+    return donations
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 import logging
 
 # Import routers
-from voice.routers import campaigns, donors, ngos
+from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin
 
 # Load environment variables
 load_dotenv()
@@ -47,6 +47,10 @@ app.add_middleware(
 app.include_router(campaigns.router)
 app.include_router(donors.router)
 app.include_router(ngos.router)
+app.include_router(donations.router)
+app.include_router(payouts.router)
+app.include_router(webhooks.router)
+app.include_router(admin.router)
 
 
 # ============================================

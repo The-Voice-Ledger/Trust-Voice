@@ -1916,6 +1916,584 @@ You now have a production-ready project structure. All future labs will fill in 
 
 ---
 
+## 📋 Why This Design?
+
+Let's examine the key architectural decisions we made in Lab 1 and understand why they matter for building a production-ready NGO donation platform.
+
+### Decision 1: Virtual Environment vs System Python
+
+**What We Chose:** Virtual environment (`venv`)
+
+**Why?**
+- **Dependency Isolation:** Each project gets its own dependencies without conflicts
+- **Version Control:** Pin exact versions (FastAPI==0.104.1) for reproducible deployments
+- **Team Consistency:** Everyone runs the same versions regardless of their system Python
+- **Production Parity:** Development matches production environment exactly
+
+**Alternatives Considered:**
+- **System Python:** Simpler but causes dependency conflicts across projects
+- **Docker:** More isolated but adds complexity for initial development
+- **Poetry/Pipenv:** Better dependency management but requires learning new tools
+
+**Trade-offs:**
+- ✅ Clean isolation and reproducibility
+- ❌ Extra activation step (`source venv/bin/activate`)
+- ✅ Standard Python tooling, no new dependencies
+- ❌ Larger disk usage (separate copy per project)
+
+**When to Reconsider:** For containerized deployments (Docker), skip venv in favor of container isolation
+
+---
+
+### Decision 2: PostgreSQL vs NoSQL Databases
+
+**What We Chose:** PostgreSQL (relational database)
+
+**Why?**
+- **ACID Transactions:** Critical for financial data (donations must be atomic)
+- **Data Integrity:** Foreign keys prevent orphaned records (donors without campaigns)
+- **Complex Queries:** JOIN operations for campaign analytics and donor history
+- **JSON Support:** Modern PostgreSQL supports JSON fields (best of both worlds)
+- **Proven for Finance:** Banks and payment systems use relational databases
+
+**Alternatives Considered:**
+- **MongoDB (NoSQL):** Flexible schema but no built-in transactions or foreign keys
+- **MySQL:** Similar to PostgreSQL but weaker JSON support and less extensible
+- **SQLite:** Great for development but not production-grade for concurrent writes
+
+**Trade-offs:**
+- ✅ Data consistency guaranteed (no partial donations)
+- ❌ Schema changes require migrations (more upfront planning)
+- ✅ Rich querying capabilities (aggregations, JOINs)
+- ❌ Slightly more setup than SQLite
+
+**Real-World Impact:** A donor makes a $1000 donation. If the payment succeeds but the database write fails, PostgreSQL transactions ensure we can rollback the payment or retry atomically—no money lost, no orphaned records.
+
+---
+
+### Decision 3: SQLAlchemy ORM vs Raw SQL
+
+**What We Chose:** SQLAlchemy ORM with declarative models
+
+**Why?**
+- **Type Safety:** IDEs autocomplete fields, catch typos before runtime
+- **Migration Management:** Alembic tracks schema changes automatically
+- **Security:** ORM prevents SQL injection by default (parameterized queries)
+- **Readability:** `campaign.name` is clearer than `row[3]`
+- **Relationships:** Define `campaign.donations` once, query anywhere
+
+**Alternatives Considered:**
+- **Raw SQL:** Faster for complex queries but error-prone and no type safety
+- **Django ORM:** Excellent but tightly coupled to Django framework
+- **Tortoise ORM:** Async-first but smaller community and fewer resources
+
+**Trade-offs:**
+- ✅ Safer code (type checking, automatic escaping)
+- ❌ Learning curve for advanced queries
+- ✅ Easier refactoring (rename field in one place)
+- ❌ Slight performance overhead (usually negligible)
+
+**Code Comparison:**
+
+```python
+# Raw SQL (error-prone)
+cursor.execute("SELECT * FROM campaigns WHERE id = %s", (campaign_id,))
+row = cursor.fetchone()
+name = row[2]  # Which column is this? Easy to break.
+
+# SQLAlchemy ORM (safe)
+campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+name = campaign.name  # IDE autocompletes, type-checked
+```
+
+---
+
+### Decision 4: Environment Variables (.env) vs Config Files
+
+**What We Chose:** `.env` file with `python-dotenv` for secrets
+
+**Why?**
+- **Security:** Never commit secrets to Git (`.env` in `.gitignore`)
+- **Environment-Specific:** Different values for dev/staging/production
+- **12-Factor App:** Industry standard for cloud-native applications
+- **Easy Rotation:** Change password without modifying code
+
+**Alternatives Considered:**
+- **Hardcoded Values:** Convenient but MASSIVE security risk
+- **JSON Config Files:** Works but easy to accidentally commit secrets
+- **Vault/Secrets Manager:** Better for production but overkill for development
+
+**Trade-offs:**
+- ✅ Secure by default (not in version control)
+- ❌ Manual setup required (copy `.env.example` to `.env`)
+- ✅ Standard across languages (Node.js, Python, Ruby all use .env)
+- ❌ Local-only (production needs secrets management service)
+
+**Security Impact:**
+```
+# BAD - Committed to Git, visible in history forever
+DATABASE_URL = "postgresql://user:ACTUAL_PASSWORD@localhost/db"
+
+# GOOD - In .env (ignored by Git), rotatable
+DATABASE_URL = os.getenv("DATABASE_URL")
+```
+
+---
+
+### Decision 5: Domain-Based Directory Structure vs Flat
+
+**What We Chose:** Domain-based structure (`/models`, `/routers`, `/services`)
+
+**Why?**
+- **Scalability:** Add new domains (payments, AI) without refactoring
+- **Team Collaboration:** Multiple devs work on different routers without conflicts
+- **Clear Boundaries:** Models define data, routers handle HTTP, services contain logic
+- **Testing:** Mock services without touching routers, test models independently
+
+**Alternatives Considered:**
+- **Flat Structure:** All files in one folder (only works for tiny projects)
+- **Feature-Based:** Group by feature (`/campaigns`, `/donors`) instead of type
+- **Monolith:** One giant `app.py` file (maintainability nightmare)
+
+**Trade-offs:**
+- ✅ Easy to locate files (`models/campaign.py` for Campaign model)
+- ❌ More folders to navigate
+- ✅ Clean separation of concerns (models don't import routers)
+- ❌ Requires discipline (don't put business logic in routers)
+
+**Structure Comparison:**
+
+```
+# Our Choice (Scalable)
+ngo_platform/
+  models/          # Data definitions only
+  routers/         # HTTP endpoints only
+  services/        # Business logic only
+  
+# Alternative (Feature-based)
+ngo_platform/
+  campaigns/       # All campaign code
+    model.py
+    router.py
+    service.py
+```
+
+Both work! We chose domain-based because it's more common in FastAPI projects and scales better when features share code (e.g., both campaigns and donations need payment processing).
+
+---
+
+## 🚀 Production Considerations
+
+Lab 1 set up a development environment. Here's what changes when you deploy to production:
+
+### Security Checklist
+
+**Environment Variables:**
+```bash
+# ❌ Development (.env file)
+DATABASE_URL=postgresql://user:dev_password@localhost/ngo_db
+SECRET_KEY=dev-secret-key-not-secure
+
+# ✅ Production (Secrets manager)
+DATABASE_URL=postgresql://user:$(aws secretsmanager get-secret-value ...)
+SECRET_KEY=$(openssl rand -hex 32)
+```
+
+**Database Credentials:**
+- Use AWS Secrets Manager, Azure Key Vault, or Google Secret Manager
+- Rotate passwords every 90 days
+- Limit database user permissions (no DROP TABLE in production)
+
+**Dependencies:**
+```bash
+# Scan for vulnerabilities before deployment
+pip install safety
+safety check --file requirements.txt
+
+# Keep dependencies updated
+pip list --outdated
+```
+
+**HTTPS Only:**
+```python
+# Force HTTPS in production
+if os.getenv("ENVIRONMENT") == "production":
+    app.add_middleware(
+        HTTPSRedirectMiddleware
+    )
+```
+
+---
+
+### Scaling Considerations
+
+**Database Connection Pooling:**
+```python
+# Development (SQLite, no pooling needed)
+engine = create_engine("sqlite:///./test.db")
+
+# Production (PostgreSQL with pooling)
+engine = create_engine(
+    os.getenv("DATABASE_URL"),
+    pool_size=20,           # Max concurrent connections
+    max_overflow=10,        # Extra connections when busy
+    pool_timeout=30,        # Wait 30s for available connection
+    pool_recycle=3600,      # Reconnect every hour (avoids stale connections)
+)
+```
+
+**Environment-Specific Settings:**
+```python
+# config.py
+class Settings:
+    def __init__(self):
+        self.env = os.getenv("ENVIRONMENT", "development")
+        self.debug = self.env == "development"
+        self.database_url = os.getenv("DATABASE_URL")
+        
+        if self.env == "production":
+            self.pool_size = 50
+            self.log_level = "ERROR"
+        else:
+            self.pool_size = 5
+            self.log_level = "DEBUG"
+
+settings = Settings()
+```
+
+**Performance Monitoring:**
+```python
+# Add request timing
+import time
+from fastapi import Request
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
+```
+
+---
+
+### Deployment Checklist
+
+Before deploying to production, verify:
+
+**Infrastructure:**
+- [ ] PostgreSQL database provisioned (AWS RDS, Heroku Postgres, DigitalOcean Managed DB)
+- [ ] Database backups configured (daily, retained for 30 days)
+- [ ] SSL certificate installed (Let's Encrypt or cloud provider)
+- [ ] Domain name configured with DNS (e.g., api.trustvoice.org)
+
+**Application:**
+- [ ] Environment variables set in production (not .env file)
+- [ ] `DEBUG=False` in production
+- [ ] CORS configured (only allow your frontend domain)
+- [ ] Health check endpoint added (`GET /health`)
+- [ ] Logging configured (send to CloudWatch, Datadog, or Sentry)
+
+**Database:**
+- [ ] Migrations applied (`alembic upgrade head`)
+- [ ] Indexes created for frequently queried columns
+- [ ] Database user has minimal permissions (no DROP, GRANT)
+
+**Testing:**
+- [ ] All tests passing (`pytest`)
+- [ ] Load testing completed (can handle expected traffic)
+- [ ] Security scan passed (`safety check`)
+
+**Monitoring:**
+- [ ] Error tracking enabled (Sentry, Rollbar)
+- [ ] Uptime monitoring (UptimeRobot, Pingdom)
+- [ ] Performance monitoring (New Relic, Datadog)
+
+---
+
+### Cost Optimization
+
+**Development (Lab 1):** $0
+- Local PostgreSQL: Free
+- No hosting: Free
+
+**MVP Production:** $15-50/month
+- **Database:** Heroku Postgres Hobby ($9/month) or DigitalOcean Managed DB ($15/month)
+- **Hosting:** Heroku Dyno ($7/month) or Railway ($5/month)
+- **Domain:** Namecheap ($10/year)
+- **SSL:** Let's Encrypt (Free)
+
+**Scaling (1000+ users):** $100-300/month
+- **Database:** AWS RDS db.t3.medium ($50/month)
+- **Hosting:** AWS Fargate or DigitalOcean App Platform ($50-100/month)
+- **CDN:** Cloudflare (Free) or AWS CloudFront ($20/month)
+- **Monitoring:** Sentry ($26/month for small team)
+- **Backups:** AWS S3 ($5/month)
+
+**Free Tier Options:**
+- **Render:** Free PostgreSQL (expires after 90 days, good for demos)
+- **Fly.io:** Free tier includes PostgreSQL and hosting
+- **Supabase:** Free PostgreSQL with 500MB storage
+- **Neon:** Serverless PostgreSQL free tier (1GB)
+
+---
+
+## 🐛 Common Gotchas
+
+Here are the issues you'll encounter in Lab 1 and how to fix them:
+
+### Gotcha 1: Virtual Environment Not Activated
+
+**Symptom:**
+```bash
+$ pip list
+# Shows system packages instead of project packages
+$ python main.py
+ModuleNotFoundError: No module named 'fastapi'
+```
+
+**Why It Happens:** You installed packages in the venv but are running Python from system Python.
+
+**Solution:**
+```bash
+# Activate venv first
+source venv/bin/activate  # macOS/Linux
+venv\Scripts\activate     # Windows
+
+# Verify activation (you'll see (venv) in prompt)
+(venv) $ which python
+/path/to/project/venv/bin/python  # ✅ Correct
+
+# Install packages AFTER activation
+(venv) $ pip install -r requirements.txt
+```
+
+**Prevention:** Add to `.bashrc` or `.zshrc`:
+```bash
+# Auto-activate venv when entering project directory
+cd() {
+    builtin cd "$@"
+    if [ -f "venv/bin/activate" ]; then
+        source venv/bin/activate
+    fi
+}
+```
+
+---
+
+### Gotcha 2: Database Connection Fails
+
+**Symptom:**
+```
+sqlalchemy.exc.OperationalError: could not connect to server: Connection refused
+```
+
+**Why It Happens:** PostgreSQL not running, wrong credentials, or wrong database name.
+
+**Debug Steps:**
+```bash
+# 1. Check if PostgreSQL is running
+pg_isready
+# Should output: /tmp:5432 - accepting connections
+
+# 2. Verify credentials
+psql -U ngo_user -d ngo_platform
+# Enter password from .env file
+
+# 3. Check DATABASE_URL format
+# Wrong: postgresql://localhost/ngo_platform (missing user)
+# Right: postgresql://ngo_user:password@localhost/ngo_platform
+```
+
+**Solution:**
+```bash
+# macOS
+brew services start postgresql@14
+
+# Ubuntu
+sudo systemctl start postgresql
+
+# Verify database exists
+psql -U postgres
+postgres=# \l  # List databases
+postgres=# CREATE DATABASE ngo_platform;
+postgres=# CREATE USER ngo_user WITH PASSWORD 'secure_password';
+postgres=# GRANT ALL PRIVILEGES ON DATABASE ngo_platform TO ngo_user;
+```
+
+---
+
+### Gotcha 3: Import Errors (Missing `__init__.py`)
+
+**Symptom:**
+```python
+from ngo_platform.models import Campaign
+ModuleNotFoundError: No module named 'ngo_platform.models'
+```
+
+**Why It Happens:** Python 3.3+ doesn't require `__init__.py` for namespace packages, but SQLAlchemy and some tools still expect them.
+
+**Solution:**
+```bash
+# Create __init__.py in every directory
+touch ngo_platform/__init__.py
+touch ngo_platform/models/__init__.py
+touch ngo_platform/routers/__init__.py
+touch ngo_platform/services/__init__.py
+touch tests/__init__.py
+```
+
+**Even Better:** Add content to `__init__.py` to expose modules:
+```python
+# ngo_platform/models/__init__.py
+from .campaign import Campaign
+from .donor import Donor
+
+__all__ = ["Campaign", "Donor"]
+```
+
+Now you can import:
+```python
+from ngo_platform.models import Campaign  # ✅ Works
+```
+
+---
+
+### Gotcha 4: Port Already in Use
+
+**Symptom:**
+```
+ERROR:    [Errno 48] Address already in use
+```
+
+**Why It Happens:** Previous `uvicorn` process still running on port 8000.
+
+**Solution:**
+```bash
+# Find process using port 8000
+lsof -i :8000
+# Output: python  12345  user  ... (LISTEN)
+
+# Kill the process
+kill -9 12345
+
+# Or kill all Python processes (⚠️ use carefully)
+pkill -9 python
+
+# Alternative: Use a different port
+uvicorn main:app --port 8001
+```
+
+**Prevention:** Use a process manager:
+```bash
+# Install
+pip install watchfiles
+
+# Run with auto-reload (stops old process automatically)
+uvicorn main:app --reload
+```
+
+---
+
+### Gotcha 5: SQLAlchemy Model Changes Not Reflected
+
+**Symptom:**
+```python
+# You added a field to Campaign model
+class Campaign(Base):
+    __tablename__ = "campaigns"
+    new_field = Column(String)  # Added this
+
+# But querying doesn't show it
+campaign = db.query(Campaign).first()
+print(campaign.new_field)  # AttributeError or always None
+```
+
+**Why It Happens:** Database schema hasn't been updated (no migration run).
+
+**Solution:**
+```bash
+# Create migration
+alembic revision --autogenerate -m "Add new_field to Campaign"
+
+# Apply migration
+alembic upgrade head
+
+# Verify in database
+psql -U ngo_user -d ngo_platform
+ngo_platform=# \d campaigns  # Describe table
+# Should show new_field column
+```
+
+**Common Mistake:** Forgetting to import the model in Alembic's `env.py`:
+```python
+# alembic/env.py
+from ngo_platform.models import Base  # ✅ Must import Base
+```
+
+---
+
+### Gotcha 6: Environment Variables Not Loading
+
+**Symptom:**
+```python
+DATABASE_URL = os.getenv("DATABASE_URL")
+print(DATABASE_URL)  # None
+```
+
+**Why It Happens:**
+1. `.env` file not in project root
+2. Forgot to call `load_dotenv()`
+3. Running from wrong directory
+
+**Solution:**
+```python
+# main.py (TOP of file, before any imports)
+from dotenv import load_dotenv
+import os
+
+load_dotenv()  # ✅ Call BEFORE accessing os.getenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")  # Now works
+```
+
+**Debugging:**
+```python
+# Check where Python is looking for .env
+import os
+print("Current directory:", os.getcwd())
+print(".env exists?", os.path.exists(".env"))
+
+# Force load from specific path
+from dotenv import load_dotenv
+load_dotenv("/absolute/path/to/.env")
+```
+
+**Best Practice:**
+```python
+# Use with default values
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./fallback.db")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable not set!")
+```
+
+---
+
+## 📊 Summary: Lab 1 Decisions Impact
+
+| Decision | Development Impact | Production Impact | Cost Impact |
+|----------|-------------------|-------------------|-------------|
+| **Virtual Environment** | Clean dependency management | Reproducible deployments | $0 |
+| **PostgreSQL** | More setup than SQLite | ACID guarantees for money | $10-50/month |
+| **SQLAlchemy ORM** | Easier refactoring | Type-safe queries, migrations | $0 |
+| **Environment Variables** | Manual .env setup | Secure secrets management | $0-20/month (vault) |
+| **Domain Structure** | More folders to navigate | Clean separation for teams | $0 |
+
+---
+
 **🎉 Congratulations! Lab 1 Complete!**
+
+You now understand not just *how* to build the foundation, but *why* we made each architectural decision. These choices will compound as we add payment processing, AI recommendations, and blockchain verification.
 
 **Ready for Lab 2?** Let's build the campaign and donor management APIs!

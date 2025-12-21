@@ -27,6 +27,11 @@ pip-delete-this-directory.txt
 .env.*.local
 .env.production
 
+# Service Management
+.service_pids
+logs/
+*.log
+
 # Database
 *.db
 *.sqlite3
@@ -83,8 +88,10 @@ temp/
 uploads/
 media/
 
-# Documentation (generated)
+# Documentation (generated/auto-generated)
 docs/_build/
+documentation/labs/
+documentation/*.md
 
 # Blockchain
 .secret
