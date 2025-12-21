@@ -552,38 +552,227 @@ ADDIS_AI_API_KEY=your_key (if using)
 
 ---
 
-## 🎯 TODO: Lab 5+ (Future Work)
+## 🎯 Remaining Labs Overview (Labs 5-12)
 
 ### Lab 5: Blockchain Receipt System
-- [ ] Ethereum smart contract for donation receipts
-- [ ] IPFS for receipt document storage
-- [ ] Web3.py integration
-- [ ] NFT-based donation certificates
-- [ ] Blockchain verification endpoint
+**Purpose:** Provide immutable, verifiable donation receipts on Ethereum blockchain
 
-### Lab 6: Impact Verification
-- [ ] Field officer mobile app (React Native)
-- [ ] GPS-tagged photo uploads
-- [ ] Impact report generation
-- [ ] Donor notification system
-- [ ] Blockchain anchoring of impact reports
+**What We'll Build:**
+- Smart contract for storing donation receipt hashes on Ethereum
+- IPFS integration for decentralized document storage
+- Web3.py integration for blockchain interactions
+- NFT-based donation certificates (optional: ERC-721 tokens)
+- Blockchain verification endpoint (donors can verify receipt authenticity)
+- Gas optimization strategies for cost-effective operations
 
-### Lab 7: Analytics Dashboard
-- [ ] React/TypeScript frontend
-- [ ] Campaign performance metrics
-- [ ] Donor engagement analytics
-- [ ] Geographic donation heatmaps
-- [ ] Real-time donation tracking
+**Why Important:**
+- Donors get tamper-proof donation records
+- NGOs can prove fund receipt without intermediaries
+- Tax authorities can verify donation claims
+- Builds trust through transparency
 
-### Lab 8: Production Deployment
-- [ ] Docker containerization
-- [ ] Kubernetes orchestration
-- [ ] CI/CD pipeline (GitHub Actions)
-- [ ] Production database migration
-- [ ] Load testing and optimization
-- [ ] Security audit
-- [ ] GDPR compliance
-- [ ] PCI-DSS for payment data
+**Technologies:** Web3.py, Ethereum (Sepolia testnet → Mainnet), IPFS, Solidity
+
+**Estimated Time:** 6-8 hours
+
+*(Detailed TODO will be added when starting Lab 5)*
+
+---
+
+### Lab 6: Impact Verification System
+**Purpose:** Enable field officers to document and verify project completion with proof
+
+**What We'll Build:**
+- Field officer mobile app (React Native or Flutter)
+- GPS-tagged photo/video uploads proving project completion
+- Impact report generation (PDF with before/after photos)
+- Automated donor notification when project completes
+- Blockchain anchoring of impact reports for immutability
+- Admin dashboard for reviewing impact submissions
+
+**Why Important:**
+- Donors see tangible proof their money was used correctly
+- NGOs build credibility through transparent reporting
+- Reduces fraud and misuse of funds
+- Creates accountability loop from donation → completion
+
+**Technologies:** React Native/Flutter, AWS S3/Cloudinary, GPS APIs, PDF generation, Push notifications
+
+**Estimated Time:** 10-12 hours
+
+*(Detailed TODO will be added when starting Lab 6)*
+
+---
+
+### Lab 7: Analytics & Admin Dashboard
+**Purpose:** Build comprehensive frontend dashboard for NGOs and platform admins
+
+**What We'll Build:**
+- React/TypeScript frontend with modern UI (Tailwind CSS, shadcn/ui)
+- Campaign performance metrics (donations over time, completion rate)
+- Donor engagement analytics (repeat donors, average donation, geographic distribution)
+- Real-time donation tracking with live updates (WebSocket)
+- Geographic heatmaps showing donation origins
+- Payout approval interface (integrated with Lab 3 admin system)
+- Export functionality (CSV, PDF reports)
+- Mobile-responsive design
+
+**Why Important:**
+- NGOs need visibility into campaign performance
+- Admins need tools to approve payouts efficiently
+- Data-driven decision making for future campaigns
+- Professional interface increases platform credibility
+
+**Technologies:** React 18, TypeScript, Vite, TanStack Query, Chart.js/Recharts, Mapbox/Leaflet
+
+**Estimated Time:** 12-15 hours
+
+*(Detailed TODO will be added when starting Lab 7)*
+
+---
+
+### Lab 8: API Security & Rate Limiting
+**Purpose:** Secure APIs and prevent abuse with rate limiting and advanced security measures
+
+**What We'll Build:**
+- API rate limiting (per user, per endpoint)
+- Request throttling for high-traffic endpoints
+- API key management for third-party integrations
+- CORS configuration for frontend domains
+- Input validation and sanitization (prevent SQL injection, XSS)
+- Security headers (HSTS, CSP, X-Frame-Options)
+- DDoS protection strategies
+- Audit logging for sensitive operations
+
+**Why Important:**
+- Prevent API abuse and service disruption
+- Protect against common web vulnerabilities
+- Ensure platform availability during traffic spikes
+- Compliance with security best practices
+
+**Technologies:** slowapi (rate limiting), FastAPI security, Redis (rate limit storage)
+
+**Estimated Time:** 6-8 hours
+
+*(Detailed TODO will be added when starting Lab 8)*
+
+---
+
+### Lab 9: Donor Mobile App (React Native - Optional)
+**Purpose:** Native mobile app for donors to browse campaigns and donate
+
+**What We'll Build:**
+- React Native cross-platform mobile app (iOS + Android)
+- Campaign browsing with search and filters
+- In-app donation flow (M-Pesa, Stripe)
+- Push notifications for campaign updates
+- Voice interaction through mobile app
+- Donation history and receipt viewing
+- Offline mode for campaign browsing
+- Biometric authentication for secure donations
+
+**Why Important:**
+- Mobile-first users prefer native app experience
+- Push notifications increase engagement
+- Better performance than web on mobile
+- Access to native features (camera, microphone, biometrics)
+
+**Technologies:** React Native, Expo, React Navigation, Async Storage
+
+**Estimated Time:** 16-20 hours
+
+**Note:** This can be a separate repository/project
+
+*(Detailed TODO will be added when starting Lab 9)*
+
+---
+
+### Lab 10: Authentication & Authorization (Enhanced)
+**Purpose:** Comprehensive authentication system with role-based permissions
+
+**Note:** We already implemented basic JWT auth in Lab 3. This lab will enhance it.
+
+**What We'll Build:**
+- Multi-factor authentication (2FA with TOTP)
+- OAuth2 integration (Google, Facebook login for donors)
+- Password reset flow with email verification
+- Session management and token refresh
+- Enhanced role-based permissions (fine-grained access control)
+- API key management for external integrations
+- Audit logging for auth events
+- Account lockout after failed attempts
+
+**Why Important:**
+- Enhanced security for admin accounts
+- Better user experience for donors (social login)
+- Prevent brute force attacks
+- Compliance with security standards
+
+**Technologies:** PyOTP (2FA), authlib (OAuth2), email services (SendGrid/AWS SES)
+
+**Estimated Time:** 6-8 hours
+
+*(Detailed TODO will be added when starting Lab 10)*
+
+---
+
+### Lab 11: Production Deployment
+**Purpose:** Deploy TrustVoice to production with enterprise-grade infrastructure
+
+**What We'll Build:**
+- Docker containerization for all services (FastAPI, Redis, Frontend)
+- Cloud deployment (AWS/GCP/DigitalOcean/Railway)
+- GitHub Actions CI/CD pipeline (automated testing + deployment)
+- Environment-specific configurations (dev, staging, production)
+- Database migration strategy (Alembic in production, zero-downtime)
+- SSL/TLS certificates (Let's Encrypt)
+- Domain setup and DNS configuration
+- Load balancing (Nginx reverse proxy)
+- Automated backups (database + file storage)
+- Health checks and uptime monitoring
+- Log aggregation (CloudWatch, Datadog, or ELK stack)
+
+**Why Important:**
+- Production environment must be reliable (99.9% uptime)
+- Automated deployments reduce human error
+- Proper monitoring catches issues before users notice
+- Backups protect against data loss
+
+**Technologies:** Docker, Docker Compose, GitHub Actions, AWS/GCP/DO, Nginx, Certbot
+
+**Estimated Time:** 8-12 hours
+
+*(Detailed TODO will be added when starting Lab 11)*
+
+---
+
+### Lab 12: Performance Optimization & Scaling
+**Purpose:** Optimize performance and ensure system scales to thousands of concurrent users
+
+**What We'll Build:**
+- Database query optimization (indexes, query analysis, N+1 prevention)
+- Redis caching layer (campaign data, donor profiles, exchange rates)
+- Database connection pooling tuning (pgbouncer or SQLAlchemy settings)
+- Async processing with Celery (email notifications, blockchain writes)
+- CDN setup for static assets (CloudFront, Cloudflare)
+- Image optimization and lazy loading
+- API response compression (gzip)
+- Load testing with realistic scenarios (Locust, k6, or Artillery)
+- Performance benchmarking and SLO definition
+- Horizontal scaling configuration (multiple FastAPI workers)
+- Database read replicas for heavy read operations
+
+**Why Important:**
+- System must handle growth without degradation
+- Slow APIs lead to poor user experience
+- Efficient resource usage reduces costs
+- Performance monitoring catches regressions
+
+**Technologies:** Redis, Celery, pgbouncer, Locust/k6, AWS CloudFront
+
+**Estimated Time:** 6-8 hours
+
+*(Detailed TODO will be added when starting Lab 12)*
 
 ---
 
