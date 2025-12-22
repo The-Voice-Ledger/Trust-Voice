@@ -1,8 +1,17 @@
 # TrustVoice - Implementation Plan & Progress Tracker
 
-**Project:** Voice-based donation platform for African NGOs  
-**Last Updated:** 21 December 2025  
+**Project:** Voice-first platform for African changemakers (NGO + Crowdfunding Hybrid)  
+**Last Updated:** 22 December 2025  
 **Current Phase:** Lab 3 Complete, Lab 4 Planning
+
+**Strategic Vision:**
+> "TrustVoice: Voice-first platform for African changemakers"
+> "Support NGOs, back creative projects, fund personal causes"
+> "From $1 donations to $50k project launches"
+
+**Hybrid Model Approach:**
+- **Phase 1 (Labs 1-12):** Build NGO donation platform foundation - Validate product-market fit, establish payment infrastructure, deploy voice-first interface
+- **Phase 2 (Labs 13-15):** Add crowdfunding layer - Leverage proven foundation to expand into rewards-based crowdfunding for creators and innovators
 
 ---
 
@@ -14,6 +23,7 @@
 | Core Features | 3-5 | 🚧 In Progress | `lab-03-payments` | 33% |
 | Advanced Features | 6-9 | ⏳ Planned | TBD | 0% |
 | Production Ready | 10-12 | ⏳ Planned | TBD | 0% |
+| Crowdfunding Expansion | 13-15 | 📋 Future | TBD | 0% |
 
 ---
 
@@ -714,6 +724,15 @@ Each lab is considered complete when:
 - CI/CD pipelines
 - Performance optimization
 - Production monitoring
+
+### Phase 5 (Labs 13-15): Crowdfunding Expansion
+- Platform business models (marketplace fees)
+- Deadline-based funding mechanics
+- Stripe Connect for multi-party payments
+- Reward tier and inventory systems
+- Creator tools and fulfillment
+- Social discovery algorithms
+- Escrow and automatic refunds
 
 ---
 
