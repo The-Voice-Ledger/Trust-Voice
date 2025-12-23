@@ -112,3 +112,11 @@ watchfiles==1.1.1
 wcwidth==0.2.14
 websockets==15.0.1
 yarl==1.22.0
+langchain-openai==0.0.5
+openai==1.10.0
+pydub==0.25.1
+python-telegram-bot==20.7
+soundfile==0.13.1
+torch==2.8.0
+torchaudio==2.8.0
+transformers==4.57.3

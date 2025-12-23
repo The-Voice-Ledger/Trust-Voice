@@ -50,6 +50,7 @@ class User(Base):
     full_name = Column(String(255))
     role = Column(SQLEnum(UserRole), default=UserRole.VIEWER, nullable=False)
     ngo_id = Column(Integer, ForeignKey('ngo_organizations.id'))  # For ngo_admin
+    preferred_language = Column(String(2), default="en")  # Language preference ('en' or 'am')
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     last_login = Column(DateTime)
