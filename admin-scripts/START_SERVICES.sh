@@ -199,8 +199,78 @@ else
     echo "   ℹ️  You can start manually: ngrok http 8001"
 fi
 
+# Start Telegram Bot (enabled by default)
+TELEGRAM_BOT_PID=""
+echo ""
+echo "7️⃣  Starting Celery worker for voice processing..."
+# Kill any existing Celery worker
+if [ -f .celery_worker_pid ]; then
+    OLD_CELERY_PID=$(cat .celery_worker_pid)
+    kill $OLD_CELERY_PID 2>/dev/null || true
+fi
+
+# Start Celery from project root with proper PYTHONPATH
+cd "$PROJECT_ROOT"
+nohup python -m celery -A voice.tasks.celery_app worker \
+    --loglevel=info \
+    --concurrency=2 \
+    --queues=voice,notifications \
+    > logs/celery_worker.log 2>&1 &
+CELERY_PID=$!
+echo $CELERY_PID > .celery_worker_pid
+sleep 3
+
+if ps -p $CELERY_PID > /dev/null; then
+    echo "   ✅ Celery worker started (PID: $CELERY_PID)"
+    echo "   📋 Logs: logs/celery_worker.log"
+else
+    echo "   ❌ Failed to start Celery worker"
+    echo "   📋 Check logs: tail -f logs/celery_worker.log"
+    CELERY_PID=""
+fi
+
+echo ""
+echo "8️⃣  Starting Telegram Bot..."
+if [ "${START_TELEGRAM_BOT:-true}" = "true" ]; then
+    if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
+        echo "   ⚠️  TELEGRAM_BOT_TOKEN not set in .env, skipping bot"
+    elif [ -z "$OPENAI_API_KEY" ]; then
+        echo "   ⚠️  OPENAI_API_KEY not set in .env, skipping bot"
+    else
+        # Kill any existing bot process
+        if [ -f .telegram_bot_pid ]; then
+            OLD_BOT_PID=$(cat .telegram_bot_pid)
+            kill $OLD_BOT_PID 2>/dev/null || true
+        fi
+        
+        nohup python voice/telegram/bot.py > logs/telegram_bot.log 2>&1 &
+        TELEGRAM_BOT_PID=$!
+        echo $TELEGRAM_BOT_PID > .telegram_bot_pid
+        sleep 2
+        
+        if ps -p $TELEGRAM_BOT_PID > /dev/null; then
+            echo "   ✅ Telegram bot started (PID: $TELEGRAM_BOT_PID)"
+            echo "   📋 Logs: logs/telegram_bot.log"
+        else
+            echo "   ❌ Failed to start Telegram bot"
+            echo "   📋 Check logs: tail -f logs/telegram_bot.log"
+            TELEGRAM_BOT_PID=""
+        fi
+    fi
+else
+    echo "   ℹ️  Telegram bot disabled (set START_TELEGRAM_BOT=true in .env to enable)"
+fi
+
 # Save PIDs to file for shutdown
-echo "$API_PID $NGROK_PID" > .service_pids
+if [ -n "$TELEGRAM_BOT_PID" ] && [ -n "$CELERY_PID" ]; then
+    echo "$API_PID $NGROK_PID $TELEGRAM_BOT_PID $CELERY_PID" > .service_pids
+elif [ -n "$TELEGRAM_BOT_PID" ]; then
+    echo "$API_PID $NGROK_PID $TELEGRAM_BOT_PID" > .service_pids
+elif [ -n "$CELERY_PID" ]; then
+    echo "$API_PID $NGROK_PID $CELERY_PID" > .service_pids
+else
+    echo "$API_PID $NGROK_PID" > .service_pids
+fi
 
 echo ""
 echo "===================================="
@@ -218,10 +288,22 @@ echo "   • FastAPI:       PID $API_PID (http://localhost:8001)"
 if [ "$NGROK_URL" != "ERROR" ] && [ -n "$NGROK_URL" ]; then
     echo "   • ngrok:         PID $NGROK_PID ($NGROK_URL)"
 fi
+if [ -n "$TELEGRAM_BOT_PID" ]; then
+    echo "   • Telegram Bot:  PID $TELEGRAM_BOT_PID"
+fi
+if [ -n "$CELERY_PID" ]; then
+    echo "   • Celery Worker: PID $CELERY_PID"
+fi
 echo ""
 echo "📋 Logs:"
 echo "   • API:     tail -f logs/trustvoice_api.log"
 echo "   • ngrok:   tail -f logs/ngrok.log"
+if [ -n "$TELEGRAM_BOT_PID" ]; then
+    echo "   • Bot:     tail -f logs/telegram_bot.log"
+fi
+if [ -n "$CELERY_PID" ]; then
+    echo "   • Celery:  tail -f logs/celery_worker.log"
+fi
 echo ""
 echo "🔗 Quick Links:"
 echo "   • API Docs:      http://localhost:8001/docs"

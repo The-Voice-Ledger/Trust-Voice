@@ -1,0 +1,1048 @@
+"""
+TrustVoice Telegram Bot
+Voice-first donation platform bot
+
+Features:
+- Voice message processing (primary)
+- Text message fallback
+- Multi-language support (English, Amharic)
+- Conversation tracking
+- User registration with language selection
+"""
+
+import os
+import logging
+from typing import Optional
+from pathlib import Path
+
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    MessageHandler,
+    ConversationHandler,
+    CallbackQueryHandler,
+    filters,
+    ContextTypes
+)
+
+# Import our voice pipeline and Celery tasks
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from voice.pipeline import format_response_for_user
+from voice.nlu.context import ConversationContext
+from voice.tasks.voice_tasks import process_voice_message_task
+from database.db import SessionLocal
+from database.models import User
+from voice.telegram.register_handler import (
+    register_command,
+    handle_role_selection,
+    handle_language_selection,
+    handle_full_name,
+    handle_org_name,
+    handle_location,
+    handle_phone,
+    handle_reason,
+    handle_verification_exp,
+    handle_coverage_regions,
+    handle_gps_phone,
+    handle_pin_entry,
+    handle_pin_confirm,
+    cancel_registration,
+    SELECTING_ROLE,
+    SELECTING_LANGUAGE,
+    ENTERING_FULL_NAME,
+    ENTERING_ORG_NAME,
+    ENTERING_LOCATION,
+    ENTERING_PHONE,
+    ENTERING_REASON,
+    ENTERING_VERIFICATION_EXP,
+    ENTERING_COVERAGE_REGIONS,
+    ENTERING_GPS_PHONE,
+    ENTERING_PIN,
+    CONFIRMING_PIN
+)
+from voice.telegram.admin_commands import (
+    admin_requests_command,
+    admin_approve_command,
+    admin_reject_command
+)
+from voice.telegram.pin_commands import (
+    get_set_pin_handler,
+    get_change_pin_handler
+)
+from voice.telegram.phone_verification import (
+    verify_phone_command,
+    handle_contact_share,
+    unverify_phone_command
+)
+
+# Configure logging
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+# Environment variables
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+AUDIO_TEMP_DIR = Path(__file__).parent.parent.parent / "uploads" / "audio"
+AUDIO_TEMP_DIR.mkdir(parents=True, exist_ok=True)
+
+# Conversation states
+SELECTING_LANGUAGE = 1
+
+# In-memory user store (TODO: Replace with database)
+users_db = {}
+
+
+def get_user_language(telegram_user_id: str) -> str:
+    """Get user's preferred language from database"""
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(
+            User.telegram_user_id == telegram_user_id
+        ).first()
+        
+        if user and user.preferred_language:
+            return user.preferred_language
+        
+        # Fallback to in-memory cache or default
+        cached = users_db.get(telegram_user_id, {})
+        return cached.get("language", "en")
+    finally:
+        db.close()
+
+
+def set_user_language(telegram_user_id: str, language: str):
+    """Set user's preferred language in database and cache"""
+    # Update in-memory cache
+    if telegram_user_id not in users_db:
+        users_db[telegram_user_id] = {}
+    users_db[telegram_user_id]["language"] = language
+    
+    # Update database if user exists
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(
+            User.telegram_user_id == telegram_user_id
+        ).first()
+        
+        if user:
+            user.preferred_language = language
+            db.commit()
+            logger.info(f"User {telegram_user_id} language updated in DB: {language}")
+        else:
+            logger.info(f"User {telegram_user_id} language set in cache: {language}")
+    finally:
+        db.close()
+
+
+def is_user_registered(telegram_user_id: str) -> bool:
+    """Check if user has completed registration"""
+    return telegram_user_id in users_db and "language" in users_db[telegram_user_id]
+
+
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /start command - Check registration and show main menu"""
+    user = update.effective_user
+    telegram_user_id = str(user.id)
+    
+    logger.info(f"User {user.first_name} ({telegram_user_id}) started bot")
+    
+    # Check database for existing user
+    db = SessionLocal()
+    try:
+        existing_user = db.query(User).filter(
+            User.telegram_user_id == telegram_user_id
+        ).first()
+        
+        if existing_user:
+            # Load user's language preference into memory
+            if existing_user.preferred_language:
+                set_user_language(telegram_user_id, existing_user.preferred_language)
+            
+            # Registered user - Show main menu
+            if existing_user.is_approved:
+                # Build role-specific menu
+                role_info = ""
+                commands = "📋 Available commands:\n"
+                
+                if existing_user.role == "CAMPAIGN_CREATOR":
+                    role_info = f"Role: Campaign Creator\n\n"
+                    commands += "/set_pin - Set web login PIN\n"
+                    commands += "/change_pin - Change your PIN\n"
+                    commands += "/verify_phone - Verify phone for IVR\n"
+                elif existing_user.role == "FIELD_AGENT":
+                    role_info = f"Role: Field Agent\n\n"
+                    commands += "/set_pin - Set web login PIN\n"
+                    commands += "/change_pin - Change your PIN\n"
+                    commands += "/verify_phone - Verify phone for IVR\n"
+                elif existing_user.role == "DONOR":
+                    role_info = f"Role: Donor\n\n"
+                    commands += "/verify_phone - Verify phone for IVR\n"
+                elif existing_user.role == "SYSTEM_ADMIN":
+                    role_info = f"Role: System Admin\n\n"
+                    commands += "/admin_requests - View pending registrations\n"
+                    commands += "/admin_approve <id> - Approve user\n"
+                    commands += "/admin_reject <id> <reason> - Reject user\n"
+                
+                commands += "/language - Change language\n"
+                commands += "/help - Full help"
+                
+                message = (
+                    f"Welcome back, {user.first_name}! 🎤\n\n"
+                    f"{role_info}"
+                    "What would you like to do?\n"
+                    "🎤 Send a voice message\n"
+                    "💬 Send a text message\n\n"
+                    f"{commands}"
+                )
+                await update.message.reply_text(message)
+                return
+            else:
+                # Pending approval
+                await update.message.reply_text(
+                    "⏳ Your account is pending approval.\n\n"
+                    "You'll receive a notification here when approved!\n\n"
+                    "Meanwhile:\n"
+                    "/language - Change language\n"
+                    "/help - Learn more about TrustVoice"
+                )
+                return
+        
+        # New user - Redirect to registration
+        message = (
+            f"Welcome to TrustVoice, {user.first_name}! 🎤\n\n"
+            "I'm your voice-first donation platform.\n\n"
+            "To get started, please register using:\n"
+            "/register"
+        )
+        
+        await update.message.reply_text(message)
+        
+    finally:
+        db.close()
+
+
+async def language_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle language selection from inline button"""
+    query = update.callback_query
+    await query.answer()
+    
+    user = update.effective_user
+    telegram_user_id = str(user.id)
+    language = query.data.split(":")[1]
+    
+    # Set language based on callback data
+    if language == "en":
+        language = "en"
+        confirmation = (
+            "✅ Language set to English!\n\n"
+            "You can now:\n"
+            "🎤 Send voice messages - I'll understand your requests\n"
+            "💬 Send text messages - I'll help you find campaigns\n"
+            "📋 Use /help to see what I can do\n\n"
+            "Try saying: \"Show me water projects in Tanzania\""
+        )
+    elif language == "am":
+        language = "am"
+        confirmation = (
+            "✅ ቋንቋ ወደ አማርኛ ተቀይሯል!\n\n"
+            "አሁን ይችላሉ:\n"
+            "🎤 የድምፅ መልእክቶችን ይላኩ - ጥያቄዎን እገነዘባለሁ\n"
+            "💬 የጽሁፍ መልዕክቶችን ይላኩ - ዘመቻዎችን እረዳለሁ\n"
+            "📋 /help ተጠቀም ምን ማድረግ እንደምችል ለማየት\n\n"
+            "ይሞክሩ: \"በታንዛኒያ የውሃ ፕሮጀክቶችን አሳየኝ\""
+        )
+    else:
+        await query.edit_message_text("Invalid selection. Please use /language to try again.")
+        return ConversationHandler.END
+    
+    # Save language preference
+    set_user_language(telegram_user_id, language)
+    
+    await query.edit_message_text(confirmation)
+    
+    return ConversationHandler.END
+
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /help command"""
+    telegram_user_id = str(update.effective_user.id)
+    language = get_user_language(telegram_user_id)
+    
+    if language == "am":
+        help_text = (
+            "📋 <b>የTrustVoice እገዛ</b>\n\n"
+            "እኔ ምን ማድረግ እችላለሁ:\n"
+            "🔍 ዘመቻዎችን መፈለግ\n"
+            "💰 መዋጮዎችን ማድረግ\n"
+            "📊 የእርስዎን ተፅእኖ መከታተል\n"
+            "📈 የእርስዎን የዋጮ ታሪክ ማየት\n\n"
+            "ምሳሌዎች:\n"
+            "🎤 \"በታንዛኒያ የውሃ ፕሮጀክቶችን አሳየኝ\"\n"
+            "🎤 \"50 ዶላር ለውሃ ፕሮጀክት መዋጮ አድርግ\"\n"
+            "🎤 \"የእኔን የዋጮ ታሪክ አሳየኝ\"\n\n"
+            "ትዕዛዞች:\n"
+            "/start - መመዝገብ ወይም ምናሌ ማየት\n"
+            "/register - ምዝገባ ጀምር\n"
+            "/campaigns - ንቁ ዘመቻዎችን ማየት\n"
+            "/donations - የእርስዎን የዋጮ ታሪክ ማየት\n"
+            "/my_campaigns - የእርስዎን ዘመቻዎች ማየት\n"
+            "/set_pin - ለድረገፅ መግቢያ ፒን አቀናብር\n"
+            "/change_pin - ፒንዎን ይለውጡ\n"
+            "/verify_phone - ስልክ ለIVR አረጋግጥ\n"
+            "/language - ቋንቋ ቀይር\n"
+            "/help - ይህን እገዛ አሳይ"
+        )
+    else:
+        help_text = (
+            "📋 <b>TrustVoice Help</b>\n\n"
+            "What I can do:\n"
+            "🔍 Find campaigns to support\n"
+            "💰 Make donations\n"
+            "📊 Track your impact\n"
+            "📈 View donation history\n\n"
+            "Examples:\n"
+            "🎤 \"Show me water projects in Tanzania\"\n"
+            "🎤 \"Donate $50 to the water project\"\n"
+            "🎤 \"What's my donation history?\"\n\n"
+            "Commands:\n"
+            "/start - Register or view menu\n"
+            "/register - Start registration\n"
+            "/campaigns - Browse active campaigns\n"
+            "/donations - View your donation history\n"
+            "/my_campaigns - View your campaigns (creators only)\n"
+            "/set_pin - Set PIN for web access\n"
+            "/change_pin - Change your PIN\n"
+            "/verify_phone - Verify phone for IVR\n"
+            "/language - Change language\n"
+            "/help - Show this help"
+        )
+    
+    await update.message.reply_text(help_text, parse_mode="HTML")
+
+
+async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /language command - Change language"""
+    keyboard = [
+        [InlineKeyboardButton("🇬🇧 English", callback_data="lang:en")],
+        [InlineKeyboardButton("🇪🇹 አማርኛ (Amharic)", callback_data="lang:am")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await update.message.reply_text(
+        "Select your preferred language:",
+        reply_markup=reply_markup
+    )
+    
+    return SELECTING_LANGUAGE
+
+
+async def campaigns_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /campaigns command - List active campaigns"""
+    from database.db import SessionLocal
+    from database.models import Campaign
+    
+    db = SessionLocal()
+    try:
+        campaigns = db.query(Campaign).filter(
+            Campaign.status == "active"
+        ).order_by(Campaign.created_at.desc()).limit(10).all()
+        
+        if not campaigns:
+            await update.message.reply_text(
+                "📋 No active campaigns found.\n\n"
+                "Check back soon or use voice commands to search!"
+            )
+            return
+        
+        message = "📋 <b>Active Campaigns</b>\n\n"
+        
+        for idx, campaign in enumerate(campaigns, 1):
+            raised = campaign.raised_amount_usd or 0
+            goal = campaign.goal_amount_usd or 1
+            progress = (raised / goal * 100)
+            location = campaign.location_region or campaign.location_country or 'N/A'
+            
+            # Progress bar
+            bar_filled = int(progress / 10)
+            bar = "█" * bar_filled + "░" * (10 - bar_filled)
+            
+            message += (
+                f"<b>{idx}. {campaign.title}</b>\n"
+                f"   {bar} {progress:.1f}%\n"
+                f"   💰 ${raised:,.0f} / ${goal:,.0f}\n"
+                f"   📍 {location}\n"
+                f"   /campaign_{campaign.id}\n\n"
+            )
+        
+        message += "💬 Use voice or text to donate!"
+        
+        await update.message.reply_text(message, parse_mode="HTML")
+        
+    finally:
+        db.close()
+
+# ============================================================================
+# VOICE INTENT ROUTER - Connects voice intents to database-backed responses
+# ============================================================================
+
+async def handle_voice_intent(intent: str, entities: dict, telegram_user_id: str, language: str = "en") -> str:
+    """
+    Route voice intent to appropriate handler and generate text response.
+    
+    This returns PLAIN TEXT (language-agnostic) that can be:
+    - Sent directly to Telegram (current)
+    - Converted to audio via OpenAI TTS (English) or AddisAI TTS (Amharic)
+    - Displayed in web UI
+    - Spoken via IVR system
+    
+    Args:
+        intent: Detected intent (e.g., 'search_campaigns')
+        entities: Extracted entities (amount, currency, category, etc.)
+        telegram_user_id: User's Telegram ID
+        language: User's preferred language ('en' or 'am')
+        
+    Returns:
+        Formatted text response (HTML-safe for Telegram)
+    """
+    from database.db import SessionLocal
+    from database.models import User, Campaign, Donation, Donor
+    
+    db = SessionLocal()
+    try:
+        # INTENT: Search/Browse Campaigns
+        if intent == "search_campaigns":
+            category = entities.get("category")
+            location = entities.get("location")
+            
+            query = db.query(Campaign).filter(Campaign.status == "active")
+            
+            if category:
+                query = query.filter(Campaign.category.ilike(f"%{category}%"))
+            if location:
+                query = query.filter(
+                    (Campaign.location_region.ilike(f"%{location}%")) |
+                    (Campaign.location_country.ilike(f"%{location}%"))
+                )
+            
+            campaigns = query.order_by(Campaign.created_at.desc()).limit(5).all()
+            
+            if not campaigns:
+                return "📋 No active campaigns found matching your criteria.\n\nTry searching without filters or check back soon!"
+            
+            message = "📋 <b>Active Campaigns</b>\n\n"
+            
+            for idx, campaign in enumerate(campaigns, 1):
+                raised = campaign.raised_amount_usd or 0
+                goal = campaign.goal_amount_usd or 1
+                progress = (raised / goal * 100)
+                location_str = campaign.location_region or campaign.location_country or 'N/A'
+                
+                # Progress bar
+                bar_filled = int(progress / 10)
+                bar = "█" * bar_filled + "░" * (10 - bar_filled)
+                
+                message += (
+                    f"<b>{idx}. {campaign.title}</b>\n"
+                    f"   {bar} {progress:.1f}%\n"
+                    f"   💰 ${raised:,.0f} raised of ${goal:,.0f} goal\n"
+                    f"   📍 {location_str}\n\n"
+                )
+            
+            message += "💬 Say which campaign you'd like to support!"
+            return message
+        
+        # INTENT: View Donation History
+        elif intent == "view_donation_history":
+            # Find donor record
+            donor = db.query(Donor).filter(
+                Donor.telegram_user_id == telegram_user_id
+            ).first()
+            
+            if not donor:
+                return (
+                    "📋 <b>Your Donation History</b>\n\n"
+                    "You haven't made any donations yet.\n"
+                    "Total donated: $0\n\n"
+                    "Say 'show me campaigns' to find causes you can support!"
+                )
+            
+            # Get donations
+            donations = db.query(Donation).filter(
+                Donation.donor_id == donor.id
+            ).order_by(Donation.created_at.desc()).limit(10).all()
+            
+            if not donations:
+                return (
+                    "📋 <b>Your Donation History</b>\n\n"
+                    "You haven't made any donations yet.\n"
+                    "Total donated: $0\n\n"
+                    "Say 'show me campaigns' to find causes you can support!"
+                )
+            
+            # Calculate total
+            total_donated = sum(d.amount_usd for d in donations if d.status == "completed")
+            
+            message = f"📊 <b>Your Donation History</b>\n\n"
+            message += f"💰 Total donated: <b>${total_donated:,.2f}</b>\n"
+            message += f"🎯 Donations: {len(donations)}\n\n"
+            message += f"<b>Recent Donations:</b>\n\n"
+            
+            for donation in donations[:5]:
+                # Get campaign
+                campaign = db.query(Campaign).filter(
+                    Campaign.id == donation.campaign_id
+                ).first()
+                
+                status_emoji = {
+                    "completed": "✅",
+                    "pending": "⏳",
+                    "failed": "❌"
+                }.get(donation.status, "❓")
+                
+                campaign_name = campaign.title if campaign else "Campaign"
+                
+                message += (
+                    f"{status_emoji} <b>${donation.amount_usd:.2f}</b> to {campaign_name}\n"
+                    f"   {donation.created_at.strftime('%b %d, %Y')}\n\n"
+                )
+            
+            message += "🙏 Thank you for your generosity!"
+            return message
+        
+        # INTENT: View My Campaigns (Creator Only)
+        elif intent == "view_my_campaigns":
+            # Find user
+            db_user = db.query(User).filter(
+                User.telegram_user_id == telegram_user_id
+            ).first()
+            
+            if not db_user:
+                return (
+                    "⚠️ <b>My Campaigns</b>\n\n"
+                    "Please register first to view campaigns you've created.\n"
+                    "Your campaign status will appear here after registration.\n\n"
+                    "Say 'I want to register' to get started!"
+                )
+            
+            # Check if user is campaign creator
+            if db_user.role not in ["CAMPAIGN_CREATOR", "SYSTEM_ADMIN"]:
+                return (
+                    "⚠️ This feature is for Campaign Creators only.\n\n"
+                    "To create campaigns, you can re-register as a Campaign Creator."
+                )
+            
+            # Get campaigns
+            campaigns = db.query(Campaign).filter(
+                Campaign.ngo_id == db_user.ngo_id
+            ).order_by(Campaign.created_at.desc()).limit(10).all()
+            
+            if not campaigns:
+                return (
+                    "📋 <b>My Created Campaigns</b>\n\n"
+                    "You haven't created any campaigns yet.\n"
+                    "Campaign status: None\n\n"
+                    "Say 'create a campaign' to get started!"
+                )
+            
+            message = f"📋 <b>Your Campaigns</b>\n\n"
+            
+            for idx, campaign in enumerate(campaigns[:5], 1):
+                raised = campaign.raised_amount_usd or 0
+                goal = campaign.goal_amount_usd or 1
+                progress = (raised / goal * 100)
+                status = "🟢 Active" if campaign.status == "active" else "🔴 Inactive"
+                
+                # Count donors
+                donor_count = db.query(Donation.donor_id).filter(
+                    Donation.campaign_id == campaign.id,
+                    Donation.status == "completed"
+                ).distinct().count()
+                
+                message += (
+                    f"<b>{idx}. {campaign.title}</b>\n"
+                    f"   {status} | {progress:.1f}% funded\n"
+                    f"   💰 ${raised:,.0f} / ${goal:,.0f}\n"
+                    f"   👥 {donor_count} donors\n\n"
+                )
+            
+            message += "💬 Say a campaign name to see details!"
+            return message
+        
+        # INTENT: Make Donation
+        elif intent == "make_donation":
+            amount = entities.get("amount")
+            currency = entities.get("currency", "USD")
+            campaign_name = entities.get("campaign_name", "this campaign")
+            
+            if not amount:
+                return "How much would you like to donate? For example, say '$50 to water project'"
+            
+            # Search for campaign
+            campaign = db.query(Campaign).filter(
+                Campaign.title.ilike(f"%{campaign_name}%"),
+                Campaign.status == "active"
+            ).first()
+            
+            if campaign:
+                return (
+                    f"Great! You want to donate <b>${amount}</b> to <b>{campaign.title}</b>.\n\n"
+                    f"Goal: ${campaign.goal_amount_usd:,.0f}\n"
+                    f"Raised so far: ${campaign.raised_amount_usd or 0:,.0f}\n\n"
+                    f"I'll send you payment instructions to complete your donation.\n"
+                    f"Payment methods: M-Pesa, Bank Transfer"
+                )
+            else:
+                return (
+                    f"I'd love to help you donate ${amount}!\n\n"
+                    f"Could you tell me which campaign?\n"
+                    f"Say 'show campaigns' to see payment options."
+                )
+        
+        # INTENT: Get Help
+        elif intent == "get_help":
+            return (
+                "<b>🤖 TrustVoice Help & Commands</b>\n\n"
+                "Available voice commands:\n"
+                "• 📋 Browse campaigns: 'Show me campaigns'\n"
+                "• 💰 Make donations: 'I want to donate $50'\n"
+                "• 📊 View history: 'Show my donations'\n"
+                "• 🌍 Change language: 'Switch to Amharic'\n\n"
+                "Just speak naturally - I understand you!"
+            )
+        
+        # INTENT: Greeting
+        elif intent == "greeting":
+            db_user = db.query(User).filter(
+                User.telegram_user_id == telegram_user_id
+            ).first()
+            
+            name = db_user.preferred_name if db_user else "there"
+            
+            return (
+                f"👋 Hello {name}!\n\n"
+                "I'm TrustVoice, your voice-powered donation assistant.\n\n"
+                "You can:\n"
+                "• Browse campaigns\n"
+                "• Make donations\n"
+                "• Check your donation history\n\n"
+                "What would you like to do?"
+            )
+        
+        # INTENT: Change Language
+        elif intent == "change_language":
+            target_language = entities.get("language", "").lower()
+            
+            if "amharic" in target_language or "am" == target_language:
+                # Update database
+                db_user = db.query(User).filter(
+                    User.telegram_user_id == telegram_user_id
+                ).first()
+                
+                if db_user:
+                    db_user.preferred_language = "am"
+                    db.commit()
+                    return "✅ Language changed to Amharic! / ቋንቋ ወደ አማርኛ ተቀይሯል!\n\nWelcome back! / እንደገና እንኳን ደህና መጡ!"
+                else:
+                    return "Please register first to change language to Amharic / ለመጀመር እባክዎ መመዝገብ ያስፈልግዎታል: /start"
+            
+            elif "english" in target_language or "en" == target_language:
+                # Update database
+                db_user = db.query(User).filter(
+                    User.telegram_user_id == telegram_user_id
+                ).first()
+                
+                if db_user:
+                    db_user.preferred_language = "en"
+                    db.commit()
+                    return "✅ Language changed to English!\n\nWelcome back!"
+                else:
+                    return "Please register first to get started: /start"
+            
+            else:
+                return "I currently support English and Amharic. Which would you prefer?"
+        
+        # Default: Generic response
+        else:
+            return f"I understand you want to {intent.replace('_', ' ')}. Let me help with that!\n\nTry saying 'help' to see what I can do."
+    
+    finally:
+        db.close()
+
+async def donations_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /donations command - View user's donation history"""
+    user = update.effective_user
+    telegram_user_id = str(user.id)
+    
+    from database.db import SessionLocal
+    from database.models import Donor, Donation
+    
+    db = SessionLocal()
+    try:
+        # Find donor by telegram_user_id
+        donor = db.query(Donor).filter(
+            Donor.telegram_user_id == telegram_user_id
+        ).first()
+        
+        if not donor:
+            await update.message.reply_text(
+                "💰 You haven't made any donations yet.\n\n"
+                "Use /campaigns to see active campaigns!"
+            )
+            return
+        
+        # Get donations
+        donations = db.query(Donation).filter(
+            Donation.donor_id == donor.id
+        ).order_by(Donation.created_at.desc()).limit(10).all()
+        
+        if not donations:
+            await update.message.reply_text(
+                "💰 You haven't made any donations yet.\n\n"
+                "Use /campaigns to see active campaigns!"
+            )
+            return
+        
+        total_donated = sum(d.amount for d in donations)
+        
+        message = f"💰 <b>Your Donation History</b>\n\n"
+        message += f"Total Donated: ${total_donated:,.2f}\n"
+        message += f"Donations: {len(donations)}\n\n"
+        
+        for idx, donation in enumerate(donations[:5], 1):
+            status_emoji = {
+                "pending": "⏳",
+                "completed": "✅",
+                "failed": "❌",
+                "refunded": "↩️"
+            }.get(donation.status, "❓")
+            
+            message += (
+                f"{idx}. {status_emoji} ${donation.amount:.2f} {donation.currency}\n"
+                f"   Campaign: {donation.campaign.title if donation.campaign else 'N/A'}\n"
+                f"   Date: {donation.created_at.strftime('%Y-%m-%d')}\n"
+                f"   Status: {donation.status.title()}\n\n"
+            )
+        
+        if len(donations) > 5:
+            message += f"... and {len(donations) - 5} more\n\n"
+        
+        message += "🙏 Thank you for your support!"
+        
+        await update.message.reply_text(message, parse_mode="HTML")
+        
+    finally:
+        db.close()
+
+
+async def my_campaigns_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /my_campaigns command - View user's created campaigns"""
+    user = update.effective_user
+    telegram_user_id = str(user.id)
+    
+    from database.db import SessionLocal
+    from database.models import User, Campaign
+    
+    db = SessionLocal()
+    try:
+        # Find user
+        db_user = db.query(User).filter(
+            User.telegram_user_id == telegram_user_id
+        ).first()
+        
+        if not db_user:
+            await update.message.reply_text(
+                "⚠️ Please register first: /start"
+            )
+            return
+        
+        # Check if user is campaign creator
+        if db_user.role not in ["CAMPAIGN_CREATOR", "SYSTEM_ADMIN"]:
+            await update.message.reply_text(
+                "⚠️ This command is for Campaign Creators only.\n\n"
+                "To create campaigns, register as a Campaign Creator: /register"
+            )
+            return
+        
+        # Get campaigns
+        campaigns = db.query(Campaign).filter(
+            Campaign.ngo_id == db_user.ngo_id
+        ).order_by(Campaign.created_at.desc()).all()
+        
+        if not campaigns:
+            await update.message.reply_text(
+                "📋 You haven't created any campaigns yet.\n\n"
+                "Use voice commands to create your first campaign!"
+            )
+            return
+        
+        message = f"📋 <b>Your Campaigns</b>\n\n"
+        
+        for idx, campaign in enumerate(campaigns[:10], 1):
+            raised = campaign.raised_amount_usd or 0
+            goal = campaign.goal_amount_usd or 1
+            progress = (raised / goal * 100)
+            status = "🟢 Active" if campaign.status == "active" else "🔴 Inactive"
+            
+            # Count donors for this campaign
+            from database.models import Donation
+            donor_count = db.query(Donation.donor_id).filter(
+                Donation.campaign_id == campaign.id,
+                Donation.status == "completed"
+            ).distinct().count()
+            
+            message += (
+                f"<b>{idx}. {campaign.title}</b>\n"
+                f"   Status: {status}\n"
+                f"   Goal: ${goal:,.0f}\n"
+                f"   Raised: ${raised:,.0f} ({progress:.1f}%)\n"
+                f"   Donors: {donor_count}\n\n"
+            )
+        
+        if len(campaigns) > 10:
+            message += f"... and {len(campaigns) - 10} more\n"
+        
+        await update.message.reply_text(message, parse_mode="HTML")
+        
+    finally:
+        db.close()
+
+
+async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle voice messages - Main voice processing"""
+    user = update.effective_user
+    telegram_user_id = str(user.id)
+    
+    # Check registration
+    if not is_user_registered(telegram_user_id):
+        await update.message.reply_text(
+            "Please register first by sending /start"
+        )
+        return
+    
+    language = get_user_language(telegram_user_id)
+    
+    logger.info(f"Processing voice message from {user.first_name} ({telegram_user_id})")
+    
+    # Send "processing" message
+    if language == "am":
+        processing_text = "🎤 የድምፅ መልእክትዎን እየሰራሁ ነው... ትንሽ ይጠብቁ።"
+    else:
+        processing_text = "🎤 Processing your voice message... Please wait."
+    
+    processing_msg = await update.message.reply_text(processing_text)
+    
+    try:
+        # Download voice message
+        voice = update.message.voice
+        file = await context.bot.get_file(voice.file_id)
+        
+        # Save to temp directory
+        audio_path = AUDIO_TEMP_DIR / f"telegram_{telegram_user_id}_{voice.file_unique_id}.ogg"
+        await file.download_to_drive(audio_path)
+        
+        logger.info(f"Voice message downloaded: {audio_path}")
+        
+        # Queue voice processing task in Celery
+        task = process_voice_message_task.delay(
+            audio_file_path=str(audio_path),
+            user_id=telegram_user_id,
+            language=language
+        )
+        
+        logger.info(f"Celery task queued: {task.id}")
+        
+        # Wait for result (async polling)
+        import asyncio
+        max_wait = 30  # 30 seconds timeout
+        wait_interval = 1  # Check every 1 second
+        elapsed = 0
+        
+        while not task.ready() and elapsed < max_wait:
+            await asyncio.sleep(wait_interval)
+            elapsed += wait_interval
+        
+        if not task.ready():
+            await processing_msg.delete()
+            timeout_msg = "⏱️ Processing is taking longer than expected. We'll notify you when ready."
+            if language == "am":
+                timeout_msg = "⏱️ ማስኬዱ ከተጠበቀው በላይ ጊዜ እየወሰደ ነው። ዝግጁ ሲሆን እናሳውቅዎታለን።"
+            await update.message.reply_text(timeout_msg)
+            return
+        
+        # Get result
+        result = task.get()
+        
+        # Delete processing message
+        await processing_msg.delete()
+        
+        if result["success"]:
+            # Get rich database-backed response
+            intent = result.get("intent")
+            entities = result.get("entities", {})
+            
+            # Route to voice intent handler (returns text response)
+            response = await handle_voice_intent(intent, entities, telegram_user_id, language)
+            
+            # Add transcript for transparency
+            transcript = result["stages"]["asr"]["transcript"]
+            full_response = f"💬 You said: \"{transcript}\"\n\n{response}"
+            
+            await update.message.reply_text(full_response, parse_mode="HTML")
+            
+            logger.info(f"✅ Voice processed: {intent}")
+        else:
+            error_msg = "Sorry, I couldn't process your voice message. Please try again."
+            if language == "am":
+                error_msg = "ይቅርታ፣ የድምፅ መልእክትዎን ማስኬድ አልቻልኩም። እባክዎ እንደገና ይሞክሩ።"
+            
+            await update.message.reply_text(f"❌ {error_msg}\n\nError: {result.get('error')}")
+            logger.error(f"Voice processing failed: {result.get('error')}")
+            
+    except Exception as e:
+        await processing_msg.delete()
+        await update.message.reply_text(f"❌ Error: {str(e)}")
+        logger.error(f"Voice handling error: {str(e)}")
+
+
+async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Handle text messages (general conversation).
+    Support natural language commands like "start", "register", "I want to register"
+    """
+    user = update.effective_user
+    telegram_user_id = str(user.id)
+    text = update.message.text.lower().strip()
+    
+    # Natural language command detection
+    if any(word in text for word in ["start", "begin", "hello", "hi", "hey"]):
+        return await start_command(update, context)
+    
+    if any(word in text for word in ["register", "sign up", "signup", "join", "i want to register"]):
+        return await register_command(update, context)
+    
+    # Check registration
+    if not is_user_registered(telegram_user_id):
+        await update.message.reply_text(
+            "Please register first using /register or just say 'I want to register'"
+        )
+        return
+    
+    language = get_user_language(telegram_user_id)
+    
+    logger.info(f"Text message from {user.first_name}: {text}")
+    
+    # Import NLU directly for text
+    from voice.nlu.nlu_infer import extract_intent_and_entities
+    from voice.nlu.context import ConversationContext
+    
+    # Get context
+    user_context = ConversationContext.get_context(telegram_user_id)
+    
+    # Extract intent
+    nlu_result = extract_intent_and_entities(text, language, user_context)
+    
+    # Update context
+    ConversationContext.update_context(
+        telegram_user_id,
+        intent=nlu_result["intent"],
+        entities=nlu_result["entities"]
+    )
+    
+    # Format response using voice intent router (same logic for voice and text)
+    intent = nlu_result["intent"]
+    entities = nlu_result["entities"]
+    
+    # Get rich database-backed response
+    response = await handle_voice_intent(intent, entities, telegram_user_id, language)
+    
+    await update.message.reply_text(response, parse_mode="HTML")
+
+
+async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle errors"""
+    logger.error(f"Update {update} caused error: {context.error}")
+
+
+def main():
+    """Start the bot"""
+    
+    if not TELEGRAM_BOT_TOKEN:
+        raise ValueError("TELEGRAM_BOT_TOKEN environment variable not set")
+    
+    # Create application
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    
+    # Registration conversation handler (new Phase 4D - TEXT ONLY)
+    registration_handler = ConversationHandler(
+        entry_points=[CommandHandler("register", register_command)],
+        states={
+            SELECTING_ROLE: [CallbackQueryHandler(handle_role_selection, pattern="^role:")],
+            SELECTING_LANGUAGE: [CallbackQueryHandler(handle_language_selection, pattern="^lang:")],
+            ENTERING_FULL_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_full_name)],
+            ENTERING_ORG_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_org_name)],
+            ENTERING_LOCATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_location)],
+            ENTERING_PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_phone)],
+            ENTERING_REASON: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_reason)],
+            ENTERING_VERIFICATION_EXP: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_verification_exp)],
+            ENTERING_COVERAGE_REGIONS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_coverage_regions)],
+            ENTERING_GPS_PHONE: [CallbackQueryHandler(handle_gps_phone, pattern="^gps:")],
+            ENTERING_PIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_pin_entry)],
+            CONFIRMING_PIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_pin_confirm)]
+        },
+        fallbacks=[CommandHandler("cancel", cancel_registration)],
+        per_message=False
+    )
+    
+    # Language change conversation handler (updated for inline buttons)
+    language_change_handler = ConversationHandler(
+        entry_points=[CommandHandler("language", language_command)],
+        states={
+            SELECTING_LANGUAGE: [CallbackQueryHandler(language_selection, pattern="^lang:")]
+        },
+        fallbacks=[CommandHandler("language", language_command)]
+    )
+    
+    # Add handlers
+    application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(registration_handler)
+    application.add_handler(language_change_handler)
+    application.add_handler(CommandHandler("help", help_command))
+    
+    # Campaign and donation commands
+    application.add_handler(CommandHandler("campaigns", campaigns_command))
+    application.add_handler(CommandHandler("donations", donations_command))
+    application.add_handler(CommandHandler("my_campaigns", my_campaigns_command))
+    
+    # PIN commands
+    application.add_handler(get_set_pin_handler())
+    application.add_handler(get_change_pin_handler())
+    
+    # Phone verification
+    application.add_handler(CommandHandler("verify_phone", verify_phone_command))
+    application.add_handler(CommandHandler("unverify_phone", unverify_phone_command))
+    application.add_handler(MessageHandler(filters.CONTACT, handle_contact_share))
+    
+    # Admin commands
+    application.add_handler(CommandHandler("admin_requests", admin_requests_command))
+    application.add_handler(CommandHandler("admin_approve", admin_approve_command))
+    application.add_handler(CommandHandler("admin_reject", admin_reject_command))
+    
+    # Voice and text handlers
+    application.add_handler(MessageHandler(filters.VOICE, handle_voice_message))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
+    application.add_error_handler(error_handler)
+    
+    # Start bot
+    logger.info("🤖 TrustVoice Telegram Bot started!")
+    logger.info("Press Ctrl+C to stop")
+    
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
+
+
+if __name__ == "__main__":
+    main()

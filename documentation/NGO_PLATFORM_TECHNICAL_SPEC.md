@@ -473,11 +473,11 @@ def transcribe_audio(audio_path: str, user_language: str) -> str:
 ```
 
 **Why User Preference vs Auto-Detection:**
-- Auto-detection fails with accents/background noise (58% accuracy in Voice Ledger testing)
+- Auto-detection fails with accents/background noise (can have lower accuracy)
 - Users set language once during registration → stored in database
 - Prevents expensive re-routing and LLM confusion
-- Voice Ledger tested with 1000+ Ethiopian farmers - **98% ASR accuracy**
-- Cost savings: $0.05 saved per message (no failed re-attempts)
+- Voice Ledger prototype uses user preference routing
+- Cost savings: Avoids failed re-attempts and re-routing
 
 **Language Selection During Registration:**
 ```
@@ -543,7 +543,7 @@ ADDIS_AI_CONFIG = {
     "temperature": 0.7,
     "max_tokens": 500,
     "supported_languages": ["am", "sw"],  # Amharic, Swahili
-    "training_hours": 2000  # Verified by Voice Ledger production
+    "training_hours": 2000  # Model training hours from HuggingFace
 }
 
 SYSTEM_PROMPTS = {
@@ -596,7 +596,7 @@ class ConversationManager:
     - Handles conversation timeouts (5 minutes inactivity)
     - Thread-safe operations for concurrent users
     
-    Proven at scale: Voice Ledger handles 1000+ concurrent farmer conversations
+    Voice Ledger prototype architecture for conversation management
     """
     
     _conversations: Dict[int, Dict[str, Any]] = {}

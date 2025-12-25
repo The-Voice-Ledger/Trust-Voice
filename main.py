@@ -7,14 +7,15 @@ Entry point for the voice-first donation platform.
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 import logging
 
-# Import routers
-from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin
-
-# Load environment variables
+# Load environment variables FIRST (before any imports that need them)
 load_dotenv()
+
+# Import routers
+from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin, auth, registrations
 
 # Configure logging
 logging.basicConfig(
@@ -51,6 +52,15 @@ app.include_router(donations.router)
 app.include_router(payouts.router)
 app.include_router(webhooks.router)
 app.include_router(admin.router)
+app.include_router(auth.router)
+app.include_router(registrations.router)
+
+# ============================================
+# Mount Frontend Static Files
+# ============================================
+
+# Serve frontend at root path
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 
 # ============================================

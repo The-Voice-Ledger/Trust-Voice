@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - TrustVoice</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="nav-brand">
+                <h2>🎤 TrustVoice Admin</h2>
+            </div>
+            <div class="nav-actions">
+                <span id="adminName" class="admin-name"></span>
+                <button onclick="handleLogout()" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="dashboard-container">
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-info">
+                    <h3 id="totalUsers">-</h3>
+                    <p>Total Users</p>
+                </div>
+            </div>
+            
+            <div class="stat-card highlight">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-info">
+                    <h3 id="pendingCount">-</h3>
+                    <p>Pending Registrations</p>
+                </div>
+            </div>
+            
+            <div class="stat-card success">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <h3 id="approvedToday">-</h3>
+                    <p>Approved Today</p>
+                </div>
+            </div>
+            
+            <div class="stat-card danger">
+                <div class="stat-icon">❌</div>
+                <div class="stat-info">
+                    <h3 id="rejectedToday">-</h3>
+                    <p>Rejected Today</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filters -->
+        <div class="filters-section">
+            <div class="filter-group">
+                <label for="statusFilter">Status:</label>
+                <select id="statusFilter" onchange="loadRegistrations()">
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="roleFilter">Role:</label>
+                <select id="roleFilter" onchange="loadRegistrations()">
+                    <option value="">All Roles</option>
+                    <option value="CAMPAIGN_CREATOR">Campaign Creator</option>
+                    <option value="FIELD_AGENT">Field Agent</option>
+                </select>
+            </div>
+            
+            <button onclick="loadRegistrations()" class="btn btn-secondary">
+                🔄 Refresh
+            </button>
+        </div>
+        
+        <!-- Registrations Table -->
+        <div class="table-container">
+            <h2>Registration Requests</h2>
+            <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+                Loading...
+            </div>
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <p>No registrations found</p>
+            </div>
+            <table id="registrationsTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Organization</th>
+                        <th>Reason</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="registrationsBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Approval Modal -->
+    <div id="approvalModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Approve Registration</h3>
+            <p id="approvalMessage"></p>
+            <div class="form-group">
+                <label for="approvalNotes">Notes (optional):</label>
+                <textarea id="approvalNotes" rows="3" placeholder="Add any notes..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button onclick="closeModal()" class="btn btn-secondary">Cancel</button>
+                <button onclick="confirmApprove()" class="btn btn-success">Approve</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Rejection Modal -->
+    <div id="rejectionModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Reject Registration</h3>
+            <p id="rejectionMessage"></p>
+            <div class="form-group">
+                <label for="rejectionReason">Reason (required):</label>
+                <textarea id="rejectionReason" rows="3" placeholder="Provide reason for rejection..." required></textarea>
+            </div>
+            <div class="modal-actions">
+                <button onclick="closeModal()" class="btn btn-secondary">Cancel</button>
+                <button onclick="confirmReject()" class="btn btn-danger">Reject</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

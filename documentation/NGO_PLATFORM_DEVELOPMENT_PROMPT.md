@@ -401,10 +401,10 @@ def transcribe_audio(audio_path: str, user_language: str) -> Dict[str, str]:
     
     **NO AUTO-DETECTION** - Language set during registration.
     
-    Voice Ledger Results:
-    - With auto-detection: 58% accuracy (accents, noise)
-    - With user preference: 98% accuracy
-    - Cost savings: $0.05/message (no re-attempts)
+    Voice Ledger Design Choice:
+    - Auto-detection can fail with accents and background noise
+    - User preference is more reliable
+    - Reduces re-attempts and costs
     
     Args:
         audio_path: Path to audio file
@@ -450,7 +450,7 @@ def transcribe_with_local_model(audio_path: str, language: str) -> str:
     
     Model: whisper-large-v3-am (fine-tuned by Addis AI)
     Training: 2000+ hours of Ethiopian Amharic speech
-    Accuracy: 94% on Voice Ledger production
+    Based on Voice Ledger prototype architecture
     """
     import whisper
     
@@ -1955,13 +1955,13 @@ Let's implement this flow...
 
 **Option 1: Auto-Detection**
 Pros: No user input needed
-Cons: 58% accuracy (Voice Ledger testing), costly re-attempts
-Cost: $0.05/message average (detection + re-transcription)
+Cons: Lower accuracy (testing showed issues), costly re-attempts
+Cost: Higher due to detection + potential re-transcription
 
 **Option 2: User Preference (CHOSEN)**
-Pros: 98% accuracy, set once during registration
+Pros: More reliable, set once during registration
 Cons: Requires one-time language selection
-Cost: $0.02/message (single transcription)
+Cost: Lower (single transcription)
 
 We chose Option 2 because...
 ```

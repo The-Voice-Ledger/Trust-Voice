@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - TrustVoice</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo">
+                <h1>🎤 TrustVoice</h1>
+                <p class="subtitle">Admin Dashboard</p>
+            </div>
+            
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input 
+                        type="tel" 
+                        id="phone" 
+                        name="phone" 
+                        placeholder="+254712345678"
+                        required
+                        autocomplete="tel"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="pin">PIN (4 digits)</label>
+                    <input 
+                        type="password" 
+                        id="pin" 
+                        name="pin" 
+                        placeholder="••••"
+                        maxlength="4"
+                        pattern="[0-9]{4}"
+                        required
+                        autocomplete="off"
+                    >
+                </div>
+                
+                <div id="errorMessage" class="error-message" style="display: none;"></div>
+                
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    Login
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                <p>Use your Telegram-registered phone number and PIN</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/auth.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        // Handle login form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const phone = document.getElementById('phone').value;
+            const pin = document.getElementById('pin').value;
+            const errorDiv = document.getElementById('errorMessage');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            // Validate PIN format
+            if (!/^\d{4}$/.test(pin)) {
+                showError('PIN must be exactly 4 digits');
+                return;
+            }
+            
+            // Disable button and show loading
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logging in...';
+            errorDiv.style.display = 'none';
+            
+            try {
+                const response = await api.post('/auth/login', { phone, pin });
+                
+                if (response.access_token) {
+                    // Store token
+                    auth.setToken(response.access_token);
+                    
+                    // Verify user is admin
+                    const user = await api.get('/admin/me');
+                    if (user.role === 'SYSTEM_ADMIN') {
+                        // Redirect to dashboard
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        showError('Access denied: Admin privileges required');
+                        auth.clearToken();
+                    }
+                } else {
+                    showError('Invalid response from server');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError(error.message || 'Login failed. Please check your credentials.');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Login';
+            }
+        });
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+        
+        // Auto-focus on phone input
+        document.getElementById('phone').focus();
+        
+        // Check if already logged in
+        if (auth.getToken()) {
+            api.get('/admin/me').then(user => {
+                if (user && user.role === 'SYSTEM_ADMIN') {
+                    window.location.href = 'dashboard.html';
+                }
+            }).catch(() => {
+                // Token invalid, stay on login page
+                auth.clearToken();
+            });
+        }
+    </script>
+</body>
+</html>

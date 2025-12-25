@@ -27,36 +27,132 @@ Base = declarative_base()
 
 
 class UserRole(enum.Enum):
-    """User roles for access control."""
+    """User roles for access control and registration."""
+    # Admin roles (password-based)
     SUPER_ADMIN = "super_admin"  # Platform admins (approve all)
     NGO_ADMIN = "ngo_admin"      # NGO admins (approve own payouts)
     VIEWER = "viewer"            # Read-only access
+    
+    # Telegram user roles (PIN-based)
+    DONOR = "DONOR"                    # Instant approval
+    CAMPAIGN_CREATOR = "CAMPAIGN_CREATOR"  # Requires admin approval
+    FIELD_AGENT = "FIELD_AGENT"        # Requires admin approval
+    SYSTEM_ADMIN = "SYSTEM_ADMIN"      # Manual creation
 
 
 class User(Base):
     """
-    Admin users who can approve payouts and manage the platform.
+    User model supporting both admin users and Telegram users.
     
-    Roles:
+    Admin users (password-based):
     - super_admin: Can approve all payouts, manage all NGOs
     - ngo_admin: Can approve payouts for their assigned NGO
     - viewer: Read-only access
+    
+    Telegram users (PIN-based for cross-interface auth):
+    - DONOR: Instant approval, voice donations
+    - CAMPAIGN_CREATOR: Requires admin approval, can create campaigns
+    - FIELD_AGENT: Requires admin approval, can verify campaigns
+    - SYSTEM_ADMIN: Manual creation, platform operators
     """
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True)
-    email = Column(String(255), unique=True, nullable=False, index=True)
-    password_hash = Column(String(255), nullable=False)
+    
+    # Admin authentication (password-based)
+    email = Column(String(255), unique=True, nullable=True, index=True)
+    password_hash = Column(String(255), nullable=True)
+    
+    # Telegram identity (primary for Telegram users)
+    telegram_user_id = Column(String(50), unique=True, nullable=True, index=True)
+    telegram_username = Column(String(100), nullable=True)
+    telegram_first_name = Column(String(100), nullable=True)
+    telegram_last_name = Column(String(100), nullable=True)
+    
+    # Common fields
     full_name = Column(String(255))
-    role = Column(SQLEnum(UserRole), default=UserRole.VIEWER, nullable=False)
+    role = Column(String(50), default="VIEWER", nullable=False)  # Store enum value as string
     ngo_id = Column(Integer, ForeignKey('ngo_organizations.id'))  # For ngo_admin
     preferred_language = Column(String(2), default="en")  # Language preference ('en' or 'am')
+    
+    # Approval fields (for Telegram users)
+    is_approved = Column(Boolean, default=True)  # Instant for DONOR, pending for others
+    approved_at = Column(DateTime, nullable=True)
+    approved_by_admin_id = Column(Integer, nullable=True)
+    
+    # PIN authentication (for cross-interface access: Web/IVR/WhatsApp)
+    pin_hash = Column(String(255), nullable=True)  # Bcrypt hash of 4-digit PIN
+    pin_set_at = Column(DateTime, nullable=True)
+    failed_login_attempts = Column(Integer, default=0)
+    locked_until = Column(DateTime, nullable=True)
+    last_login_at = Column(DateTime, nullable=True)
+    
+    # Phone verification (for IVR access)
+    phone_number = Column(String(20), unique=True, nullable=True, index=True)
+    phone_verified_at = Column(DateTime, nullable=True)
+    
+    # Status
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
-    last_login = Column(DateTime)
+    last_login = Column(DateTime)  # Deprecated, use last_login_at
     
     # Relationships
     ngo = relationship("NGOOrganization", backref="admin_users")
+
+
+class PendingRegistration(Base):
+    """
+    Pending user registrations awaiting admin approval.
+    
+    Used for CAMPAIGN_CREATOR and FIELD_AGENT roles.
+    DONOR role gets instant approval (no pending record).
+    
+    Workflow:
+    1. User completes registration form via Telegram
+    2. Record created with status='PENDING'
+    3. Admin reviews via /admin-requests
+    4. On approval: Create User record, update status='APPROVED'
+    5. On rejection: Update status='REJECTED', store reason
+    """
+    __tablename__ = "pending_registrations"
+    
+    id = Column(Integer, primary_key=True)
+    
+    # Telegram identity
+    telegram_user_id = Column(String(50), nullable=False, index=True)
+    telegram_username = Column(String(100))
+    telegram_first_name = Column(String(100))
+    telegram_last_name = Column(String(100))
+    
+    # Role request
+    requested_role = Column(String(50), nullable=False)  # 'CAMPAIGN_CREATOR' or 'FIELD_AGENT'
+    
+    # Registration form data
+    full_name = Column(String(200))
+    organization_name = Column(String(200))  # Campaign Creators
+    location = Column(String(200))
+    phone_number = Column(String(20))
+    reason = Column(Text)
+    
+    # Field Agent specific fields
+    verification_experience = Column(Text)
+    coverage_regions = Column(Text)
+    has_gps_phone = Column(Boolean)
+    
+    # PIN (will be copied to users table on approval)
+    pin_hash = Column(String(255))
+    
+    # Admin review
+    status = Column(String(20), default='PENDING', nullable=False, index=True)  # PENDING, APPROVED, REJECTED
+    reviewed_by_admin_id = Column(Integer, ForeignKey('users.id'))
+    reviewed_at = Column(DateTime)
+    rejection_reason = Column(Text)
+    
+    # Timestamp
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    reviewed_by = relationship("User", foreign_keys=[reviewed_by_admin_id])
 
 
 class Donor(Base):
