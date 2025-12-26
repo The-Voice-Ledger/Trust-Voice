@@ -15,6 +15,7 @@ from typing import Optional, Dict, Literal
 import torch
 from transformers import AutoProcessor, AutoModelForSpeechSeq2Seq
 from openai import OpenAI
+import httpx
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -105,7 +106,11 @@ def transcribe_with_whisper_api(
         if not OPENAI_API_KEY:
             raise ASRError("OPENAI_API_KEY not set in environment")
         
-        client = OpenAI(api_key=OPENAI_API_KEY)
+        # Add timeout to prevent hanging indefinitely
+        client = OpenAI(
+            api_key=OPENAI_API_KEY,
+            timeout=httpx.Timeout(30.0, connect=5.0)
+        )
         
         logger.info(f"Transcribing with Whisper API (language: {language})")
         
@@ -221,7 +226,20 @@ def transcribe_audio(
         if selected_language == "am":
             # Try AddisAI first (fast, cloud-based)
             try:
-                from voice.providers.addis_ai import transcribe_sync, AddisAIError
+                # Import AddisAI - handle import failure gracefully
+                try:
+                    from voice.providers.addis_ai import transcribe_sync, AddisAIError
+                except ImportError as import_err:
+                    logger.warning(f"AddisAI module not available: {import_err}")
+                    # Fall back to local model if available
+                    if USE_LOCAL_AMHARIC_FALLBACK:
+                        logger.info("AddisAI not available, using local Amharic model")
+                        return transcribe_with_amharic_model(audio_file_path)
+                    else:
+                        raise ASRError(
+                            "Amharic ASR unavailable. AddisAI module not installed and "
+                            "local fallback disabled."
+                        )
                 
                 logger.info("Attempting AddisAI transcription (primary)")
                 result = transcribe_sync(audio_file_path, "am")

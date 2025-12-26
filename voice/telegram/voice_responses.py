@@ -219,7 +219,7 @@ async def send_voice_reply(
     language: Optional[str] = None,
     send_voice: bool = True,
     reply_to_message_id: Optional[int] = None
-) -> None:
+):
     """
     Send dual delivery response (text immediately + voice in background).
     
@@ -235,6 +235,9 @@ async def send_voice_reply(
         language: Language override (optional, uses user preference if None)
         send_voice: Whether to send voice (can disable for testing)
         reply_to_message_id: Optional message to reply to
+    
+    Returns:
+        The text message object sent (for testing/verification)
     """
     # Step 1: Send text immediately (0ms latency)
     text_msg = await bot.send_message(
@@ -248,11 +251,19 @@ async def send_voice_reply(
     
     # Step 2: Look up user preference and spawn background TTS task
     if send_voice:
-        # Look up user preference from database
-        user_preference_language = get_user_language_preference(str(chat_id))
+        # Look up user preference from database (only if language not explicitly provided)
+        user_preference_language = None if language else get_user_language_preference(str(chat_id))
+        
+        # Callback to log background task exceptions
+        def log_task_exception(task):
+            """Log exceptions from background TTS tasks"""
+            try:
+                task.result()
+            except Exception as e:
+                logger.error(f"Background TTS task failed: {e}", exc_info=True)
         
         # Spawn background task (returns immediately)
-        asyncio.create_task(
+        task = asyncio.create_task(
             _generate_and_send_voice_background(
                 bot=bot,
                 chat_id=chat_id,
@@ -262,7 +273,12 @@ async def send_voice_reply(
                 user_preference_language=user_preference_language
             )
         )
+        # Add exception handler to prevent silent failures
+        task.add_done_callback(log_task_exception)
         # ↑ Function returns here immediately (non-blocking)
+    
+    # Return text message for verification/testing
+    return text_msg
 
 
 async def send_voice_reply_from_update(

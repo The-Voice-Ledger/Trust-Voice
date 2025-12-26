@@ -1061,6 +1061,17 @@ def main():
     if not TELEGRAM_BOT_TOKEN:
         raise ValueError("TELEGRAM_BOT_TOKEN environment variable not set")
     
+    # Pre-load Amharic model if local fallback is enabled (Issue #8 fix)
+    # This prevents 3-5 minute bot freeze on first Amharic voice message
+    if os.getenv("USE_LOCAL_AMHARIC_FALLBACK", "true").lower() == "true":
+        try:
+            from voice.asr.asr_infer import load_amharic_model
+            logger.info("Pre-loading Amharic model at startup...")
+            load_amharic_model()
+            logger.info("✓ Amharic model loaded successfully")
+        except Exception as e:
+            logger.warning(f"Could not pre-load Amharic model: {e}")
+    
     # Create application
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     

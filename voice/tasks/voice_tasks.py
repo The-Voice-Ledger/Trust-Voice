@@ -152,3 +152,31 @@ def cleanup_old_audio_files() -> Dict[str, Any]:
     except Exception as exc:
         logger.error(f"Error during cleanup: {exc}")
         return {"status": "error", "error": str(exc)}
+
+
+@app.task(name="voice.tasks.cleanup_tts_cache")
+def cleanup_tts_cache() -> Dict[str, Any]:
+    """
+    Clean up old TTS cache files (run daily)
+    
+    Returns:
+        Dict with cleanup statistics
+    """
+    try:
+        logger.info("Starting TTS cache cleanup")
+        
+        from voice.tts.tts_provider import tts_provider
+        
+        # Clear cache files older than 7 days
+        deleted_count = tts_provider.clear_cache(older_than_days=7)
+        
+        logger.info(f"Cleaned up {deleted_count} old TTS cache files")
+        
+        return {
+            "status": "success",
+            "deleted_count": deleted_count
+        }
+        
+    except Exception as exc:
+        logger.error(f"Error during TTS cache cleanup: {exc}")
+        return {"status": "error", "error": str(exc)}

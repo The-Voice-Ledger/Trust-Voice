@@ -32,6 +32,36 @@ class AudioProcessingError(Exception):
     pass
 
 
+def check_disk_space(required_mb: float = 100.0) -> Tuple[bool, Optional[str]]:
+    """
+    Check if sufficient disk space is available for audio processing
+    
+    Args:
+        required_mb: Minimum required disk space in MB (default 100 MB)
+        
+    Returns:
+        Tuple of (has_space, error_message)
+    """
+    try:
+        import shutil
+        
+        # Get disk usage for current working directory
+        stat = shutil.disk_usage(Path.cwd())
+        available_mb = stat.free / (1024 * 1024)
+        
+        if available_mb < required_mb:
+            error_msg = f"Insufficient disk space: {available_mb:.1f} MB available, {required_mb:.1f} MB required"
+            logger.error(error_msg)
+            return False, error_msg
+        
+        logger.debug(f"Disk space check passed: {available_mb:.1f} MB available")
+        return True, None
+        
+    except Exception as e:
+        logger.error(f"Disk space check error: {str(e)}")
+        return False, f"Failed to check disk space: {str(e)}"
+
+
 def validate_audio_file(file_path: str) -> Tuple[bool, Optional[str]]:
     """
     Validate audio file size, format, and duration
@@ -118,6 +148,15 @@ def convert_to_whisper_format(
     """
     try:
         input_path = Path(input_path)
+        
+        # Check disk space before conversion (Issue #9 fix)
+        # Estimate 3x input file size for safe conversion
+        input_size_mb = input_path.stat().st_size / (1024 * 1024)
+        required_mb = max(input_size_mb * 3, 50.0)  # At least 50 MB
+        
+        has_space, space_error = check_disk_space(required_mb)
+        if not has_space:
+            raise AudioProcessingError(space_error)
         
         # Generate output path if not provided
         if output_path is None:
@@ -232,11 +271,11 @@ def cleanup_audio_file(file_path: str) -> bool:
     """
     try:
         path = Path(file_path)
-        if path.exists():
-            path.unlink()
-            logger.info(f"Audio file deleted: {file_path}")
-            return True
-        return False
+        # Use missing_ok=True to avoid TOCTOU race condition
+        # (file could be deleted between exists() check and unlink() call)
+        path.unlink(missing_ok=True)
+        logger.info(f"Audio file deleted: {file_path}")
+        return True
     except Exception as e:
         logger.error(f"Audio cleanup error: {str(e)}")
         return False

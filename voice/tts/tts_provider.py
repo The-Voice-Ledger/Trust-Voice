@@ -110,7 +110,11 @@ class TTSProvider:
         
         try:
             from openai import AsyncOpenAI
-            client = AsyncOpenAI(api_key=self.openai_api_key)
+            # Add timeout to prevent hanging indefinitely
+            client = AsyncOpenAI(
+                api_key=self.openai_api_key,
+                timeout=httpx.Timeout(30.0, connect=5.0)
+            )
             
             # Generate unique filename
             filename = f"tts_openai_{hashlib.md5(text.encode()).hexdigest()[:8]}.mp3"
@@ -196,41 +200,6 @@ class TTSProvider:
         except Exception as e:
             logger.error(f"AddisAI TTS error: {str(e)}")
             return await self._openai_tts(text, "nova")
-        
-        try:
-            # Generate unique filename
-            filename = f"tts_addisai_{hashlib.md5(text.encode()).hexdigest()[:8]}.mp3"
-            output_path = TTS_CACHE_DIR / filename
-            
-            # Call AddisAI TTS API
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    self.addisai_tts_url,
-                    json={
-                        "text": text,
-                        "voice": voice,
-                        "language": "am",
-                        "format": "mp3"
-                    }
-                )
-                
-                if response.status_code == 200:
-                    # Save audio to file
-                    with open(output_path, "wb") as f:
-                        f.write(response.content)
-                    
-                    return True, str(output_path), None
-                else:
-                    error = f"AddisAI TTS failed: {response.status_code}"
-                    logger.error(error)
-                    return False, None, error
-                    
-        except httpx.TimeoutException:
-            logger.error("AddisAI TTS timeout")
-            return False, None, "AddisAI TTS timeout (>30s)"
-        except Exception as e:
-            logger.error(f"AddisAI TTS error: {str(e)}")
-            return False, None, f"AddisAI TTS failed: {str(e)}"
     
     def clear_cache(self, older_than_days: int = 7):
         """Clear TTS cache files older than specified days"""

@@ -53,5 +53,22 @@ app.conf.task_routes = {
     "voice.tasks.cleanup_old_audio_files": {"queue": "voice"},
 }
 
+# Periodic task schedule (Celery Beat)
+# Run cleanup tasks automatically to prevent disk space issues
+from celery.schedules import crontab
+
+app.conf.beat_schedule = {
+    'cleanup-audio-files-hourly': {
+        'task': 'voice.tasks.cleanup_old_audio_files',
+        'schedule': crontab(minute=0),  # Every hour at :00
+        'options': {'queue': 'voice'}
+    },
+    'cleanup-tts-cache-daily': {
+        'task': 'voice.tasks.cleanup_tts_cache',
+        'schedule': crontab(hour=3, minute=0),  # Daily at 3:00 AM
+        'options': {'queue': 'voice'}
+    },
+}
+
 if __name__ == "__main__":
     app.start()

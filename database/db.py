@@ -24,10 +24,17 @@ if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable not set!")
 
 # Create engine
-# pool_pre_ping=True: Check connection health before using
+# Pool configuration to prevent connection exhaustion:
+# - pool_size: Maximum number of persistent connections
+# - max_overflow: Number of connections that can be created beyond pool_size
+# - pool_pre_ping: Check connection health before using
+# - pool_recycle: Recycle connections after 1 hour (3600s) to prevent stale connections
 engine = create_engine(
     DATABASE_URL,
-    pool_pre_ping=True,
+    pool_size=20,  # Base connection pool size
+    max_overflow=10,  # Allow up to 30 total connections (20+10)
+    pool_pre_ping=True,  # Verify connections are alive
+    pool_recycle=3600,  # Recycle connections every hour
     echo=False  # Set to True to see SQL queries (debugging)
 )
 
