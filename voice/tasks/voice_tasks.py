@@ -62,7 +62,7 @@ def process_voice_message_task(
         result = process_voice_message(
             audio_file_path=audio_file_path,
             user_id=user_id,
-            language=language
+            user_language=language  # Fixed: use 'user_language' not 'language'
         )
         
         logger.info(f"Voice processing complete for user {user_id}")

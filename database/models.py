@@ -18,10 +18,12 @@ from sqlalchemy import (
     Column, Integer, String, Float, Boolean, DateTime, 
     Text, ForeignKey, JSON, Enum as SQLEnum
 )
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
+import uuid
 
 Base = declarative_base()
 
@@ -268,6 +270,11 @@ class Campaign(Base):
     # Status
     status = Column(String(20), default="active")  # active, paused, completed, cancelled
     
+    # Verification Metrics (for impact reports)
+    verification_count = Column(Integer, default=0)  # Number of field agent verifications
+    total_trust_score = Column(Float, default=0.0)  # Sum of all trust scores
+    avg_trust_score = Column(Float, default=0.0)  # Average trust score (calculated)
+    
     # Dates
     start_date = Column(DateTime)
     end_date = Column(DateTime)
@@ -389,49 +396,57 @@ class Donation(Base):
 
 class ImpactVerification(Base):
     """
-    Field officer report proving project completion.
+    Field agent report proving project completion/progress.
     
     Example:
     - Campaign: Mwanza Water Project
-    - Verifier: Ibrahim (WaterAid field officer)
-    - Type: milestone_completed
+    - Field Agent: Ibrahim (TrustVoice verified agent)
     - Description: "Well #3 completed, serving 450 families"
-    - Audio: 30-second voice recording (IPFS URL)
-    - Photos: [well_photo1.jpg, well_photo2.jpg] (IPFS URLs)
+    - Photos: [photo1_file_id, photo2_file_id] (Telegram file IDs)
     - GPS: -2.5164, 32.9175
-    - Blockchain: Anchored to Polygon with tx hash
+    - Trust Score: 85/100 (auto-approved)
+    - Agent Payout: $30 USD via M-Pesa
     
-    This verification is linked to all $100 donor receipts.
+    Field agents earn $30 per approved verification.
+    Reports with trust score >= 80 are auto-approved.
     """
     __tablename__ = "impact_verifications"
     
-    id = Column(Integer, primary_key=True)
-    campaign_id = Column(Integer, ForeignKey("campaigns.id"), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    campaign_id = Column(UUID(as_uuid=True), ForeignKey("campaigns.id"), nullable=False)
     
-    # Field Officer Info
-    verifier_phone = Column(String(20))
-    verifier_name = Column(String(100))
+    # Field Agent Info
+    field_agent_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     
     # Verification Details
-    verification_type = Column(String(50))  # milestone, completion, beneficiary_count
-    description = Column(Text)
+    verification_date = Column(DateTime, default=datetime.utcnow)
+    agent_notes = Column(Text)  # Field agent's observations
+    testimonials = Column(Text)  # Beneficiary quotes
     
-    # Media
-    audio_recording_url = Column(Text)  # IPFS URL
-    photo_urls = Column(JSON)  # Array of IPFS URLs stored as JSON
+    # Media (Telegram file IDs or URLs)
+    photos = Column(JSON)  # Array of photo file IDs
     
     # Location & Impact
-    gps_coordinates = Column(String(100))  # "latitude,longitude"
-    beneficiary_count = Column(Integer)  # Number of people impacted
+    gps_latitude = Column(Float)
+    gps_longitude = Column(Float)
+    beneficiary_count = Column(Integer, default=0)
     
-    # Blockchain Anchor
-    blockchain_anchor_tx = Column(String(66))  # Polygon transaction hash
+    # Trust Scoring
+    trust_score = Column(Integer, default=0)  # 0-100
+    status = Column(String(20), default="pending")  # pending, approved, rejected
     
-    # Timestamp
-    verified_at = Column(DateTime, default=datetime.utcnow)
+    # Agent Payout
+    agent_payout_amount_usd = Column(Float)  # Typically $30
+    agent_payout_status = Column(String(20))  # initiated, completed, failed
+    agent_payout_transaction_id = Column(String(100))  # M-Pesa ConversationID
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     campaign = relationship("Campaign", back_populates="verifications")
+    field_agent = relationship("User", foreign_keys=[field_agent_id])
 
 
 class ConversationLog(Base):

@@ -97,6 +97,36 @@ SELECTING_LANGUAGE = 1
 users_db = {}
 
 
+async def send_voice_reply(
+    update: Update,
+    text: str,
+    language: Optional[str] = None,
+    parse_mode: Optional[str] = "HTML"
+):
+    """
+    Send both text and voice reply for accessibility (non-blocking).
+    
+    Uses dual delivery pattern:
+    - Text sent immediately (0ms latency)
+    - Voice generated in background (~2-3s)
+    
+    Args:
+        update: Telegram update object
+        text: Message text to send
+        language: Language code for TTS (None = use user preference, "en" = English, "am" = Amharic)
+        parse_mode: Telegram parse mode (HTML, Markdown, or None)
+    """
+    from voice.telegram.voice_responses import send_voice_reply_from_update
+    
+    await send_voice_reply_from_update(
+        update=update,
+        text=text,
+        language=language,
+        parse_mode=parse_mode,
+        send_voice=True
+    )
+
+
 def get_user_language(telegram_user_id: str) -> str:
     """Get user's preferred language from database"""
     db = SessionLocal()
@@ -185,8 +215,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 elif existing_user.role == "SYSTEM_ADMIN":
                     role_info = f"Role: System Admin\n\n"
                     commands += "/admin_requests - View pending registrations\n"
-                    commands += "/admin_approve <id> - Approve user\n"
-                    commands += "/admin_reject <id> <reason> - Reject user\n"
+                    commands += "/admin_approve &lt;id&gt; - Approve user\n"
+                    commands += "/admin_reject &lt;id&gt; &lt;reason&gt; - Reject user\n"
                 
                 commands += "/language - Change language\n"
                 commands += "/help - Full help"
@@ -199,16 +229,25 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "💬 Send a text message\n\n"
                     f"{commands}"
                 )
-                await update.message.reply_text(message)
+                await send_voice_reply(
+                    update=update,
+                    text=message,
+                    language=existing_user.preferred_language,
+                    parse_mode=None
+                )
                 return
             else:
                 # Pending approval
-                await update.message.reply_text(
-                    "⏳ Your account is pending approval.\n\n"
-                    "You'll receive a notification here when approved!\n\n"
-                    "Meanwhile:\n"
-                    "/language - Change language\n"
-                    "/help - Learn more about TrustVoice"
+                await send_voice_reply(
+                    update=update,
+                    text=(
+                        "⏳ Your account is pending approval.\n\n"
+                        "You'll receive a notification here when approved!\n\n"
+                        "Meanwhile:\n"
+                        "/language - Change language\n"
+                        "/help - Learn more about TrustVoice"
+                    ),
+                    language=existing_user.preferred_language
                 )
                 return
         
@@ -220,7 +259,11 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "/register"
         )
         
-        await update.message.reply_text(message)
+        await send_voice_reply(
+            update=update,
+            text=message,
+            language=None
+        )
         
     finally:
         db.close()

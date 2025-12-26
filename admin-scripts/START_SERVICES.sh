@@ -34,8 +34,10 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-# Load environment variables
-export $(cat .env | grep -v '^#' | xargs)
+# Load environment variables using set -a
+set -a
+source .env
+set +a
 echo "   ✅ Environment variables loaded"
 
 # Check PostgreSQL (Neon cloud database)
@@ -210,8 +212,8 @@ if [ -f .celery_worker_pid ]; then
 fi
 
 # Start Celery from project root with proper PYTHONPATH
-cd "$PROJECT_ROOT"
-nohup python -m celery -A voice.tasks.celery_app worker \
+cd "$PROJECT_DIR"
+nohup venv/bin/python -m celery -A voice.tasks.celery_app worker \
     --loglevel=info \
     --concurrency=2 \
     --queues=voice,notifications \

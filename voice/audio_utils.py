@@ -58,9 +58,30 @@ def validate_audio_file(file_path: str) -> Tuple[bool, Optional[str]]:
         if file_size_mb > MAX_AUDIO_SIZE_MB:
             return False, f"Audio file too large ({file_size_mb:.2f}MB). Max: {MAX_AUDIO_SIZE_MB}MB"
         
-        # Load audio to check duration
-        audio = AudioSegment.from_file(str(path))
-        duration_seconds = len(audio) / 1000  # pydub works in milliseconds
+        # Use ffprobe to check duration (avoid pydub hanging on macOS)
+        import subprocess
+        probe_cmd = [
+            "ffprobe", "-v", "error",
+            "-show_entries", "format=duration",
+            "-of", "default=noprint_wrappers=1:nokey=1",
+            str(path)
+        ]
+        
+        result = subprocess.run(
+            probe_cmd,
+            capture_output=True,
+            timeout=10,
+            stdin=subprocess.DEVNULL,
+            check=False
+        )
+        
+        if result.returncode != 0:
+            return False, f"Failed to read audio file: {result.stderr.decode()}"
+        
+        try:
+            duration_seconds = float(result.stdout.decode().strip())
+        except ValueError:
+            return False, "Failed to parse audio duration"
         
         if duration_seconds > MAX_AUDIO_DURATION_SECONDS:
             return False, f"Audio too long ({duration_seconds:.1f}s). Max: {MAX_AUDIO_DURATION_SECONDS}s"
@@ -106,23 +127,29 @@ def convert_to_whisper_format(
         
         logger.info(f"Converting audio: {input_path} -> {output_path}")
         
-        # Load audio file
-        audio = AudioSegment.from_file(str(input_path))
+        # Use ffmpeg directly to avoid pydub hanging issues on macOS
+        import subprocess
+        ffmpeg_cmd = [
+            "ffmpeg", "-y",
+            "-i", str(input_path),
+            "-ar", str(target_sr),
+            "-ac", str(target_channels),
+            "-acodec", "pcm_s16le",
+            str(output_path)
+        ]
         
-        # Convert to mono if stereo
-        if audio.channels > target_channels:
-            audio = audio.set_channels(target_channels)
-            logger.info(f"Converted to {target_channels} channel(s)")
+        result = subprocess.run(
+            ffmpeg_cmd,
+            capture_output=True,
+            timeout=30,
+            stdin=subprocess.DEVNULL,
+            check=False
+        )
         
-        # Resample to target sample rate
-        if audio.frame_rate != target_sr:
-            audio = audio.set_frame_rate(target_sr)
-            logger.info(f"Resampled to {target_sr} Hz")
+        if result.returncode != 0:
+            raise AudioProcessingError(f"ffmpeg conversion failed: {result.stderr.decode()}")
         
-        # Export as WAV
-        audio.export(str(output_path), format="wav")
         logger.info(f"Audio converted successfully: {output_path}")
-        
         return str(output_path)
         
     except Exception as e:
@@ -141,17 +168,45 @@ def get_audio_metadata(file_path: str) -> dict:
         Dictionary with audio metadata
     """
     try:
+        import subprocess
+        import json
+        
         path = Path(file_path)
-        audio = AudioSegment.from_file(str(path))
+        
+        # Use ffprobe to extract metadata (avoid pydub hanging on macOS)
+        probe_cmd = [
+            "ffprobe", "-v", "quiet",
+            "-print_format", "json",
+            "-show_format", "-show_streams",
+            str(path)
+        ]
+        
+        result = subprocess.run(
+            probe_cmd,
+            capture_output=True,
+            timeout=10,
+            stdin=subprocess.DEVNULL,
+            check=False
+        )
+        
+        if result.returncode != 0:
+            raise Exception(f"ffprobe failed: {result.stderr.decode()}")
+        
+        probe_data = json.loads(result.stdout.decode())
+        format_info = probe_data.get("format", {})
+        audio_stream = next(
+            (s for s in probe_data.get("streams", []) if s.get("codec_type") == "audio"),
+            {}
+        )
         
         metadata = {
             "file_name": path.name,
             "file_size_mb": round(path.stat().st_size / (1024 * 1024), 2),
-            "duration_seconds": round(len(audio) / 1000, 2),
-            "sample_rate": audio.frame_rate,
-            "channels": audio.channels,
+            "duration_seconds": round(float(format_info.get("duration", 0)), 2),
+            "sample_rate": int(audio_stream.get("sample_rate", 0)),
+            "channels": audio_stream.get("channels", 0),
             "format": path.suffix.lower(),
-            "bit_depth": audio.sample_width * 8 if hasattr(audio, 'sample_width') else None
+            "bit_depth": audio_stream.get("bits_per_sample", None)
         }
         
         logger.info(f"Audio metadata extracted: {metadata}")

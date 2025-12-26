@@ -1,8 +1,11 @@
 """
 Automatic Speech Recognition (ASR) Module for TrustVoice
-Supports both OpenAI Whisper API (English) and Local Amharic Model
+Supports three ASR methods:
+1. AddisAI API (Amharic) - Primary, fast (300-800ms)
+2. Local Amharic Model - Fallback if AddisAI fails (3-5s)
+3. OpenAI Whisper API (English) - All other languages
 
-Based on Voice Ledger architecture - proven with 1000+ Ethiopian farmers
+Based on Voice Ledger architecture - routes ASR requests based on user language preference
 """
 
 import os
@@ -24,6 +27,7 @@ LanguageCode = Literal["en", "am"]
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 DEFAULT_LANGUAGE = os.getenv("DEFAULT_LANGUAGE", "en")
 AMHARIC_MODEL_NAME = "b1n1yam/shook-medium-amharic-2k"
+USE_LOCAL_AMHARIC_FALLBACK = os.getenv("USE_LOCAL_AMHARIC_FALLBACK", "true").lower() == "true"
 
 # Cache for loaded models
 _model_cache = {}
@@ -193,10 +197,10 @@ def transcribe_audio(
     """
     Main ASR function - routes to appropriate transcription method
     
-    Routing logic (based on Voice Ledger):
+    Routing logic:
     1. If user_preference is set, use that (PRIMARY method)
     2. Otherwise use language parameter
-    3. 'am' -> Local Amharic model
+    3. 'am' -> Try AddisAI API first, fallback to local model if enabled
     4. 'en' or others -> OpenAI Whisper API
     
     Args:
@@ -215,7 +219,29 @@ def transcribe_audio(
         
         # Route to appropriate transcription method
         if selected_language == "am":
-            return transcribe_with_amharic_model(audio_file_path)
+            # Try AddisAI first (fast, cloud-based)
+            try:
+                from voice.providers.addis_ai import transcribe_sync, AddisAIError
+                
+                logger.info("Attempting AddisAI transcription (primary)")
+                result = transcribe_sync(audio_file_path, "am")
+                
+                logger.info(f"✅ AddisAI transcription successful: {len(result['text'])} chars")
+                return result
+                
+            except (AddisAIError, Exception) as e:
+                logger.warning(f"AddisAI transcription failed: {str(e)}")
+                
+                # Conditional fallback to local model
+                if USE_LOCAL_AMHARIC_FALLBACK:
+                    logger.info("Falling back to local Amharic model")
+                    return transcribe_with_amharic_model(audio_file_path)
+                else:
+                    logger.error("Local fallback disabled, raising error")
+                    raise ASRError(
+                        f"Amharic transcription temporarily unavailable. "
+                        f"AddisAI API error: {str(e)}"
+                    )
         else:
             # Use Whisper API for English and other languages
             return transcribe_with_whisper_api(audio_file_path, language=selected_language)

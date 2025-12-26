@@ -48,8 +48,9 @@ app.conf.update(
 
 # Task routing (optional - for dedicated workers)
 app.conf.task_routes = {
-    "voice.tasks.voice_tasks.process_voice_message_task": {"queue": "voice"},
-    "voice.tasks.voice_tasks.send_notification_task": {"queue": "notifications"},
+    "voice.tasks.process_voice_message": {"queue": "voice"},
+    "voice.tasks.send_notification": {"queue": "notifications"},
+    "voice.tasks.cleanup_old_audio_files": {"queue": "voice"},
 }
 
 if __name__ == "__main__":
