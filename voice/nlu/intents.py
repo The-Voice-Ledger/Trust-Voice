@@ -33,6 +33,7 @@ class IntentType(str, Enum):
     UPDATE_PROFILE = "update_profile"
     CHANGE_LANGUAGE = "change_language"
     GET_HELP = "get_help"
+    SYSTEM_INFO = "system_info"  # General questions about the platform
     
     # Conversational
     GREETING = "greeting"
@@ -67,7 +68,12 @@ INTENT_SCHEMAS: Dict[IntentType, Dict[str, Any]] = {
         "examples": [
             "Show me water projects in Tanzania",
             "Find education campaigns under $100",
-            "I want to support healthcare in Kenya"
+            "I want to support healthcare in Kenya",
+            "What campaigns are available?",
+            "Show active campaigns",
+            "List all projects",
+            "Browse campaigns",
+            "What can I donate to?"
         ]
     },
     
@@ -164,13 +170,40 @@ INTENT_SCHEMAS: Dict[IntentType, Dict[str, Any]] = {
     },
     
     IntentType.GET_HELP: {
-        "description": "User needs help or guidance",
+        "description": "User needs help or guidance on using the system",
         "required_entities": [],
         "optional_entities": [],
         "examples": [
             "Help me",
             "What can I do?",
-            "How does this work?"
+            "How does this work?",
+            "Show me the commands",
+            "What are my options?",
+            "Guide me",
+            "I need assistance",
+            "How do I use this?"
+        ]
+    },
+    
+    IntentType.SYSTEM_INFO: {
+        "description": "User asks general questions about TrustVoice platform, its features, purpose, or how it works",
+        "required_entities": [],
+        "optional_entities": [],
+        "examples": [
+            "Tell me about TrustVoice",
+            "What is this system?",
+            "How does the platform work?",
+            "Explain this service",
+            "What does TrustVoice do?",
+            "Tell me more about this",
+            "What's this all about?",
+            "Describe the platform",
+            "What is this donation platform?",
+            "How does verification work?",
+            "What makes TrustVoice different?",
+            "Who can use this system?",
+            "What features do you have?",
+            "How do donations work here?"
         ]
     },
     

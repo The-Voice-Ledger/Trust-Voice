@@ -171,7 +171,25 @@ def set_user_language(telegram_user_id: str, language: str):
 
 def is_user_registered(telegram_user_id: str) -> bool:
     """Check if user has completed registration"""
-    return telegram_user_id in users_db and "language" in users_db[telegram_user_id]
+    # Check in-memory cache first
+    if telegram_user_id in users_db and "language" in users_db[telegram_user_id]:
+        return True
+    
+    # Check database
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(
+            User.telegram_user_id == telegram_user_id
+        ).first()
+        
+        if user and user.is_approved:
+            # Load user into cache
+            set_user_language(telegram_user_id, user.preferred_language or "en")
+            return True
+        
+        return False
+    finally:
+        db.close()
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -215,8 +233,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 elif existing_user.role == "SYSTEM_ADMIN":
                     role_info = f"Role: System Admin\n\n"
                     commands += "/admin_requests - View pending registrations\n"
-                    commands += "/admin_approve &lt;id&gt; - Approve user\n"
-                    commands += "/admin_reject &lt;id&gt; &lt;reason&gt; - Reject user\n"
+                    commands += "/admin_approve <id> - Approve user\n"
+                    commands += "/admin_reject <id> <reason> - Reject user\n"
                 
                 commands += "/language - Change language\n"
                 commands += "/help - Full help"
@@ -658,6 +676,26 @@ async def handle_voice_intent(intent: str, entities: dict, telegram_user_id: str
                 "Just speak naturally - I understand you!"
             )
         
+        # INTENT: System Information
+        elif intent == "system_info":
+            return (
+                "<b>🎤 About TrustVoice</b>\n\n"
+                "TrustVoice is a <b>voice-first donation platform</b> connecting donors with verified NGO campaigns across Africa.\n\n"
+                "<b>✨ Key Features:</b>\n"
+                "• 🗣️ Voice-first: Speak naturally in English or Amharic\n"
+                "• ✅ Verified Impact: GPS-verified project completion\n"
+                "• 📱 Multi-channel: Telegram, IVR calls, web interface\n"
+                "• 💰 Easy Payments: M-Pesa, mobile money, cards\n"
+                "• 🌍 Pan-African: Supporting NGOs across the continent\n\n"
+                "<b>🎯 Campaign Categories:</b>\n"
+                "Water & Sanitation, Education, Healthcare, Agriculture, Women Empowerment, Youth Development, Emergency Relief, Infrastructure\n\n"
+                "<b>👥 Who Can Use TrustVoice?</b>\n"
+                "• Donors: Browse and support verified campaigns\n"
+                "• NGOs: Create and manage fundraising campaigns\n"
+                "• Field Agents: Report and verify impact with GPS\n\n"
+                "💬 Try: 'Show me water projects' or 'I want to donate'"
+            )
+        
         # INTENT: Greeting
         elif intent == "greeting":
             db_user = db.query(User).filter(
@@ -935,7 +973,13 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             transcript = result["stages"]["asr"]["transcript"]
             full_response = f"💬 You said: \"{transcript}\"\n\n{response}"
             
-            await update.message.reply_text(full_response, parse_mode="HTML")
+            # Send with dual delivery (text + voice)
+            await send_voice_reply(
+                update=update,
+                text=full_response,
+                language=language,
+                parse_mode="HTML"
+            )
             
             logger.info(f"✅ Voice processed: {intent}")
         else:
