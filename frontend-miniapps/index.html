@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>TrustVoice Mini Apps</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -119,14 +122,27 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">🎯</div>
+            <div class="logo">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+            </div>
             <h1>TrustVoice Mini Apps</h1>
             <div class="subtitle">Voice-first donation platform</div>
         </div>
         
         <div class="apps-grid">
             <div class="app-card" onclick="openApp('analytics')">
-                <div class="app-icon">📊</div>
+                <div class="app-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                </div>
                 <div class="app-info">
                     <div class="app-title">Analytics Dashboard</div>
                     <div class="app-description">View real-time metrics and campaign insights</div>
@@ -135,7 +151,12 @@
             </div>
             
             <div class="app-card" onclick="openApp('campaigns')">
-                <div class="app-icon">🔍</div>
+                <div class="app-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </div>
                 <div class="app-info">
                     <div class="app-title">Campaign Browser</div>
                     <div class="app-description">Browse and search active campaigns</div>
@@ -153,7 +174,13 @@
             </div>
             
             <div class="app-card" onclick="openApp('donate')">
-                <div class="app-icon">💰</div>
+                <div class="app-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path>
+                        <path d="M12 18V6"></path>
+                    </svg>
+                </div>
                 <div class="app-info">
                     <div class="app-title">Donation Checkout</div>
                     <div class="app-description">Complete your donation securely</div>
@@ -162,7 +189,15 @@
             </div>
             
             <div class="app-card" onclick="openApp('ngoregister')">
-                <div class="app-icon">🏛️</div>
+                <div class="app-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 21h18"></path>
+                        <path d="M5 21V7l8-4v18"></path>
+                        <path d="M19 21V11l-6-4"></path>
+                        <path d="M9 9v.01"></path>
+                        <path d="M9 12v.01"></path>
+                    </svg>
+                </div>
                 <div class="app-info">
                     <div class="app-title">Register NGO</div>
                     <div class="app-description">Submit your organization for verification</div>

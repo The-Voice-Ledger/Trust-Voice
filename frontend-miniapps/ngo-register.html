@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Register Your NGO - TrustVoice</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -144,11 +147,66 @@
             text-align: center;
             margin-bottom: 16px;
         }
+        
+        .textarea-voice-group {
+            position: relative;
+        }
+        
+        .voice-dictate-btn {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        
+        .voice-dictate-btn svg {
+            display: block;
+        }
+        
+        .voice-dictate-btn.recording {
+            animation: pulse 1.5s infinite;
+            background: #f44336;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+        }
+        
+        .voice-status {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+            margin-top: 4px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
     <div id="app">
-        <h1>🏛️ Register Your NGO</h1>
+        <h1>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;">
+                <path d="M3 21h18"></path>
+                <path d="M5 21V7l8-4v18"></path>
+                <path d="M19 21V11l-6-4"></path>
+                <path d="M9 9v.01"></path>
+                <path d="M9 12v.01"></path>
+                <path d="M9 15v.01"></path>
+                <path d="M9 18v.01"></path>
+            </svg>
+            Register Your NGO
+        </h1>
         <p class="subtitle">Join TrustVoice to create verified campaigns and receive transparent donations</p>
         
         <div class="progress">
@@ -254,7 +312,18 @@
                 
                 <div class="form-group">
                     <label>Mission Statement</label>
-                    <textarea id="mission_statement" name="mission_statement" placeholder="What is your organization's purpose?"></textarea>
+                    <div class="textarea-voice-group">
+                        <textarea id="mission_statement" name="mission_statement" placeholder="What is your organization's purpose?" style="padding-right: 56px;"></textarea>
+                        <button type="button" class="voice-dictate-btn" id="missionVoiceBtn" onclick="startDictation('mission_statement')">
+                            <svg id="missionVoiceIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="23"></line>
+                                <line x1="8" y1="23" x2="16" y2="23"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="missionVoiceStatus" class="voice-status"></div>
                 </div>
                 
                 <div class="form-group">
@@ -307,6 +376,10 @@
         const progressFill = document.getElementById('progressFill');
         const progressText = document.getElementById('progressText');
         
+        let mediaRecorder;
+        let audioChunks = [];
+        let currentField = null;
+        
         // Get Telegram user info
         const telegramUser = tg.initDataUnsafe.user || {};
         if (telegramUser.first_name || telegramUser.last_name) {
@@ -340,6 +413,92 @@
             el.textContent = message;
             el.style.display = 'block';
             setTimeout(() => el.style.display = 'none', 5000);
+        }
+        
+        // Voice Dictation Functions
+        async function startDictation(fieldId) {
+            currentField = fieldId;
+            const btn = document.getElementById('missionVoiceBtn');
+            const icon = document.getElementById('missionVoiceIcon');
+            const status = document.getElementById('missionVoiceStatus');
+            
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                // Start recording
+                try {
+                    status.textContent = 'Listening...';
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        audioChunks.push(event.data);
+                    };
+                    
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        await processDictation(audioBlob);
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    mediaRecorder.start();
+                    btn.classList.add('recording');
+                    icon.innerHTML = '<rect width="12" height="12" x="6" y="6" rx="2" stroke="currentColor" fill="currentColor"></rect>';
+                    
+                } catch (error) {
+                    console.error('Microphone error:', error);
+                    tg.showAlert('Could not access microphone. Please check permissions.');
+                    status.textContent = '';
+                }
+            } else {
+                // Stop recording
+                mediaRecorder.stop();
+                btn.classList.remove('recording');
+                icon.innerHTML = '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line>';
+                status.textContent = 'Processing...';
+            }
+        }
+        
+        async function processDictation(audioBlob) {
+            const status = document.getElementById('missionVoiceStatus');
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'dictate.webm');
+            formData.append('user_id', tg.initDataUnsafe?.user?.id || 'guest');
+            formData.append('field_name', currentField);
+            
+            try {
+                const response = await fetch(API_BASE + '/api/voice/dictate-text', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.transcription) {
+                        // Append to existing text
+                        const textarea = document.getElementById(currentField);
+                        const existingText = textarea.value;
+                        textarea.value = existingText ? existingText + ' ' + data.transcription : data.transcription;
+                        status.textContent = '✅ Text added!';
+                        tg.HapticFeedback.notificationOccurred('success');
+                        updateProgress();
+                    } else {
+                        status.textContent = '❌ ' + data.response_text;
+                        tg.HapticFeedback.notificationOccurred('error');
+                    }
+                } else {
+                    status.textContent = '❌ Failed to process audio';
+                    tg.HapticFeedback.notificationOccurred('error');
+                }
+            } catch (error) {
+                console.error('Dictation error:', error);
+                status.textContent = '❌ Network error';
+                tg.HapticFeedback.notificationOccurred('error');
+            }
+            
+            // Clear status after 3 seconds
+            setTimeout(() => {
+                status.textContent = '';
+            }, 3000);
         }
         
         // Submit registration

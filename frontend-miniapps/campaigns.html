@@ -238,7 +238,13 @@
 </head>
 <body>
     <div class="header">
-        <h1>🔍 Campaign Browser</h1>
+        <h1>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            Campaign Browser
+        </h1>
         <div class="subtitle">Browse and support active campaigns</div>
     </div>
     
@@ -249,7 +255,14 @@
     <div class="search-box">
         <span>🔎</span>
         <input type="text" id="searchInput" placeholder="Search campaigns..." />
-        <button id="voiceBtn" class="voice-btn" title="Voice search">🎤</button>
+            <button id="voiceBtn" class="voice-btn" title="Voice search">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+            </button>
     </div>
     
     <div class="filters">
@@ -267,7 +280,12 @@
     <div id="campaigns" style="display: none;"></div>
     
     <div id="emptyState" class="empty-state" style="display: none;">
-        <div class="empty-icon">🔍</div>
+        <div class="empty-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.3;">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+        </div>
         <div class="empty-text">No campaigns found</div>
     </div>
     
@@ -459,7 +477,7 @@
                 // Stop recording
                 mediaRecorder.stop();
                 voiceBtn.classList.remove('recording');
-                voiceBtn.textContent = '🎤';
+                voiceBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>';
             } else {
                 // Start recording
                 try {
@@ -483,7 +501,7 @@
                     voiceBtn.classList.add('recording');
                     voiceBtn.textContent = '⏹️';
                     tg.showPopup({
-                        title: '🎤 Recording',
+                        title: '�️ Recording',
                         message: 'Speak your search query. Tap stop when done.',
                         buttons: [{type: 'ok'}]
                     });
@@ -499,7 +517,7 @@
             try {
                 // Show loading state
                 voiceResponse.classList.add('show');
-                voiceText.textContent = '🎙️ Processing your voice command...';
+                voiceText.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg> Processing your voice command...';
                 
                 // Get user ID from Telegram
                 const userId = tg.initDataUnsafe?.user?.id || 'unknown';

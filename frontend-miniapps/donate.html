@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Donation Checkout</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -198,12 +201,63 @@
             color: var(--tg-theme-hint-color, #999);
             margin-top: 16px;
             line-height: 1.5;
+        }        
+        .voice-amount-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
-    </style>
+        
+        .voice-btn {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 24px;
+            cursor: pointer;
+            min-width: 60px;
+            transition: all 0.2s;
+        }
+        
+        .voice-btn svg {
+            display: block;
+        }
+        
+        .voice-btn.recording {
+            animation: pulse 1.5s infinite;
+            background: #f44336;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .voice-response {
+            background: #e3f2fd;
+            border-left: 4px solid var(--tg-theme-button-color, #3390ec);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 14px;
+        }
+        
+        .voice-transcription {
+            font-style: italic;
+            color: var(--tg-theme-hint-color, #666);
+            margin-bottom: 4px;
+        }    </style>
 </head>
 <body>
     <div class="header">
-        <div class="icon">💰</div>
+        <div class="icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path>
+                <path d="M12 18V6"></path>
+            </svg>
+        </div>
         <h1>Complete Your Donation</h1>
         <div class="subtitle">Support this campaign</div>
     </div>
@@ -223,14 +277,41 @@
             <button class="amount-btn" data-amount="250">$250</button>
             <button class="amount-btn" data-amount="500">$500</button>
         </div>
-        <input type="number" class="custom-amount" id="customAmount" placeholder="Custom amount" min="1">
+        
+        <div class="voice-amount-group">
+            <input 
+                type="number" 
+                class="custom-amount" 
+                id="customAmount" 
+                placeholder="Custom amount" 
+                min="1"
+            >
+            <button class="voice-btn" id="voiceBtn" onclick="startVoiceDonation()">
+                <svg id="voiceBtnIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+            </button>
+        </div>
+        
+        <div id="voiceResponse" class="voice-response" style="display: none;">
+            <div class="voice-transcription" id="voiceTranscription"></div>
+            <div id="voiceMessage"></div>
+        </div>
     </div>
     
     <div class="payment-methods">
         <div class="section-title">Payment Method</div>
         
         <div class="payment-option active" data-method="card">
-            <div class="payment-icon">💳</div>
+            <div class="payment-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                </svg>
+            </div>
             <div class="payment-info">
                 <div class="payment-name">Credit/Debit Card</div>
                 <div class="payment-desc">Visa, Mastercard, Amex</div>
@@ -238,7 +319,12 @@
         </div>
         
         <div class="payment-option" data-method="mpesa">
-            <div class="payment-icon">📱</div>
+            <div class="payment-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                    <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                </svg>
+            </div>
             <div class="payment-info">
                 <div class="payment-name">M-Pesa</div>
                 <div class="payment-desc">Mobile money transfer</div>
@@ -285,6 +371,10 @@
         
         let selectedAmount = 25;
         let selectedMethod = 'card';
+        let mediaRecorder;
+        let audioChunks = [];
+        
+        const API_BASE = window.location.origin;
         
         // Amount selection
         document.querySelectorAll('.amount-btn').forEach(btn => {
@@ -356,6 +446,101 @@
                     }
                 }
             );
+        }
+        
+        // Voice Donation Functions
+        async function startVoiceDonation() {
+            const btn = document.getElementById('voiceBtn');
+            const icon = document.getElementById('voiceBtnIcon');
+            
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                // Start recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        audioChunks.push(event.data);
+                    };
+                    
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        await processVoiceDonation(audioBlob);
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    mediaRecorder.start();
+                    btn.classList.add('recording');
+                    icon.innerHTML = '<rect width="12" height="12" x="6" y="6" rx="2" stroke="currentColor" fill="currentColor"></rect>';
+                    
+                } catch (error) {
+                    console.error('Microphone error:', error);
+                    tg.showAlert('Could not access microphone. Please check permissions.');
+                }
+            } else {
+                // Stop recording
+                mediaRecorder.stop();
+                btn.classList.remove('recording');
+                icon.innerHTML = '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line>';
+            }
+        }
+        
+        async function processVoiceDonation(audioBlob) {
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'donate.webm');
+            formData.append('user_id', tg.initDataUnsafe?.user?.id || 'guest');
+            formData.append('campaign_id', '1'); // Would come from URL params in real app
+            
+            try {
+                const response = await fetch(API_BASE + '/api/voice/donate-by-voice', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displayVoiceDonationResult(data);
+                } else {
+                    tg.showAlert('Failed to process voice command. Please try again.');
+                }
+            } catch (error) {
+                console.error('Voice donation error:', error);
+                tg.showAlert('Network error. Please check your connection.');
+            }
+        }
+        
+        function displayVoiceDonationResult(data) {
+            const responseBox = document.getElementById('voiceResponse');
+            const transcription = document.getElementById('voiceTranscription');
+            const message = document.getElementById('voiceMessage');
+            
+            transcription.textContent = `You said: "${data.transcription}"`;
+            
+            if (data.success && data.amount) {
+                message.textContent = data.response_text;
+                
+                // Set the amount
+                document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('customAmount').value = data.amount;
+                selectedAmount = data.amount;
+                updateSummary();
+                
+                // Play audio if available
+                if (data.audio_url) {
+                    const audio = new Audio(API_BASE + data.audio_url);
+                    audio.play().catch(e => console.log('Auto-play prevented:', e));
+                }
+            } else {
+                message.textContent = data.response_text || "Couldn't understand the amount. Please try again.";
+            }
+            
+            responseBox.style.display = 'block';
+            
+            // Hide after 5 seconds
+            setTimeout(() => {
+                responseBox.style.display = 'none';
+            }, 5000);
         }
         
         // Initial summary
