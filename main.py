@@ -15,7 +15,7 @@ import logging
 load_dotenv()
 
 # Import routers
-from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin, auth, registrations, ngo_registrations
+from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin, auth, registrations, ngo_registrations, miniapp_voice
 
 # Configure logging
 logging.basicConfig(
@@ -55,6 +55,7 @@ app.include_router(webhooks.router)
 app.include_router(admin.router)
 app.include_router(auth.router)
 app.include_router(registrations.router)
+app.include_router(miniapp_voice.router)
 
 # ============================================
 # Mount Frontend Static Files

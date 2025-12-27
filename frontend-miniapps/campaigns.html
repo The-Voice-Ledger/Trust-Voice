@@ -57,6 +57,64 @@
             color: var(--tg-theme-hint-color, #999);
         }
         
+        .voice-btn {
+            background: var(--tg-theme-button-color, #3390ec);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+        
+        .voice-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .voice-btn.recording {
+            background: #f44336;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .voice-response {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        
+        .voice-response.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .voice-text {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
         .filters {
             display: flex;
             gap: 8px;
@@ -184,9 +242,14 @@
         <div class="subtitle">Browse and support active campaigns</div>
     </div>
     
+    <div id="voiceResponse" class="voice-response">
+        <div class="voice-text" id="voiceText"></div>
+    </div>
+    
     <div class="search-box">
         <span>🔎</span>
-        <input type="text" id="searchInput" placeholder="Search campaigns...">
+        <input type="text" id="searchInput" placeholder="Search campaigns..." />
+        <button id="voiceBtn" class="voice-btn" title="Voice search">🎤</button>
     </div>
     
     <div class="filters">
@@ -215,6 +278,9 @@
         
         let allCampaigns = [];
         let currentFilter = 'all';
+        let mediaRecorder = null;
+        let audioChunks = [];
+        const API_BASE = window.location.origin.replace(':8001', ':8001');
         
         // Mock campaign data
         const mockCampaigns = [
@@ -382,6 +448,114 @@
         document.getElementById('searchInput').addEventListener('input', () => {
             renderCampaigns();
         });
+        
+        // Voice Search Functionality
+        const voiceBtn = document.getElementById('voiceBtn');
+        const voiceResponse = document.getElementById('voiceResponse');
+        const voiceText = document.getElementById('voiceText');
+        
+        voiceBtn.addEventListener('click', async () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                // Stop recording
+                mediaRecorder.stop();
+                voiceBtn.classList.remove('recording');
+                voiceBtn.textContent = '🎤';
+            } else {
+                // Start recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        audioChunks.push(event.data);
+                    };
+                    
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        await processVoiceCommand(audioBlob);
+                        
+                        // Stop all tracks
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    mediaRecorder.start();
+                    voiceBtn.classList.add('recording');
+                    voiceBtn.textContent = '⏹️';
+                    tg.showPopup({
+                        title: '🎤 Recording',
+                        message: 'Speak your search query. Tap stop when done.',
+                        buttons: [{type: 'ok'}]
+                    });
+                    
+                } catch (error) {
+                    console.error('Microphone error:', error);
+                    tg.showAlert('Unable to access microphone. Please grant permission and try again.');
+                }
+            }
+        });
+        
+        async function processVoiceCommand(audioBlob) {
+            try {
+                // Show loading state
+                voiceResponse.classList.add('show');
+                voiceText.textContent = '🎙️ Processing your voice command...';
+                
+                // Get user ID from Telegram
+                const userId = tg.initDataUnsafe?.user?.id || 'unknown';
+                
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'voice_search.webm');
+                formData.append('user_id', userId);
+                
+                // Send to backend
+                const response = await fetch(`${API_BASE}/api/voice/search-campaigns`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                // Display text response
+                voiceText.textContent = result.response_text || 'Found your campaigns!';
+                
+                // Play audio response if available
+                if (result.has_audio && result.audio_url) {
+                    const audio = new Audio(`${API_BASE}${result.audio_url}`);
+                    audio.play().catch(e => console.log('Audio playback failed:', e));
+                }
+                
+                // Apply search filter based on transcription
+                if (result.transcription) {
+                    document.getElementById('searchInput').value = result.transcription;
+                    renderCampaigns();
+                }
+                
+                // If campaigns were returned, display them
+                if (result.campaigns && result.campaigns.length > 0) {
+                    // The search input update above will trigger renderCampaigns
+                    // which will show matching campaigns
+                    console.log(`Voice search found ${result.campaigns.length} campaigns`);
+                }
+                
+                // Hide response after 5 seconds
+                setTimeout(() => {
+                    voiceResponse.classList.remove('show');
+                }, 5000);
+                
+            } catch (error) {
+                console.error('Voice processing error:', error);
+                voiceText.textContent = '❌ Unable to process voice command. Please try again.';
+                setTimeout(() => {
+                    voiceResponse.classList.remove('show');
+                }, 3000);
+            }
+        }
         
         // Initial load
         loadCampaigns();
