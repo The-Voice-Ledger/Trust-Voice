@@ -111,6 +111,7 @@ if ps -p $API_PID > /dev/null && curl -s http://localhost:8001/docs > /dev/null 
     echo "   ✅ FastAPI server started (PID: $API_PID)"
     echo "   📋 Logs: logs/trustvoice_api.log"
     echo "   🌐 API docs: http://localhost:8001/docs"
+    echo "   📱 Mini apps: http://localhost:8001/index.html"
 else
     echo "   ❌ Failed to start FastAPI server"
     echo "   📋 Check logs: tail -f logs/trustvoice_api.log"
@@ -309,10 +310,19 @@ fi
 echo ""
 echo "🔗 Quick Links:"
 echo "   • API Docs:      http://localhost:8001/docs"
+echo "   • Mini Apps Menu: http://localhost:8001/index.html"
 echo "   • ngrok Dashboard: http://localhost:4040"
 if [ "$NGROK_URL" != "ERROR" ] && [ -n "$NGROK_URL" ]; then
     echo "   • Public API:    $NGROK_URL/docs"
+    echo "   • Public Mini Apps: $NGROK_URL/index.html"
     echo "   • M-Pesa Webhook: $NGROK_URL/webhooks/mpesa"
+    echo ""
+    echo "📱 Telegram Mini Apps:"
+    echo "   • Analytics:    $NGROK_URL/analytics.html"
+    echo "   • Campaigns:    $NGROK_URL/campaigns.html"
+    echo "   • Admin:        $NGROK_URL/admin.html"
+    echo "   • Donate:       $NGROK_URL/donate.html"
+    echo "   • NGO Register: $NGROK_URL/ngo-register.html"
 fi
 echo ""
 echo "🛑 To stop all services, run: ./admin-scripts/STOP_SERVICES.sh"

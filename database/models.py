@@ -157,6 +157,77 @@ class PendingRegistration(Base):
     reviewed_by = relationship("User", foreign_keys=[reviewed_by_admin_id])
 
 
+class PendingNGORegistration(Base):
+    """
+    Pending NGO organization registrations awaiting admin approval.
+    
+    Workflow:
+    1. NGO submits registration via mini app or voice
+    2. Record created with status='PENDING'
+    3. Admin reviews via /admin panel
+    4. On approval: Create NGOOrganization record, update status='APPROVED'
+    5. On rejection: Update status='REJECTED', store reason
+    """
+    __tablename__ = "pending_ngo_registrations"
+    
+    id = Column(Integer, primary_key=True)
+    
+    # Submitter info (if via Telegram)
+    submitted_by_telegram_id = Column(String(50), index=True)
+    submitted_by_telegram_username = Column(String(100))
+    submitted_by_name = Column(String(200))
+    
+    # NGO Organization Details
+    organization_name = Column(String(200), nullable=False)
+    registration_number = Column(String(100))  # Official registration/tax ID
+    organization_type = Column(String(100))  # Charity, Foundation, Community Group, etc.
+    
+    # Contact Information
+    email = Column(String(200))
+    phone_number = Column(String(20))
+    website = Column(String(500))
+    
+    # Location
+    country = Column(String(100))
+    region = Column(String(200))
+    address = Column(Text)
+    
+    # Organization Details
+    mission_statement = Column(Text)
+    focus_areas = Column(Text)  # e.g., "Education, Healthcare, Water"
+    year_established = Column(Integer)
+    staff_size = Column(String(50))  # e.g., "1-10", "11-50", "50+"
+    
+    # Verification Documents (URLs or file paths)
+    registration_document_url = Column(String(500))
+    tax_certificate_url = Column(String(500))
+    additional_documents = Column(Text)  # JSON array of document URLs
+    
+    # Banking Information (for payouts)
+    bank_name = Column(String(200))
+    account_number = Column(String(100))
+    account_name = Column(String(200))
+    swift_code = Column(String(50))
+    
+    # Admin Review
+    status = Column(String(20), default='PENDING', nullable=False, index=True)  # PENDING, APPROVED, REJECTED, NEEDS_INFO
+    reviewed_by_admin_id = Column(Integer, ForeignKey('users.id'))
+    reviewed_at = Column(DateTime)
+    rejection_reason = Column(Text)
+    admin_notes = Column(Text)
+    
+    # Created NGO (if approved)
+    ngo_id = Column(Integer, ForeignKey('ngo_organizations.id'))
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    reviewed_by = relationship("User", foreign_keys=[reviewed_by_admin_id])
+    ngo = relationship("NGOOrganization", foreign_keys=[ngo_id])
+
+
 class Donor(Base):
     """
     Individual donor who interacts via phone/Telegram/WhatsApp.
@@ -250,7 +321,10 @@ class Campaign(Base):
     __tablename__ = "campaigns"
     
     id = Column(Integer, primary_key=True)
-    ngo_id = Column(Integer, ForeignKey("ngo_organizations.id"), nullable=False)
+    
+    # Campaign Ownership (XOR: exactly one must be set)
+    ngo_id = Column(Integer, ForeignKey("ngo_organizations.id"), nullable=True)  # NGO campaigns
+    creator_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # Individual campaigns
     
     # Basic Info
     title = Column(String(255), nullable=False)
@@ -283,9 +357,25 @@ class Campaign(Base):
     
     # Relationships
     ngo = relationship("NGOOrganization", back_populates="campaigns")
+    creator_user = relationship("User", foreign_keys=[creator_user_id], backref="created_campaigns")
     donations = relationship("Donation", back_populates="campaign")
     verifications = relationship("ImpactVerification", back_populates="campaign")
     context_items = relationship("CampaignContext", back_populates="campaign")
+    
+    def validate_ownership(self) -> bool:
+        """Ensure exactly one of ngo_id or creator_user_id is set (XOR)."""
+        return (self.ngo_id is not None) != (self.creator_user_id is not None)
+    
+    def get_owner_name(self, db_session) -> str:
+        """Get display name of campaign owner."""
+        if self.ngo_id:
+            ngo = db_session.query(NGOOrganization).filter(NGOOrganization.id == self.ngo_id).first()
+            return f"{ngo.name} (NGO)" if ngo else "Unknown NGO"
+        elif self.creator_user_id:
+            from database.models import User
+            user = db_session.query(User).filter(User.id == self.creator_user_id).first()
+            return f"{user.full_name} (Individual)" if user else "Unknown Creator"
+        return "Unknown Owner"
     
     def get_current_usd_total(self):
         """

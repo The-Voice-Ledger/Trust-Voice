@@ -77,25 +77,21 @@ async def handle_create_campaign(
                 "data": {}
             }
         
-        # Get or verify NGO
-        if not user.ngo_id:
-            return {
-                "success": False,
-                "message": "You need to be associated with an NGO first. Please contact support to set up your organization.",
-                "needs_clarification": False,
-                "missing_entities": [],
-                "data": {}
-            }
+        # Determine campaign type: NGO or Individual
+        campaign_type = "NGO" if user.ngo_id else "Individual"
+        ngo = None
         
-        ngo = db.query(NGOOrganization).filter(NGOOrganization.id == user.ngo_id).first()
-        if not ngo:
-            return {
-                "success": False,
-                "message": "I couldn't find your organization. Please contact support.",
-                "needs_clarification": False,
-                "missing_entities": [],
-                "data": {}
-            }
+        if user.ngo_id:
+            # NGO Campaign
+            ngo = db.query(NGOOrganization).filter(NGOOrganization.id == user.ngo_id).first()
+            if not ngo:
+                return {
+                    "success": False,
+                    "message": "I couldn't find your organization. Please contact support.",
+                    "needs_clarification": False,
+                    "missing_entities": [],
+                    "data": {}
+                }
         
         # Extract entities
         title = entities.get("title")
@@ -116,11 +112,12 @@ async def handle_create_campaign(
                 "data": {}
             }
         
-        # Create campaign
+        # Create campaign (NGO or Individual)
         campaign_id = uuid.uuid4()
         campaign = Campaign(
             id=campaign_id,
-            ngo_id=user.ngo_id,
+            ngo_id=user.ngo_id if user.ngo_id else None,  # Set if NGO campaign
+            creator_user_id=user.id if not user.ngo_id else None,  # Set if individual campaign
             title=title,
             description=description,
             category=category.lower(),
@@ -136,10 +133,12 @@ async def handle_create_campaign(
         db.add(campaign)
         db.commit()
         
-        logger.info(f"Created campaign {campaign_id} via voice: {title}")
+        logger.info(f"Created {campaign_type} campaign {campaign_id} via voice: {title}")
         
+        owner_name = ngo.name if ngo else user.full_name
         message = (
-            f"Great! I've created your campaign '{title}' with a goal of {int(goal_amount)} dollars in the {category} category. "
+            f"Great! I've created your {campaign_type.lower()} campaign '{title}' for {owner_name} "
+            f"with a goal of {int(goal_amount)} dollars in the {category} category. "
             f"Your campaign is pending verification by a field agent. "
             "Once verified, it will be active and donors can start contributing. "
             f"Campaign ID: {str(campaign_id)[:8]}. "
@@ -591,3 +590,154 @@ async def handle_ngo_dashboard(
             "missing_entities": [],
             "data": {}
         }
+
+
+# ============================================================================
+# HANDLER 5: REGISTER NGO
+# ============================================================================
+
+@register_handler("register_ngo")
+async def handle_register_ngo(
+    entities: Dict[str, Any],
+    user_id: str,
+    db: Session,
+    context: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Submit NGO registration application.
+    
+    Required entities:
+        - organization_name: NGO name
+        - email: Contact email
+        - country: Operating country
+        
+    Optional entities:
+        - registration_number: Official registration ID
+        - phone_number: Contact phone
+        - mission_statement: NGO mission
+        - focus_areas: e.g., "education, healthcare"
+        - year_established: Founding year
+        - website: Organization website
+    
+    Returns confirmation and next steps.
+    """
+    try:
+        from database.models import PendingNGORegistration
+        
+        # Extract required entities
+        org_name = entities.get("organization_name")
+        email = entities.get("email")
+        country = entities.get("country")
+        
+        # Check for missing required fields
+        missing = []
+        if not org_name:
+            missing.append("organization_name")
+        if not email:
+            missing.append("email")
+        if not country:
+            missing.append("country")
+        
+        if missing:
+            return {
+                "success": False,
+                "message": f"To register your NGO, I need: {', '.join(missing)}. Please provide these details.",
+                "needs_clarification": True,
+                "missing_entities": missing,
+                "data": {}
+            }
+        
+        # Get Telegram user info from context
+        telegram_user = context.get("telegram_user", {})
+        telegram_id = telegram_user.get("id") or user_id
+        telegram_username = telegram_user.get("username")
+        
+        # Check if NGO already registered
+        existing_ngo = db.query(NGOOrganization).filter(
+            NGOOrganization.name == org_name
+        ).first()
+        
+        if existing_ngo:
+            return {
+                "success": False,
+                "message": f"'{org_name}' is already registered in our system. If you represent this organization, please contact support.",
+                "needs_clarification": False,
+                "missing_entities": [],
+                "data": {}
+            }
+        
+        # Check if application already pending
+        existing_pending = db.query(PendingNGORegistration).filter(
+            PendingNGORegistration.organization_name == org_name,
+            PendingNGORegistration.status == 'PENDING'
+        ).first()
+        
+        if existing_pending:
+            return {
+                "success": False,
+                "message": f"An application for '{org_name}' is already pending review. We'll notify you once it's reviewed.",
+                "needs_clarification": False,
+                "missing_entities": [],
+                "data": {"application_id": existing_pending.id}
+            }
+        
+        # Create pending registration
+        pending = PendingNGORegistration(
+            submitted_by_telegram_id=str(telegram_id),
+            submitted_by_telegram_username=telegram_username,
+            submitted_by_name=entities.get("submitted_by_name"),
+            organization_name=org_name,
+            registration_number=entities.get("registration_number"),
+            organization_type=entities.get("organization_type"),
+            email=email,
+            phone_number=entities.get("phone_number"),
+            website=entities.get("website"),
+            country=country,
+            region=entities.get("region"),
+            address=entities.get("address"),
+            mission_statement=entities.get("mission_statement"),
+            focus_areas=entities.get("focus_areas"),
+            year_established=entities.get("year_established"),
+            staff_size=entities.get("staff_size"),
+            bank_name=entities.get("bank_name"),
+            account_number=entities.get("account_number"),
+            account_name=entities.get("account_name"),
+            swift_code=entities.get("swift_code"),
+            status='PENDING'
+        )
+        
+        db.add(pending)
+        db.commit()
+        db.refresh(pending)
+        
+        message = (
+            f"Great! I've submitted your registration for '{org_name}'. "
+            f"Our admin team will review your application and get back to you within 2-3 business days. "
+            f"Your application ID is {pending.id}. "
+            f"We'll notify you via Telegram once it's approved. "
+            f"In the meantime, you can complete your profile or upload verification documents using our registration form."
+        )
+        
+        return {
+            "success": True,
+            "message": message,
+            "needs_clarification": False,
+            "missing_entities": [],
+            "data": {
+                "application_id": pending.id,
+                "organization_name": org_name,
+                "status": "PENDING",
+                "review_time": "2-3 business days"
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error registering NGO: {str(e)}", exc_info=True)
+        return {
+            "success": False,
+            "message": "Sorry, I had trouble submitting your NGO registration. Please try again or use the registration form in the menu.",
+            "needs_clarification": False,
+            "missing_entities": [],
+            "data": {}
+        }
+

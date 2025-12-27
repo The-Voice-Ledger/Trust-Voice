@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 16px;
+        }
+        
+        .header {
+            margin-bottom: 24px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: var(--tg-theme-hint-color, #999);
+            font-size: 14px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 16px;
+            border-radius: 12px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .stat-change {
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .stat-change.positive {
+            color: #4CAF50;
+        }
+        
+        .stat-change.negative {
+            color: #f44336;
+        }
+        
+        .chart-container {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        canvas {
+            max-height: 250px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .refresh-btn {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 16px;
+        }
+        
+        .refresh-btn:active {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Analytics Dashboard</h1>
+        <div class="subtitle">Real-time campaign metrics</div>
+    </div>
+    
+    <div id="loading" class="loading">
+        Loading analytics data...
+    </div>
+    
+    <div id="error" class="error" style="display: none;"></div>
+    
+    <div id="content" style="display: none;">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Raised</div>
+                <div class="stat-value" id="totalRaised">$0</div>
+                <div class="stat-change positive" id="raisedChange">+0%</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Active Campaigns</div>
+                <div class="stat-value" id="activeCampaigns">0</div>
+                <div class="stat-change positive" id="campaignsChange">+0</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Total Donors</div>
+                <div class="stat-value" id="totalDonors">0</div>
+                <div class="stat-change positive" id="donorsChange">+0%</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Avg. Donation</div>
+                <div class="stat-value" id="avgDonation">$0</div>
+                <div class="stat-change" id="avgChange">$0</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">Donations Over Time</div>
+            <canvas id="donationsChart"></canvas>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">Top Campaigns</div>
+            <canvas id="campaignsChart"></canvas>
+        </div>
+        
+        <button class="refresh-btn" onclick="loadAnalytics()">
+            🔄 Refresh Data
+        </button>
+    </div>
+    
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        
+        let donationsChart, campaignsChart;
+        
+        // API base URL (update with your actual backend URL)
+        const API_BASE = 'http://localhost:8000'; // Change to ngrok URL when ready
+        
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(amount);
+        }
+        
+        // Format number with commas
+        function formatNumber(num) {
+            return new Intl.NumberFormat('en-US').format(num);
+        }
+        
+        // Create donations timeline chart
+        function createDonationsChart(data) {
+            const ctx = document.getElementById('donationsChart').getContext('2d');
+            
+            if (donationsChart) {
+                donationsChart.destroy();
+            }
+            
+            donationsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Donations',
+                        data: data.values,
+                        borderColor: '#3390ec',
+                        backgroundColor: 'rgba(51, 144, 236, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Create top campaigns bar chart
+        function createCampaignsChart(data) {
+            const ctx = document.getElementById('campaignsChart').getContext('2d');
+            
+            if (campaignsChart) {
+                campaignsChart.destroy();
+            }
+            
+            campaignsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Raised',
+                        data: data.values,
+                        backgroundColor: [
+                            '#4CAF50',
+                            '#2196F3',
+                            '#FF9800',
+                            '#9C27B0',
+                            '#F44336'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Load analytics data from backend
+        async function loadAnalytics() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const content = document.getElementById('content');
+            
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            content.style.display = 'none';
+            
+            try {
+                // Fetch analytics data from your FastAPI backend
+                // For now, using mock data
+                const response = await fetchMockAnalytics();
+                
+                // Update stats
+                document.getElementById('totalRaised').textContent = formatCurrency(response.totalRaised);
+                document.getElementById('raisedChange').textContent = `+${response.raisedChange}% this month`;
+                
+                document.getElementById('activeCampaigns').textContent = formatNumber(response.activeCampaigns);
+                document.getElementById('campaignsChange').textContent = `+${response.newCampaigns} new`;
+                
+                document.getElementById('totalDonors').textContent = formatNumber(response.totalDonors);
+                document.getElementById('donorsChange').textContent = `+${response.donorsChange}% growth`;
+                
+                document.getElementById('avgDonation').textContent = formatCurrency(response.avgDonation);
+                document.getElementById('avgChange').textContent = formatCurrency(response.avgChange) + ' change';
+                
+                // Create charts
+                createDonationsChart(response.donationsTimeline);
+                createCampaignsChart(response.topCampaigns);
+                
+                loading.style.display = 'none';
+                content.style.display = 'block';
+                
+            } catch (err) {
+                console.error('Error loading analytics:', err);
+                loading.style.display = 'none';
+                error.textContent = '❌ Failed to load analytics. Please try again.';
+                error.style.display = 'block';
+            }
+        }
+        
+        // Mock analytics data (replace with real API call)
+        async function fetchMockAnalytics() {
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            return {
+                totalRaised: 125430.50,
+                raisedChange: 23.5,
+                activeCampaigns: 12,
+                newCampaigns: 3,
+                totalDonors: 1847,
+                donorsChange: 15.2,
+                avgDonation: 67.89,
+                avgChange: 5.32,
+                donationsTimeline: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    values: [1200, 1900, 3000, 2500, 2800, 3200, 4100]
+                },
+                topCampaigns: {
+                    labels: [
+                        'Clean Water Kenya',
+                        'Education Uganda',
+                        'Healthcare Nepal',
+                        'Food Relief Yemen',
+                        'Shelter Haiti'
+                    ],
+                    values: [28500, 22300, 19800, 17200, 15600]
+                }
+            };
+        }
+        
+        // Initial load
+        loadAnalytics();
+    </script>
+</body>
+</html>

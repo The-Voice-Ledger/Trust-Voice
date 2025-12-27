@@ -27,6 +27,7 @@ def enrich_campaign_response(campaign: Campaign) -> dict:
     campaign_dict = {
         "id": campaign.id,
         "ngo_id": campaign.ngo_id,
+        "creator_user_id": campaign.creator_user_id,
         "title": campaign.title,
         "description": campaign.description,
         "goal_amount_usd": campaign.goal_amount_usd,
@@ -43,7 +44,10 @@ def enrich_campaign_response(campaign: Campaign) -> dict:
 
 # Pydantic schemas for request/response
 class CampaignCreate(BaseModel):
-    ngo_id: int
+    # Ownership (exactly one must be provided)
+    ngo_id: Optional[int] = None  # For NGO campaigns
+    creator_user_id: Optional[int] = None  # For individual campaigns
+    
     title: str = Field(..., min_length=3, max_length=200)
     description: str
     goal_amount_usd: float = Field(..., gt=0)
@@ -73,7 +77,8 @@ class CampaignUpdate(BaseModel):
 
 class CampaignResponse(BaseModel):
     id: int
-    ngo_id: int
+    ngo_id: Optional[int] = None  # Set for NGO campaigns
+    creator_user_id: Optional[int] = None  # Set for individual campaigns
     title: str
     description: str
     goal_amount_usd: float
@@ -92,16 +97,34 @@ class CampaignResponse(BaseModel):
 @router.post("/", response_model=CampaignResponse, status_code=201)
 def create_campaign(campaign: CampaignCreate, db: Session = Depends(get_db)):
     """
-    Create a new fundraising campaign
+    Create a new fundraising campaign (NGO or Individual).
+    
+    Must provide exactly one of: ngo_id (NGO campaign) or creator_user_id (individual campaign)
     """
-    # Verify NGO exists
-    ngo = db.query(NGOOrganization).filter(NGOOrganization.id == campaign.ngo_id).first()
-    if not ngo:
-        raise HTTPException(status_code=404, detail=f"NGO with id {campaign.ngo_id} not found")
+    # Validate XOR: exactly one ownership field must be set
+    if not ((campaign.ngo_id is not None) ^ (campaign.creator_user_id is not None)):
+        raise HTTPException(
+            status_code=400, 
+            detail="Must provide exactly one of: ngo_id (NGO campaign) or creator_user_id (individual campaign)"
+        )
+    
+    # Verify NGO exists (if NGO campaign)
+    if campaign.ngo_id:
+        ngo = db.query(NGOOrganization).filter(NGOOrganization.id == campaign.ngo_id).first()
+        if not ngo:
+            raise HTTPException(status_code=404, detail=f"NGO with id {campaign.ngo_id} not found")
+    
+    # Verify user exists (if individual campaign)
+    if campaign.creator_user_id:
+        from database.models import User
+        user = db.query(User).filter(User.id == campaign.creator_user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail=f"User with id {campaign.creator_user_id} not found")
     
     # Create campaign
     db_campaign = Campaign(
         ngo_id=campaign.ngo_id,
+        creator_user_id=campaign.creator_user_id,
         title=campaign.title,
         description=campaign.description,
         goal_amount_usd=campaign.goal_amount_usd,
