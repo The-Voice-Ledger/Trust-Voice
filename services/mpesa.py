@@ -306,3 +306,95 @@ class MPesaService:
 
 # Singleton instance
 mpesa_service = MPesaService()
+
+
+# ==============================================================================
+# Convenience Functions for Lab 5 Handlers
+# ==============================================================================
+
+def mpesa_stk_push(
+    phone_number: str,
+    amount: float,
+    account_reference: str,
+    transaction_desc: str
+) -> Dict:
+    """
+    Convenience wrapper for STK Push (used by donation_handler).
+    
+    Returns:
+        {
+            "success": bool,
+            "CheckoutRequestID": str,
+            "error": str (if failed)
+        }
+    """
+    try:
+        result = mpesa_service.initiate_stk_push(
+            phone_number=phone_number,
+            amount=amount,
+            account_reference=account_reference,
+            transaction_desc=transaction_desc
+        )
+        
+        # Check if successful
+        if result.get('ResponseCode') == '0':
+            return {
+                "success": True,
+                **result
+            }
+        else:
+            return {
+                "success": False,
+                "error": result.get('ResponseDescription', 'STK Push failed')
+            }
+            
+    except Exception as e:
+        logger.error(f"STK Push wrapper error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+def mpesa_b2c_payout(
+    phone_number: str,
+    amount: float,
+    occasion: str,
+    remarks: str
+) -> Dict:
+    """
+    Convenience wrapper for B2C payout (used by payout_handler and impact_handler).
+    
+    Returns:
+        {
+            "success": bool,
+            "ConversationID": str,
+            "error": str (if failed)
+        }
+    """
+    try:
+        result = mpesa_service.b2c_payment(
+            phone_number=phone_number,
+            amount=amount,
+            remarks=remarks,
+            occasion=occasion
+        )
+        
+        # Check if successful
+        if result.get('ResponseCode') == '0':
+            return {
+                "success": True,
+                **result
+            }
+        else:
+            return {
+                "success": False,
+                "error": result.get('ResponseDescription', 'B2C payment failed')
+            }
+            
+    except Exception as e:
+        logger.error(f"B2C payout wrapper error: {str(e)}")
+        return {
+            "success": False,
+            "error": str(e)
+        }

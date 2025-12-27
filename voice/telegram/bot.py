@@ -35,6 +35,10 @@ from voice.nlu.context import ConversationContext
 from voice.tasks.voice_tasks import process_voice_message_task
 from database.db import SessionLocal
 from database.models import User
+from voice.command_router import route_command
+from voice.context import get_context, update_context, store_search_results, set_current_campaign
+# Import handlers to register them with command router
+import voice.handlers
 from voice.telegram.register_handler import (
     register_command,
     handle_role_selection,
@@ -448,311 +452,11 @@ async def campaigns_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         db.close()
 
 # ============================================================================
-# VOICE INTENT ROUTER - Connects voice intents to database-backed responses
+# LAB 6: Unified Voice Command Router
 # ============================================================================
+# All voice intents now route through Lab 6 command router
+# Old handle_voice_intent function removed - single source of truth
 
-async def handle_voice_intent(intent: str, entities: dict, telegram_user_id: str, language: str = "en") -> str:
-    """
-    Route voice intent to appropriate handler and generate text response.
-    
-    This returns PLAIN TEXT (language-agnostic) that can be:
-    - Sent directly to Telegram (current)
-    - Converted to audio via OpenAI TTS (English) or AddisAI TTS (Amharic)
-    - Displayed in web UI
-    - Spoken via IVR system
-    
-    Args:
-        intent: Detected intent (e.g., 'search_campaigns')
-        entities: Extracted entities (amount, currency, category, etc.)
-        telegram_user_id: User's Telegram ID
-        language: User's preferred language ('en' or 'am')
-        
-    Returns:
-        Formatted text response (HTML-safe for Telegram)
-    """
-    from database.db import SessionLocal
-    from database.models import User, Campaign, Donation, Donor
-    
-    db = SessionLocal()
-    try:
-        # INTENT: Search/Browse Campaigns
-        if intent == "search_campaigns":
-            category = entities.get("category")
-            location = entities.get("location")
-            
-            query = db.query(Campaign).filter(Campaign.status == "active")
-            
-            if category:
-                query = query.filter(Campaign.category.ilike(f"%{category}%"))
-            if location:
-                query = query.filter(
-                    (Campaign.location_region.ilike(f"%{location}%")) |
-                    (Campaign.location_country.ilike(f"%{location}%"))
-                )
-            
-            campaigns = query.order_by(Campaign.created_at.desc()).limit(5).all()
-            
-            if not campaigns:
-                return "📋 No active campaigns found matching your criteria.\n\nTry searching without filters or check back soon!"
-            
-            message = "📋 <b>Active Campaigns</b>\n\n"
-            
-            for idx, campaign in enumerate(campaigns, 1):
-                raised = campaign.raised_amount_usd or 0
-                goal = campaign.goal_amount_usd or 1
-                progress = (raised / goal * 100)
-                location_str = campaign.location_region or campaign.location_country or 'N/A'
-                
-                # Progress bar
-                bar_filled = int(progress / 10)
-                bar = "█" * bar_filled + "░" * (10 - bar_filled)
-                
-                message += (
-                    f"<b>{idx}. {campaign.title}</b>\n"
-                    f"   {bar} {progress:.1f}%\n"
-                    f"   💰 ${raised:,.0f} raised of ${goal:,.0f} goal\n"
-                    f"   📍 {location_str}\n\n"
-                )
-            
-            message += "💬 Say which campaign you'd like to support!"
-            return message
-        
-        # INTENT: View Donation History
-        elif intent == "view_donation_history":
-            # Find donor record
-            donor = db.query(Donor).filter(
-                Donor.telegram_user_id == telegram_user_id
-            ).first()
-            
-            if not donor:
-                return (
-                    "📋 <b>Your Donation History</b>\n\n"
-                    "You haven't made any donations yet.\n"
-                    "Total donated: $0\n\n"
-                    "Say 'show me campaigns' to find causes you can support!"
-                )
-            
-            # Get donations
-            donations = db.query(Donation).filter(
-                Donation.donor_id == donor.id
-            ).order_by(Donation.created_at.desc()).limit(10).all()
-            
-            if not donations:
-                return (
-                    "📋 <b>Your Donation History</b>\n\n"
-                    "You haven't made any donations yet.\n"
-                    "Total donated: $0\n\n"
-                    "Say 'show me campaigns' to find causes you can support!"
-                )
-            
-            # Calculate total
-            total_donated = sum(d.amount_usd for d in donations if d.status == "completed")
-            
-            message = f"📊 <b>Your Donation History</b>\n\n"
-            message += f"💰 Total donated: <b>${total_donated:,.2f}</b>\n"
-            message += f"🎯 Donations: {len(donations)}\n\n"
-            message += f"<b>Recent Donations:</b>\n\n"
-            
-            for donation in donations[:5]:
-                # Get campaign
-                campaign = db.query(Campaign).filter(
-                    Campaign.id == donation.campaign_id
-                ).first()
-                
-                status_emoji = {
-                    "completed": "✅",
-                    "pending": "⏳",
-                    "failed": "❌"
-                }.get(donation.status, "❓")
-                
-                campaign_name = campaign.title if campaign else "Campaign"
-                
-                message += (
-                    f"{status_emoji} <b>${donation.amount_usd:.2f}</b> to {campaign_name}\n"
-                    f"   {donation.created_at.strftime('%b %d, %Y')}\n\n"
-                )
-            
-            message += "🙏 Thank you for your generosity!"
-            return message
-        
-        # INTENT: View My Campaigns (Creator Only)
-        elif intent == "view_my_campaigns":
-            # Find user
-            db_user = db.query(User).filter(
-                User.telegram_user_id == telegram_user_id
-            ).first()
-            
-            if not db_user:
-                return (
-                    "⚠️ <b>My Campaigns</b>\n\n"
-                    "Please register first to view campaigns you've created.\n"
-                    "Your campaign status will appear here after registration.\n\n"
-                    "Say 'I want to register' to get started!"
-                )
-            
-            # Check if user is campaign creator
-            if db_user.role not in ["CAMPAIGN_CREATOR", "SYSTEM_ADMIN"]:
-                return (
-                    "⚠️ This feature is for Campaign Creators only.\n\n"
-                    "To create campaigns, you can re-register as a Campaign Creator."
-                )
-            
-            # Get campaigns
-            campaigns = db.query(Campaign).filter(
-                Campaign.ngo_id == db_user.ngo_id
-            ).order_by(Campaign.created_at.desc()).limit(10).all()
-            
-            if not campaigns:
-                return (
-                    "📋 <b>My Created Campaigns</b>\n\n"
-                    "You haven't created any campaigns yet.\n"
-                    "Campaign status: None\n\n"
-                    "Say 'create a campaign' to get started!"
-                )
-            
-            message = f"📋 <b>Your Campaigns</b>\n\n"
-            
-            for idx, campaign in enumerate(campaigns[:5], 1):
-                raised = campaign.raised_amount_usd or 0
-                goal = campaign.goal_amount_usd or 1
-                progress = (raised / goal * 100)
-                status = "🟢 Active" if campaign.status == "active" else "🔴 Inactive"
-                
-                # Count donors
-                donor_count = db.query(Donation.donor_id).filter(
-                    Donation.campaign_id == campaign.id,
-                    Donation.status == "completed"
-                ).distinct().count()
-                
-                message += (
-                    f"<b>{idx}. {campaign.title}</b>\n"
-                    f"   {status} | {progress:.1f}% funded\n"
-                    f"   💰 ${raised:,.0f} / ${goal:,.0f}\n"
-                    f"   👥 {donor_count} donors\n\n"
-                )
-            
-            message += "💬 Say a campaign name to see details!"
-            return message
-        
-        # INTENT: Make Donation
-        elif intent == "make_donation":
-            amount = entities.get("amount")
-            currency = entities.get("currency", "USD")
-            campaign_name = entities.get("campaign_name", "this campaign")
-            
-            if not amount:
-                return "How much would you like to donate? For example, say '$50 to water project'"
-            
-            # Search for campaign
-            campaign = db.query(Campaign).filter(
-                Campaign.title.ilike(f"%{campaign_name}%"),
-                Campaign.status == "active"
-            ).first()
-            
-            if campaign:
-                return (
-                    f"Great! You want to donate <b>${amount}</b> to <b>{campaign.title}</b>.\n\n"
-                    f"Goal: ${campaign.goal_amount_usd:,.0f}\n"
-                    f"Raised so far: ${campaign.raised_amount_usd or 0:,.0f}\n\n"
-                    f"I'll send you payment instructions to complete your donation.\n"
-                    f"Payment methods: M-Pesa, Bank Transfer"
-                )
-            else:
-                return (
-                    f"I'd love to help you donate ${amount}!\n\n"
-                    f"Could you tell me which campaign?\n"
-                    f"Say 'show campaigns' to see payment options."
-                )
-        
-        # INTENT: Get Help
-        elif intent == "get_help":
-            return (
-                "<b>🤖 TrustVoice Help & Commands</b>\n\n"
-                "Available voice commands:\n"
-                "• 📋 Browse campaigns: 'Show me campaigns'\n"
-                "• 💰 Make donations: 'I want to donate $50'\n"
-                "• 📊 View history: 'Show my donations'\n"
-                "• 🌍 Change language: 'Switch to Amharic'\n\n"
-                "Just speak naturally - I understand you!"
-            )
-        
-        # INTENT: System Information
-        elif intent == "system_info":
-            return (
-                "<b>🎤 About TrustVoice</b>\n\n"
-                "TrustVoice is a <b>voice-first donation platform</b> connecting donors with verified NGO campaigns across Africa.\n\n"
-                "<b>✨ Key Features:</b>\n"
-                "• 🗣️ Voice-first: Speak naturally in English or Amharic\n"
-                "• ✅ Verified Impact: GPS-verified project completion\n"
-                "• 📱 Multi-channel: Telegram, IVR calls, web interface\n"
-                "• 💰 Easy Payments: M-Pesa, mobile money, cards\n"
-                "• 🌍 Pan-African: Supporting NGOs across the continent\n\n"
-                "<b>🎯 Campaign Categories:</b>\n"
-                "Water & Sanitation, Education, Healthcare, Agriculture, Women Empowerment, Youth Development, Emergency Relief, Infrastructure\n\n"
-                "<b>👥 Who Can Use TrustVoice?</b>\n"
-                "• Donors: Browse and support verified campaigns\n"
-                "• NGOs: Create and manage fundraising campaigns\n"
-                "• Field Agents: Report and verify impact with GPS\n\n"
-                "💬 Try: 'Show me water projects' or 'I want to donate'"
-            )
-        
-        # INTENT: Greeting
-        elif intent == "greeting":
-            db_user = db.query(User).filter(
-                User.telegram_user_id == telegram_user_id
-            ).first()
-            
-            name = db_user.preferred_name if db_user else "there"
-            
-            return (
-                f"👋 Hello {name}!\n\n"
-                "I'm TrustVoice, your voice-powered donation assistant.\n\n"
-                "You can:\n"
-                "• Browse campaigns\n"
-                "• Make donations\n"
-                "• Check your donation history\n\n"
-                "What would you like to do?"
-            )
-        
-        # INTENT: Change Language
-        elif intent == "change_language":
-            target_language = entities.get("language", "").lower()
-            
-            if "amharic" in target_language or "am" == target_language:
-                # Update database
-                db_user = db.query(User).filter(
-                    User.telegram_user_id == telegram_user_id
-                ).first()
-                
-                if db_user:
-                    db_user.preferred_language = "am"
-                    db.commit()
-                    return "✅ Language changed to Amharic! / ቋንቋ ወደ አማርኛ ተቀይሯል!\n\nWelcome back! / እንደገና እንኳን ደህና መጡ!"
-                else:
-                    return "Please register first to change language to Amharic / ለመጀመር እባክዎ መመዝገብ ያስፈልግዎታል: /start"
-            
-            elif "english" in target_language or "en" == target_language:
-                # Update database
-                db_user = db.query(User).filter(
-                    User.telegram_user_id == telegram_user_id
-                ).first()
-                
-                if db_user:
-                    db_user.preferred_language = "en"
-                    db.commit()
-                    return "✅ Language changed to English!\n\nWelcome back!"
-                else:
-                    return "Please register first to get started: /start"
-            
-            else:
-                return "I currently support English and Amharic. Which would you prefer?"
-        
-        # Default: Generic response
-        else:
-            return f"I understand you want to {intent.replace('_', ' ')}. Let me help with that!\n\nTry saying 'help' to see what I can do."
-    
-    finally:
-        db.close()
 
 async def donations_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /donations command - View user's donation history"""
@@ -962,15 +666,55 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         await processing_msg.delete()
         
         if result["success"]:
-            # Get rich database-backed response
+            # Get intent and entities from NLU
             intent = result.get("intent")
             entities = result.get("entities", {})
+            transcript = result["stages"]["asr"]["transcript"]
             
-            # Route to voice intent handler (returns text response)
-            response = await handle_voice_intent(intent, entities, telegram_user_id, language)
+            # ==================================================================
+            # LAB 6: Unified Command Router (All Users)
+            # ==================================================================
+            # Route ALL users through Lab 6 (registered & guests)
+            db = SessionLocal()
+            try:
+                user = db.query(User).filter(User.telegram_user_id == telegram_user_id).first()
+                
+                # Use UUID for registered users, telegram_user_id for guests
+                user_id = str(user.id) if user else telegram_user_id
+                
+                # Get conversation context
+                context = get_context(user_id)
+                
+                # Route command through Lab 6 router
+                router_result = await route_command(
+                    intent=intent,
+                    entities=entities,
+                    user_id=user_id,
+                    db=db,
+                    conversation_context=context
+                )
+                
+                # Update context if search results returned
+                if router_result.get("success") and "campaigns" in router_result.get("data", {}):
+                    campaign_ids = router_result["data"]["campaigns"]
+                    if campaign_ids:
+                        store_search_results(user_id, campaign_ids)
+                
+                # Update current campaign if returned
+                if "campaign_id" in router_result.get("data", {}):
+                    set_current_campaign(user_id, router_result["data"]["campaign_id"])
+                
+                # Use Lab 6 response
+                response = router_result.get("message", "I didn't understand that. Try saying 'help'.")
+                    
+            finally:
+                db.close()
+            
+            # ==================================================================
+            # End Lab 6 Integration
+            # ==================================================================
             
             # Add transcript for transparency
-            transcript = result["stages"]["asr"]["transcript"]
             full_response = f"💬 You said: \"{transcript}\"\n\n{response}"
             
             # Send with dual delivery (text + voice)
@@ -1040,14 +784,40 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         entities=nlu_result["entities"]
     )
     
-    # Format response using voice intent router (same logic for voice and text)
+    # Route through Lab 6 command router (same logic for voice and text)
     intent = nlu_result["intent"]
     entities = nlu_result["entities"]
     
-    # Get rich database-backed response
-    response = await handle_voice_intent(intent, entities, telegram_user_id, language)
+    # Get database session and user
+    db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.telegram_user_id == telegram_user_id).first()
+        user_id = str(user.id) if user else telegram_user_id
+        
+        # Get conversation context
+        from voice.context.conversation_manager import get_context
+        context_data = get_context(user_id)
+        
+        # Route through Lab 6
+        router_result = await route_command(
+            intent=intent,
+            entities=entities,
+            user_id=user_id,
+            db=db,
+            conversation_context=context_data
+        )
+        
+        response = router_result.get("message", "I didn't understand that. Try saying 'help'.")
+    finally:
+        db.close()
     
-    await update.message.reply_text(response, parse_mode="HTML")
+    # Send with dual delivery (text + voice) - same as voice messages
+    await send_voice_reply(
+        update=update,
+        text=response,
+        language=language,
+        parse_mode="HTML"
+    )
 
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):

@@ -420,3 +420,25 @@ class StripeService:
 
 # Singleton instance
 stripe_service = StripeService()
+
+
+# ============================================================================
+# WRAPPER FUNCTIONS (for backwards compatibility with Lab 5 handlers)
+# ============================================================================
+
+def create_payment_intent(
+    amount: float,
+    currency: str,
+    customer_email: Optional[str] = None,
+    metadata: Optional[Dict] = None
+) -> Dict:
+    """
+    Wrapper function for Lab 5 donation_handler.py compatibility.
+    Calls StripeService.create_payment_intent().
+    """
+    return stripe_service.create_payment_intent(
+        amount=amount,
+        currency=currency,
+        customer_email=customer_email,
+        metadata=metadata
+    )
