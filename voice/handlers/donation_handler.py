@@ -396,9 +396,55 @@ async def get_donation_status(
         }
 
 
-# Example usage
-if __name__ == "__main__":
-    print("🎤 Donation Handler Test\n")
+# ============================================================================
+# LAB 8: Multi-turn Conversational Donations
+# ============================================================================
+
+async def start_conversational_donation(
+    entities: Dict[str, Any],
+    user_id: str,
+    db: Session,
+    context: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """
+    Start conversational donation flow (Lab 8)
+    
+    Handler for "make_donation" intent when user doesn't have all details.
+    Starts a multi-step conversation to collect campaign, amount, and payment info.
+    
+    Args:
+        entities: Extracted entities (may be empty or partial)
+        user_id: User's telegram_user_id
+        db: Database session
+        context: Conversation context
+        
+    Returns:
+        Success response with first question
+    """
+    from voice.workflows.donation_flow import DonationConversation
+    
+    try:
+        # Start the donation flow
+        result = await DonationConversation.start(user_id, db)
+        
+        return {
+            "success": True,
+            "message": result["message"],
+            "data": {
+                "campaigns": result.get("campaigns", []),
+                "step": result["step"]
+            }
+        }
+    
+    except Exception as e:
+        logger.error(f"Error starting donation conversation: {e}")
+        return {
+            "success": False,
+            "message": "Sorry, I couldn't start the donation process. Please try again.",
+            "error": str(e)
+        }
+
+
     
     # This would normally be called from the bot
     # Example: User says "Donate $50 to clean water project"

@@ -767,6 +767,39 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     logger.info(f"Text message from {user.first_name}: {text}")
     
+    # ====================================================================
+    # LAB 8: Multi-turn conversation check
+    # ====================================================================
+    # Check if user is in active conversation (e.g., donation flow, search)
+    from voice.session_manager import SessionManager, is_in_conversation, get_conversation_state, ConversationState
+    from voice.workflows.donation_flow import route_donation_message
+    from voice.workflows.search_flow import route_search_message
+    
+    if is_in_conversation(telegram_user_id):
+        # Route to appropriate conversation handler
+        db = SessionLocal()
+        try:
+            state = get_conversation_state(telegram_user_id)
+            
+            if state == ConversationState.DONATING.value:
+                result = await route_donation_message(telegram_user_id, update.message.text, db)
+                await update.message.reply_text(result["message"])
+                return
+            
+            elif state == ConversationState.SEARCHING_CAMPAIGNS.value:
+                result = await route_search_message(telegram_user_id, update.message.text, db)
+                await update.message.reply_text(result["message"])
+                return
+        
+        except Exception as e:
+            logger.error(f"Conversation routing error: {e}")
+            # Fall through to normal NLU
+        finally:
+            db.close()
+    # ====================================================================
+    # End Lab 8
+    # ====================================================================
+    
     # Import NLU directly for text
     from voice.nlu.nlu_infer import extract_intent_and_entities
     from voice.nlu.context import ConversationContext

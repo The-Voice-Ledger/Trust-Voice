@@ -40,6 +40,8 @@ async def handle_search_campaigns(
     """
     Search campaigns by category, location, or keyword.
     
+    LAB 8: Starts conversational search flow for multi-turn refinement.
+    
     Entities:
         - category (optional): education, health, water, environment
         - location (optional): region/city filter
@@ -49,6 +51,37 @@ async def handle_search_campaigns(
     """
     try:
         logger.info(f"Searching campaigns for user {user_id}")
+        
+        # ============================================================
+        # LAB 8: Start conversational search flow
+        # ============================================================
+        from voice.workflows.search_flow import SearchConversation
+        
+        # Build query string from entities
+        query_parts = []
+        if entities.get("category"):
+            query_parts.append(entities["category"])
+        if entities.get("keyword"):
+            query_parts.append(entities["keyword"])
+        if entities.get("location"):
+            query_parts.append(f"in {entities['location']}")
+        
+        query_str = " ".join(query_parts) if query_parts else "all campaigns"
+        
+        # Start conversational search
+        result = await SearchConversation.start_search(user_id, query_str, db)
+        
+        return {
+            "success": True,
+            "message": result["message"],
+            "needs_clarification": False,
+            "missing_entities": [],
+            "data": {
+                "campaigns": [c["id"] for c in result.get("campaigns", [])],
+                "count": len(result.get("campaigns", []))
+            }
+        }
+        # ============================================================
         
         # Build query
         query = db.query(Campaign).filter(Campaign.status == "active")
@@ -332,12 +365,21 @@ async def handle_make_donation(
         - campaign_id (required): Campaign UUID or reference
         - payment_method (optional): "mpesa" or "stripe"
     
-    Uses Lab 5's donation_handler for payment processing.
+    LAB 8: If entities are missing, starts conversational donation flow.
+    Uses Lab 5's donation_handler for payment processing when all details present.
     """
     try:
         amount = entities.get("amount")
         campaign_id = entities.get("campaign_id")
         payment_method = entities.get("payment_method", "mpesa")  # Default to M-Pesa
+        
+        # ============================================================
+        # LAB 8: Start conversational flow if missing entities
+        # ============================================================
+        if not amount or not campaign_id:
+            from voice.handlers.donation_handler import start_conversational_donation
+            return await start_conversational_donation(entities, user_id, db, context)
+        # ============================================================
         
         # Resolve campaign reference if needed
         try:
