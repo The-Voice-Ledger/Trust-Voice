@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from database.models import Campaign, Donor, Donation, User
 from services.mpesa import mpesa_stk_push
 from services.stripe_service import create_payment_intent
+from voice.session_manager import SessionManager, ConversationState, DonationStep
 
 logger = logging.getLogger(__name__)
 
@@ -416,15 +417,119 @@ async def start_conversational_donation(
         entities: Extracted entities (may be empty or partial)
         user_id: User's telegram_user_id
         db: Database session
-        context: Conversation context
+        context: Conversation context with transcript
         
     Returns:
         Success response with first question
     """
     from voice.workflows.donation_flow import DonationConversation
+    from voice.workflows.search_flow import SearchConversation
     
     try:
-        # Start the donation flow
+        # Check if user mentioned a campaign reference in the transcript
+        transcript = context.get("transcript", "") if context else ""
+        campaign_id = None
+        
+        if transcript:
+            # Try to extract campaign reference from transcript
+            transcript_lower = transcript.lower()
+            
+            # Check if it mentions "campaign" with a reference
+            if "campaign" in transcript_lower or "number" in transcript_lower:
+                # Get campaign IDs from search session
+                from voice.session_manager import SessionManager
+                search_session = SessionManager.get_session(user_id)
+                
+                if search_session and search_session["data"].get("campaign_ids"):
+                    campaign_ids = search_session["data"]["campaign_ids"]
+                    
+                    # Parse the campaign reference
+                    parsed_id = SearchConversation._parse_campaign_ref(transcript, campaign_ids)
+                    
+                    if parsed_id:
+                        campaign_id = parsed_id
+        
+        # If we found a campaign reference, skip to amount question
+        if campaign_id:
+            campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+            
+            if campaign:
+                # Check if amount was also provided
+                amount = entities.get("amount")
+                
+                if amount:
+                    # Both campaign and amount provided - start at payment method step
+                    SessionManager.create_session(user_id, ConversationState.DONATING)
+                    SessionManager.update_session(
+                        user_id,
+                        current_step=DonationStep.SELECT_PAYMENT.value,
+                        data_update={
+                            "campaign_id": campaign.id,
+                            "campaign_title": campaign.title,
+                            "amount": float(amount),
+                            "currency": entities.get("currency", "USD")
+                        },
+                        message="Started donation with campaign and amount"
+                    )
+                    
+                    return {
+                        "success": True,
+                        "message": f"Perfect! You want to donate ${amount} to {campaign.title}. How would you like to pay? (M-Pesa or Card)",
+                        "data": {
+                            "campaign": {"id": campaign.id, "title": campaign.title},
+                            "amount": amount,
+                            "step": DonationStep.SELECT_PAYMENT.value
+                        }
+                    }
+                else:
+                    # Only campaign provided - ask for amount
+                    SessionManager.create_session(user_id, ConversationState.DONATING)
+                    SessionManager.update_session(
+                        user_id,
+                        current_step=DonationStep.ENTER_AMOUNT.value,
+                        data_update={
+                            "campaign_id": campaign.id,
+                            "campaign_title": campaign.title
+                        },
+                        message=f"Selected campaign: {campaign.title}"
+                    )
+                    
+                    return {
+                        "success": True,
+                        "message": f"Great! How much would you like to donate to {campaign.title}? 💰",
+                        "data": {
+                            "campaign": {"id": campaign.id, "title": campaign.title},
+                            "step": DonationStep.ENTER_AMOUNT.value
+                        }
+                    }
+        
+        # Check if amount was provided without campaign
+        amount = entities.get("amount")
+        if amount:
+            # Start at campaign selection with amount pre-filled
+            result = await DonationConversation.start(user_id, db)
+            result["message"] = f"Perfect! You want to donate ${amount}. {result['message']}"
+            
+            # Store amount in session
+            SessionManager.update_session(
+                user_id,
+                data_update={
+                    "amount": float(amount),
+                    "currency": entities.get("currency", "USD")
+                }
+            )
+            
+            return {
+                "success": True,
+                "message": result["message"],
+                "data": {
+                    "campaigns": result.get("campaigns", []),
+                    "amount": amount,
+                    "step": result["step"]
+                }
+            }
+        
+        # Default: Start from the beginning
         result = await DonationConversation.start(user_id, db)
         
         return {

@@ -39,6 +39,10 @@ class SearchConversation:
         # Parse query for filters
         filters = SearchConversation._parse_query(query)
         
+        # Debug: Log what filters were extracted
+        print(f"[DEBUG] Search query: '{query}'")
+        print(f"[DEBUG] Extracted filters: {filters}")
+        
         # Search campaigns
         campaigns = SearchConversation._search_with_filters(filters, db)
         
@@ -209,7 +213,8 @@ class SearchConversation:
         
         return {
             "message": message,
-            "campaign": {"id": campaign.id, "title": campaign.title}
+            "campaign": {"id": campaign.id, "title": campaign.title},
+            "data": {"campaign_id": campaign_id}
         }
     
     @staticmethod
@@ -260,7 +265,7 @@ class SearchConversation:
             keyword = keyword.replace(region, "")
         
         # Remove generic terms that don't help search
-        generic_terms = ["campaign", "campaigns", "project", "projects", "show", "me", "find", "search", "in", "for"]
+        generic_terms = ["campaign", "campaigns", "project", "projects", "show", "me", "find", "search", "in", "for", "active", "available", "current", "can", "you", "please", "tell", "what", "are", "the"]
         for term in generic_terms:
             keyword = keyword.replace(term, "")
         
@@ -305,30 +310,55 @@ class SearchConversation:
         
         Examples:
         - "1" -> campaign_ids[0]
+        - "number one" -> campaign_ids[0]
         - "#42" -> 42
         - "first one" -> campaign_ids[0]
         """
         ref_lower = ref.lower()
         
-        # Ordinals
+        # Word numbers (handles "number one", "number two", etc.)
+        word_numbers = {
+            "one": 1, "1": 1,
+            "two": 2, "2": 2,
+            "three": 3, "3": 3,
+            "four": 4, "4": 4,
+            "five": 5, "5": 5,
+            "six": 6, "6": 6,
+            "seven": 7, "7": 7,
+            "eight": 8, "8": 8,
+            "nine": 9, "9": 9,
+            "ten": 10, "10": 10
+        }
+        
+        # Check for word numbers in the reference
+        for word, num in word_numbers.items():
+            if word in ref_lower and num <= len(campaign_ids):
+                return campaign_ids[num - 1]
+        
+        # Ordinals (handles "first", "second", "third", etc.)
         ordinals = {
             "first": 0, "1st": 0,
             "second": 1, "2nd": 1,
             "third": 2, "3rd": 2,
             "fourth": 3, "4th": 3,
-            "fifth": 4, "5th": 4
+            "fifth": 4, "5th": 4,
+            "sixth": 5, "6th": 5,
+            "seventh": 6, "7th": 6,
+            "eighth": 7, "8th": 7,
+            "ninth": 8, "9th": 8,
+            "tenth": 9, "10th": 9
         }
         
         for word, idx in ordinals.items():
             if word in ref_lower and idx < len(campaign_ids):
                 return campaign_ids[idx]
         
-        # Direct number
+        # Direct number with regex (handles "#42", "42", etc.)
         match = re.search(r'#?(\d+)', ref)
         if match:
             num = int(match.group(1))
             
-            # Check if it's an index (1-5) or campaign ID
+            # Check if it's an index (1-10) or campaign ID
             if num <= len(campaign_ids):
                 return campaign_ids[num - 1]
             elif num in campaign_ids:

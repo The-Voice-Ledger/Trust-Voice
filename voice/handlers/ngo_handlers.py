@@ -233,32 +233,36 @@ async def handle_withdraw_funds(
             
             campaign_uuid = recent_campaign.id
         else:
-            try:
-                campaign_uuid = uuid.UUID(str(campaign_id))
-            except (ValueError, AttributeError):
-                # Try extracting from context
-                last_results = context.get("last_search_campaigns", [])
-                if last_results:
-                    from voice.command_router import extract_campaign_reference
-                    campaign_uuid_str = extract_campaign_reference(str(campaign_id), last_results)
-                    if campaign_uuid_str:
-                        campaign_uuid = uuid.UUID(campaign_uuid_str)
-                    else:
-                        return {
-                            "success": False,
-                            "message": "Which campaign do you want to withdraw from? Say 'my latest campaign' or the campaign name.",
-                            "needs_clarification": True,
-                            "missing_entities": ["campaign_id"],
-                            "data": {}
-                        }
-                else:
-                    return {
-                        "success": False,
-                        "message": "Which campaign should I withdraw from?",
-                        "needs_clarification": True,
-                        "missing_entities": ["campaign_id"],
-                        "data": {}
-                    }
+            campaign_uuid = None
+            
+            # Try using transcript with SearchConversation first
+            transcript = context.get("transcript", "")
+            if transcript:
+                from voice.workflows.search_flow import SearchConversation
+                from voice.session_manager import SessionManager
+                
+                search_session = SessionManager.get_session(user_id)
+                if search_session and search_session["data"].get("campaign_ids"):
+                    campaign_ids = search_session["data"]["campaign_ids"]
+                    parsed_id = SearchConversation._parse_campaign_ref(transcript, campaign_ids)
+                    if parsed_id:
+                        campaign_uuid = parsed_id
+            
+            # Fallback: try direct UUID parsing
+            if not campaign_uuid and campaign_id:
+                try:
+                    campaign_uuid = uuid.UUID(str(campaign_id))
+                except (ValueError, AttributeError):
+                    pass
+            
+            if not campaign_uuid:
+                return {
+                    "success": False,
+                    "message": "Which campaign do you want to withdraw from? Say 'my latest campaign' or the campaign name.",
+                    "needs_clarification": True,
+                    "missing_entities": ["campaign_id"],
+                    "data": {}
+                }
         
         # Call Lab 5 payout handler
         result = await request_campaign_payout(
@@ -369,32 +373,37 @@ async def handle_field_report(
                 "data": {}
             }
         
-        # Resolve campaign
-        try:
-            campaign_uuid = uuid.UUID(str(campaign_id))
-        except (ValueError, AttributeError):
-            last_results = context.get("last_search_campaigns", [])
-            if last_results:
-                from voice.command_router import extract_campaign_reference
-                campaign_uuid_str = extract_campaign_reference(str(campaign_id), last_results)
-                if campaign_uuid_str:
-                    campaign_uuid = uuid.UUID(campaign_uuid_str)
-                else:
-                    return {
-                        "success": False,
-                        "message": "Which campaign are you reporting on? Say the campaign name or search for campaigns first.",
-                        "needs_clarification": True,
-                        "missing_entities": ["campaign_id"],
-                        "data": {}
-                    }
-            else:
-                return {
-                    "success": False,
-                    "message": "I need to know which campaign. Search for campaigns first, then say 'report for number 1'.",
-                    "needs_clarification": True,
-                    "missing_entities": ["campaign_id"],
-                    "data": {}
-                }
+        # Resolve campaign using transcript and SearchConversation
+        campaign_uuid = None
+        
+        # Try using transcript with SearchConversation first
+        transcript = context.get("transcript", "")
+        if transcript:
+            from voice.workflows.search_flow import SearchConversation
+            from voice.session_manager import SessionManager
+            
+            search_session = SessionManager.get_session(user_id)
+            if search_session and search_session["data"].get("campaign_ids"):
+                campaign_ids = search_session["data"]["campaign_ids"]
+                parsed_id = SearchConversation._parse_campaign_ref(transcript, campaign_ids)
+                if parsed_id:
+                    campaign_uuid = parsed_id
+        
+        # Fallback: try direct UUID parsing
+        if not campaign_uuid and campaign_id:
+            try:
+                campaign_uuid = uuid.UUID(str(campaign_id))
+            except (ValueError, AttributeError):
+                pass
+        
+        if not campaign_uuid:
+            return {
+                "success": False,
+                "message": "Which campaign are you reporting on? Say the campaign name or search for campaigns first.",
+                "needs_clarification": True,
+                "missing_entities": ["campaign_id"],
+                "data": {}
+            }
         
         # Call Lab 5 impact handler
         result = await process_impact_report(

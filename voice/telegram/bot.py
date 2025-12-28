@@ -682,8 +682,9 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 # Use UUID for registered users, telegram_user_id for guests
                 user_id = str(user.id) if user else telegram_user_id
                 
-                # Get conversation context
+                # Get conversation context and add transcript
                 context = get_context(user_id)
+                context["transcript"] = transcript  # Add transcript for handlers to use
                 
                 # Route command through Lab 6 router
                 router_result = await route_command(
@@ -827,9 +828,10 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         user = db.query(User).filter(User.telegram_user_id == telegram_user_id).first()
         user_id = str(user.id) if user else telegram_user_id
         
-        # Get conversation context
+        # Get conversation context and add transcript
         from voice.context.conversation_manager import get_context
         context_data = get_context(user_id)
+        context_data["transcript"] = text  # Add transcript for handlers to use
         
         # Route through Lab 6
         router_result = await route_command(
