@@ -54,11 +54,13 @@
             white-space: nowrap;
             cursor: pointer;
             transition: all 0.2s;
+            color: var(--tg-theme-text-color, #000000);
         }
         
         .tab.active {
             background: var(--tg-theme-button-color, #3390ec);
             color: var(--tg-theme-button-text-color, #ffffff);
+            border: 2px solid var(--tg-theme-button-color, #3390ec);
         }
         
         .tab-content {
@@ -256,6 +258,12 @@
     </style>
 </head>
 <body>
+    <button onclick="window.location.href='index.html'" style="background: none; border: none; color: var(--tg-theme-link-color, #3390ec); font-size: 16px; cursor: pointer; padding: 8px 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to Menu
+    </button>
     <div class="header">
         <h1>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;">
