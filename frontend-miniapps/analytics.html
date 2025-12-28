@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Analytics Dashboard</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 16px;
+        }
+        
+        .header {
+            margin-bottom: 24px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: var(--tg-theme-hint-color, #999);
+            font-size: 14px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 16px;
+            border-radius: 12px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .stat-change {
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .stat-change.positive {
+            color: #4CAF50;
+        }
+        
+        .stat-change.negative {
+            color: #f44336;
+        }
+        
+        .chart-container {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        canvas {
+            max-height: 250px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .refresh-btn {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 16px;
+        }
+        
+        .refresh-btn:active {
+            opacity: 0.8;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        
+        .voice-btn {
+            flex: 1;
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .voice-btn.recording {
+            animation: pulse 1.5s infinite;
+            background: #f44336;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .voice-response {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .voice-response-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+        
+        .voice-transcription {
+            font-style: italic;
+            color: var(--tg-theme-hint-color, #999);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .voice-answer {
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--tg-theme-hint-color, #999);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button onclick="window.location.href='index.html'" style="background: none; border: none; color: var(--tg-theme-link-color, #3390ec); font-size: 16px; cursor: pointer; padding: 8px 0; margin-bottom: 12px; display: flex; align-items: center; gap: 4px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back to Menu
+        </button>
+        <h1>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            Analytics Dashboard
+        </h1>
+        <div class="subtitle">Real-time campaign metrics</div>
+    </div>
+    
+    <!-- Voice Response Box -->
+    <div id="voiceResponse" class="voice-response" style="display: none;">
+        <div class="voice-response-header">
+            <span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                </svg>
+                Voice Response
+            </span>
+            <button class="close-btn" onclick="closeVoiceResponse()">✕</button>
+        </div>
+        <div id="voiceTranscription" class="voice-transcription"></div>
+        <div id="voiceAnswer" class="voice-answer"></div>
+        <audio id="voiceAudio" controls style="width: 100%; margin-top: 8px;"></audio>
+    </div>
+    
+    <div id="loading" class="loading">
+        Loading analytics data...
+    </div>
+    
+    <div id="error" class="error" style="display: none;"></div>
+    
+    <div id="content" style="display: none;">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Raised</div>
+                <div class="stat-value" id="totalRaised">$0</div>
+                <div class="stat-change positive" id="raisedChange">+0%</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Active Campaigns</div>
+                <div class="stat-value" id="activeCampaigns">0</div>
+                <div class="stat-change positive" id="campaignsChange">+0</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Total Donors</div>
+                <div class="stat-value" id="totalDonors">0</div>
+                <div class="stat-change positive" id="donorsChange">+0%</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-label">Avg. Donation</div>
+                <div class="stat-value" id="avgDonation">$0</div>
+                <div class="stat-change" id="avgChange">$0</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">Donations Over Time</div>
+            <canvas id="donationsChart"></canvas>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">Top Campaigns</div>
+            <canvas id="campaignsChart"></canvas>
+        </div>
+        
+        <div class="button-group">
+            <button class="refresh-btn" onclick="loadAnalytics()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                Refresh Data
+            </button>
+            <button class="voice-btn" id="voiceBtn" onclick="startVoiceQuery()">
+                <svg id="voiceBtnIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+                <span id="voiceBtnText">Ask</span>
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        
+        let donationsChart, campaignsChart;
+        let mediaRecorder;
+        let audioChunks = [];
+        
+        // API base URL (update with your actual backend URL)
+        const API_BASE = window.location.origin; // Use current origin (ngrok URL)
+        
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(amount);
+        }
+        
+        // Format number with commas
+        function formatNumber(num) {
+            return new Intl.NumberFormat('en-US').format(num);
+        }
+        
+        // Create donations timeline chart
+        function createDonationsChart(data) {
+            const ctx = document.getElementById('donationsChart').getContext('2d');
+            
+            if (donationsChart) {
+                donationsChart.destroy();
+            }
+            
+            donationsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Donations',
+                        data: data.values,
+                        borderColor: '#3390ec',
+                        backgroundColor: 'rgba(51, 144, 236, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Create top campaigns bar chart
+        function createCampaignsChart(data) {
+            const ctx = document.getElementById('campaignsChart').getContext('2d');
+            
+            if (campaignsChart) {
+                campaignsChart.destroy();
+            }
+            
+            campaignsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Raised',
+                        data: data.values,
+                        backgroundColor: [
+                            '#4CAF50',
+                            '#2196F3',
+                            '#FF9800',
+                            '#9C27B0',
+                            '#F44336'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Load analytics data from backend
+        async function loadAnalytics() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const content = document.getElementById('content');
+            
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            content.style.display = 'none';
+            
+            try {
+                // Fetch analytics data from your FastAPI backend
+                // For now, using mock data
+                const response = await fetchMockAnalytics();
+                
+                // Update stats
+                document.getElementById('totalRaised').textContent = formatCurrency(response.totalRaised);
+                document.getElementById('raisedChange').textContent = `+${response.raisedChange}% this month`;
+                
+                document.getElementById('activeCampaigns').textContent = formatNumber(response.activeCampaigns);
+                document.getElementById('campaignsChange').textContent = `+${response.newCampaigns} new`;
+                
+                document.getElementById('totalDonors').textContent = formatNumber(response.totalDonors);
+                document.getElementById('donorsChange').textContent = `+${response.donorsChange}% growth`;
+                
+                document.getElementById('avgDonation').textContent = formatCurrency(response.avgDonation);
+                document.getElementById('avgChange').textContent = formatCurrency(response.avgChange) + ' change';
+                
+                // Create charts
+                createDonationsChart(response.donationsTimeline);
+                createCampaignsChart(response.topCampaigns);
+                
+                loading.style.display = 'none';
+                content.style.display = 'block';
+                
+            } catch (err) {
+                console.error('Error loading analytics:', err);
+                loading.style.display = 'none';
+                error.textContent = '❌ Failed to load analytics. Please try again.';
+                error.style.display = 'block';
+            }
+        }
+        
+        // Mock analytics data (replace with real API call)
+        async function fetchMockAnalytics() {
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            return {
+                totalRaised: 125430.50,
+                raisedChange: 23.5,
+                activeCampaigns: 12,
+                newCampaigns: 3,
+                totalDonors: 1847,
+                donorsChange: 15.2,
+                avgDonation: 67.89,
+                avgChange: 5.32,
+                donationsTimeline: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    values: [1200, 1900, 3000, 2500, 2800, 3200, 4100]
+                },
+                topCampaigns: {
+                    labels: [
+                        'Clean Water Kenya',
+                        'Education Uganda',
+                        'Healthcare Nepal',
+                        'Food Relief Yemen',
+                        'Shelter Haiti'
+                    ],
+                    values: [28500, 22300, 19800, 17200, 15600]
+                }
+            };
+        }
+        
+        // Voice Query Functions
+        async function startVoiceQuery() {
+            const btn = document.getElementById('voiceBtn');
+            const icon = document.getElementById('voiceBtnIcon');
+            const text = document.getElementById('voiceBtnText');
+            
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                // Start recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        audioChunks.push(event.data);
+                    };
+                    
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        await sendVoiceQuery(audioBlob);
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    mediaRecorder.start();
+                    btn.classList.add('recording');
+                    icon.innerHTML = '<rect width="12" height="12" x="6" y="6" rx="2" stroke="currentColor" fill="currentColor"></rect>';
+                    text.textContent = 'Stop';
+                    
+                } catch (error) {
+                    console.error('Microphone error:', error);
+                    tg.showAlert('Could not access microphone. Please check permissions.');
+                }
+            } else {
+                // Stop recording
+                mediaRecorder.stop();
+                btn.classList.remove('recording');
+                icon.innerHTML = '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line>';
+                text.textContent = 'Ask';
+            }
+        }
+        
+        async function sendVoiceQuery(audioBlob) {
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'query.webm');
+            formData.append('user_id', tg.initDataUnsafe?.user?.id || 'guest');
+            formData.append('time_range', 'all');
+            
+            try {
+                const response = await fetch(API_BASE + '/api/voice/analytics-query', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displayVoiceResponse(data);
+                } else {
+                    tg.showAlert('Failed to process voice query. Please try again.');
+                }
+            } catch (error) {
+                console.error('Voice query error:', error);
+                tg.showAlert('Network error. Please check your connection.');
+            }
+        }
+        
+        function displayVoiceResponse(data) {
+            const responseBox = document.getElementById('voiceResponse');
+            const transcription = document.getElementById('voiceTranscription');
+            const answer = document.getElementById('voiceAnswer');
+            const audio = document.getElementById('voiceAudio');
+            
+            transcription.textContent = `You asked: "${data.transcription}"`;
+            answer.textContent = data.response_text;
+            
+            if (data.audio_url) {
+                audio.src = API_BASE + data.audio_url;
+                audio.style.display = 'block';
+                // Auto-play
+                audio.play().catch(e => console.log('Auto-play prevented:', e));
+            } else {
+                audio.style.display = 'none';
+            }
+            
+            responseBox.style.display = 'block';
+            
+            // Scroll to response
+            responseBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        function closeVoiceResponse() {
+            document.getElementById('voiceResponse').style.display = 'none';
+        }
+        
+        // Initial load
+        loadAnalytics();
+    </script>
+</body>
+</html>

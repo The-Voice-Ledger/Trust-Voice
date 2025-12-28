@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Browser</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 16px;
+        }
+        
+        .header {
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: var(--tg-theme-hint-color, #999);
+            font-size: 14px;
+        }
+        
+        .search-box {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            color: var(--tg-theme-text-color, #000);
+            outline: none;
+        }
+        
+        .search-box input::placeholder {
+            color: var(--tg-theme-hint-color, #999);
+        }
+        
+        .voice-btn {
+            background: var(--tg-theme-button-color, #3390ec);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+        
+        .voice-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .voice-btn.recording {
+            background: #f44336;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .voice-response {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        
+        .voice-response.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .voice-text {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+        
+        .filter-btn {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border: 2px solid transparent;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--tg-theme-text-color, #000000);
+        }
+        
+        .filter-btn.active {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border-color: var(--tg-theme-button-color, #3390ec);
+        }
+        
+        .campaign-card {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .campaign-card:active {
+            transform: scale(0.98);
+        }
+        
+        .campaign-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+        
+        .campaign-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .campaign-org {
+            font-size: 13px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+        
+        .campaign-badge {
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .campaign-description {
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .progress-bar {
+            background: rgba(0,0,0,0.1);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #4CAF50, #66BB6A);
+            height: 100%;
+            transition: width 0.3s;
+        }
+        
+        .campaign-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+        
+        .stat-label {
+            color: var(--tg-theme-hint-color, #999);
+        }
+        
+        .stat-value {
+            font-weight: 600;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        .empty-text {
+            color: var(--tg-theme-hint-color, #999);
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button onclick="window.location.href='index.html'" style="background: none; border: none; color: var(--tg-theme-link-color, #3390ec); font-size: 16px; cursor: pointer; padding: 8px 0; margin-bottom: 12px; display: flex; align-items: center; gap: 4px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back to Menu
+        </button>
+        <h1>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            Campaign Browser
+        </h1>
+        <div class="subtitle">Browse and support active campaigns</div>
+    </div>
+    
+    <div id="voiceResponse" class="voice-response">
+        <div class="voice-text" id="voiceText"></div>
+    </div>
+    
+    <div class="search-box">
+        <span>🔎</span>
+        <input type="text" id="searchInput" placeholder="Search campaigns..." />
+            <button id="voiceBtn" class="voice-btn" title="Voice search">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+            </button>
+    </div>
+    
+    <div class="filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="education">Education</button>
+        <button class="filter-btn" data-filter="health">Healthcare</button>
+        <button class="filter-btn" data-filter="water">Clean Water</button>
+        <button class="filter-btn" data-filter="food">Food Relief</button>
+    </div>
+    
+    <div id="loading" class="loading">
+        Loading campaigns...
+    </div>
+    
+    <div id="campaigns" style="display: none;"></div>
+    
+    <div id="emptyState" class="empty-state" style="display: none;">
+        <div class="empty-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.3;">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+            </svg>
+        </div>
+        <div class="empty-text">No campaigns found</div>
+    </div>
+    
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        
+        let allCampaigns = [];
+        let currentFilter = 'all';
+        let mediaRecorder = null;
+        let audioChunks = [];
+        const API_BASE = window.location.origin.replace(':8001', ':8001');
+        
+        // Mock campaign data
+        const mockCampaigns = [
+            {
+                id: 1,
+                title: "Clean Water for Rural Kenya",
+                org: "Water for All NGO",
+                description: "Building wells and water filtration systems in 5 rural villages",
+                category: "water",
+                raised: 45000,
+                goal: 75000,
+                donors: 342,
+                status: "Active"
+            },
+            {
+                id: 2,
+                title: "School Supplies for Uganda",
+                org: "Education First",
+                description: "Providing books, uniforms, and supplies to 500 students",
+                category: "education",
+                raised: 28000,
+                goal: 40000,
+                donors: 256,
+                status: "Active"
+            },
+            {
+                id: 3,
+                title: "Mobile Clinic for Nepal",
+                org: "Healthcare Outreach",
+                description: "Operating a mobile medical clinic in mountain villages",
+                category: "health",
+                raised: 62000,
+                goal: 80000,
+                donors: 478,
+                status: "Active"
+            },
+            {
+                id: 4,
+                title: "Food Relief for Yemen",
+                org: "Global Food Aid",
+                description: "Emergency food packages for families affected by crisis",
+                category: "food",
+                raised: 95000,
+                goal: 100000,
+                donors: 823,
+                status: "Active"
+            },
+            {
+                id: 5,
+                title: "Girls Education in Afghanistan",
+                org: "Women's Education Fund",
+                description: "Supporting underground schools for girls in Kabul",
+                category: "education",
+                raised: 18000,
+                goal: 50000,
+                donors: 134,
+                status: "Active"
+            },
+            {
+                id: 6,
+                title: "Malaria Prevention in Tanzania",
+                org: "Health Without Borders",
+                description: "Distributing mosquito nets and prevention education",
+                category: "health",
+                raised: 34000,
+                goal: 45000,
+                donors: 289,
+                status: "Active"
+            }
+        ];
+        
+        // Load campaigns
+        async function loadCampaigns() {
+            const loading = document.getElementById('loading');
+            const campaignsDiv = document.getElementById('campaigns');
+            
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            allCampaigns = mockCampaigns;
+            
+            loading.style.display = 'none';
+            campaignsDiv.style.display = 'block';
+            
+            renderCampaigns();
+        }
+        
+        // Render campaigns
+        function renderCampaigns() {
+            const campaignsDiv = document.getElementById('campaigns');
+            const emptyState = document.getElementById('emptyState');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            let filtered = allCampaigns.filter(c => {
+                const matchesFilter = currentFilter === 'all' || c.category === currentFilter;
+                const matchesSearch = c.title.toLowerCase().includes(searchTerm) || 
+                                     c.org.toLowerCase().includes(searchTerm) ||
+                                     c.description.toLowerCase().includes(searchTerm);
+                return matchesFilter && matchesSearch;
+            });
+            
+            if (filtered.length === 0) {
+                campaignsDiv.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            campaignsDiv.style.display = 'block';
+            emptyState.style.display = 'none';
+            
+            campaignsDiv.innerHTML = filtered.map(campaign => {
+                const progress = (campaign.raised / campaign.goal) * 100;
+                
+                return `
+                    <div class="campaign-card" onclick="openCampaign(${campaign.id})">
+                        <div class="campaign-header">
+                            <div>
+                                <div class="campaign-title">${campaign.title}</div>
+                                <div class="campaign-org">${campaign.org}</div>
+                            </div>
+                            <div class="campaign-badge">${campaign.status}</div>
+                        </div>
+                        <div class="campaign-description">${campaign.description}</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progress}%"></div>
+                        </div>
+                        <div class="campaign-stats">
+                            <div>
+                                <span class="stat-label">Raised:</span>
+                                <span class="stat-value">$${campaign.raised.toLocaleString()}</span>
+                            </div>
+                            <div>
+                                <span class="stat-label">Goal:</span>
+                                <span class="stat-value">$${campaign.goal.toLocaleString()}</span>
+                            </div>
+                            <div>
+                                <span class="stat-label">Donors:</span>
+                                <span class="stat-value">${campaign.donors}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Open campaign details
+        function openCampaign(id) {
+            const campaign = allCampaigns.find(c => c.id === id);
+            if (campaign) {
+                tg.showAlert(`Campaign: ${campaign.title}\n\nThis would open the full campaign details and donation flow.`);
+            }
+        }
+        
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                renderCampaigns();
+            });
+        });
+        
+        // Search input
+        document.getElementById('searchInput').addEventListener('input', () => {
+            renderCampaigns();
+        });
+        
+        // Voice Search Functionality
+        const voiceBtn = document.getElementById('voiceBtn');
+        const voiceResponse = document.getElementById('voiceResponse');
+        const voiceText = document.getElementById('voiceText');
+        
+        voiceBtn.addEventListener('click', async () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                // Stop recording
+                mediaRecorder.stop();
+                voiceBtn.classList.remove('recording');
+                voiceBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>';
+            } else {
+                // Start recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        audioChunks.push(event.data);
+                    };
+                    
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        await processVoiceCommand(audioBlob);
+                        
+                        // Stop all tracks
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    mediaRecorder.start();
+                    voiceBtn.classList.add('recording');
+                    voiceBtn.textContent = '⏹️';
+                    tg.showPopup({
+                        title: '�️ Recording',
+                        message: 'Speak your search query. Tap stop when done.',
+                        buttons: [{type: 'ok'}]
+                    });
+                    
+                } catch (error) {
+                    console.error('Microphone error:', error);
+                    tg.showAlert('Unable to access microphone. Please grant permission and try again.');
+                }
+            }
+        });
+        
+        async function processVoiceCommand(audioBlob) {
+            try {
+                // Show loading state
+                voiceResponse.classList.add('show');
+                voiceText.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg> Processing your voice command...';
+                
+                // Get user ID from Telegram
+                const userId = tg.initDataUnsafe?.user?.id || 'unknown';
+                
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'voice_search.webm');
+                formData.append('user_id', userId);
+                
+                // Send to backend
+                const response = await fetch(`${API_BASE}/api/voice/search-campaigns`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                // Display text response
+                voiceText.textContent = result.response_text || 'Found your campaigns!';
+                
+                // Play audio response if available
+                if (result.has_audio && result.audio_url) {
+                    const audio = new Audio(`${API_BASE}${result.audio_url}`);
+                    audio.play().catch(e => console.log('Audio playback failed:', e));
+                }
+                
+                // Apply search filter based on transcription
+                if (result.transcription) {
+                    document.getElementById('searchInput').value = result.transcription;
+                    renderCampaigns();
+                }
+                
+                // If campaigns were returned, display them
+                if (result.campaigns && result.campaigns.length > 0) {
+                    // The search input update above will trigger renderCampaigns
+                    // which will show matching campaigns
+                    console.log(`Voice search found ${result.campaigns.length} campaigns`);
+                }
+                
+                // Hide response after 5 seconds
+                setTimeout(() => {
+                    voiceResponse.classList.remove('show');
+                }, 5000);
+                
+            } catch (error) {
+                console.error('Voice processing error:', error);
+                voiceText.textContent = '❌ Unable to process voice command. Please try again.';
+                setTimeout(() => {
+                    voiceResponse.classList.remove('show');
+                }, 3000);
+            }
+        }
+        
+        // Initial load
+        loadCampaigns();
+    </script>
+</body>
+</html>

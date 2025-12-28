@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Admin Panel</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 16px;
+        }
+        
+        .header {
+            margin-bottom: 24px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: var(--tg-theme-hint-color, #999);
+            font-size: 14px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+        
+        .tab {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--tg-theme-text-color, #000000);
+        }
+        
+        .tab.active {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: 2px solid var(--tg-theme-button-color, #3390ec);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .request-card {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .request-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+        
+        .request-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .request-date {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            background: #FFA726;
+            color: white;
+        }
+        
+        .status-approved {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .status-rejected {
+            background: #F44336;
+            color: white;
+        }
+        
+        .request-details {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        
+        .detail-row {
+            display: flex;
+            margin-bottom: 4px;
+        }
+        
+        .detail-label {
+            color: var(--tg-theme-hint-color, #999);
+            min-width: 80px;
+        }
+        
+        .detail-value {
+            font-weight: 500;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .btn:active {
+            opacity: 0.7;
+        }
+        
+        .btn-approve {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-reject {
+            background: #F44336;
+            color: white;
+        }
+        
+        .btn-view {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+        
+        .voice-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .voice-btn {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .voice-btn svg {
+            display: block;
+            flex-shrink: 0;
+        }
+        
+        .voice-btn.recording {
+            animation: pulse 1.5s infinite;
+            background: #f44336;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .voice-response {
+            background: #e3f2fd;
+            border-left: 4px solid var(--tg-theme-button-color, #3390ec);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        
+        .voice-transcription {
+            font-style: italic;
+            color: var(--tg-theme-hint-color, #666);
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="window.location.href='index.html'" style="background: none; border: none; color: var(--tg-theme-link-color, #3390ec); font-size: 16px; cursor: pointer; padding: 8px 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to Menu
+    </button>
+    <div class="header">
+        <h1>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 1v6m0 6v6m5.5-9.5l-5.196 3M6.696 14.5l5.196-3m4.304 4.5l-5.196-3m-5.196 0l5.196-3"></path>
+            </svg>
+            Admin Panel
+        </h1>
+        <div class="subtitle">Manage platform operations</div>
+    </div>
+    
+    <div class="voice-controls">
+        <button class="voice-btn" id="voiceQueryBtn" onclick="startVoiceQuery()">
+            <svg id="voiceQueryIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+            <span>Ask Question</span>
+        </button>
+        <button class="voice-btn" id="voiceCommandBtn" onclick="startVoiceCommand()">
+            <svg id="voiceCommandIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+            <span>Voice Command</span>
+        </button>
+    </div>
+    
+    <div id="voiceResponse" class="voice-response" style="display: none;">
+        <div class="voice-transcription" id="voiceTranscription"></div>
+        <div id="voiceMessage"></div>
+    </div>
+    
+    <div class="tabs">
+        <button class="tab active" data-tab="pending">Pending (3)</button>
+        <button class="tab" data-tab="ngos">NGOs (12)</button>
+        <button class="tab" data-tab="payouts">Payouts</button>
+        <button class="tab" data-tab="stats">Statistics</button>
+    </div>
+    
+    <div id="loading" class="loading">
+        Loading admin data...
+    </div>
+    
+    <div id="content" style="display: none;">
+        <!-- Pending Approvals Tab -->
+        <div class="tab-content active" data-content="pending">
+            <div class="request-card">
+                <div class="request-header">
+                    <div>
+                        <div class="request-title">Hope Foundation Kenya</div>
+                        <div class="request-date">Submitted 2 hours ago</div>
+                    </div>
+                    <div class="status-badge status-pending">Pending</div>
+                </div>
+                <div class="request-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Type:</span>
+                        <span class="detail-value">NGO Registration</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Contact:</span>
+                        <span class="detail-value">info@hopefoundation.org</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Location:</span>
+                        <span class="detail-value">Nairobi, Kenya</span>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-approve" onclick="handleApproval(1, true)">✓ Approve</button>
+                    <button class="btn btn-reject" onclick="handleApproval(1, false)">✗ Reject</button>
+                </div>
+            </div>
+            
+            <div class="request-card">
+                <div class="request-header">
+                    <div>
+                        <div class="request-title">Education for All Uganda</div>
+                        <div class="request-date">Submitted 5 hours ago</div>
+                    </div>
+                    <div class="status-badge status-pending">Pending</div>
+                </div>
+                <div class="request-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Type:</span>
+                        <span class="detail-value">NGO Registration</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Contact:</span>
+                        <span class="detail-value">contact@educationforall.ug</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Location:</span>
+                        <span class="detail-value">Kampala, Uganda</span>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-approve" onclick="handleApproval(2, true)">✓ Approve</button>
+                    <button class="btn btn-reject" onclick="handleApproval(2, false)">✗ Reject</button>
+                </div>
+            </div>
+            
+            <div class="request-card">
+                <div class="request-header">
+                    <div>
+                        <div class="request-title">Clean Water Nepal</div>
+                        <div class="request-date">Submitted 1 day ago</div>
+                    </div>
+                    <div class="status-badge status-pending">Pending</div>
+                </div>
+                <div class="request-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Type:</span>
+                        <span class="detail-value">NGO Registration</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Contact:</span>
+                        <span class="detail-value">admin@cleanwaternepal.org</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Location:</span>
+                        <span class="detail-value">Kathmandu, Nepal</span>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-approve" onclick="handleApproval(3, true)">✓ Approve</button>
+                    <button class="btn btn-reject" onclick="handleApproval(3, false)">✗ Reject</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- NGOs Tab -->
+        <div class="tab-content" data-content="ngos">
+            <div class="request-card">
+                <div class="request-header">
+                    <div>
+                        <div class="request-title">Water for All NGO</div>
+                        <div class="request-date">Active since 2023</div>
+                    </div>
+                    <div class="status-badge status-approved">Approved</div>
+                </div>
+                <div class="request-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Campaigns:</span>
+                        <span class="detail-value">3 active</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Total Raised:</span>
+                        <span class="detail-value">$145,000</span>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-view" onclick="viewNGO(1)">View Details</button>
+                </div>
+            </div>
+            
+            <div class="request-card">
+                <div class="request-header">
+                    <div>
+                        <div class="request-title">Healthcare Outreach</div>
+                        <div class="request-date">Active since 2022</div>
+                    </div>
+                    <div class="status-badge status-approved">Approved</div>
+                </div>
+                <div class="request-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Campaigns:</span>
+                        <span class="detail-value">2 active</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Total Raised:</span>
+                        <span class="detail-value">$98,500</span>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-view" onclick="viewNGO(2)">View Details</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Payouts Tab -->
+        <div class="tab-content" data-content="payouts">
+            <div class="request-card">
+                <div class="request-title">Recent Payouts</div>
+                <div class="request-details" style="margin-top: 12px;">
+                    <div class="detail-row">
+                        <span class="detail-label">Today:</span>
+                        <span class="detail-value">$12,450</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">This Week:</span>
+                        <span class="detail-value">$67,200</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">This Month:</span>
+                        <span class="detail-value">$234,800</span>
+                    </div>
+                </div>
+                <div class="action-buttons" style="margin-top: 12px;">
+                    <button class="btn btn-view" onclick="viewPayouts()">View All Payouts</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistics Tab -->
+        <div class="tab-content" data-content="stats">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">Active NGOs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">28</div>
+                    <div class="stat-label">Campaigns</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">1.2K</div>
+                    <div class="stat-label">Total Donors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">$456K</div>
+                    <div class="stat-label">Total Raised</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        
+        let mediaRecorder;
+        let audioChunks = [];
+        let currentVoiceMode = null; // 'query' or 'command'
+        
+        const API_BASE = window.location.origin;
+        
+        // Load admin data
+        async function loadAdminData() {
+            const loading = document.getElementById('loading');
+            const content = document.getElementById('content');
+            
+            try {
+                // Fetch pending NGO registrations
+                const response = await fetch(`${window.location.origin}/ngo-registrations/?status_filter=PENDING`);
+                if (response.ok) {
+                    const pendingNGOs = await response.json();
+                    renderPendingNGOs(pendingNGOs);
+                    
+                    // Update tab count
+                    const pendingTab = document.querySelector('[data-tab="pending"]');
+                    pendingTab.textContent = `Pending (${pendingNGOs.length})`;
+                }
+            } catch (error) {
+                console.error('Error loading pending NGOs:', error);
+            }
+            
+            loading.style.display = 'none';
+            content.style.display = 'block';
+        }
+        
+        // Render pending NGO registrations
+        function renderPendingNGOs(ngos) {
+            const container = document.querySelector('[data-content="pending"]');
+            
+            if (ngos.length === 0) {
+                container.innerHTML = '<div class="request-card"><div class="request-details">No pending registrations</div></div>';
+                return;
+            }
+            
+            container.innerHTML = ngos.map(ngo => {
+                const submittedDate = new Date(ngo.created_at);
+                const now = new Date();
+                const hoursAgo = Math.floor((now - submittedDate) / (1000 * 60 * 60));
+                const timeText = hoursAgo < 24 
+                    ? `${hoursAgo} ${hoursAgo === 1 ? 'hour' : 'hours'} ago`
+                    : `${Math.floor(hoursAgo / 24)} ${Math.floor(hoursAgo / 24) === 1 ? 'day' : 'days'} ago`;
+                
+                return `
+                    <div class="request-card" data-id="${ngo.id}">
+                        <div class="request-header">
+                            <div>
+                                <div class="request-title">${ngo.organization_name}</div>
+                                <div class="request-date">Submitted ${timeText}</div>
+                            </div>
+                            <div class="status-badge status-pending">${ngo.status}</div>
+                        </div>
+                        <div class="request-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Type:</span>
+                                <span class="detail-value">${ngo.organization_type || 'Not specified'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Contact:</span>
+                                <span class="detail-value">${ngo.email || 'N/A'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Location:</span>
+                                <span class="detail-value">${ngo.region ? ngo.region + ', ' : ''}${ngo.country || 'N/A'}</span>
+                            </div>
+                            ${ngo.mission_statement ? `
+                            <div class="detail-row" style="margin-top: 8px;">
+                                <span class="detail-label">Mission:</span>
+                                <span class="detail-value">${ngo.mission_statement.substring(0, 100)}${ngo.mission_statement.length > 100 ? '...' : ''}</span>
+                            </div>
+                            ` : ''}
+                            ${ngo.focus_areas ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Focus:</span>
+                                <span class="detail-value">${ngo.focus_areas}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-approve" onclick="handleApproval(${ngo.id}, true)">✓ Approve</button>
+                            <button class="btn btn-reject" onclick="handleApproval(${ngo.id}, false)">✗ Reject</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                
+                // Update tabs
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.querySelector(`[data-content="${tabName}"]`).classList.add('active');
+            });
+        });
+        
+        // Handle approval
+        async function handleApproval(id, approved) {
+            const action = approved ? 'approve' : 'reject';
+            const telegramUser = tg.initDataUnsafe.user || {};
+            
+            tg.showConfirm(
+                `Are you sure you want to ${action} this NGO registration?`,
+                async (confirmed) => {
+                    if (confirmed) {
+                        try {
+                            tg.MainButton.showProgress();
+                            
+                            const endpoint = approved 
+                                ? `/ngo-registrations/${id}/approve`
+                                : `/ngo-registrations/${id}/reject`;
+                            
+                            const body = approved
+                                ? { admin_id: 1, admin_notes: "Approved via Telegram admin panel" }
+                                : { admin_id: 1, rejection_reason: "Does not meet verification requirements" };
+                            
+                            const response = await fetch(`${window.location.origin}${endpoint}`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(body)
+                            });
+                            
+                            if (response.ok) {
+                                tg.showAlert(`NGO ${approved ? 'approved' : 'rejected'} successfully!`);
+                                tg.HapticFeedback.notificationOccurred('success');
+                                
+                                // Remove the card
+                                const card = document.querySelector(`[data-id="${id}"]`);
+                                if (card) {
+                                    card.style.opacity = '0';
+                                    setTimeout(() => card.remove(), 300);
+                                }
+                                
+                                // Reload data after a moment
+                                setTimeout(loadAdminData, 1000);
+                            } else {
+                                const error = await response.json();
+                                tg.showAlert(`Error: ${error.detail || 'Failed to process request'}`);
+                                tg.HapticFeedback.notificationOccurred('error');
+                            }
+                            
+                            tg.MainButton.hideProgress();
+                        } catch (error) {
+                            console.error('Approval error:', error);
+                            tg.showAlert('Network error. Please try again.');
+                            tg.HapticFeedback.notificationOccurred('error');
+                            tg.MainButton.hideProgress();
+                        }
+                    }
+                }
+            );
+        }
+        
+        // View NGO
+        function viewNGO(id) {
+            tg.showAlert('This would open the detailed NGO profile page.');
+        }
+        
+        // View payouts
+        function viewPayouts() {
+            tg.showAlert('This would open the detailed payouts history page.');
+        }
+        
+        // Voice Query Functions
+        async function startVoiceQuery() {
+            currentVoiceMode = 'query';
+            await startVoiceRecording('voiceQueryBtn', 'voiceQueryIcon');
+        }
+        
+        async function startVoiceCommand() {
+            currentVoiceMode = 'command';
+            await startVoiceRecording('voiceCommandBtn', 'voiceCommandIcon');
+        }
+        
+        async function startVoiceRecording(btnId, iconId) {
+            const btn = document.getElementById(btnId);
+            const icon = document.getElementById(iconId);
+            
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                // Start recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        audioChunks.push(event.data);
+                    };
+                    
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        await processVoiceInput(audioBlob);
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    mediaRecorder.start();
+                    btn.classList.add('recording');
+                    icon.innerHTML = '<rect width="12" height="12" x="6" y="6" rx="2" stroke="currentColor" fill="currentColor"></rect>';
+                    
+                } catch (error) {
+                    console.error('Microphone error:', error);
+                    tg.showAlert('Could not access microphone. Please check permissions.');
+                }
+            } else {
+                // Stop recording
+                mediaRecorder.stop();
+                btn.classList.remove('recording');
+                // Restore original icon based on button type
+                if (btnId === 'voiceQueryBtn') {
+                    icon.innerHTML = '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line>';
+                } else {
+                    icon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>';
+                }
+            }
+        }
+        
+        async function processVoiceInput(audioBlob) {
+            const endpoint = currentVoiceMode === 'query' ? '/api/voice/admin-query' : '/api/voice/admin-command';
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'admin.webm');
+            formData.append('user_id', tg.initDataUnsafe?.user?.id || 'guest');
+            
+            try {
+                const response = await fetch(API_BASE + endpoint, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displayVoiceResponse(data);
+                } else {
+                    tg.showAlert('Failed to process voice. Please try again.');
+                }
+            } catch (error) {
+                console.error('Voice processing error:', error);
+                tg.showAlert('Network error. Please check your connection.');
+            }
+        }
+        
+        function displayVoiceResponse(data) {
+            const responseBox = document.getElementById('voiceResponse');
+            const transcription = document.getElementById('voiceTranscription');
+            const message = document.getElementById('voiceMessage');
+            
+            transcription.textContent = `You said: "${data.transcription}"`;
+            message.textContent = data.response_text;
+            
+            responseBox.style.display = 'block';
+            
+            // Play audio if available
+            if (data.audio_url) {
+                const audio = new Audio(API_BASE + data.audio_url);
+                audio.play().catch(e => console.log('Auto-play prevented:', e));
+            }
+            
+            // Handle command confirmation
+            if (currentVoiceMode === 'command' && data.action && data.registration_id) {
+                setTimeout(() => {
+                    tg.showConfirm(
+                        data.response_text,
+                        async (confirmed) => {
+                            if (confirmed) {
+                                await executeAdminAction(data.action, data.registration_id);
+                            }
+                        }
+                    );
+                }, 2000);
+            }
+            
+            // Hide after 5 seconds
+            setTimeout(() => {
+                responseBox.style.display = 'none';
+            }, 5000);
+        }
+        
+        async function executeAdminAction(action, registrationId) {
+            try {
+                const endpoint = action === 'approve' 
+                    ? `/ngo-registrations/${registrationId}/approve`
+                    : `/ngo-registrations/${registrationId}/reject`;
+                
+                const body = action === 'approve'
+                    ? { admin_id: 1, admin_notes: "Approved via voice command" }
+                    : { admin_id: 1, rejection_reason: "Rejected via voice command" };
+                
+                const response = await fetch(API_BASE + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                
+                if (response.ok) {
+                    tg.showAlert(`✅ Registration ${action}d successfully!`);
+                    tg.HapticFeedback.notificationOccurred('success');
+                    setTimeout(loadAdminData, 1000);
+                } else {
+                    tg.showAlert('Error executing action. Please try again.');
+                    tg.HapticFeedback.notificationOccurred('error');
+                }
+            } catch (error) {
+                console.error('Action execution error:', error);
+                tg.showAlert('Network error. Please try again.');
+            }
+        }
+        
+        // Initial load
+        loadAdminData();
+    </script>
+</body>
+</html>

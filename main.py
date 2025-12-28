@@ -15,7 +15,7 @@ import logging
 load_dotenv()
 
 # Import routers
-from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin, auth, registrations
+from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin, auth, registrations, ngo_registrations, miniapp_voice
 
 # Configure logging
 logging.basicConfig(
@@ -48,19 +48,21 @@ app.add_middleware(
 app.include_router(campaigns.router)
 app.include_router(donors.router)
 app.include_router(ngos.router)
+app.include_router(ngo_registrations.router)
 app.include_router(donations.router)
 app.include_router(payouts.router)
 app.include_router(webhooks.router)
 app.include_router(admin.router)
 app.include_router(auth.router)
 app.include_router(registrations.router)
+app.include_router(miniapp_voice.router)
 
 # ============================================
 # Mount Frontend Static Files
 # ============================================
 
-# Serve frontend at root path
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+# Serve frontend mini apps at root path
+app.mount("/", StaticFiles(directory="frontend-miniapps", html=True), name="frontend-miniapps")
 
 
 # ============================================
