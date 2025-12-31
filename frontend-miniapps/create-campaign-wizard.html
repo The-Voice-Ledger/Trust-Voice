@@ -379,7 +379,14 @@
 </head>
 <body>
     <div class="header">
-        <div class="header-icon">🎤</div>
+        <div class="header-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+        </div>
         <h1>Create Your Campaign</h1>
         <div class="subtitle">Speak or type - we'll guide you through it</div>
     </div>
@@ -406,11 +413,16 @@
     <!-- Step 1: Title -->
     <div class="wizard-step active" id="step-1">
         <div class="voice-prompt">
-            <div class="voice-prompt-icon">💡</div>
+            <div class="voice-prompt-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v2m0 16v2m8.485-15.485l-1.414 1.414M4.929 4.929L3.515 3.515M22 12h-2M4 12H2m16.071 7.071l-1.414-1.414M4.929 19.071l-1.414 1.414"/>
+                    <circle cx="12" cy="12" r="5"/>
+                </svg>
+            </div>
             <div class="voice-prompt-text">What should we call your campaign?</div>
             <div class="voice-prompt-hint">Give it a clear, catchy name that describes what you're raising funds for</div>
             <button class="voice-input-btn" onclick="startVoiceInput('title')">
-                <span id="voice-btn-icon-1">🎤</span>
+                <span id="voice-btn-icon-1">●</span>
                 <span id="voice-btn-text-1">Tap to Speak</span>
             </button>
         </div>
@@ -420,7 +432,11 @@
             <input type="text" class="form-input" id="title" placeholder="e.g., Clean Water for Rural Schools">
             <div class="form-hint">Keep it short and descriptive (max 60 characters)</div>
             <div class="ai-suggestion" id="ai-suggestion-1">
-                <span class="ai-suggestion-icon">✨</span>
+                <span class="ai-suggestion-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15 8.5 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 9 8.5 12 2"/>
+                    </svg>
+                </span>
                 <div class="ai-suggestion-text" id="ai-text-1"></div>
                 <button class="apply-suggestion-btn" onclick="applySuggestion('title', 1)">Apply Suggestion</button>
             </div>
@@ -434,11 +450,19 @@
     <!-- Step 2: Description -->
     <div class="wizard-step" id="step-2">
         <div class="voice-prompt">
-            <div class="voice-prompt-icon">📝</div>
+            <div class="voice-prompt-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                </svg>
+            </div>
             <div class="voice-prompt-text">Tell us about your campaign</div>
             <div class="voice-prompt-hint">Explain what you're fundraising for, who will benefit, and why it matters</div>
             <button class="voice-input-btn" onclick="startVoiceInput('description')">
-                <span id="voice-btn-icon-2">🎤</span>
+                <span id="voice-btn-icon-2">●</span>
                 <span id="voice-btn-text-2">Tap to Speak</span>
             </button>
         </div>
@@ -448,7 +472,11 @@
             <textarea class="form-textarea" id="description" placeholder="Describe your campaign in detail..."></textarea>
             <div class="form-hint">Include: What problem you're solving, who benefits, and your plan</div>
             <div class="ai-suggestion" id="ai-suggestion-2">
-                <span class="ai-suggestion-icon">✨</span>
+                <span class="ai-suggestion-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15 8.5 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 9 8.5 12 2"/>
+                    </svg>
+                </span>
                 <div class="ai-suggestion-text" id="ai-text-2"></div>
                 <button class="apply-suggestion-btn" onclick="applySuggestion('description', 2)">Apply Suggestion</button>
             </div>
@@ -463,11 +491,16 @@
     <!-- Step 3: Category -->
     <div class="wizard-step" id="step-3">
         <div class="voice-prompt">
-            <div class="voice-prompt-icon">🏷️</div>
+            <div class="voice-prompt-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                    <line x1="7" y1="7" x2="7.01" y2="7"/>
+                </svg>
+            </div>
             <div class="voice-prompt-text">Which category fits best?</div>
             <div class="voice-prompt-hint">Choose the category that best describes your campaign</div>
             <button class="voice-input-btn" onclick="startVoiceInput('category')">
-                <span id="voice-btn-icon-3">🎤</span>
+                <span id="voice-btn-icon-3">●</span>
                 <span id="voice-btn-text-3">Say a Category</span>
             </button>
         </div>
@@ -476,14 +509,14 @@
             <label class="form-label">Category</label>
             <select class="form-select" id="category">
                 <option value="">Select a category...</option>
-                <option value="education">📚 Education</option>
-                <option value="health">🏥 Health & Medical</option>
-                <option value="water">💧 Clean Water</option>
-                <option value="food">🍽️ Food Security</option>
-                <option value="environment">🌱 Environment</option>
-                <option value="shelter">🏠 Shelter & Housing</option>
-                <option value="emergency">🚨 Emergency Relief</option>
-                <option value="community">🤝 Community Development</option>
+                <option value="education">Education</option>
+                <option value="health">Health & Medical</option>
+                <option value="water">Clean Water</option>
+                <option value="food">Food Security</option>
+                <option value="environment">Environment</option>
+                <option value="shelter">Shelter & Housing</option>
+                <option value="emergency">Emergency Relief</option>
+                <option value="community">Community Development</option>
             </select>
             <div class="form-hint">Or just say the category name and we'll match it</div>
         </div>
@@ -497,11 +530,17 @@
     <!-- Step 4: Goal -->
     <div class="wizard-step" id="step-4">
         <div class="voice-prompt">
-            <div class="voice-prompt-icon">🎯</div>
+            <div class="voice-prompt-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <circle cx="12" cy="12" r="6"/>
+                    <circle cx="12" cy="12" r="2"/>
+                </svg>
+            </div>
             <div class="voice-prompt-text">What's your fundraising goal?</div>
             <div class="voice-prompt-hint">How much money do you need to raise?</div>
             <button class="voice-input-btn" onclick="startVoiceInput('goal')">
-                <span id="voice-btn-icon-4">🎤</span>
+                <span id="voice-btn-icon-4">●</span>
                 <span id="voice-btn-text-4">Say the Amount</span>
             </button>
         </div>
@@ -521,11 +560,18 @@
     <!-- Step 5: Deadline -->
     <div class="wizard-step" id="step-5">
         <div class="voice-prompt">
-            <div class="voice-prompt-icon">📅</div>
+            <div class="voice-prompt-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+            </div>
             <div class="voice-prompt-text">When should the campaign end?</div>
             <div class="voice-prompt-hint">Pick a deadline that gives you enough time to reach your goal</div>
             <button class="voice-input-btn" onclick="startVoiceInput('deadline')">
-                <span id="voice-btn-icon-5">🎤</span>
+                <span id="voice-btn-icon-5">●</span>
                 <span id="voice-btn-text-5">Say the Date</span>
             </button>
         </div>
@@ -538,13 +584,24 @@
         
         <div class="nav-buttons">
             <button class="btn btn-secondary" onclick="prevStep()">← Back</button>
-            <button class="btn btn-primary" onclick="submitCampaign()">Create Campaign 🚀</button>
+            <button class="btn btn-primary" onclick="submitCampaign()">
+                Create Campaign
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 6px; vertical-align: middle;">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+            </button>
         </div>
     </div>
     
     <!-- Success Screen -->
     <div class="success-screen" id="success-screen">
-        <div class="success-icon">🎉</div>
+        <div class="success-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+        </div>
         <div class="success-title">Campaign Created!</div>
         <div class="success-message">Your campaign has been submitted and will be reviewed shortly.</div>
         <button class="btn btn-primary" onclick="window.Telegram.WebApp.close()">Done</button>
@@ -657,7 +714,7 @@
                         console.error('Error:', error);
                         alert('Failed to process voice input. Please try again or type instead.');
                     } finally {
-                        btnIcon.textContent = '🎤';
+                        btnIcon.textContent = '●';
                         btnText.textContent = 'Tap to Speak';
                         btn.classList.remove('recording');
                         btn.disabled = false;
@@ -685,7 +742,7 @@
             } catch (err) {
                 console.error('Microphone error:', err);
                 alert('Microphone access denied. Please enable microphone in your settings or type instead.');
-                btnIcon.textContent = '🎤';
+                btnIcon.textContent = '●';
                 btnText.textContent = 'Tap to Speak';
                 btn.classList.remove('recording');
             }

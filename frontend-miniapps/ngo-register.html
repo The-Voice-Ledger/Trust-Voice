@@ -535,20 +535,20 @@
                         const textarea = document.getElementById(currentField);
                         const existingText = textarea.value;
                         textarea.value = existingText ? existingText + ' ' + data.transcription : data.transcription;
-                        status.textContent = '✅ Text added!';
+                        status.textContent = '✓ Text added!';
                         tg.HapticFeedback.notificationOccurred('success');
                         updateProgress();
                     } else {
-                        status.textContent = '❌ ' + data.response_text;
+                        status.textContent = '✗ ' + data.response_text;
                         tg.HapticFeedback.notificationOccurred('error');
                     }
                 } else {
-                    status.textContent = '❌ Failed to process audio';
+                    status.textContent = '✗ Failed to process audio';
                     tg.HapticFeedback.notificationOccurred('error');
                 }
             } catch (error) {
                 console.error('Dictation error:', error);
-                status.textContent = '❌ Network error';
+                status.textContent = '✗ Network error';
                 tg.HapticFeedback.notificationOccurred('error');
             }
             
@@ -598,7 +598,12 @@
                     
                     // Show success message
                     document.getElementById('app').innerHTML = `
-                        <div class="checkmark">✅</div>
+                        <div class="checkmark">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                        </div>
                         <h1 style="text-align: center; margin-bottom: 16px;">Application Submitted!</h1>
                         <div class="form-section">
                             <p style="margin-bottom: 12px;">
