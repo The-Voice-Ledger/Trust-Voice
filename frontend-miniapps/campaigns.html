@@ -613,8 +613,85 @@
             }
         });
         
+        // Voice Ledger Enhancement: Check if audio has actual speech content
+        async function checkAudioHasSound(audioBlob) {
+            try {
+                const audioContext = new AudioContext();
+                const arrayBuffer = await audioBlob.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                
+                // Get audio channel data (first channel)
+                const channelData = audioBuffer.getChannelData(0);
+                
+                // Calculate maximum amplitude
+                let maxAmplitude = 0;
+                for (let i = 0; i < channelData.length; i++) {
+                    maxAmplitude = Math.max(maxAmplitude, Math.abs(channelData[i]));
+                }
+                
+                // Threshold: 0.01 (1%)
+                // Typical speech: 0.1-0.8 amplitude
+                // Ambient noise: 0.001-0.005 amplitude
+                // 0.01 is 5x higher than noise but 10x lower than speech
+                const hasSound = maxAmplitude > 0.01;
+                
+                audioContext.close();
+                return { 
+                    hasSound, 
+                    maxAmplitude,
+                    duration: audioBuffer.duration 
+                };
+                
+            } catch (error) {
+                console.error('Audio validation error:', error);
+                // Fail open - allow upload if validation fails
+                return { hasSound: true, error: error.message };
+            }
+        }
+        
         async function processVoiceCommand(audioBlob) {
             try {
+                // Voice Ledger Step 1: Duration check
+                const approximateDuration = audioBlob.size / 16000; // Rough estimate
+                if (approximateDuration < 0.5) {
+                    tg.showPopup({
+                        title: '⏱️ Recording Too Short',
+                        message: 'Your recording was less than 1 second.\n\nPlease hold the voice button and speak for at least 1 second.',
+                        buttons: [{type: 'ok'}]
+                    });
+                    return;
+                }
+                
+                // Voice Ledger Step 2: File size check
+                const maxSize = 25 * 1024 * 1024; // 25MB
+                if (audioBlob.size > maxSize) {
+                    tg.showPopup({
+                        title: '📦 Recording Too Large',
+                        message: 'Your recording exceeds 25MB.\n\nPlease keep recordings under 2 minutes.',
+                        buttons: [{type: 'ok'}]
+                    });
+                    return;
+                }
+                
+                // Voice Ledger Step 3: Silent audio detection
+                voiceResponse.classList.add('show');
+                voiceText.textContent = '🔍 Validating audio...';
+                
+                const audioCheck = await checkAudioHasSound(audioBlob);
+                
+                if (!audioCheck.hasSound) {
+                    voiceText.textContent = '';
+                    voiceResponse.classList.remove('show');
+                    
+                    tg.showPopup({
+                        title: '🔇 No Speech Detected',
+                        message: 'I couldn\'t detect any speech in your recording.\n\nTips:\n• Speak clearly into the microphone\n• Reduce background noise\n• Hold the button while speaking\n• Ensure microphone is not muted',
+                        buttons: [{type: 'ok'}]
+                    });
+                    return;
+                }
+                
+                // All checks passed - proceed with upload
                 // Show loading state
                 voiceResponse.classList.add('show');
                 voiceText.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg> Processing your voice command...';
