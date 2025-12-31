@@ -8,6 +8,7 @@
     <meta http-equiv="Expires" content="0">
     <title>Campaign Browser</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="js/voice-utils.js?v=2"></script>
     <style>
         * {
             margin: 0;
@@ -320,214 +321,11 @@
             available_actions: ['view_campaign', 'filter_campaigns', 'search_campaigns']
         };
         
-        // Voice Ledger Enhancement: Custom error class for voice commands
-        class VoiceError extends Error {
-            static NETWORK = 'NETWORK';
-            static TIMEOUT = 'TIMEOUT';
-            static VALIDATION = 'VALIDATION';
-            static SERVER = 'SERVER';
-            static UNKNOWN = 'UNKNOWN';
-            
-            constructor(message, type, context = {}) {
-                super(message);
-                this.name = 'VoiceError';
-                this.type = type;
-                this.context = context;
-                this.timestamp = Date.now();
-            }
-            
-            isRetryable() {
-                return [
-                    VoiceError.NETWORK,
-                    VoiceError.TIMEOUT,
-                    VoiceError.SERVER
-                ].includes(this.type);
-            }
-            
-            getUserMessage() {
-                const messages = {
-                    [VoiceError.NETWORK]: '📡 No Connection\n\nPlease check your internet and try again.',
-                    [VoiceError.TIMEOUT]: '⏱️ Request Timed Out\n\nThe server took too long to respond.',
-                    [VoiceError.VALIDATION]: this.message,
-                    [VoiceError.SERVER]: '🔧 Server Error\n\nPlease try again in a moment.',
-                    [VoiceError.UNKNOWN]: '❌ Unexpected Error\n\nPlease try again.'
-                };
-                return messages[this.type] || messages[VoiceError.UNKNOWN];
-            }
-        }
-        
-        // =================================================================================
-        // TTS PLAYBACK CONTROLLER (Voice Ledger Priority 2.2)
-        // =================================================================================
-        
-        class TTSController {
-            constructor() {
-                this.currentAudio = null;
-                this.audioUrl = null;
-                this.isPlaying = false;
-                this.controls = null;
-            }
-            
-            play(audioUrl) {
-                // Stop any existing audio
-                this.stop();
-                
-                this.audioUrl = `${API_BASE}${audioUrl}`;
-                this.currentAudio = new Audio(this.audioUrl);
-                
-                // Setup event listeners
-                this.currentAudio.onplay = () => {
-                    this.isPlaying = true;
-                    this.showControls();
-                    this.updateControlsState();
-                };
-                
-                this.currentAudio.onpause = () => {
-                    this.isPlaying = false;
-                    this.updateControlsState();
-                };
-                
-                this.currentAudio.onended = () => {
-                    this.isPlaying = false;
-                    this.hideControls();
-                };
-                
-                this.currentAudio.onerror = (error) => {
-                    console.error('Audio playback error:', error);
-                    this.hideControls();
-                };
-                
-                // Play
-                this.currentAudio.play().catch(e => {
-                    console.error('Failed to play audio:', e);
-                    this.hideControls();
-                });
-            }
-            
-            pause() {
-                if (this.currentAudio && this.isPlaying) {
-                    this.currentAudio.pause();
-                }
-            }
-            
-            resume() {
-                if (this.currentAudio && !this.isPlaying) {
-                    this.currentAudio.play().catch(e => {
-                        console.error('Failed to resume audio:', e);
-                    });
-                }
-            }
-            
-            stop() {
-                if (this.currentAudio) {
-                    this.currentAudio.pause();
-                    this.currentAudio.currentTime = 0;
-                    this.currentAudio = null;
-                    this.isPlaying = false;
-                }
-                this.hideControls();
-            }
-            
-            replay() {
-                if (this.audioUrl) {
-                    this.play(this.audioUrl.replace(API_BASE, ''));
-                }
-            }
-            
-            showControls() {
-                if (!this.controls) {
-                    this.createControls();
-                }
-                this.controls.style.display = 'flex';
-            }
-            
-            hideControls() {
-                if (this.controls) {
-                    this.controls.style.display = 'none';
-                }
-            }
-            
-            createControls() {
-                // Create controls if they don't exist
-                this.controls = document.createElement('div');
-                this.controls.id = 'tts-controls';
-                this.controls.style.cssText = `
-                    position: fixed;
-                    bottom: 100px;
-                    right: 20px;
-                    background: white;
-                    padding: 12px;
-                    border-radius: 25px;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                    display: none;
-                    gap: 8px;
-                    z-index: 1000;
-                    align-items: center;
-                `;
-                
-                // Pause/Resume button
-                const pauseResumeBtn = document.createElement('button');
-                pauseResumeBtn.id = 'tts-pause-resume';
-                pauseResumeBtn.style.cssText = `
-                    background: none;
-                    border: none;
-                    font-size: 20px;
-                    cursor: pointer;
-                    padding: 8px;
-                `;
-                pauseResumeBtn.onclick = () => {
-                    if (this.isPlaying) {
-                        this.pause();
-                    } else {
-                        this.resume();
-                    }
-                };
-                this.controls.appendChild(pauseResumeBtn);
-                
-                // Replay button
-                const replayBtn = document.createElement('button');
-                replayBtn.innerHTML = '🔁';
-                replayBtn.style.cssText = `
-                    background: none;
-                    border: none;
-                    font-size: 18px;
-                    cursor: pointer;
-                    padding: 8px;
-                `;
-                replayBtn.onclick = () => this.replay();
-                replayBtn.title = 'Replay';
-                this.controls.appendChild(replayBtn);
-                
-                // Stop button
-                const stopBtn = document.createElement('button');
-                stopBtn.innerHTML = '⏹️';
-                stopBtn.style.cssText = `
-                    background: none;
-                    border: none;
-                    font-size: 18px;
-                    cursor: pointer;
-                    padding: 8px;
-                `;
-                stopBtn.onclick = () => this.stop();
-                stopBtn.title = 'Stop';
-                this.controls.appendChild(stopBtn);
-                
-                document.body.appendChild(this.controls);
-            }
-            
-            updateControlsState() {
-                if (this.controls) {
-                    const pauseResumeBtn = this.controls.querySelector('#tts-pause-resume');
-                    if (pauseResumeBtn) {
-                        pauseResumeBtn.innerHTML = this.isPlaying ? '⏸️' : '▶️';
-                        pauseResumeBtn.title = this.isPlaying ? 'Pause' : 'Resume';
-                    }
-                }
-            }
-        }
+        // Voice Ledger Enhancement: Use utilities from voice-utils.js
+        // Access via window.VoiceUtils (no destructuring to avoid scope conflicts)
         
         // Global TTS controller instance
-        const ttsController = new TTSController();
+        const ttsController = new window.VoiceUtils.TTSController(API_BASE);
         
         // Mock campaign data
         const mockCampaigns = [
@@ -829,42 +627,6 @@
             }
         });
         
-        // Voice Ledger Enhancement: Check if audio has actual speech content
-        async function checkAudioHasSound(audioBlob) {
-            try {
-                const audioContext = new AudioContext();
-                const arrayBuffer = await audioBlob.arrayBuffer();
-                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                
-                // Get audio channel data (first channel)
-                const channelData = audioBuffer.getChannelData(0);
-                
-                // Calculate maximum amplitude
-                let maxAmplitude = 0;
-                for (let i = 0; i < channelData.length; i++) {
-                    maxAmplitude = Math.max(maxAmplitude, Math.abs(channelData[i]));
-                }
-                
-                // Threshold: 0.01 (1%)
-                // Typical speech: 0.1-0.8 amplitude
-                // Ambient noise: 0.001-0.005 amplitude
-                // 0.01 is 5x higher than noise but 10x lower than speech
-                const hasSound = maxAmplitude > 0.01;
-                
-                audioContext.close();
-                return { 
-                    hasSound, 
-                    maxAmplitude,
-                    duration: audioBuffer.duration 
-                };
-                
-            } catch (error) {
-                console.error('Audio validation error:', error);
-                // Fail open - allow upload if validation fails
-                return { hasSound: true, error: error.message };
-            }
-        }
-        
         async function processVoiceCommand(audioBlob) {
             try {
                 // Voice Ledger Step 1: Duration check
@@ -893,9 +655,9 @@
                 voiceResponse.classList.add('show');
                 voiceText.textContent = '🔍 Validating audio...';
                 
-                const audioCheck = await checkAudioHasSound(audioBlob);
+                const hasSound = await window.VoiceUtils.checkAudioHasSound(audioBlob);
                 
-                if (!audioCheck.hasSound) {
+                if (!hasSound) {
                     voiceText.textContent = '';
                     voiceResponse.classList.remove('show');
                     
@@ -966,9 +728,9 @@
             try {
                 // Network connectivity check
                 if (!navigator.onLine) {
-                    throw new VoiceError(
+                    throw new window.VoiceUtils.VoiceError(
                         'No internet connection',
-                        VoiceError.NETWORK,
+                        window.VoiceUtils.VoiceError.NETWORK,
                         { offline: true }
                     );
                 }
@@ -988,21 +750,21 @@
                 // Categorize HTTP errors
                 if (!response.ok) {
                     if (response.status >= 500) {
-                        throw new VoiceError(
+                        throw new window.VoiceUtils.VoiceError(
                             'Server error',
-                            VoiceError.SERVER,
+                            window.VoiceUtils.VoiceError.SERVER,
                             { status: response.status }
                         );
                     } else if (response.status === 400) {
-                        throw new VoiceError(
+                        throw new window.VoiceUtils.VoiceError(
                             'Invalid request',
-                            VoiceError.VALIDATION,
+                            window.VoiceUtils.VoiceError.VALIDATION,
                             { status: response.status }
                         );
                     } else {
-                        throw new VoiceError(
+                        throw new window.VoiceUtils.VoiceError(
                             'HTTP error',
-                            VoiceError.UNKNOWN,
+                            window.VoiceUtils.VoiceError.UNKNOWN,
                             { status: response.status }
                         );
                     }
@@ -1039,15 +801,15 @@
             } catch (error) {
                 // Categorize native errors
                 if (error.name === 'AbortError') {
-                    throw new VoiceError('Request timeout', VoiceError.TIMEOUT);
+                    throw new window.VoiceUtils.VoiceError('Request timeout', window.VoiceUtils.VoiceError.TIMEOUT);
                 } else if (error instanceof TypeError && error.message.includes('fetch')) {
-                    throw new VoiceError('Network error', VoiceError.NETWORK);
-                } else if (error instanceof VoiceError) {
+                    throw new window.VoiceUtils.VoiceError('Network error', window.VoiceUtils.VoiceError.NETWORK);
+                } else if (error instanceof window.VoiceUtils.VoiceError) {
                     throw error; // Already categorized
                 } else {
-                    throw new VoiceError(
+                    throw new window.VoiceUtils.VoiceError(
                         error.message || 'Unknown error',
-                        VoiceError.UNKNOWN,
+                        window.VoiceUtils.VoiceError.UNKNOWN,
                         { originalError: error }
                     );
                 }

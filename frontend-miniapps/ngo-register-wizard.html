@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register Your NGO - Voice Wizard</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="js/voice-utils.js?v=3"></script>
     <style>
         * {
             margin: 0;
@@ -931,6 +932,17 @@
                     
                     mediaRecorders[stepNum].onstop = async () => {
                         const audioBlob = new Blob(audioChunks[stepNum], { type: 'audio/webm' });
+                        
+                        // Voice Ledger: Check for silent audio
+                        const hasSound = await window.VoiceUtils.checkAudioHasSound(audioBlob);
+                        if (!hasSound) {
+                            tg.showAlert('🔇 Silent Audio\n\nNo sound detected. Please:\n• Speak closer to microphone\n• Check microphone isn\'t muted\n• Try again');
+                            stream.getTracks().forEach(track => track.stop());
+                            voiceBtn.classList.remove('recording');
+                            voiceBtnText.textContent = '🎤 Tap to Speak';
+                            return;
+                        }
+                        
                         await processVoiceInput(audioBlob, fieldName, stepNum);
                         stream.getTracks().forEach(track => track.stop());
                     };
@@ -963,26 +975,60 @@
         
         // Process voice input
         async function processVoiceInput(audioBlob, fieldName, stepNum) {
-            const formData = new FormData();
-            formData.append('audio', audioBlob, 'voice.webm');
-            formData.append('field_name', fieldName);
-            formData.append('step_number', stepNum.toString());
+            // Voice Ledger: Retry logic with exponential backoff
+            const uploadWithRetry = async (retryCount = 0) => {
+                const MAX_RETRIES = 3;
+                const RETRY_DELAYS = [1000, 2000, 4000];
+                
+                try {
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob, 'voice.webm');
+                    formData.append('field_name', fieldName);
+                    formData.append('step_number', stepNum.toString());
+                    
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 30000);
+                    
+                    const response = await fetch(`${API_BASE}/voice/wizard-step`, {
+                        method: 'POST',
+                        body: formData,
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        if (response.status >= 500) {
+                            throw new window.VoiceUtils.VoiceError('Server error', window.VoiceUtils.VoiceError.SERVER);
+                        } else if (response.status >= 400) {
+                            throw new window.VoiceUtils.VoiceError('Invalid request', window.VoiceUtils.VoiceError.VALIDATION);
+                        }
+                    }
+                    
+                    return await response.json();
+                    
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        throw new window.VoiceUtils.VoiceError('Request timeout', window.VoiceUtils.VoiceError.TIMEOUT);
+                    } else if (error instanceof window.VoiceUtils.VoiceError && error.isRetryable() && retryCount < MAX_RETRIES) {
+                        await new Promise(resolve => setTimeout(resolve, RETRY_DELAYS[retryCount]));
+                        return uploadWithRetry(retryCount + 1);
+                    }
+                    throw error;
+                }
+            };
             
             try {
-                const response = await fetch(`${API_BASE}/voice/wizard-step`, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    displayVoiceResult(data, fieldName, stepNum);
-                } else {
-                    tg.showAlert('Failed to process voice input. Please try again or type manually.');
-                }
+                const data = await uploadWithRetry();
+                displayVoiceResult(data, fieldName, stepNum);
             } catch (error) {
                 console.error('Voice processing error:', error);
-                tg.showAlert('Network error. Please check your connection.');
+                // Voice Ledger: User-friendly error messages
+                if (error instanceof window.VoiceUtils.VoiceError) {
+                    tg.showAlert(error.getUserMessage());
+                } else {
+                    tg.showAlert('❌ Voice Input Failed\n\nPlease try again or type instead.');
+                }
             }
         }
         

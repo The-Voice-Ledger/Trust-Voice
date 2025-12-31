@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Campaign - Voice Guided</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="js/voice-utils.js?v=3"></script>
     <style>
         * {
             margin: 0;
@@ -671,23 +672,63 @@
                     
                     const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                     
-                    // Send to backend
-                    const formData = new FormData();
-                    formData.append('audio', audioBlob);
-                    formData.append('field_name', fieldName);
-                    formData.append('step_number', currentStep);
+                    // Voice Ledger: Check for silent audio
+                    const hasSound = await window.VoiceUtils.checkAudioHasSound(audioBlob);
+                    if (!hasSound) {
+                        btnIcon.textContent = '●';
+                        btnText.textContent = 'Tap to Speak';
+                        btn.classList.remove('recording');
+                        btn.disabled = false;
+                        stream.getTracks().forEach(track => track.stop());
+                        alert('🔇 Silent Audio\n\nNo sound detected. Please:\n• Speak closer to microphone\n• Check microphone isn\'t muted\n• Try again');
+                        return;
+                    }
+                    
+                    // Voice Ledger: Retry logic with exponential backoff
+                    const uploadWithRetry = async (retryCount = 0) => {
+                        const MAX_RETRIES = 3;
+                        const RETRY_DELAYS = [1000, 2000, 4000];
+                        
+                        try {
+                            const formData = new FormData();
+                            formData.append('audio', audioBlob);
+                            formData.append('field_name', fieldName);
+                            formData.append('step_number', currentStep);
+                            
+                            const controller = new AbortController();
+                            const timeoutId = setTimeout(() => controller.abort(), 30000);
+                            
+                            const response = await fetch('/api/voice/wizard-step', {
+                                method: 'POST',
+                                body: formData,
+                                signal: controller.signal
+                            });
+                            
+                            clearTimeout(timeoutId);
+                            
+                            if (!response.ok) {
+                                if (response.status >= 500) {
+                                    throw new window.VoiceUtils.VoiceError('Server error', window.VoiceUtils.VoiceError.SERVER);
+                                } else if (response.status >= 400) {
+                                    throw new window.VoiceUtils.VoiceError('Invalid request', window.VoiceUtils.VoiceError.VALIDATION);
+                                }
+                            }
+                            
+                            return await response.json();
+                            
+                        } catch (error) {
+                            if (error.name === 'AbortError') {
+                                throw new window.VoiceUtils.VoiceError('Request timeout', window.VoiceUtils.VoiceError.TIMEOUT);
+                            } else if (error instanceof window.VoiceUtils.VoiceError && error.isRetryable() && retryCount < MAX_RETRIES) {
+                                await new Promise(resolve => setTimeout(resolve, RETRY_DELAYS[retryCount]));
+                                return uploadWithRetry(retryCount + 1);
+                            }
+                            throw error;
+                        }
+                    };
                     
                     try {
-                        const response = await fetch('/api/voice/wizard-step', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        
-                        if (!response.ok) {
-                            throw new Error('Transcription failed');
-                        }
-                        
-                        const result = await response.json();
+                        const result = await uploadWithRetry();
                         
                         // Fill field with transcription
                         const field = document.getElementById(fieldName);
@@ -711,8 +752,13 @@
                         speakText(`I heard: ${result.transcription}`);
                         
                     } catch (error) {
-                        console.error('Error:', error);
-                        alert('Failed to process voice input. Please try again or type instead.');
+                        console.error('Voice input error:', error);
+                        // Voice Ledger: User-friendly error messages
+                        if (error instanceof window.VoiceUtils.VoiceError) {
+                            alert(error.getUserMessage());
+                        } else {
+                            alert('❌ Voice Input Failed\n\nPlease try again or type instead.');
+                        }
                     } finally {
                         btnIcon.textContent = '●';
                         btnText.textContent = 'Tap to Speak';
