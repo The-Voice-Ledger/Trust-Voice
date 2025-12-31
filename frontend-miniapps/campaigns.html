@@ -353,6 +353,179 @@
             }
         }
         
+        // =================================================================================
+        // TTS PLAYBACK CONTROLLER (Voice Ledger Priority 2.2)
+        // =================================================================================
+        
+        class TTSController {
+            constructor() {
+                this.currentAudio = null;
+                this.audioUrl = null;
+                this.isPlaying = false;
+                this.controls = null;
+            }
+            
+            play(audioUrl) {
+                // Stop any existing audio
+                this.stop();
+                
+                this.audioUrl = `${API_BASE}${audioUrl}`;
+                this.currentAudio = new Audio(this.audioUrl);
+                
+                // Setup event listeners
+                this.currentAudio.onplay = () => {
+                    this.isPlaying = true;
+                    this.showControls();
+                    this.updateControlsState();
+                };
+                
+                this.currentAudio.onpause = () => {
+                    this.isPlaying = false;
+                    this.updateControlsState();
+                };
+                
+                this.currentAudio.onended = () => {
+                    this.isPlaying = false;
+                    this.hideControls();
+                };
+                
+                this.currentAudio.onerror = (error) => {
+                    console.error('Audio playback error:', error);
+                    this.hideControls();
+                };
+                
+                // Play
+                this.currentAudio.play().catch(e => {
+                    console.error('Failed to play audio:', e);
+                    this.hideControls();
+                });
+            }
+            
+            pause() {
+                if (this.currentAudio && this.isPlaying) {
+                    this.currentAudio.pause();
+                }
+            }
+            
+            resume() {
+                if (this.currentAudio && !this.isPlaying) {
+                    this.currentAudio.play().catch(e => {
+                        console.error('Failed to resume audio:', e);
+                    });
+                }
+            }
+            
+            stop() {
+                if (this.currentAudio) {
+                    this.currentAudio.pause();
+                    this.currentAudio.currentTime = 0;
+                    this.currentAudio = null;
+                    this.isPlaying = false;
+                }
+                this.hideControls();
+            }
+            
+            replay() {
+                if (this.audioUrl) {
+                    this.play(this.audioUrl.replace(API_BASE, ''));
+                }
+            }
+            
+            showControls() {
+                if (!this.controls) {
+                    this.createControls();
+                }
+                this.controls.style.display = 'flex';
+            }
+            
+            hideControls() {
+                if (this.controls) {
+                    this.controls.style.display = 'none';
+                }
+            }
+            
+            createControls() {
+                // Create controls if they don't exist
+                this.controls = document.createElement('div');
+                this.controls.id = 'tts-controls';
+                this.controls.style.cssText = `
+                    position: fixed;
+                    bottom: 100px;
+                    right: 20px;
+                    background: white;
+                    padding: 12px;
+                    border-radius: 25px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    display: none;
+                    gap: 8px;
+                    z-index: 1000;
+                    align-items: center;
+                `;
+                
+                // Pause/Resume button
+                const pauseResumeBtn = document.createElement('button');
+                pauseResumeBtn.id = 'tts-pause-resume';
+                pauseResumeBtn.style.cssText = `
+                    background: none;
+                    border: none;
+                    font-size: 20px;
+                    cursor: pointer;
+                    padding: 8px;
+                `;
+                pauseResumeBtn.onclick = () => {
+                    if (this.isPlaying) {
+                        this.pause();
+                    } else {
+                        this.resume();
+                    }
+                };
+                this.controls.appendChild(pauseResumeBtn);
+                
+                // Replay button
+                const replayBtn = document.createElement('button');
+                replayBtn.innerHTML = '🔁';
+                replayBtn.style.cssText = `
+                    background: none;
+                    border: none;
+                    font-size: 18px;
+                    cursor: pointer;
+                    padding: 8px;
+                `;
+                replayBtn.onclick = () => this.replay();
+                replayBtn.title = 'Replay';
+                this.controls.appendChild(replayBtn);
+                
+                // Stop button
+                const stopBtn = document.createElement('button');
+                stopBtn.innerHTML = '⏹️';
+                stopBtn.style.cssText = `
+                    background: none;
+                    border: none;
+                    font-size: 18px;
+                    cursor: pointer;
+                    padding: 8px;
+                `;
+                stopBtn.onclick = () => this.stop();
+                stopBtn.title = 'Stop';
+                this.controls.appendChild(stopBtn);
+                
+                document.body.appendChild(this.controls);
+            }
+            
+            updateControlsState() {
+                if (this.controls) {
+                    const pauseResumeBtn = this.controls.querySelector('#tts-pause-resume');
+                    if (pauseResumeBtn) {
+                        pauseResumeBtn.innerHTML = this.isPlaying ? '⏸️' : '▶️';
+                        pauseResumeBtn.title = this.isPlaying ? 'Pause' : 'Resume';
+                    }
+                }
+            }
+        }
+        
+        // Global TTS controller instance
+        const ttsController = new TTSController();
+        
         // Mock campaign data
         const mockCampaigns = [
             {
@@ -833,10 +1006,9 @@
                 // Display text response
                 voiceText.textContent = result.response_text || 'Found your campaigns!';
                 
-                // Play audio response if available
+                // Play audio response with TTS controls
                 if (result.has_audio && result.audio_url) {
-                    const audio = new Audio(`${API_BASE}${result.audio_url}`);
-                    audio.play().catch(e => console.log('Audio playback failed:', e));
+                    ttsController.play(result.audio_url);
                 }
                 
                 // Apply search filter based on transcription
