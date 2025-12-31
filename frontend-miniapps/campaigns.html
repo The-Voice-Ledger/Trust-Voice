@@ -755,7 +755,8 @@
                 currentCampaign = campaign;
                 updateVoiceContext();
                 
-                tg.showAlert(`Campaign: ${campaign.title}\n\nThis would open the full campaign details and donation flow.`);
+                // Navigate to donation page with campaign ID
+                window.location.href = `donate.html?campaign_id=${id}`;
             }
         }
         
