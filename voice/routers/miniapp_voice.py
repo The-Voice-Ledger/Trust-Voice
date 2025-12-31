@@ -30,7 +30,7 @@ from voice.tts.tts_provider import TTSProvider
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/voice", tags=["miniapp-voice"])
+router = APIRouter(prefix="/voice", tags=["miniapp-voice"])
 
 # Initialize TTS provider
 tts_provider = TTSProvider()
@@ -39,7 +39,8 @@ tts_provider = TTSProvider()
 @router.post("/search-campaigns")
 async def voice_search_campaigns(
     audio: UploadFile = File(...),
-    user_id: str = Form(...)
+    user_id: str = Form(...),
+    context: Optional[str] = Form(None)
 ):
     """
     Process voice search command from campaigns mini app.
@@ -47,7 +48,7 @@ async def voice_search_campaigns(
     Flow:
     1. Save uploaded audio to temporary file
     2. Transcribe using ASR (with user's language preference)
-    3. Search campaigns based on transcribed text
+    3. Search campaigns based on transcribed text AND context
     4. Generate text response
     5. Generate TTS audio response
     6. Return both text and audio URL
@@ -55,13 +56,24 @@ async def voice_search_campaigns(
     Args:
         audio: Audio file from MediaRecorder (webm/ogg)
         user_id: Telegram user ID for language preference lookup
+        context: Optional JSON context (app state, selected items, available actions)
         
     Returns:
         JSON with transcription, results, and audio response URL
     """
+    import json
     temp_audio_path = None
+    context_data = None
     
     try:
+        # Parse context if provided
+        if context:
+            try:
+                context_data = json.loads(context)
+                logger.info(f"Voice search with context: view={context_data.get('view')}, app={context_data.get('app')}")
+            except json.JSONDecodeError:
+                logger.warning(f"Failed to parse context JSON: {context}")
+        
         logger.info(f"Voice search request from user {user_id}")
         
         # Step 1: Save uploaded audio to temporary file
@@ -100,29 +112,82 @@ async def voice_search_campaigns(
             logger.error(f"ASR error: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Speech recognition failed: {str(e)}")
         
-        # Step 4: Search campaigns based on transcribed text
+        # Step 4: Search campaigns based on transcribed text AND context
         search_query = transcribed_text.lower().strip()
         
-        campaigns = db.query(Campaign).filter(
-            Campaign.status == "active"
-        ).filter(
-            (Campaign.title.ilike(f"%{search_query}%")) |
-            (Campaign.description.ilike(f"%{search_query}%"))
-        ).limit(5).all()
+        # Enhance search with context awareness
+        context_aware_response = False
+        selected_campaign = None
+        
+        # Check if user is viewing a specific campaign and command relates to it
+        if context_data and context_data.get('view') == 'detail':
+            selected_campaign_data = context_data.get('selected_campaign')
+            if selected_campaign_data:
+                campaign_id = selected_campaign_data.get('id')
+                
+                # Handle context-aware commands like "donate to this campaign"
+                context_keywords = ['this', 'current', 'shown', 'displayed', 'selected']
+                if any(keyword in search_query for keyword in context_keywords):
+                    # User is referring to the currently viewed campaign
+                    selected_campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+                    if selected_campaign:
+                        context_aware_response = True
+                        logger.info(f"Context-aware: User referring to campaign {campaign_id}")
+        
+        # Perform search
+        if context_aware_response and selected_campaign:
+            # User is asking about the currently viewed campaign
+            campaigns = [selected_campaign]
+            logger.info(f"Using context: Campaign '{selected_campaign.title}'")
+        else:
+            # Regular search across all campaigns
+            campaigns = db.query(Campaign).filter(
+                Campaign.status == "active"
+            ).filter(
+                (Campaign.title.ilike(f"%{search_query}%")) |
+                (Campaign.description.ilike(f"%{search_query}%"))
+            ).limit(5).all()
         
         logger.info(f"Found {len(campaigns)} campaigns matching '{search_query}'")
         
         # Step 5: Generate text response
         if campaigns:
-            if user_language == "am":
-                response_text = f"ለ'{search_query}' {len(campaigns)} ዘመቻዎች አገኘሁ:\n\n"
+            # Check if this is a context-aware response
+            if context_aware_response and len(campaigns) == 1:
+                campaign = campaigns[0]
+                
+                # Generate response about the specific campaign
+                if 'donate' in search_query or 'give' in search_query or 'contribute' in search_query:
+                    if user_language == "am":
+                        response_text = f"በ{campaign.title} ላይ ለመለገስ፣ መለገስ ቁልፍን ይጫኑ።\n\n"
+                        response_text += f"ግብ: KES {campaign.goal_amount:,}\n"
+                        response_text += f"የተሰበሰበ: KES {campaign.raised_amount:,}"
+                    else:
+                        response_text = f"To donate to {campaign.title}, tap the Donate button.\n\n"
+                        response_text += f"Goal: KES {campaign.goal_amount:,}\n"
+                        response_text += f"Raised: KES {campaign.raised_amount:,}"
+                elif 'detail' in search_query or 'info' in search_query or 'about' in search_query:
+                    if user_language == "am":
+                        response_text = f"{campaign.title}\n\n{campaign.description[:200]}"
+                    else:
+                        response_text = f"{campaign.title}\n\n{campaign.description[:200]}"
+                else:
+                    # Generic response about the campaign
+                    if user_language == "am":
+                        response_text = f"እርስዎ {campaign.title} እየተመለከቱ ነው።"
+                    else:
+                        response_text = f"You're viewing {campaign.title}."
             else:
-                response_text = f"I found {len(campaigns)} campaigns for '{search_query}':\n\n"
-            
-            for i, campaign in enumerate(campaigns, 1):
-                response_text += f"{i}. {campaign.title}\n"
-                if campaign.goal_amount:
-                    response_text += f"   Goal: KES {campaign.goal_amount:,}\n"
+                # Regular search results
+                if user_language == "am":
+                    response_text = f"ለ'{search_query}' {len(campaigns)} ዘመቻዎች አገኘሁ:\n\n"
+                else:
+                    response_text = f"I found {len(campaigns)} campaigns for '{search_query}':\n\n"
+                
+                for i, campaign in enumerate(campaigns, 1):
+                    response_text += f"{i}. {campaign.title}\n"
+                    if campaign.goal_amount:
+                        response_text += f"   Goal: KES {campaign.goal_amount:,}\n"
         else:
             if user_language == "am":
                 response_text = f"ይቅርታ፣ ለ'{search_query}' ምንም ዘመቻ አላገኘሁም። እባክዎ እንደገና ይሞክሩ።"
@@ -408,20 +473,24 @@ def _classify_analytics_query(text: str) -> str:
 async def voice_donate(
     audio: UploadFile = File(...),
     user_id: str = Form(...),
-    campaign_id: Optional[int] = Form(None)
+    campaign_id: Optional[int] = Form(None),
+    context: Optional[str] = Form(None)  # Voice Ledger: Accept context
 ):
     """
-    Process voice donation command.
+    Process voice donation command with preference learning.
     
     Example: "Donate 500 shillings" or "አምስት መቶ ብር ለግስ"
+    
+    Lab 9 Part 3: Auto-learns payment preferences from donations
     
     Args:
         audio: Audio file
         user_id: Telegram user ID
         campaign_id: Optional campaign ID if context is known
+        context: Optional donation context (amount, payment, step)
         
     Returns:
-        JSON with donation intent and confirmation
+        JSON with donation intent, confirmation, and suggested defaults
     """
     temp_audio_path = None
     
@@ -437,6 +506,23 @@ async def voice_donate(
         # Get user language
         db = next(get_db())
         user_language = get_user_language_preference(user_id) or "en"
+        
+        # Lab 9 Part 3: Get user preferences for suggestions
+        from voice.conversation.preferences import PreferenceManager
+        from database.models import User
+        
+        user = db.query(User).filter(User.telegram_id == user_id).first()
+        suggested_payment = None
+        suggested_amount = None
+        
+        if user:
+            suggested_payment = PreferenceManager.get_preference(user.id, "payment_provider", db)
+            suggested_amount_str = PreferenceManager.get_preference(user.id, "donation_amount", db)
+            if suggested_amount_str:
+                try:
+                    suggested_amount = int(suggested_amount_str)
+                except ValueError:
+                    pass
         
         # Transcribe
         transcription_result = transcribe_audio(
@@ -492,7 +578,10 @@ async def voice_donate(
             "response_text": response_text,
             "audio_url": audio_url,
             "transcription": transcribed_text,
-            "requires_confirmation": True
+            "requires_confirmation": True,
+            # Lab 9 Part 3: Include preference suggestions
+            "suggested_payment": suggested_payment,
+            "suggested_amount": suggested_amount
         })
         
     except Exception as e:
@@ -845,6 +934,133 @@ async def voice_dictate_text(
     except Exception as e:
         logger.error(f"Voice dictation error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+        
+    finally:
+        if temp_audio_path and os.path.exists(temp_audio_path):
+            try:
+                os.remove(temp_audio_path)
+            except:
+                pass
+
+
+@router.post("/wizard-step")
+async def voice_wizard_step(
+    audio: UploadFile = File(...),
+    field_name: str = Form(...),
+    step_number: Optional[int] = Form(None)
+):
+    """
+    Process voice input for campaign creation wizard with AI suggestions.
+    
+    This endpoint:
+    1. Transcribes the audio
+    2. Validates the input for the specific field
+    3. Generates AI suggestions for improvement (title, description only)
+    4. Returns transcription + suggestion
+    
+    Args:
+        audio: Audio file from wizard
+        field_name: Field being filled (title, description, category, goal, deadline)
+        step_number: Current step number (1-5)
+        
+    Returns:
+        JSON with transcription and optional AI suggestion
+    """
+    temp_audio_path = None
+    
+    try:
+        logger.info(f"Voice wizard step for field: {field_name}, step: {step_number}")
+        
+        # Save audio
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
+            content = await audio.read()
+            temp_file.write(content)
+            temp_audio_path = temp_file.name
+        
+        # Transcribe (default to English for wizard)
+        transcription_result = transcribe_audio(
+            temp_audio_path,
+            language="en",
+            user_preference="en"
+        )
+        
+        transcribed_text = transcription_result.get("text", "").strip()
+        logger.info(f"Wizard transcription ({field_name}): '{transcribed_text}'")
+        
+        if not transcribed_text:
+            return JSONResponse(content={
+                "success": False,
+                "error": "no_transcription",
+                "transcription": "",
+                "suggestion": None
+            })
+        
+        # Generate AI suggestions based on field
+        suggestion = None
+        
+        if field_name == "title":
+            # Check title length and quality
+            if len(transcribed_text) > 60:
+                suggestion = f"Consider shortening: \"{transcribed_text[:50]}...\""
+            elif len(transcribed_text.split()) < 3:
+                suggestion = "Add more detail to make the title clearer (e.g., 'Clean Water for Rural Schools in Addis')"
+            elif not any(char.isupper() for char in transcribed_text):
+                # Suggest title case
+                suggestion = transcribed_text.title()
+        
+        elif field_name == "description":
+            word_count = len(transcribed_text.split())
+            if word_count < 20:
+                suggestion = "Add more details: What problem are you solving? Who will benefit? What's your plan?"
+            elif word_count > 200:
+                suggestion = "Consider breaking this into paragraphs for better readability"
+            
+            # Check for key elements
+            has_problem = any(word in transcribed_text.lower() for word in ['need', 'problem', 'lack', 'challenge'])
+            has_solution = any(word in transcribed_text.lower() for word in ['will', 'plan', 'build', 'provide', 'create'])
+            has_beneficiaries = any(word in transcribed_text.lower() for word in ['people', 'students', 'families', 'children', 'community'])
+            
+            if not (has_problem and has_solution):
+                suggestion = "Try including: 1) What problem you're solving, 2) Your solution, 3) Who benefits"
+        
+        elif field_name == "goal":
+            # Parse amount
+            import re
+            numbers = re.findall(r'\d+', transcribed_text)
+            if numbers:
+                amount = int(''.join(numbers))
+                if amount < 1000:
+                    suggestion = "This seems quite low. Consider if this is enough to achieve your goal."
+                elif amount > 1000000:
+                    suggestion = "This is a very large goal. Consider breaking it into phases."
+        
+        elif field_name == "category":
+            # No suggestions needed - will be matched on frontend
+            pass
+        
+        elif field_name == "deadline":
+            # Parse date mentions
+            if any(word in transcribed_text.lower() for word in ['tomorrow', 'next week', 'few days']):
+                suggestion = "Most successful campaigns run for 30-60 days. Consider a longer timeline."
+        
+        return JSONResponse(content={
+            "success": True,
+            "transcription": transcribed_text,
+            "suggestion": suggestion,
+            "field_name": field_name
+        })
+        
+    except Exception as e:
+        logger.error(f"Voice wizard error: {str(e)}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": str(e),
+                "transcription": "",
+                "suggestion": None
+            }
+        )
         
     finally:
         if temp_audio_path and os.path.exists(temp_audio_path):
