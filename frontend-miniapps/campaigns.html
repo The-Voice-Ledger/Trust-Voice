@@ -317,6 +317,42 @@
             available_actions: ['view_campaign', 'filter_campaigns', 'search_campaigns']
         };
         
+        // Voice Ledger Enhancement: Custom error class for voice commands
+        class VoiceError extends Error {
+            static NETWORK = 'NETWORK';
+            static TIMEOUT = 'TIMEOUT';
+            static VALIDATION = 'VALIDATION';
+            static SERVER = 'SERVER';
+            static UNKNOWN = 'UNKNOWN';
+            
+            constructor(message, type, context = {}) {
+                super(message);
+                this.name = 'VoiceError';
+                this.type = type;
+                this.context = context;
+                this.timestamp = Date.now();
+            }
+            
+            isRetryable() {
+                return [
+                    VoiceError.NETWORK,
+                    VoiceError.TIMEOUT,
+                    VoiceError.SERVER
+                ].includes(this.type);
+            }
+            
+            getUserMessage() {
+                const messages = {
+                    [VoiceError.NETWORK]: '📡 No Connection\n\nPlease check your internet and try again.',
+                    [VoiceError.TIMEOUT]: '⏱️ Request Timed Out\n\nThe server took too long to respond.',
+                    [VoiceError.VALIDATION]: this.message,
+                    [VoiceError.SERVER]: '🔧 Server Error\n\nPlease try again in a moment.',
+                    [VoiceError.UNKNOWN]: '❌ Unexpected Error\n\nPlease try again.'
+                };
+                return messages[this.type] || messages[VoiceError.UNKNOWN];
+            }
+        }
+        
         // Mock campaign data
         const mockCampaigns = [
             {
@@ -691,28 +727,105 @@
                     return;
                 }
                 
-                // All checks passed - proceed with upload
-                // Show loading state
-                voiceResponse.classList.add('show');
-                voiceText.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg> Processing your voice command...';
+                // All checks passed - proceed with upload with retry
+                await attemptUpload(audioBlob);
                 
-                // Get user ID from Telegram
-                const userId = tg.initDataUnsafe?.user?.id || 'unknown';
+            } catch (error) {
+                console.error('Voice processing error:', error);
+                voiceText.textContent = '❌ Unable to process voice command. Please try again.';
+                setTimeout(() => {
+                    voiceResponse.classList.remove('show');
+                }, 3000);
+            }
+        }
+        
+        // Voice Ledger Enhancement: Upload with exponential backoff retry
+        async function attemptUpload(audioBlob, retryCount = 0) {
+            const MAX_RETRIES = 3;
+            const RETRY_DELAYS = [1000, 2000, 4000]; // 1s, 2s, 4s
+            
+            try {
+                return await uploadAndProcessAudio(audioBlob);
                 
-                // Prepare form data
-                const formData = new FormData();
-                formData.append('audio', audioBlob, 'voice_search.webm');
-                formData.append('user_id', userId);
-                formData.append('context', JSON.stringify(voiceContext));  // Voice Ledger: Send context
+            } catch (error) {
+                // Only retry if error is retryable and we haven't exceeded max attempts
+                if (error.isRetryable && error.isRetryable() && retryCount < MAX_RETRIES) {
+                    const delay = RETRY_DELAYS[retryCount];
+                    
+                    // Show retry notification
+                    voiceText.textContent = `⚠️ Connection issue. Retrying in ${delay/1000}s... (${retryCount + 1}/${MAX_RETRIES})`;
+                    
+                    // Wait with exponential backoff
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    
+                    // Retry recursively
+                    return await attemptUpload(audioBlob, retryCount + 1);
+                    
+                } else {
+                    // Max retries exceeded or non-retryable error
+                    throw error;
+                }
+            }
+        }
+        
+        // Voice Ledger Enhancement: Actual upload function with error categorization
+        async function uploadAndProcessAudio(audioBlob) {
+            // Show loading state
+            voiceResponse.classList.add('show');
+            voiceText.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg> Processing your voice command...';
+            
+            // Get user ID from Telegram
+            const userId = tg.initDataUnsafe?.user?.id || 'unknown';
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'voice_search.webm');
+            formData.append('user_id', userId);
+            formData.append('context', JSON.stringify(voiceContext));
+            
+            try {
+                // Network connectivity check
+                if (!navigator.onLine) {
+                    throw new VoiceError(
+                        'No internet connection',
+                        VoiceError.NETWORK,
+                        { offline: true }
+                    );
+                }
                 
-                // Send to backend
+                // Send with timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+                
                 const response = await fetch(`${API_BASE}/api/voice/search-campaigns`, {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    signal: controller.signal
                 });
                 
+                clearTimeout(timeoutId);
+                
+                // Categorize HTTP errors
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    if (response.status >= 500) {
+                        throw new VoiceError(
+                            'Server error',
+                            VoiceError.SERVER,
+                            { status: response.status }
+                        );
+                    } else if (response.status === 400) {
+                        throw new VoiceError(
+                            'Invalid request',
+                            VoiceError.VALIDATION,
+                            { status: response.status }
+                        );
+                    } else {
+                        throw new VoiceError(
+                            'HTTP error',
+                            VoiceError.UNKNOWN,
+                            { status: response.status }
+                        );
+                    }
                 }
                 
                 const result = await response.json();
@@ -734,8 +847,6 @@
                 
                 // If campaigns were returned, display them
                 if (result.campaigns && result.campaigns.length > 0) {
-                    // The search input update above will trigger renderCampaigns
-                    // which will show matching campaigns
                     console.log(`Voice search found ${result.campaigns.length} campaigns`);
                 }
                 
@@ -744,12 +855,23 @@
                     voiceResponse.classList.remove('show');
                 }, 5000);
                 
+                return result;
+                
             } catch (error) {
-                console.error('Voice processing error:', error);
-                voiceText.textContent = '❌ Unable to process voice command. Please try again.';
-                setTimeout(() => {
-                    voiceResponse.classList.remove('show');
-                }, 3000);
+                // Categorize native errors
+                if (error.name === 'AbortError') {
+                    throw new VoiceError('Request timeout', VoiceError.TIMEOUT);
+                } else if (error instanceof TypeError && error.message.includes('fetch')) {
+                    throw new VoiceError('Network error', VoiceError.NETWORK);
+                } else if (error instanceof VoiceError) {
+                    throw error; // Already categorized
+                } else {
+                    throw new VoiceError(
+                        error.message || 'Unknown error',
+                        VoiceError.UNKNOWN,
+                        { originalError: error }
+                    );
+                }
             }
         }
         
