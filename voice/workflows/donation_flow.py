@@ -131,8 +131,18 @@ class DonationConversation:
             message=f"Selected campaign: {campaign.title}"
         )
         
+        # LAB 9 Part 3: Suggest amount based on user history
+        amount_suggestion = ""
+        user = db.query(User).filter(User.telegram_user_id == user_id).first()
+        if user:
+            suggested_amount = PreferenceManager.get_preference(
+                user.id, "donation_amount", db
+            )
+            if suggested_amount:
+                amount_suggestion = f"\n\n💡 Your usual amount is {suggested_amount} birr. Use this? (say 'yes' or enter different amount)"
+        
         return {
-            "message": f"Excellent choice! How much would you like to donate to {campaign.title}? 💰",
+            "message": f"Excellent choice! How much would you like to donate to {campaign.title}? 💰{amount_suggestion}",
             "step": DonationStep.ENTER_AMOUNT.value,
             "campaign": {"id": campaign.id, "title": campaign.title}
         }
@@ -200,12 +210,21 @@ class DonationConversation:
             message=f"Entered amount: {amount}"
         )
         
+        # LAB 9 Part 3: Suggest payment method preference
+        payment_suggestion = ""
+        if user:
+            suggested_provider = PreferenceManager.get_preference(
+                user.id, "payment_provider", db
+            )
+            if suggested_provider:
+                payment_suggestion = f"\n\n💡 Use your usual {suggested_provider.title()}? (say 'yes' or choose another)"
+        
         return {
             "message": f"Perfect! {amount} birr to {campaign_title}.\n\n"
                       f"How would you like to pay? 💳\n"
                       f"• Chapa\n"
                       f"• Telebirr\n"
-                      f"• M-Pesa",
+                      f"• M-Pesa{payment_suggestion}",
             "step": DonationStep.SELECT_PAYMENT.value
         }
     
