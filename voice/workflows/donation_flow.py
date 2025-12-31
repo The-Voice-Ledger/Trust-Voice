@@ -1,7 +1,7 @@
 """
 Multi-turn donation conversation flow
 
-LAB 9 Enhancement: Clarification, context switching, and user preferences
+LAB 9 Enhancement: Clarification, context switching, user preferences, and analytics
 """
 
 from typing import Dict, Optional
@@ -25,7 +25,9 @@ from voice.conversation.preferences import (
     PreferenceManager,
     PreferenceLearner
 )
+from voice.conversation.analytics import ConversationAnalytics
 import re
+import uuid
 
 
 class DonationConversation:
@@ -40,13 +42,29 @@ class DonationConversation:
             message: Bot response
             campaigns: List of active campaigns
         """
+        # Generate session_id for analytics
+        session_id = str(uuid.uuid4())
+        
         # Create session
         SessionManager.create_session(user_id, ConversationState.DONATING)
         SessionManager.update_session(
             user_id,
             current_step=DonationStep.SELECT_CAMPAIGN.value,
-            message="Started donation flow"
+            message="Started donation flow",
+            data_update={"session_id": session_id}
         )
+        
+        # LAB 9 Part 4: Track conversation start
+        user = db.query(User).filter(User.telegram_user_id == user_id).first()
+        if user:
+            ConversationAnalytics.track_event(
+                db=db,
+                user_id=user.id,
+                session_id=session_id,
+                event_type="conversation_started",
+                conversation_state="donating",
+                current_step="select_campaign"
+            )
         
         # Get active campaigns
         campaigns = db.query(Campaign).filter(
@@ -131,6 +149,20 @@ class DonationConversation:
             message=f"Selected campaign: {campaign.title}"
         )
         
+        # LAB 9 Part 4: Track campaign selection
+        session_data = SessionManager.get_session(user_id)
+        session_id = session_data.get("data", {}).get("session_id")
+        if user and session_id:
+            ConversationAnalytics.track_event(
+                db=db,
+                user_id=user.id,
+                session_id=session_id,
+                event_type="step_completed",
+                conversation_state="donating",
+                current_step="campaign_selected",
+                metadata={"campaign_id": campaign.id, "campaign_title": campaign.title}
+            )
+        
         # LAB 9 Part 3: Suggest amount based on user history
         amount_suggestion = ""
         user = db.query(User).filter(User.telegram_user_id == user_id).first()
@@ -210,6 +242,20 @@ class DonationConversation:
             message=f"Entered amount: {amount}"
         )
         
+        # LAB 9 Part 4: Track amount entry
+        session_data = SessionManager.get_session(user_id)
+        session_id = session_data.get("data", {}).get("session_id")
+        if user and session_id:
+            ConversationAnalytics.track_event(
+                db=db,
+                user_id=user.id,
+                session_id=session_id,
+                event_type="step_completed",
+                conversation_state="donating",
+                current_step="amount_entered",
+                metadata={"amount": amount}
+            )
+        
         # LAB 9 Part 3: Suggest payment method preference
         payment_suggestion = ""
         if user:
@@ -279,6 +325,21 @@ class DonationConversation:
             message=f"Selected payment: {provider}"
         )
         
+        # LAB 9 Part 4: Track payment method selection
+        session_data = SessionManager.get_session(user_id)
+        session_id = session_data.get("data", {}).get("session_id")
+        user = db.query(User).filter(User.telegram_user_id == user_id).first()
+        if user and session_id:
+            ConversationAnalytics.track_event(
+                db=db,
+                user_id=user.id,
+                session_id=session_id,
+                event_type="step_completed",
+                conversation_state="donating",
+                current_step="payment_selected",
+                metadata={"payment_provider": provider}
+            )
+        
         # Show summary
         data = session["data"]
         message = (
@@ -307,6 +368,21 @@ class DonationConversation:
         message_lower = user_message.lower()
         
         if "cancel" in message_lower or "no" in message_lower:
+            # LAB 9 Part 4: Track abandonment
+            session_data = SessionManager.get_session(user_id)
+            session_id = session_data.get("data", {}).get("session_id")
+            user = db.query(User).filter(User.telegram_user_id == user_id).first()
+            if user and session_id:
+                ConversationAnalytics.track_event(
+                    db=db,
+                    user_id=user.id,
+                    session_id=session_id,
+                    event_type="conversation_abandoned",
+                    conversation_state="donating",
+                    current_step="cancelled",
+                    metadata={"reason": "user_cancelled"}
+                )
+            
             SessionManager.end_session(user_id)
             return {
                 "message": "Donation cancelled. Let me know if you'd like to try again!",
@@ -359,6 +435,23 @@ class DonationConversation:
                 },
                 db
             )
+            
+            # LAB 9 Part 4: Track successful completion
+            session_id = session["data"].get("session_id")
+            if session_id:
+                ConversationAnalytics.track_event(
+                    db=db,
+                    user_id=user.id,
+                    session_id=session_id,
+                    event_type="conversation_completed",
+                    conversation_state="donating",
+                    current_step="completed",
+                    metadata={
+                        "donation_id": donation.id,
+                        "amount": data["amount"],
+                        "campaign_id": data["campaign_id"]
+                    }
+                )
             
             # End session
             SessionManager.end_session(user_id)

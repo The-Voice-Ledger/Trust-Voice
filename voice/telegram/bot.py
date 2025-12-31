@@ -775,6 +775,8 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     from voice.session_manager import SessionManager, is_in_conversation, get_conversation_state, ConversationState
     from voice.workflows.donation_flow import route_donation_message
     from voice.workflows.search_flow import route_search_message
+    from voice.conversation.analytics import ConversationAnalytics
+    from database.models import User as DBUser
     
     if is_in_conversation(telegram_user_id):
         # Route to appropriate conversation handler
@@ -794,6 +796,29 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         
         except Exception as e:
             logger.error(f"Conversation routing error: {e}")
+            
+            # LAB 9 Part 4: Track errors
+            try:
+                db_user = db.query(DBUser).filter(DBUser.telegram_user_id == telegram_user_id).first()
+                session_data = SessionManager.get_session(telegram_user_id)
+                session_id = session_data.get("data", {}).get("session_id") if session_data else None
+                
+                if db_user and session_id:
+                    ConversationAnalytics.track_event(
+                        db=db,
+                        user_id=db_user.id,
+                        session_id=session_id,
+                        event_type="error_occurred",
+                        conversation_state=state,
+                        current_step="error",
+                        metadata={
+                            "error_type": type(e).__name__,
+                            "error_message": str(e)
+                        }
+                    )
+            except Exception as track_error:
+                logger.error(f"Failed to track error: {track_error}")
+            
             # Fall through to normal NLU
         finally:
             db.close()

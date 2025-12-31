@@ -14,6 +14,7 @@ Architecture follows Option A: Self-contained voice processing in mini app
 import logging
 import os
 import tempfile
+import uuid
 from pathlib import Path
 from typing import Optional
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
@@ -27,6 +28,7 @@ from database.models import Campaign, User
 from voice.asr.asr_infer import transcribe_audio, ASRError
 from voice.telegram.voice_responses import get_user_language_preference, detect_language, clean_text_for_tts
 from voice.tts.tts_provider import TTSProvider
+from voice.conversation.analytics import ConversationAnalytics
 
 logger = logging.getLogger(__name__)
 
@@ -243,6 +245,28 @@ async def voice_search_campaigns(
             "audio_url": audio_url if tts_success else None
         }
         
+        # LAB 9 Part 4: Track voice search event
+        try:
+            user_record = db.query(User).filter(User.telegram_user_id == user_id).first()
+            if user_record:
+                session_id = str(uuid.uuid4())
+                ConversationAnalytics.track_event(
+                    db=db,
+                    user_id=user_record.id,
+                    session_id=session_id,
+                    event_type="voice_search",
+                    conversation_state="miniapp_search",
+                    current_step="search_completed",
+                    metadata={
+                        "query": search_query,
+                        "results_count": len(campaigns),
+                        "context_aware": context_aware_response,
+                        "tts_success": tts_success
+                    }
+                )
+        except Exception as analytics_error:
+            logger.error(f"Analytics tracking failed: {analytics_error}")
+        
         logger.info(f"Voice search complete: {len(campaigns)} results, TTS: {tts_success}")
         
         return JSONResponse(content=response_data)
@@ -251,6 +275,28 @@ async def voice_search_campaigns(
         raise
     except Exception as e:
         logger.error(f"Voice search error: {str(e)}", exc_info=True)
+        
+        # LAB 9 Part 4: Track error
+        try:
+            db = next(get_db())
+            user_record = db.query(User).filter(User.telegram_user_id == user_id).first()
+            if user_record:
+                session_id = str(uuid.uuid4())
+                ConversationAnalytics.track_event(
+                    db=db,
+                    user_id=user_record.id,
+                    session_id=session_id,
+                    event_type="error_occurred",
+                    conversation_state="miniapp_search",
+                    current_step="error",
+                    metadata={
+                        "error_type": type(e).__name__,
+                        "error_message": str(e)
+                    }
+                )
+        except Exception as analytics_error:
+            logger.error(f"Analytics tracking failed: {analytics_error}")
+        
         raise HTTPException(status_code=500, detail=f"Voice search failed: {str(e)}")
         
     finally:
@@ -570,6 +616,27 @@ async def voice_donate(
             audio_filename = Path(audio_path).name
             audio_url = f"/api/voice/audio/{audio_filename}"
         
+        # LAB 9 Part 4: Track voice donation attempt
+        try:
+            if user:
+                session_id = str(uuid.uuid4())
+                ConversationAnalytics.track_event(
+                    db=db,
+                    user_id=user.id,
+                    session_id=session_id,
+                    event_type="voice_donation",
+                    conversation_state="miniapp_donation",
+                    current_step="amount_recognized",
+                    metadata={
+                        "amount": amount,
+                        "campaign_id": campaign_id,
+                        "suggested_payment": suggested_payment,
+                        "suggested_amount": suggested_amount
+                    }
+                )
+        except Exception as analytics_error:
+            logger.error(f"Analytics tracking failed: {analytics_error}")
+        
         return JSONResponse(content={
             "success": True,
             "amount": amount,
@@ -586,6 +653,28 @@ async def voice_donate(
         
     except Exception as e:
         logger.error(f"Voice donation error: {str(e)}", exc_info=True)
+        
+        # LAB 9 Part 4: Track error
+        try:
+            db = next(get_db())
+            user_record = db.query(User).filter(User.telegram_user_id == user_id).first()
+            if user_record:
+                session_id = str(uuid.uuid4())
+                ConversationAnalytics.track_event(
+                    db=db,
+                    user_id=user_record.id,
+                    session_id=session_id,
+                    event_type="error_occurred",
+                    conversation_state="miniapp_donation",
+                    current_step="error",
+                    metadata={
+                        "error_type": type(e).__name__,
+                        "error_message": str(e)
+                    }
+                )
+        except Exception as analytics_error:
+            logger.error(f"Analytics tracking failed: {analytics_error}")
+        
         raise HTTPException(status_code=500, detail=str(e))
         
     finally:
