@@ -574,6 +574,113 @@
         
         const ttsController = new TTSController();
         
+        // Voice Ledger Enhancement: Silent audio detection
+        async function checkAudioHasSound(audioBlob) {
+            try {
+                const audioContext = new AudioContext();
+                const arrayBuffer = await audioBlob.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                
+                const channelData = audioBuffer.getChannelData(0);
+                let maxAmplitude = 0;
+                
+                for (let i = 0; i < channelData.length; i++) {
+                    maxAmplitude = Math.max(maxAmplitude, Math.abs(channelData[i]));
+                }
+                
+                const hasSound = maxAmplitude > 0.01;  // 1% threshold
+                await audioContext.close();
+                
+                return {
+                    hasSound,
+                    maxAmplitude,
+                    duration: audioBuffer.duration
+                };
+            } catch (error) {
+                console.error('Audio analysis failed:', error);
+                return { hasSound: true, maxAmplitude: 0, duration: 0 };
+            }
+        }
+        
+        // Voice Ledger Enhancement: Retry with exponential backoff
+        async function attemptUpload(audioBlob, retryCount = 0) {
+            const MAX_RETRIES = 3;
+            const RETRY_DELAYS = [1000, 2000, 4000];
+            
+            try {
+                return await uploadAndProcessAudio(audioBlob);
+            } catch (error) {
+                if (error.isRetryable && error.isRetryable() && retryCount < MAX_RETRIES) {
+                    const delay = RETRY_DELAYS[retryCount];
+                    const responseBox = document.getElementById('voiceResponse');
+                    const message = document.getElementById('voiceMessage');
+                    
+                    message.textContent = `⚠️ Connection issue. Retrying in ${delay/1000}s... (${retryCount + 1}/${MAX_RETRIES})`;
+                    responseBox.style.display = 'block';
+                    
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return await attemptUpload(audioBlob, retryCount + 1);
+                } else {
+                    throw error;
+                }
+            }
+        }
+        
+        // Voice Ledger Enhancement: Upload with error categorization
+        async function uploadAndProcessAudio(audioBlob) {
+            // Network check
+            if (!navigator.onLine) {
+                throw new VoiceError('No internet connection', VoiceError.NETWORK, { offline: true });
+            }
+            
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'donate.webm');
+            formData.append('user_id', tg.initDataUnsafe?.user?.id || 'guest');
+            formData.append('campaign_id', currentCampaign?.id || campaignId || '1');
+            formData.append('context', JSON.stringify(donationContext));
+            
+            // 30-second timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+            
+            try {
+                const response = await fetch(API_BASE + '/api/voice/donate-by-voice', {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                // Categorize HTTP errors
+                if (!response.ok) {
+                    if (response.status >= 500) {
+                        throw new VoiceError('Server error', VoiceError.SERVER, { status: response.status });
+                    } else if (response.status === 400) {
+                        throw new VoiceError('Invalid request', VoiceError.VALIDATION, { status: response.status });
+                    } else {
+                        throw new VoiceError('HTTP error', VoiceError.UNKNOWN, { status: response.status });
+                    }
+                }
+                
+                return await response.json();
+                
+            } catch (error) {
+                clearTimeout(timeoutId);
+                
+                // Categorize native errors
+                if (error.name === 'AbortError') {
+                    throw new VoiceError('Request timeout', VoiceError.TIMEOUT);
+                } else if (error instanceof TypeError && error.message.includes('fetch')) {
+                    throw new VoiceError('Network error', VoiceError.NETWORK);
+                } else if (error instanceof VoiceError) {
+                    throw error;
+                } else {
+                    throw new VoiceError(error.message || 'Unknown error', VoiceError.UNKNOWN, { originalError: error });
+                }
+            }
+        }
+        
         // Get campaign ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const campaignId = urlParams.get('campaign_id');
@@ -597,6 +704,7 @@
                 selectedAmount = parseInt(btn.dataset.amount);
                 document.getElementById('customAmount').value = '';
                 updateSummary();
+                updateDonationContext();  // Voice Ledger: Update context
             });
         });
         
@@ -605,6 +713,7 @@
             document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
             selectedAmount = parseFloat(e.target.value) || 0;
             updateSummary();
+            updateDonationContext();  // Voice Ledger: Update context
         });
         
         // Payment method selection
@@ -613,6 +722,8 @@
                 document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
                 option.classList.add('active');
                 selectedMethod = option.dataset.method;
+                donationContext.step = 'confirmation';
+                updateDonationContext();  // Voice Ledger: Update context
             });
         });
         
@@ -700,26 +811,59 @@
         }
         
         async function processVoiceDonation(audioBlob) {
-            const formData = new FormData();
-            formData.append('audio', audioBlob, 'donate.webm');
-            formData.append('user_id', tg.initDataUnsafe?.user?.id || 'guest');
-            formData.append('campaign_id', currentCampaign?.id || campaignId || '1');
+            const responseBox = document.getElementById('voiceResponse');
+            const message = document.getElementById('voiceMessage');
             
             try {
-                const response = await fetch(API_BASE + '/api/voice/donate-by-voice', {
-                    method: 'POST',
-                    body: formData
-                });
+                // Voice Ledger: 3-step validation
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    displayVoiceDonationResult(data);
-                } else {
-                    tg.showAlert('Failed to process voice command. Please try again.');
+                // Step 1: Duration check
+                if (audioBlob.size === 0 || audioBlob.size < 1000) {
+                    message.textContent = '⏱️ Audio too short\n\nPlease speak for at least 1 second.';
+                    responseBox.style.display = 'block';
+                    setTimeout(() => responseBox.style.display = 'none', 3000);
+                    return;
                 }
+                
+                // Step 2: File size check
+                const maxSize = 25 * 1024 * 1024; // 25MB
+                if (audioBlob.size > maxSize) {
+                    message.textContent = '📦 Audio too large\n\nPlease keep recordings under 25MB.';
+                    responseBox.style.display = 'block';
+                    setTimeout(() => responseBox.style.display = 'none', 3000);
+                    return;
+                }
+                
+                // Step 3: Silent audio check
+                message.textContent = '🔍 Analyzing audio...';
+                responseBox.style.display = 'block';
+                
+                const audioCheck = await checkAudioHasSound(audioBlob);
+                if (!audioCheck.hasSound) {
+                    message.textContent = `🔇 Silent Audio Detected\n\nNo sound detected (amplitude: ${(audioCheck.maxAmplitude * 100).toFixed(2)}%).\n\nPlease:\n• Speak closer to microphone\n• Check microphone isn't muted\n• Try again with clear speech`;
+                    setTimeout(() => responseBox.style.display = 'none', 5000);
+                    return;
+                }
+                
+                console.log(`✓ Audio valid: ${audioCheck.duration.toFixed(1)}s, amplitude: ${(audioCheck.maxAmplitude * 100).toFixed(1)}%`);
+                
+                // Upload with retry
+                message.textContent = '☁️ Uploading...';
+                const data = await attemptUpload(audioBlob);
+                
+                displayVoiceDonationResult(data);
+                
             } catch (error) {
                 console.error('Voice donation error:', error);
-                tg.showAlert('Network error. Please check your connection.');
+                
+                if (error instanceof VoiceError) {
+                    message.textContent = error.getUserMessage();
+                } else {
+                    message.textContent = '❌ Error processing voice command\n\nPlease try again.';
+                }
+                
+                responseBox.style.display = 'block';
+                setTimeout(() => responseBox.style.display = 'none', 5000);
             }
         }
         
@@ -738,11 +882,11 @@
                 document.getElementById('customAmount').value = data.amount;
                 selectedAmount = data.amount;
                 updateSummary();
+                updateDonationContext();  // Update context after amount change
                 
-                // Play audio if available
+                // Play audio with TTS controls
                 if (data.audio_url) {
-                    const audio = new Audio(API_BASE + data.audio_url);
-                    audio.play().catch(e => console.log('Auto-play prevented:', e));
+                    ttsController.play(data.audio_url);
                 }
             } else {
                 message.textContent = data.response_text || "Couldn't understand the amount. Please try again.";
