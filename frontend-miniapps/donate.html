@@ -268,13 +268,13 @@
         <div class="subtitle">Support this campaign</div>
     </div>
     
-    <div class="campaign-info" id="campaignInfo">
-        <div class="campaign-title" id="campaignTitle">Clean Water for Rural Kenya</div>
-        <div class="campaign-org" id="campaignOrg">Water for All NGO</div>
+    <div class="campaign-info" id="campaignInfo" style="display: none;">
+        <div class="campaign-title" id="campaignTitle">Loading...</div>
+        <div class="campaign-org" id="campaignOrg">Please wait...</div>
         <div class="campaign-progress" id="campaignProgress" style="margin-top: 8px; font-size: 14px; opacity: 0.8;"></div>
     </div>
     
-    <div id="loadingCampaign" style="display: none; text-align: center; padding: 40px; color: var(--tg-theme-hint-color, #999);">
+    <div id="loadingCampaign" style="display: block; text-align: center; padding: 40px; color: var(--tg-theme-hint-color, #999);">
         <div>Loading campaign details...</div>
     </div>
     
@@ -688,6 +688,9 @@
         // Load campaign if ID provided
         if (campaignId) {
             loadCampaign(campaignId);
+        } else {
+            // No campaign ID - show error and redirect
+            document.getElementById('loadingCampaign').innerHTML = '<div>No campaign selected.<br><br><a href="campaigns.html" style="color: var(--tg-theme-link-color, #3390ec);">Browse Campaigns</a></div>';
         }
         
         // Load campaign from API
@@ -720,7 +723,9 @@
                 console.error('Failed to load campaign:', error);
                 document.getElementById('loadingCampaign').textContent = 'Failed to load campaign. Please try again.';
             }
-        }\n        \n        // Amount selection
+        }
+        
+        // Amount selection
         document.querySelectorAll('.amount-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
