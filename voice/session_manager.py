@@ -7,9 +7,11 @@ Handles conversation state, user context, and session lifecycle using Redis.
 import os
 import json
 import redis
+import uuid
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 from enum import Enum
+from sqlalchemy.orm import Session
 
 # Redis connection
 redis_client = redis.Redis(
@@ -51,18 +53,22 @@ class SessionManager:
         return f"session:{user_id}"
     
     @staticmethod
-    def create_session(user_id: str, state: ConversationState) -> Dict[str, Any]:
+    def create_session(user_id: str, state: ConversationState, db: Optional[Session] = None) -> Dict[str, Any]:
         """
         Create new conversation session
         
         Args:
             user_id: Telegram user ID
             state: Initial conversation state
+            db: Database session for analytics tracking
             
         Returns:
             Session data dictionary
         """
+        session_id = str(uuid.uuid4())
+        
         session = {
+            "session_id": session_id,
             "user_id": user_id,
             "state": state.value,
             "current_step": None,
@@ -78,6 +84,25 @@ class SessionManager:
             SESSION_TTL,
             json.dumps(session)
         )
+        
+        # Track analytics event
+        if db:
+            try:
+                from voice.conversation.analytics import ConversationAnalytics
+                ConversationAnalytics.track_event(
+                    user_id=user_id,
+                    session_id=session_id,
+                    event_type="conversation_started",
+                    conversation_state=state.value,
+                    db=db
+                )
+                ConversationAnalytics.update_daily_metrics(
+                    conversation_type=state.value,
+                    metric_type="started",
+                    db=db
+                )
+            except Exception as e:
+                print(f"⚠️  Analytics tracking failed: {e}")
         
         return session
     
@@ -105,7 +130,8 @@ class SessionManager:
         state: Optional[ConversationState] = None,
         current_step: Optional[str] = None,
         data_update: Optional[Dict[str, Any]] = None,
-        message: Optional[str] = None
+        message: Optional[str] = None,
+        db: Optional[Session] = None
     ) -> Dict[str, Any]:
         """
         Update existing session
@@ -116,6 +142,7 @@ class SessionManager:
             current_step: New step in workflow (optional)
             data_update: Dictionary to merge into session data
             message: Add message to history
+            db: Database session for analytics tracking
             
         Returns:
             Updated session data
@@ -126,8 +153,25 @@ class SessionManager:
             # Create new session if none exists
             session = SessionManager.create_session(
                 user_id, 
-                state or ConversationState.IDLE
+                state or ConversationState.IDLE,
+                db=db
             )
+        
+        # Track step completion
+        if current_step and db:
+            try:
+                from voice.conversation.analytics import ConversationAnalytics
+                ConversationAnalytics.track_event(
+                    user_id=user_id,
+                    session_id=session.get("session_id", str(uuid.uuid4())),
+                    event_type="step_completed",
+                    conversation_state=session.get("state"),
+                    current_step=current_step,
+                    event_data=data_update,
+                    db=db
+                )
+            except Exception as e:
+                print(f"⚠️  Analytics tracking failed: {e}")
         
         # Update fields
         if state:
@@ -155,16 +199,52 @@ class SessionManager:
         return session
     
     @staticmethod
-    def end_session(user_id: str) -> bool:
+    def end_session(user_id: str, reason: str = "completed", db: Optional[Session] = None) -> bool:
         """
         End conversation session
         
         Args:
             user_id: Telegram user ID
+            reason: Reason for ending ("completed", "abandoned", "timeout")
+            db: Database session for analytics tracking
             
         Returns:
             True if session existed and was deleted
         """
+        session = SessionManager.get_session(user_id)
+        
+        # Track analytics
+        if session and db:
+            try:
+                from voice.conversation.analytics import ConversationAnalytics
+                
+                event_type = "conversation_completed" if reason == "completed" else "conversation_abandoned"
+                
+                ConversationAnalytics.track_event(
+                    user_id=user_id,
+                    session_id=session.get("session_id", str(uuid.uuid4())),
+                    event_type=event_type,
+                    conversation_state=session.get("state"),
+                    current_step=session.get("current_step"),
+                    event_data={"reason": reason},
+                    db=db
+                )
+                
+                if reason == "completed":
+                    ConversationAnalytics.update_daily_metrics(
+                        conversation_type=session.get("state", "idle"),
+                        metric_type="completed",
+                        db=db
+                    )
+                elif reason == "abandoned":
+                    ConversationAnalytics.update_daily_metrics(
+                        conversation_type=session.get("state", "idle"),
+                        metric_type="abandoned",
+                        db=db
+                    )
+            except Exception as e:
+                print(f"⚠️  Analytics tracking failed: {e}")
+        
         key = SessionManager._get_key(user_id)
         return redis_client.delete(key) > 0
     

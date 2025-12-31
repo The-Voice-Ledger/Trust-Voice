@@ -713,7 +713,7 @@
                 const progress = (campaign.raised / campaign.goal) * 100;
                 
                 return `
-                    <div class="campaign-card" onclick="openCampaign(${campaign.id})">
+                    <div class="campaign-card">
                         <div class="campaign-header">
                             <div>
                                 <div class="campaign-title">${campaign.title}</div>
@@ -739,6 +739,9 @@
                                 <span class="stat-value">${campaign.donors}</span>
                             </div>
                         </div>
+                        <button onclick="event.stopPropagation(); openCampaign(${campaign.id})" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 12px;">
+                            Donate Now
+                        </button>
                     </div>
                 `;
             }).join('');

@@ -1,5 +1,7 @@
 """
 Multi-turn donation conversation flow
+
+LAB 9 Enhancement: Clarification, context switching, and user preferences
 """
 
 from typing import Dict, Optional
@@ -10,6 +12,19 @@ from voice.session_manager import (
     DonationStep
 )
 from database.models import Campaign, Donation, User
+from voice.conversation.clarification import (
+    ClarificationHandler,
+    ConversationRepair
+)
+from voice.conversation.context_switcher import (
+    ConversationContext,
+    InterruptDetector,
+    generate_resume_prompt
+)
+from voice.conversation.preferences import (
+    PreferenceManager,
+    PreferenceLearner
+)
 import re
 
 
@@ -57,10 +72,12 @@ class DonationConversation:
         db: Session
     ) -> Dict[str, str]:
         """
-        Process campaign selection
+        Process campaign selection with fuzzy matching
+        
+        LAB 9: Uses ClarificationHandler for typo tolerance and disambiguation
         
         Args:
-            user_message: e.g., "Education", "campaign 2", "#42"
+            user_message: e.g., "Education", "educashun", "campaign 2", "#42"
         """
         # Try to extract campaign ID or name
         campaign = None
@@ -71,11 +88,31 @@ class DonationConversation:
             campaign_id = int(id_match.group(1))
             campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
         
-        # Fallback: Search by title
+        # LAB 9: Use fuzzy matching for campaign name
         if not campaign:
-            campaign = db.query(Campaign).filter(
-                Campaign.title.ilike(f"%{user_message}%")
-            ).first()
+            result = await ClarificationHandler.handle_ambiguous_campaign(
+                user_id, user_message, db
+            )
+            
+            if result["type"] == "exact_match":
+                # High confidence match found
+                campaign_data = result["campaign"]
+                campaign = db.query(Campaign).filter(
+                    Campaign.id == campaign_data["id"]
+                ).first()
+            elif result["type"] == "clarification_needed":
+                # Multiple matches - need user to clarify
+                return {
+                    "message": result["message"],
+                    "step": "clarification",
+                    "options": result["options"]
+                }
+            else:
+                # No matches found
+                return {
+                    "message": result["message"],
+                    "step": DonationStep.SELECT_CAMPAIGN.value
+                }
         
         if not campaign:
             return {
@@ -103,23 +140,55 @@ class DonationConversation:
     @staticmethod
     async def handle_amount(
         user_id: str,
-        user_message: str
+        user_message: str,
+        db: Session
     ) -> Dict[str, str]:
         """
-        Process amount entry
+        Process amount entry with word number parsing and preferences
+        
+        LAB 9 Part 1: ClarificationHandler.parse_number_with_units
+        LAB 9 Part 3: Suggests default amount from preferences
         
         Args:
-            user_message: e.g., "100", "500 birr", "fifty dollars"
+            user_message: e.g., "100", "500 birr", "fifty dollars", "five hundred", "yes" (for default)
         """
         session = SessionManager.get_session(user_id)
         campaign_title = session["data"]["campaign_title"]
         
-        # Extract number from message
-        amount = DonationConversation._extract_amount(user_message)
+        # Get user from session (telegram_user_id → user_id)
+        user = db.query(User).filter(User.telegram_user_id == user_id).first()
+        
+        # LAB 9 Part 3: Check if user wants to use suggested default
+        if user and user_message.lower() in ["yes", "y", "use default", "default"]:
+            suggested_amount = PreferenceManager.get_preference(
+                user.id, "donation_amount", db
+            )
+            if suggested_amount:
+                amount = int(suggested_amount)
+                # Save amount
+                SessionManager.update_session(
+                    user_id,
+                    current_step=DonationStep.SELECT_PAYMENT.value,
+                    data_update={"amount": amount},
+                    message=f"Using default amount: {amount}"
+                )
+                
+                return {
+                    "message": f"Perfect! {amount} birr to {campaign_title}.\n\n"
+                              f"How would you like to pay? 💳\n"
+                              f"• Chapa\n"
+                              f"• Telebirr\n"
+                              f"• M-Pesa",
+                    "step": DonationStep.SELECT_PAYMENT.value
+                }
+        
+        # LAB 9 Part 1: Use enhanced number parser (handles word numbers)
+        amount = ClarificationHandler.parse_number_with_units(user_message)
         
         if not amount or amount < 10:
             return {
-                "message": "Please enter a valid amount (minimum 10).",
+                "message": "Please enter a valid amount (minimum 10). "
+                          "You can say '50', 'fifty', or '500 birr'.",
                 "step": DonationStep.ENTER_AMOUNT.value
             }
         
@@ -132,7 +201,7 @@ class DonationConversation:
         )
         
         return {
-            "message": f"Perfect! {amount} to {campaign_title}.\n\n"
+            "message": f"Perfect! {amount} birr to {campaign_title}.\n\n"
                       f"How would you like to pay? 💳\n"
                       f"• Chapa\n"
                       f"• Telebirr\n"
@@ -143,24 +212,45 @@ class DonationConversation:
     @staticmethod
     async def handle_payment_method(
         user_id: str,
-        user_message: str
+        user_message: str,
+        db: Session
     ) -> Dict[str, str]:
-        """Process payment method selection"""
+        """
+        Process payment method selection with preferences
+        
+        LAB 9 Part 3: Supports "yes" for default payment method
+        """
         session = SessionManager.get_session(user_id)
         
-        # Map to payment provider
-        message_lower = user_message.lower()
-        if "chapa" in message_lower:
-            provider = "chapa"
-        elif "telebirr" in message_lower or "tele" in message_lower:
-            provider = "telebirr"
-        elif "mpesa" in message_lower or "m-pesa" in message_lower:
-            provider = "mpesa"
+        # Get user from session
+        user = db.query(User).filter(User.telegram_user_id == user_id).first()
+        
+        # LAB 9 Part 3: Check if user wants to use suggested default
+        if user and user_message.lower() in ["yes", "y", "use default", "default"]:
+            suggested_provider = PreferenceManager.get_preference(
+                user.id, "payment_provider", db
+            )
+            if suggested_provider:
+                provider = suggested_provider
+            else:
+                return {
+                    "message": "Please choose Chapa, Telebirr, or M-Pesa.",
+                    "step": DonationStep.SELECT_PAYMENT.value
+                }
         else:
-            return {
-                "message": "Please choose Chapa, Telebirr, or M-Pesa.",
-                "step": DonationStep.SELECT_PAYMENT.value
-            }
+            # Map to payment provider
+            message_lower = user_message.lower()
+            if "chapa" in message_lower:
+                provider = "chapa"
+            elif "telebirr" in message_lower or "tele" in message_lower:
+                provider = "telebirr"
+            elif "mpesa" in message_lower or "m-pesa" in message_lower:
+                provider = "mpesa"
+            else:
+                return {
+                    "message": "Please choose Chapa, Telebirr, or M-Pesa.",
+                    "step": DonationStep.SELECT_PAYMENT.value
+                }
         
         # Save payment method
         SessionManager.update_session(
@@ -241,6 +331,16 @@ class DonationConversation:
             donation.status = "completed"
             db.commit()
             
+            # LAB 9 Part 3: Learn from completed donation
+            PreferenceManager.learn_from_donation(
+                user.id,
+                {
+                    "payment_provider": data["payment_provider"],
+                    "amount": data["amount"]
+                },
+                db
+            )
+            
             # End session
             SessionManager.end_session(user_id)
             
@@ -280,6 +380,8 @@ async def route_donation_message(
     """
     Route message to appropriate donation flow handler
     
+    LAB 9 Part 1-2: Handles clarifications, corrections, and context switching
+    
     Args:
         user_id: Telegram user ID
         message: User's message text
@@ -289,9 +391,105 @@ async def route_donation_message(
         Bot response with next step
     """
     session = SessionManager.get_session(user_id)
+    current_state = ConversationState(session["state"]) if session else ConversationState.IDLE
+    
+    # LAB 9 Part 2: Check for resume request
+    if InterruptDetector.is_resume_request(message):
+        if ConversationContext.has_paused_conversation(user_id):
+            restored = ConversationContext.resume_conversation(user_id)
+            if restored:
+                prompt = generate_resume_prompt(restored)
+                return {
+                    "message": prompt,
+                    "step": restored.get("step", "resumed"),
+                    "resumed": True
+                }
+        return {
+            "message": "No paused conversation to resume. Would you like to start a donation?",
+            "step": "idle"
+        }
+    
+    # LAB 9 Part 2: Check for interrupts (questions, navigation)
+    if InterruptDetector.is_interrupt(message, current_state):
+        interrupt_type = InterruptDetector.classify_interrupt(message)
+        
+        if interrupt_type == "navigation":
+            # Handle cancel/stop
+            if any(word in message.lower() for word in ["cancel", "stop", "quit", "exit"]):
+                cleared = ConversationContext.clear_all_contexts(user_id)
+                SessionManager.end_session(user_id)
+                return {
+                    "message": "Cancelled. Let me know if you'd like to start again!",
+                    "step": "cancelled"
+                }
+            
+            # Handle "go back" - resume previous context
+            elif "go back" in message.lower():
+                if ConversationContext.has_paused_conversation(user_id):
+                    restored = ConversationContext.resume_conversation(user_id)
+                    if restored:
+                        prompt = generate_resume_prompt(restored)
+                        return {
+                            "message": prompt,
+                            "step": restored.get("step", "resumed")
+                        }
+                return {
+                    "message": "Nothing to go back to. Let's start fresh!",
+                    "step": "idle"
+                }
+        
+        elif interrupt_type == "question":
+            # Pause current conversation to handle question
+            if session and current_state != ConversationState.IDLE:
+                paused = ConversationContext.pause_current_conversation(
+                    user_id,
+                    "user_asked_question"
+                )
+                
+                # For now, return a simple acknowledgment
+                # In production, this would call handle_general_query()
+                return {
+                    "message": f"Let me answer that: [Question handler would process: '{message}']\n\n"
+                              f"💬 Type 'continue' to resume your donation.",
+                    "step": "question_answered",
+                    "paused": True
+                }
     
     if not session:
         return await DonationConversation.start(user_id, db)
+    
+    # LAB 9 Part 1: Check for pending clarification
+    if session and session["data"].get("pending_clarification"):
+        campaign = await ClarificationHandler.resolve_clarification(
+            user_id, message, db
+        )
+        if campaign:
+            # Clarification resolved - proceed to amount
+            SessionManager.update_session(
+                user_id,
+                current_step=DonationStep.ENTER_AMOUNT.value,
+                data_update={
+                    "campaign_id": campaign.id,
+                    "campaign_title": campaign.title,
+                    "pending_clarification": None,
+                    "clarification_options": None
+                }
+            )
+            return {
+                "message": f"Perfect! {campaign.title}. How much would you like to donate? 💰",
+                "step": DonationStep.ENTER_AMOUNT.value
+            }
+        else:
+            # Still unclear - ask again
+            return {
+                "message": "Please select a number from the list or type the full campaign name.",
+                "step": "clarification"
+            }
+    
+    # LAB 9 Part 1: Check for corrections ("actually...", "I meant...", etc.)
+    if ConversationRepair.is_correction(message):
+        result = await ConversationRepair.handle_correction(user_id, message, db)
+        return result
     
     current_step = session.get("current_step")
     
@@ -299,10 +497,10 @@ async def route_donation_message(
         return await DonationConversation.handle_campaign_selection(user_id, message, db)
     
     elif current_step == DonationStep.ENTER_AMOUNT.value:
-        return await DonationConversation.handle_amount(user_id, message)
+        return await DonationConversation.handle_amount(user_id, message, db)
     
     elif current_step == DonationStep.SELECT_PAYMENT.value:
-        return await DonationConversation.handle_payment_method(user_id, message)
+        return await DonationConversation.handle_payment_method(user_id, message, db)
     
     elif current_step == DonationStep.CONFIRM.value:
         return await DonationConversation.handle_confirmation(user_id, message, db)

@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversation Analytics Dashboard</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #f5f5f5);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+        
+        .header {
+            margin-bottom: 24px;
+        }
+        
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .icon {
+            font-size: 32px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            color: var(--tg-theme-hint-color, #999);
+            font-size: 14px;
+        }
+        
+        /* Time Period Selector */
+        .time-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            padding: 4px;
+            border-radius: 12px;
+        }
+        
+        .time-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: transparent;
+            color: var(--tg-theme-text-color, #000);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .time-btn.active {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #fff);
+        }
+        
+        /* Summary Cards */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .summary-card {
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .card-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .card-value.success {
+            color: #4CAF50;
+        }
+        
+        .card-value.warning {
+            color: #FF9800;
+        }
+        
+        .card-value.info {
+            color: #2196F3;
+        }
+        
+        .card-value.error {
+            color: #f44336;
+        }
+        
+        .card-label {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+        
+        .card-trend {
+            font-size: 11px;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .trend-up {
+            color: #4CAF50;
+        }
+        
+        .trend-down {
+            color: #f44336;
+        }
+        
+        /* Chart Section */
+        .chart-section {
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+        
+        /* Funnel Section */
+        .funnel-section {
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .funnel-step {
+            margin-bottom: 16px;
+            position: relative;
+        }
+        
+        .funnel-step:last-child {
+            margin-bottom: 0;
+        }
+        
+        .funnel-step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .funnel-step-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .funnel-step-stats {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+        
+        .funnel-percentage {
+            font-weight: 600;
+            color: var(--tg-theme-button-color, #3390ec);
+        }
+        
+        .funnel-count {
+            color: var(--tg-theme-hint-color, #999);
+        }
+        
+        .funnel-bar {
+            width: 100%;
+            height: 32px;
+            background: #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .funnel-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            padding-left: 12px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .funnel-drop-off {
+            position: absolute;
+            right: -80px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #ffebee;
+            color: #c62828;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        /* Event List */
+        .events-section {
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .event-item {
+            padding: 12px;
+            border-left: 3px solid #e0e0e0;
+            margin-bottom: 12px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        
+        .event-item.started {
+            border-left-color: #2196F3;
+        }
+        
+        .event-item.completed {
+            border-left-color: #4CAF50;
+        }
+        
+        .event-item.abandoned {
+            border-left-color: #f44336;
+        }
+        
+        .event-item.clarification {
+            border-left-color: #FF9800;
+        }
+        
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        
+        .event-type {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .event-time {
+            font-size: 11px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+        
+        .event-details {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #666);
+        }
+        
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--tg-theme-button-color, #3390ec);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+        
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">
+            <span class="icon">📊</span>
+            <h1>Conversation Analytics</h1>
+        </div>
+        <div class="subtitle">Track conversation performance and user behavior</div>
+    </div>
+    
+    <!-- Time Period Selector -->
+    <div class="time-selector">
+        <button class="time-btn active" data-days="7" onclick="changePeriod(7)">7 Days</button>
+        <button class="time-btn" data-days="30" onclick="changePeriod(30)">30 Days</button>
+        <button class="time-btn" data-days="90" onclick="changePeriod(90)">90 Days</button>
+    </div>
+    
+    <!-- Loading State -->
+    <div id="loading" class="loading">
+        <div class="loading-spinner"></div>
+        <div>Loading analytics...</div>
+    </div>
+    
+    <!-- Main Content (hidden initially) -->
+    <div id="content" style="display: none;">
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="card-value info" id="started-count">0</div>
+                <div class="card-label">Started</div>
+                <div class="card-trend" id="started-trend"></div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="card-value success" id="completed-count">0</div>
+                <div class="card-label">Completed</div>
+                <div class="card-trend" id="completed-trend"></div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="card-value error" id="abandoned-count">0</div>
+                <div class="card-label">Abandoned</div>
+                <div class="card-trend" id="abandoned-trend"></div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="card-value success" id="completion-rate">0%</div>
+                <div class="card-label">Success Rate</div>
+                <div class="card-trend" id="rate-trend"></div>
+            </div>
+        </div>
+        
+        <!-- Trend Chart -->
+        <div class="chart-section">
+            <div class="section-title">
+                <span>📈</span>
+                <span>Daily Trends</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Donation Funnel -->
+        <div class="funnel-section">
+            <div class="section-title">
+                <span>🔻</span>
+                <span>Donation Funnel</span>
+            </div>
+            <div id="funnel-steps">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+        
+        <!-- Recent Events -->
+        <div class="events-section">
+            <div class="section-title">
+                <span>⚡</span>
+                <span>Recent Events</span>
+            </div>
+            <div id="recent-events">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.BackButton.show();
+        tg.BackButton.onClick(() => tg.close());
+        
+        let currentPeriod = 7;
+        let trendChart = null;
+        
+        // Load analytics data
+        async function loadAnalytics(days = 7) {
+            try {
+                const response = await fetch(`/api/analytics/conversation-metrics?days=${days}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load analytics');
+                }
+                
+                const data = await response.json();
+                
+                // Hide loading, show content
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                
+                // Update summary cards
+                updateSummaryCards(data.summary);
+                
+                // Update trend chart
+                updateTrendChart(data.daily_metrics);
+                
+                // Update funnel
+                updateFunnel(data.donation_funnel);
+                
+                // Update recent events (if available)
+                if (data.recent_events) {
+                    updateRecentEvents(data.recent_events);
+                }
+                
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div class="empty-icon">⚠️</div>
+                    <div>Failed to load analytics</div>
+                `;
+            }
+        }
+        
+        function updateSummaryCards(summary) {
+            document.getElementById('started-count').textContent = summary.started || 0;
+            document.getElementById('completed-count').textContent = summary.completed || 0;
+            document.getElementById('abandoned-count').textContent = summary.abandoned || 0;
+            document.getElementById('completion-rate').textContent = 
+                (summary.completion_rate || 0).toFixed(1) + '%';
+            
+            // Calculate trends (comparing to previous period)
+            if (summary.previous_period) {
+                updateTrend('started-trend', summary.started, summary.previous_period.started);
+                updateTrend('completed-trend', summary.completed, summary.previous_period.completed);
+                updateTrend('abandoned-trend', summary.abandoned, summary.previous_period.abandoned, true);
+                updateTrend('rate-trend', summary.completion_rate, summary.previous_period.completion_rate);
+            }
+        }
+        
+        function updateTrend(elementId, current, previous, inverse = false) {
+            const element = document.getElementById(elementId);
+            if (!previous) return;
+            
+            const change = ((current - previous) / previous * 100).toFixed(1);
+            const isPositive = inverse ? change < 0 : change > 0;
+            const arrow = isPositive ? '↑' : '↓';
+            const className = isPositive ? 'trend-up' : 'trend-down';
+            
+            element.innerHTML = `
+                <span class="${className}">${arrow} ${Math.abs(change)}%</span>
+                <span style="color: var(--tg-theme-hint-color, #999)">vs prev period</span>
+            `;
+        }
+        
+        function updateTrendChart(dailyMetrics) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            
+            // Prepare data
+            const labels = dailyMetrics.map(m => {
+                const date = new Date(m.date);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            
+            const startedData = dailyMetrics.map(m => m.started);
+            const completedData = dailyMetrics.map(m => m.completed);
+            
+            // Destroy existing chart if any
+            if (trendChart) {
+                trendChart.destroy();
+            }
+            
+            // Create new chart
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Started',
+                            data: startedData,
+                            borderColor: '#2196F3',
+                            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Completed',
+                            data: completedData,
+                            borderColor: '#4CAF50',
+                            backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 10,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateFunnel(funnelData) {
+            const funnelSteps = document.getElementById('funnel-steps');
+            
+            if (!funnelData || Object.keys(funnelData).length === 0) {
+                funnelSteps.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <div>No funnel data available yet</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Define step order and labels
+            const stepOrder = [
+                { key: 'campaign_selection', label: 'Campaign Selection' },
+                { key: 'amount_entry', label: 'Amount Entry' },
+                { key: 'payment_method', label: 'Payment Method' },
+                { key: 'confirmation', label: 'Confirmation' },
+                { key: 'completed', label: 'Completed' }
+            ];
+            
+            let html = '';
+            let previousPercentage = 100;
+            
+            stepOrder.forEach((step, index) => {
+                const data = funnelData[step.key] || { count: 0, percentage: 0 };
+                const percentage = data.percentage || 0;
+                const count = data.count || 0;
+                
+                // Calculate drop-off
+                const dropOff = previousPercentage - percentage;
+                const showDropOff = index > 0 && dropOff > 0;
+                
+                html += `
+                    <div class="funnel-step">
+                        <div class="funnel-step-header">
+                            <div class="funnel-step-name">${index + 1}. ${step.label}</div>
+                            <div class="funnel-step-stats">
+                                <span class="funnel-percentage">${percentage.toFixed(1)}%</span>
+                                <span class="funnel-count">(${count})</span>
+                            </div>
+                        </div>
+                        <div class="funnel-bar">
+                            <div class="funnel-bar-fill" style="width: ${percentage}%">
+                            </div>
+                            ${showDropOff ? `<div class="funnel-drop-off">-${dropOff.toFixed(1)}%</div>` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                previousPercentage = percentage;
+            });
+            
+            funnelSteps.innerHTML = html;
+        }
+        
+        function updateRecentEvents(events) {
+            const container = document.getElementById('recent-events');
+            
+            if (!events || events.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <div>No recent events</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const eventTypeLabels = {
+                'conversation_started': 'Started',
+                'conversation_completed': 'Completed',
+                'conversation_abandoned': 'Abandoned',
+                'clarification_requested': 'Clarification',
+                'context_switched': 'Context Switch',
+                'step_completed': 'Step Complete'
+            };
+            
+            const html = events.slice(0, 10).map(event => {
+                const eventClass = event.event_type.replace('conversation_', '').replace('_requested', '');
+                const label = eventTypeLabels[event.event_type] || event.event_type;
+                const time = new Date(event.created_at).toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit'
+                });
+                
+                let details = '';
+                if (event.current_step) {
+                    details += `Step: ${event.current_step}`;
+                }
+                if (event.event_data && Object.keys(event.event_data).length > 0) {
+                    details += details ? ' | ' : '';
+                    details += JSON.stringify(event.event_data).substring(0, 50);
+                }
+                
+                return `
+                    <div class="event-item ${eventClass}">
+                        <div class="event-header">
+                            <div class="event-type">${label}</div>
+                            <div class="event-time">${time}</div>
+                        </div>
+                        ${details ? `<div class="event-details">${details}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = html;
+        }
+        
+        function changePeriod(days) {
+            // Update button states
+            document.querySelectorAll('.time-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-days') == days);
+            });
+            
+            // Show loading
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            
+            // Load new data
+            currentPeriod = days;
+            loadAnalytics(days);
+        }
+        
+        // Initial load
+        loadAnalytics(currentPeriod);
+        
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            loadAnalytics(currentPeriod);
+        }, 30000);
+    </script>
+</body>
+</html>

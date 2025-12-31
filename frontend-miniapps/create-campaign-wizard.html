@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Campaign - Voice Guided</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #f5f5f5);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 16px;
+            padding-bottom: 100px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        
+        h1 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: var(--tg-theme-hint-color, #999);
+            font-size: 14px;
+        }
+        
+        /* Progress Indicator */
+        .progress-container {
+            margin-bottom: 32px;
+        }
+        
+        .progress-label {
+            text-align: center;
+            font-size: 13px;
+            color: var(--tg-theme-hint-color, #999);
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+        
+        .progress-bar-wrapper {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .progress-step {
+            flex: 1;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            transition: background 0.3s;
+        }
+        
+        .progress-step.completed {
+            background: #4CAF50;
+        }
+        
+        .progress-step.active {
+            background: var(--tg-theme-button-color, #3390ec);
+        }
+        
+        .progress-steps-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+        
+        /* Wizard Steps */
+        .wizard-step {
+            display: none;
+            animation: fadeIn 0.4s ease-in;
+        }
+        
+        .wizard-step.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Voice Prompt Card */
+        .voice-prompt {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .voice-prompt-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        
+        .voice-prompt-text {
+            font-size: 18px;
+            line-height: 1.5;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        
+        .voice-prompt-hint {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        /* Voice Input Button */
+        .voice-input-btn {
+            background: white;
+            color: #667eea;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .voice-input-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .voice-input-btn.recording {
+            background: #ef5350;
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(239, 83, 80, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(239, 83, 80, 0);
+            }
+        }
+        
+        .voice-input-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* Form Fields */
+        .form-section {
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            background: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color, #3390ec);
+        }
+        
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .form-hint {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+            margin-top: 8px;
+        }
+        
+        /* AI Suggestions */
+        .ai-suggestion {
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            display: none;
+            animation: slideIn 0.3s;
+        }
+        
+        .ai-suggestion.visible {
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .ai-suggestion-icon {
+            font-size: 16px;
+            margin-right: 8px;
+        }
+        
+        .ai-suggestion-text {
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .apply-suggestion-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+        
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-secondary {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .btn-primary {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #fff);
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Loading State */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .loading-overlay.visible {
+            display: flex;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            text-align: center;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--tg-theme-button-color, #3390ec);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Success Screen */
+        .success-screen {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .success-screen.visible {
+            display: block;
+        }
+        
+        .success-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+        }
+        
+        .success-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .success-message {
+            color: var(--tg-theme-hint-color, #999);
+            font-size: 16px;
+            margin-bottom: 32px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-icon">🎤</div>
+        <h1>Create Your Campaign</h1>
+        <div class="subtitle">Speak or type - we'll guide you through it</div>
+    </div>
+    
+    <!-- Progress Indicator -->
+    <div class="progress-container">
+        <div class="progress-label" id="progress-label">Step 1 of 5: Campaign Title</div>
+        <div class="progress-bar-wrapper">
+            <div class="progress-step active" id="progress-1"></div>
+            <div class="progress-step" id="progress-2"></div>
+            <div class="progress-step" id="progress-3"></div>
+            <div class="progress-step" id="progress-4"></div>
+            <div class="progress-step" id="progress-5"></div>
+        </div>
+        <div class="progress-steps-text">
+            <span>Title</span>
+            <span>Description</span>
+            <span>Category</span>
+            <span>Goal</span>
+            <span>Deadline</span>
+        </div>
+    </div>
+    
+    <!-- Step 1: Title -->
+    <div class="wizard-step active" id="step-1">
+        <div class="voice-prompt">
+            <div class="voice-prompt-icon">💡</div>
+            <div class="voice-prompt-text">What should we call your campaign?</div>
+            <div class="voice-prompt-hint">Give it a clear, catchy name that describes what you're raising funds for</div>
+            <button class="voice-input-btn" onclick="startVoiceInput('title')">
+                <span id="voice-btn-icon-1">🎤</span>
+                <span id="voice-btn-text-1">Tap to Speak</span>
+            </button>
+        </div>
+        
+        <div class="form-section">
+            <label class="form-label">Campaign Title</label>
+            <input type="text" class="form-input" id="title" placeholder="e.g., Clean Water for Rural Schools">
+            <div class="form-hint">Keep it short and descriptive (max 60 characters)</div>
+            <div class="ai-suggestion" id="ai-suggestion-1">
+                <span class="ai-suggestion-icon">✨</span>
+                <div class="ai-suggestion-text" id="ai-text-1"></div>
+                <button class="apply-suggestion-btn" onclick="applySuggestion('title', 1)">Apply Suggestion</button>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="btn btn-primary" onclick="nextStep()">Next Step →</button>
+        </div>
+    </div>
+    
+    <!-- Step 2: Description -->
+    <div class="wizard-step" id="step-2">
+        <div class="voice-prompt">
+            <div class="voice-prompt-icon">📝</div>
+            <div class="voice-prompt-text">Tell us about your campaign</div>
+            <div class="voice-prompt-hint">Explain what you're fundraising for, who will benefit, and why it matters</div>
+            <button class="voice-input-btn" onclick="startVoiceInput('description')">
+                <span id="voice-btn-icon-2">🎤</span>
+                <span id="voice-btn-text-2">Tap to Speak</span>
+            </button>
+        </div>
+        
+        <div class="form-section">
+            <label class="form-label">Campaign Description</label>
+            <textarea class="form-textarea" id="description" placeholder="Describe your campaign in detail..."></textarea>
+            <div class="form-hint">Include: What problem you're solving, who benefits, and your plan</div>
+            <div class="ai-suggestion" id="ai-suggestion-2">
+                <span class="ai-suggestion-icon">✨</span>
+                <div class="ai-suggestion-text" id="ai-text-2"></div>
+                <button class="apply-suggestion-btn" onclick="applySuggestion('description', 2)">Apply Suggestion</button>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" onclick="prevStep()">← Back</button>
+            <button class="btn btn-primary" onclick="nextStep()">Next Step →</button>
+        </div>
+    </div>
+    
+    <!-- Step 3: Category -->
+    <div class="wizard-step" id="step-3">
+        <div class="voice-prompt">
+            <div class="voice-prompt-icon">🏷️</div>
+            <div class="voice-prompt-text">Which category fits best?</div>
+            <div class="voice-prompt-hint">Choose the category that best describes your campaign</div>
+            <button class="voice-input-btn" onclick="startVoiceInput('category')">
+                <span id="voice-btn-icon-3">🎤</span>
+                <span id="voice-btn-text-3">Say a Category</span>
+            </button>
+        </div>
+        
+        <div class="form-section">
+            <label class="form-label">Category</label>
+            <select class="form-select" id="category">
+                <option value="">Select a category...</option>
+                <option value="education">📚 Education</option>
+                <option value="health">🏥 Health & Medical</option>
+                <option value="water">💧 Clean Water</option>
+                <option value="food">🍽️ Food Security</option>
+                <option value="environment">🌱 Environment</option>
+                <option value="shelter">🏠 Shelter & Housing</option>
+                <option value="emergency">🚨 Emergency Relief</option>
+                <option value="community">🤝 Community Development</option>
+            </select>
+            <div class="form-hint">Or just say the category name and we'll match it</div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" onclick="prevStep()">← Back</button>
+            <button class="btn btn-primary" onclick="nextStep()">Next Step →</button>
+        </div>
+    </div>
+    
+    <!-- Step 4: Goal -->
+    <div class="wizard-step" id="step-4">
+        <div class="voice-prompt">
+            <div class="voice-prompt-icon">🎯</div>
+            <div class="voice-prompt-text">What's your fundraising goal?</div>
+            <div class="voice-prompt-hint">How much money do you need to raise?</div>
+            <button class="voice-input-btn" onclick="startVoiceInput('goal')">
+                <span id="voice-btn-icon-4">🎤</span>
+                <span id="voice-btn-text-4">Say the Amount</span>
+            </button>
+        </div>
+        
+        <div class="form-section">
+            <label class="form-label">Fundraising Goal (Birr)</label>
+            <input type="number" class="form-input" id="goal" placeholder="e.g., 50000" min="100">
+            <div class="form-hint">Set a realistic goal based on your needs</div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" onclick="prevStep()">← Back</button>
+            <button class="btn btn-primary" onclick="nextStep()">Next Step →</button>
+        </div>
+    </div>
+    
+    <!-- Step 5: Deadline -->
+    <div class="wizard-step" id="step-5">
+        <div class="voice-prompt">
+            <div class="voice-prompt-icon">📅</div>
+            <div class="voice-prompt-text">When should the campaign end?</div>
+            <div class="voice-prompt-hint">Pick a deadline that gives you enough time to reach your goal</div>
+            <button class="voice-input-btn" onclick="startVoiceInput('deadline')">
+                <span id="voice-btn-icon-5">🎤</span>
+                <span id="voice-btn-text-5">Say the Date</span>
+            </button>
+        </div>
+        
+        <div class="form-section">
+            <label class="form-label">Campaign Deadline</label>
+            <input type="date" class="form-input" id="deadline" min="">
+            <div class="form-hint">Most successful campaigns run for 30-60 days</div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" onclick="prevStep()">← Back</button>
+            <button class="btn btn-primary" onclick="submitCampaign()">Create Campaign 🚀</button>
+        </div>
+    </div>
+    
+    <!-- Success Screen -->
+    <div class="success-screen" id="success-screen">
+        <div class="success-icon">🎉</div>
+        <div class="success-title">Campaign Created!</div>
+        <div class="success-message">Your campaign has been submitted and will be reviewed shortly.</div>
+        <button class="btn btn-primary" onclick="window.Telegram.WebApp.close()">Done</button>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div>Processing...</div>
+        </div>
+    </div>
+    
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.BackButton.show();
+        tg.BackButton.onClick(() => {
+            if (currentStep > 1) {
+                prevStep();
+            } else {
+                tg.close();
+            }
+        });
+        
+        let currentStep = 1;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let currentSuggestion = {};
+        const wizardData = {};
+        
+        // Set minimum date for deadline
+        const today = new Date();
+        const minDate = new Date(today.setDate(today.getDate() + 7));
+        document.getElementById('deadline').min = minDate.toISOString().split('T')[0];
+        
+        // Voice input function
+        async function startVoiceInput(fieldName) {
+            const stepNum = currentStep;
+            const btnIcon = document.getElementById(`voice-btn-icon-${stepNum}`);
+            const btnText = document.getElementById(`voice-btn-text-${stepNum}`);
+            const btn = event.target.closest('.voice-input-btn');
+            
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('Voice input not supported on this device. Please type instead.');
+                return;
+            }
+            
+            try {
+                // Start recording
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                btnIcon.textContent = '🔴';
+                btnText.textContent = 'Recording... Tap to stop';
+                btn.classList.add('recording');
+                
+                mediaRecorder.ondataavailable = (e) => {
+                    audioChunks.push(e.data);
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    btnIcon.textContent = '⏳';
+                    btnText.textContent = 'Processing...';
+                    btn.disabled = true;
+                    
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    
+                    // Send to backend
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob);
+                    formData.append('field_name', fieldName);
+                    formData.append('step_number', currentStep);
+                    
+                    try {
+                        const response = await fetch('/api/voice/wizard-step', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Transcription failed');
+                        }
+                        
+                        const result = await response.json();
+                        
+                        // Fill field with transcription
+                        const field = document.getElementById(fieldName);
+                        if (field.tagName === 'SELECT') {
+                            // Match spoken category
+                            matchCategory(result.transcription);
+                        } else {
+                            field.value = result.transcription;
+                        }
+                        
+                        // Show AI suggestions if available
+                        if (result.suggestion) {
+                            currentSuggestion[fieldName] = result.suggestion;
+                            const suggestionEl = document.getElementById(`ai-suggestion-${stepNum}`);
+                            const suggestionText = document.getElementById(`ai-text-${stepNum}`);
+                            suggestionText.textContent = result.suggestion;
+                            suggestionEl.classList.add('visible');
+                        }
+                        
+                        // Speak confirmation
+                        speakText(`I heard: ${result.transcription}`);
+                        
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Failed to process voice input. Please try again or type instead.');
+                    } finally {
+                        btnIcon.textContent = '🎤';
+                        btnText.textContent = 'Tap to Speak';
+                        btn.classList.remove('recording');
+                        btn.disabled = false;
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+                };
+                
+                mediaRecorder.start();
+                
+                // Auto-stop after 60 seconds
+                setTimeout(() => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                    }
+                }, 60000);
+                
+                // Stop on button click
+                btn.onclick = () => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                        btn.onclick = () => startVoiceInput(fieldName);
+                    }
+                };
+                
+            } catch (err) {
+                console.error('Microphone error:', err);
+                alert('Microphone access denied. Please enable microphone in your settings or type instead.');
+                btnIcon.textContent = '🎤';
+                btnText.textContent = 'Tap to Speak';
+                btn.classList.remove('recording');
+            }
+        }
+        
+        // Match spoken category
+        function matchCategory(spoken) {
+            const categories = {
+                'education': ['education', 'school', 'learning', 'student', 'teacher'],
+                'health': ['health', 'medical', 'hospital', 'doctor', 'clinic'],
+                'water': ['water', 'well', 'sanitation', 'clean water'],
+                'food': ['food', 'hunger', 'nutrition', 'meal'],
+                'environment': ['environment', 'tree', 'climate', 'nature', 'green'],
+                'shelter': ['shelter', 'housing', 'home', 'building'],
+                'emergency': ['emergency', 'disaster', 'relief', 'crisis'],
+                'community': ['community', 'development', 'village', 'local']
+            };
+            
+            const spokenLower = spoken.toLowerCase();
+            for (const [category, keywords] of Object.entries(categories)) {
+                if (keywords.some(keyword => spokenLower.includes(keyword))) {
+                    document.getElementById('category').value = category;
+                    return;
+                }
+            }
+        }
+        
+        // Apply AI suggestion
+        function applySuggestion(fieldName, stepNum) {
+            if (currentSuggestion[fieldName]) {
+                document.getElementById(fieldName).value = currentSuggestion[fieldName];
+                document.getElementById(`ai-suggestion-${stepNum}`).classList.remove('visible');
+                speakText('Suggestion applied');
+            }
+        }
+        
+        // Text-to-speech
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+                speechSynthesis.speak(utterance);
+            }
+        }
+        
+        // Navigation
+        function nextStep() {
+            // Validate current step
+            const currentField = getCurrentField();
+            if (!currentField || !currentField.value) {
+                speakText('Please fill in this field first');
+                alert('Please fill in this field before continuing');
+                return;
+            }
+            
+            // Save data
+            wizardData[currentField.id] = currentField.value;
+            
+            // Hide current step
+            document.getElementById(`step-${currentStep}`).classList.remove('active');
+            document.getElementById(`progress-${currentStep}`).classList.remove('active');
+            document.getElementById(`progress-${currentStep}`).classList.add('completed');
+            
+            // Show next step
+            currentStep++;
+            document.getElementById(`step-${currentStep}`).classList.add('active');
+            document.getElementById(`progress-${currentStep}`).classList.add('active');
+            
+            // Update label
+            updateProgressLabel();
+            
+            // Speak next prompt
+            speakNextPrompt();
+        }
+        
+        function prevStep() {
+            // Hide current step
+            document.getElementById(`step-${currentStep}`).classList.remove('active');
+            document.getElementById(`progress-${currentStep}`).classList.remove('active');
+            
+            // Show previous step
+            currentStep--;
+            document.getElementById(`step-${currentStep}`).classList.add('active');
+            document.getElementById(`progress-${currentStep}`).classList.add('active');
+            document.getElementById(`progress-${currentStep}`).classList.remove('completed');
+            
+            // Update label
+            updateProgressLabel();
+        }
+        
+        function getCurrentField() {
+            const step = document.getElementById(`step-${currentStep}`);
+            return step.querySelector('input, textarea, select');
+        }
+        
+        function updateProgressLabel() {
+            const labels = [
+                'Campaign Title',
+                'Description',
+                'Category',
+                'Funding Goal',
+                'Deadline'
+            ];
+            document.getElementById('progress-label').textContent = 
+                `Step ${currentStep} of 5: ${labels[currentStep - 1]}`;
+        }
+        
+        function speakNextPrompt() {
+            const prompts = [
+                "What should we call your campaign?",
+                "Tell us about your campaign",
+                "Which category fits best?",
+                "What's your fundraising goal?",
+                "When should the campaign end?"
+            ];
+            speakText(prompts[currentStep - 1]);
+        }
+        
+        // Submit campaign
+        async function submitCampaign() {
+            // Validate all fields
+            const currentField = getCurrentField();
+            if (!currentField || !currentField.value) {
+                alert('Please fill in this field');
+                return;
+            }
+            wizardData[currentField.id] = currentField.value;
+            
+            // Show loading
+            document.getElementById('loading-overlay').classList.add('visible');
+            
+            try {
+                const response = await fetch('/api/campaigns', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: wizardData.title,
+                        description: wizardData.description,
+                        category: wizardData.category,
+                        goal_amount: parseFloat(wizardData.goal),
+                        deadline: wizardData.deadline,
+                        created_via: 'voice_wizard'
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to create campaign');
+                }
+                
+                // Show success
+                document.getElementById('loading-overlay').classList.remove('visible');
+                document.getElementById(`step-${currentStep}`).classList.remove('active');
+                document.getElementById('success-screen').classList.add('visible');
+                
+                speakText('Success! Your campaign has been created');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading-overlay').classList.remove('visible');
+                alert('Failed to create campaign. Please try again.');
+            }
+        }
+        
+        // Initial voice prompt
+        setTimeout(() => {
+            speakText('Welcome! Let\'s create your campaign. What should we call it?');
+        }, 500);
+    </script>
+</body>
+</html>
