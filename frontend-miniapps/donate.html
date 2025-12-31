@@ -268,9 +268,14 @@
         <div class="subtitle">Support this campaign</div>
     </div>
     
-    <div class="campaign-info">
-        <div class="campaign-title">Clean Water for Rural Kenya</div>
-        <div class="campaign-org">Water for All NGO</div>
+    <div class="campaign-info" id="campaignInfo">
+        <div class="campaign-title" id="campaignTitle">Clean Water for Rural Kenya</div>
+        <div class="campaign-org" id="campaignOrg">Water for All NGO</div>
+        <div class="campaign-progress" id="campaignProgress" style="margin-top: 8px; font-size: 14px; opacity: 0.8;"></div>
+    </div>
+    
+    <div id="loadingCampaign" style="display: none; text-align: center; padding: 40px; color: var(--tg-theme-hint-color, #999);">
+        <div>Loading campaign details...</div>
     </div>
     
     <div class="amount-section">
@@ -379,10 +384,212 @@
         let selectedMethod = 'card';
         let mediaRecorder;
         let audioChunks = [];
+        let currentCampaign = null;
         
         const API_BASE = window.location.origin;
         
-        // Amount selection
+        // Voice Ledger Enhancement: Context tracking
+        let donationContext = {
+            app: 'donate',
+            campaign_id: null,
+            campaign_title: null,
+            selected_amount: 25,
+            selected_payment: 'card',
+            step: 'amount_selection',  // amount_selection, payment_selection, confirmation
+            available_actions: ['select_amount', 'select_payment', 'confirm_donation']
+        };
+        
+        function updateDonationContext() {
+            donationContext.campaign_id = currentCampaign?.id || null;
+            donationContext.campaign_title = currentCampaign?.title || null;
+            donationContext.selected_amount = selectedAmount;
+            donationContext.selected_payment = selectedMethod;
+            console.log('📍 Donation context updated:', donationContext);
+        }
+        
+        // Voice Ledger Enhancement: Custom error class
+        class VoiceError extends Error {
+            static NETWORK = 'NETWORK';
+            static TIMEOUT = 'TIMEOUT';
+            static VALIDATION = 'VALIDATION';
+            static SERVER = 'SERVER';
+            static UNKNOWN = 'UNKNOWN';
+            
+            constructor(message, type, context = {}) {
+                super(message);
+                this.name = 'VoiceError';
+                this.type = type;
+                this.context = context;
+                this.timestamp = Date.now();
+            }
+            
+            isRetryable() {
+                return [VoiceError.NETWORK, VoiceError.TIMEOUT, VoiceError.SERVER].includes(this.type);
+            }
+            
+            getUserMessage() {
+                const messages = {
+                    [VoiceError.NETWORK]: '📡 No Connection\n\nCheck internet and try again.',
+                    [VoiceError.TIMEOUT]: '⏱️ Request Timed Out\n\nTaking too long. Try again?',
+                    [VoiceError.VALIDATION]: '⚠️ Invalid Input\n\nPlease check your voice command.',
+                    [VoiceError.SERVER]: '🔧 Server Busy\n\nPlease try again in a moment.',
+                    [VoiceError.UNKNOWN]: '❌ Unexpected Error\n\nPlease try again.'
+                };
+                return messages[this.type] || messages[VoiceError.UNKNOWN];
+            }
+        }
+        
+        // Voice Ledger Enhancement: TTS Playback Controller
+        class TTSController {
+            constructor() {
+                this.currentAudio = null;
+                this.audioUrl = null;
+                this.isPlaying = false;
+                this.controls = null;
+            }
+            
+            play(audioUrl) {
+                this.stop();
+                this.audioUrl = `${API_BASE}${audioUrl}`;
+                this.currentAudio = new Audio(this.audioUrl);
+                
+                this.currentAudio.onplay = () => {
+                    this.isPlaying = true;
+                    this.showControls();
+                    this.updateControlsState();
+                };
+                
+                this.currentAudio.onpause = () => {
+                    this.isPlaying = false;
+                    this.updateControlsState();
+                };
+                
+                this.currentAudio.onended = () => {
+                    this.isPlaying = false;
+                    this.hideControls();
+                };
+                
+                this.currentAudio.onerror = (error) => {
+                    console.error('Audio playback error:', error);
+                    this.hideControls();
+                };
+                
+                this.currentAudio.play().catch(e => {
+                    console.error('Failed to play audio:', e);
+                    this.hideControls();
+                });
+            }
+            
+            pause() {
+                if (this.currentAudio && this.isPlaying) {
+                    this.currentAudio.pause();
+                }
+            }
+            
+            resume() {
+                if (this.currentAudio && !this.isPlaying) {
+                    this.currentAudio.play().catch(e => console.error('Failed to resume audio:', e));
+                }
+            }
+            
+            stop() {
+                if (this.currentAudio) {
+                    this.currentAudio.pause();
+                    this.currentAudio.currentTime = 0;
+                    this.currentAudio = null;
+                    this.isPlaying = false;
+                }
+                this.hideControls();
+            }
+            
+            replay() {
+                if (this.audioUrl) {
+                    this.play(this.audioUrl.replace(API_BASE, ''));
+                }
+            }
+            
+            showControls() {
+                if (!this.controls) {
+                    this.createControls();
+                }
+                this.controls.style.display = 'flex';
+            }
+            
+            hideControls() {
+                if (this.controls) {
+                    this.controls.style.display = 'none';
+                }
+            }
+            
+            createControls() {
+                this.controls = document.createElement('div');
+                this.controls.id = 'tts-controls';
+                this.controls.style.cssText = `
+                    position: fixed;
+                    bottom: 100px;
+                    right: 20px;
+                    background: white;
+                    padding: 12px;
+                    border-radius: 25px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    display: none;
+                    gap: 8px;
+                    z-index: 1000;
+                    align-items: center;
+                `;
+                
+                const pauseResumeBtn = document.createElement('button');
+                pauseResumeBtn.id = 'tts-pause-resume';
+                pauseResumeBtn.style.cssText = 'background: none; border: none; font-size: 20px; cursor: pointer; padding: 8px;';
+                pauseResumeBtn.onclick = () => this.isPlaying ? this.pause() : this.resume();
+                this.controls.appendChild(pauseResumeBtn);
+                
+                const replayBtn = document.createElement('button');
+                replayBtn.innerHTML = '🔁';
+                replayBtn.style.cssText = 'background: none; border: none; font-size: 18px; cursor: pointer; padding: 8px;';
+                replayBtn.onclick = () => this.replay();
+                replayBtn.title = 'Replay';
+                this.controls.appendChild(replayBtn);
+                
+                const stopBtn = document.createElement('button');
+                stopBtn.innerHTML = '⏹️';
+                stopBtn.style.cssText = 'background: none; border: none; font-size: 18px; cursor: pointer; padding: 8px;';
+                stopBtn.onclick = () => this.stop();
+                stopBtn.title = 'Stop';
+                this.controls.appendChild(stopBtn);
+                
+                document.body.appendChild(this.controls);
+            }
+            
+            updateControlsState() {
+                if (this.controls) {
+                    const pauseResumeBtn = this.controls.querySelector('#tts-pause-resume');
+                    if (pauseResumeBtn) {
+                        pauseResumeBtn.innerHTML = this.isPlaying ? '⏸️' : '▶️';
+                        pauseResumeBtn.title = this.isPlaying ? 'Pause' : 'Resume';
+                    }
+                }
+            }
+        }
+        
+        const ttsController = new TTSController();
+        
+        // Get campaign ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const campaignId = urlParams.get('campaign_id');
+        
+        // Load campaign if ID provided
+        if (campaignId) {
+            loadCampaign(campaignId);
+        }
+        
+        // Load campaign from API
+        async function loadCampaign(id) {
+            try {
+                document.getElementById('loadingCampaign').style.display = 'block';
+                document.getElementById('campaignInfo').style.display = 'none';
+                
+                const response = await fetch(`${API_BASE}/api/campaigns/${id}`);\n                if (!response.ok) throw new Error('Campaign not found');\n                \n                const campaign = await response.json();\n                currentCampaign = campaign;\n                \n                document.getElementById('campaignTitle').textContent = campaign.title;\n                document.getElementById('campaignOrg').textContent = campaign.ngo_name || 'Anonymous NGO';\n                \n                const raised = campaign.raised_amount_usd || 0;\n                const goal = campaign.goal_amount_usd || 0;\n                const percentage = goal > 0 ? Math.round((raised / goal) * 100) : 0;\n                document.getElementById('campaignProgress').textContent = \n                    `$${raised.toLocaleString()} raised of $${goal.toLocaleString()} goal (${percentage}%)`;\n                \n                document.getElementById('loadingCampaign').style.display = 'none';\n                document.getElementById('campaignInfo').style.display = 'block';\n            } catch (error) {\n                console.error('Failed to load campaign:', error);\n                document.getElementById('loadingCampaign').textContent = 'Failed to load campaign. Please try again.';\n            }\n        }\n        \n        // Amount selection
         document.querySelectorAll('.amount-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
@@ -496,7 +703,7 @@
             const formData = new FormData();
             formData.append('audio', audioBlob, 'donate.webm');
             formData.append('user_id', tg.initDataUnsafe?.user?.id || 'guest');
-            formData.append('campaign_id', '1'); // Would come from URL params in real app
+            formData.append('campaign_id', currentCampaign?.id || campaignId || '1');
             
             try {
                 const response = await fetch(API_BASE + '/api/voice/donate-by-voice', {
