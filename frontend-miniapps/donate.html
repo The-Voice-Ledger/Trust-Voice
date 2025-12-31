@@ -268,24 +268,12 @@
         <div class="subtitle">Support this campaign</div>
     </div>
     
-    <div class="campaign-info" id="campaignInfo" style="display: none;">
-        <div class="campaign-title" id="campaignTitle">Loading...</div>
-        <div class="campaign-org" id="campaignOrg"></div>
-        <div class="campaign-progress" id="campaignProgress" style="margin-top: 12px; font-size: 14px; opacity: 0.9;"></div>
+    <div class="campaign-info">
+        <div class="campaign-title">Clean Water for Rural Kenya</div>
+        <div class="campaign-org">Water for All NGO</div>
     </div>
     
-    <div id="loadingCampaign" style="text-align: center; padding: 40px; color: var(--tg-theme-hint-color, #999);">
-        <div style="font-size: 24px; margin-bottom: 12px;">⏳</div>
-        <div>Loading campaign details...</div>
-    </div>
-    
-    <div id="campaignError" style="display: none; text-align: center; padding: 40px; color: #f44336;">
-        <div style="font-size: 24px; margin-bottom: 12px;">⚠️</div>
-        <div id="errorMessage">Campaign not found</div>
-        <button onclick="window.location.href='campaigns.html'" style="margin-top: 16px; padding: 12px 24px; background: var(--tg-theme-button-color); color: white; border: none; border-radius: 8px; cursor: pointer;">Browse Campaigns</button>
-    </div>
-    
-    <div class="amount-section" id="amountSection" style="display: none;">
+    <div class="amount-section">
         <div class="section-title">Select Amount</div>
         <div class="amount-presets">
             <button class="amount-btn" data-amount="10">$10</button>
@@ -320,7 +308,7 @@
         </div>
     </div>
     
-    <div class="payment-methods" id="paymentSection" style="display: none;">
+    <div class="payment-methods">
         <div class="section-title">Payment Method</div>
         
         <div class="payment-option active" data-method="card">
@@ -358,7 +346,7 @@
         </div>
     </div>
     
-    <div class="summary" id="summarySection" style="display: none;">
+    <div class="summary">
         <div class="section-title">Summary</div>
         <div class="summary-row">
             <span>Donation Amount</span>
@@ -374,7 +362,7 @@
         </div>
     </div>
     
-    <button class="donate-btn" id="donateBtn" onclick="processDonation()" style="display: none;">
+    <button class="donate-btn" onclick="processDonation()">
         Donate Now
     </button>
     
@@ -391,84 +379,8 @@
         let selectedMethod = 'card';
         let mediaRecorder;
         let audioChunks = [];
-        let currentCampaign = null;
         
         const API_BASE = window.location.origin;
-        
-        // Get campaign ID from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const campaignId = urlParams.get('campaign_id');
-        
-        console.log('Donate page loaded');
-        console.log('Campaign ID from URL:', campaignId);
-        console.log('Full URL:', window.location.href);
-        
-        // Load campaign on page load
-        if (campaignId) {
-            console.log('Loading campaign:', campaignId);
-            loadCampaign(campaignId);
-        } else {
-            console.log('No campaign ID provided');
-            showError('No campaign selected. Please browse campaigns first.');
-        }
-        
-        // Load campaign from API
-        async function loadCampaign(id) {
-            try {
-                // Add cache busting
-                const cacheBuster = new Date().getTime();
-                const response = await fetch(`${API_BASE}/campaigns/${id}?_=${cacheBuster}`);
-                
-                if (!response.ok) {
-                    throw new Error('Campaign not found');
-                }
-                
-                const campaign = await response.json();
-                currentCampaign = campaign;
-                displayCampaign(campaign);
-                
-            } catch (error) {
-                console.error('Failed to load campaign:', error);
-                showError('Failed to load campaign. Please try again.');
-            }
-        }
-        
-        function displayCampaign(campaign) {
-            console.log('Displaying campaign:', campaign);
-            
-            document.getElementById('loadingCampaign').style.display = 'none';
-            document.getElementById('campaignInfo').style.display = 'block';
-            
-            document.getElementById('campaignTitle').textContent = campaign.title;
-            document.getElementById('campaignOrg').textContent = campaign.ngo_name || 'Anonymous NGO';
-            
-            // Show progress
-            const raised = campaign.amount_raised || 0;
-            const target = campaign.target_amount || 0;
-            const percentage = target > 0 ? Math.round((raised / target) * 100) : 0;
-            
-            document.getElementById('campaignProgress').textContent = 
-                `$${raised.toLocaleString()} raised of $${target.toLocaleString()} goal (${percentage}%)`;
-            
-            // Show donation form sections
-            document.getElementById('amountSection').style.display = 'block';
-            document.getElementById('paymentSection').style.display = 'block';
-            document.getElementById('summarySection').style.display = 'block';
-            document.getElementById('donateBtn').style.display = 'block';
-        }
-        
-        function showError(message) {
-            document.getElementById('loadingCampaign').style.display = 'none';
-            document.getElementById('campaignInfo').style.display = 'none';
-            document.getElementById('campaignError').style.display = 'block';
-            document.getElementById('errorMessage').textContent = message;
-            
-            // Hide donation form sections
-            document.getElementById('amountSection').style.display = 'none';
-            document.getElementById('paymentSection').style.display = 'none';
-            document.getElementById('summarySection').style.display = 'none';
-            document.getElementById('donateBtn').style.display = 'none';
-        }
         
         // Amount selection
         document.querySelectorAll('.amount-btn').forEach(btn => {
@@ -508,12 +420,7 @@
         }
         
         // Process donation
-        async function processDonation() {
-            if (!currentCampaign) {
-                tg.showAlert('Campaign not loaded. Please try again.');
-                return;
-            }
-            
+        function processDonation() {
             if (selectedAmount <= 0) {
                 tg.showAlert('Please select or enter a donation amount.');
                 return;
@@ -522,51 +429,26 @@
             const total = (selectedAmount * 1.029).toFixed(2);
             
             tg.showConfirm(
-                `Confirm donation of $${total} to "${currentCampaign.title}" via ${selectedMethod}?`,
-                async (confirmed) => {
+                `Confirm donation of $${total} via ${selectedMethod}?`,
+                (confirmed) => {
                     if (confirmed) {
                         // Show processing
-                        const btn = document.querySelector('.donate-btn');
-                        btn.textContent = 'Processing...';
-                        btn.disabled = true;
+                        document.querySelector('.donate-btn').textContent = 'Processing...';
+                        document.querySelector('.donate-btn').disabled = true;
                         
-                        try {
-                            // Create donation via API
-                            const response = await fetch(`${API_BASE}/donations/`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    campaign_id: currentCampaign.id,
-                                    amount: selectedAmount,
-                                    payment_method: selectedMethod,
-                                    user_id: tg.initDataUnsafe?.user?.id || null,
-                                    currency: 'USD'
-                                })
-                            });
+                        // Simulate payment processing
+                        setTimeout(() => {
+                            tg.showAlert('✅ Donation successful! Thank you for your support.\n\nReceipt sent to your Telegram.');
                             
-                            if (response.ok) {
-                                const donation = await response.json();
-                                
-                                tg.showAlert(`✅ Donation successful! Thank you for supporting ${currentCampaign.title}.\n\nReceipt sent to your Telegram.`);
-                                
-                                if (tg.HapticFeedback) {
-                                    tg.HapticFeedback.notificationOccurred('success');
-                                }
-                                
-                                setTimeout(() => {
-                                    tg.close();
-                                }, 2000);
-                            } else {
-                                throw new Error('Payment failed');
+                            // Use Telegram's close method or haptic feedback
+                            if (tg.HapticFeedback) {
+                                tg.HapticFeedback.notificationOccurred('success');
                             }
-                        } catch (error) {
-                            console.error('Donation error:', error);
-                            tg.showAlert('Payment failed. Please try again.');
-                            btn.textContent = 'Donate Now';
-                            btn.disabled = false;
-                        }
+                            
+                            setTimeout(() => {
+                                tg.close();
+                            }, 2000);
+                        }, 2000);
                     }
                 }
             );
@@ -614,10 +496,10 @@
             const formData = new FormData();
             formData.append('audio', audioBlob, 'donate.webm');
             formData.append('user_id', tg.initDataUnsafe?.user?.id || 'guest');
-            formData.append('campaign_id', currentCampaign?.id || campaignId);
+            formData.append('campaign_id', '1'); // Would come from URL params in real app
             
             try {
-                const response = await fetch(API_BASE + '/voice/donate-by-voice', {
+                const response = await fetch(API_BASE + '/api/voice/donate-by-voice', {
                     method: 'POST',
                     body: formData
                 });
