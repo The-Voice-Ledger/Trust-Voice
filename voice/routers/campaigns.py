@@ -99,10 +99,12 @@ class CampaignResponse(BaseModel):
     raised_amounts: Optional[dict] = {}  # Per-currency breakdown: {"USD": 1000, "EUR": 500}
     current_usd_total: Optional[float] = None  # Dynamic USD total with current rates
     status: str
+    category: Optional[str] = None  # Campaign category (water, education, health, etc.)
     location_gps: Optional[str]
     created_at: datetime
     updated_at: datetime
     ngo_name: Optional[str] = None  # NGO organization name (fetched dynamically)
+    donation_count: Optional[int] = 0  # Number of donations to this campaign
     
     class Config:
         from_attributes = True
