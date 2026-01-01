@@ -17,6 +17,14 @@ load_dotenv()
 # Import routers
 from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin, auth, registrations, ngo_registrations, miniapp_voice, analytics
 
+# Import Telegram webhook router for production deployment
+try:
+    from voice.telegram.webhook import router as telegram_webhook_router
+    TELEGRAM_WEBHOOK_AVAILABLE = True
+except ImportError:
+    TELEGRAM_WEBHOOK_AVAILABLE = False
+    logger.warning("Telegram webhook router not available")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -57,6 +65,11 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(registrations.router, prefix="/api")
 app.include_router(miniapp_voice.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
+
+# Register Telegram webhook router if available (for production deployment)
+if TELEGRAM_WEBHOOK_AVAILABLE:
+    app.include_router(telegram_webhook_router)
+    logger.info("✅ Telegram webhook router registered")
 
 # ============================================
 # Mount Frontend Static Files

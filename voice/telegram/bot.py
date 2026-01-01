@@ -965,11 +965,44 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
     application.add_error_handler(error_handler)
     
-    # Start bot
-    logger.info("🤖 TrustVoice Telegram Bot started!")
-    logger.info("Press Ctrl+C to stop")
+    # Check environment for webhook vs polling mode
+    app_env = os.getenv("APP_ENV", "development")
+    webhook_url = os.getenv("TELEGRAM_WEBHOOK_URL", "")
     
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    if app_env == "production" and webhook_url:
+        # Production: Use webhooks (Railway/production environment)
+        logger.info("🚀 Bot configured for WEBHOOK mode (production)")
+        logger.info(f"   Webhook URL: {webhook_url}")
+        logger.info("   Waiting for webhook requests from Telegram...")
+        
+        # Register bot application with webhook handler
+        try:
+            from voice.telegram.webhook import set_bot_application
+            set_bot_application(application)
+            logger.info("✅ Bot application registered with webhook handler")
+        except ImportError:
+            logger.error("❌ Failed to import webhook handler")
+        
+        # Initialize webhook (this will be set by Railway)
+        import asyncio
+        asyncio.get_event_loop().run_until_complete(
+            application.bot.set_webhook(
+                url=webhook_url,
+                allowed_updates=["message", "callback_query"],
+                drop_pending_updates=True
+            )
+        )
+        logger.info(f"✅ Webhook configured: {webhook_url}")
+        
+        # Initialize the application but don't run polling
+        asyncio.get_event_loop().run_until_complete(application.initialize())
+        logger.info("✅ Bot initialized and ready for webhooks")
+        
+    else:
+        # Development: Use polling
+        logger.info("🤖 Bot starting in POLLING mode (development)")
+        logger.info("   Press Ctrl+C to stop")
+        application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":
