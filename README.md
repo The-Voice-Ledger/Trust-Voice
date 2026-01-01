@@ -2,18 +2,357 @@
 
 Voice-first donation platform for African changemakers. Supports NGO donations and crowdfunding through voice interfaces (Telegram bot, phone calls) with multiple payment methods.
 
-## Overview
+## What Is This?
 
-TrustVoice enables donations via voice commands in English and Amharic. Users can search campaigns, make donations, and track impact through conversational AI powered by OpenAI GPT-4 and AddisAI.
+TrustVoice lets people donate to campaigns and create fundraising projects using their voice. No typing, no forms - just speak naturally in English or Amharic. The system understands what you want and guides you through the process.
 
-**Core Features:**
-- Voice message processing (primary interface)
-- Multi-language support (English, Amharic)
-- Campaign search and discovery
-- Voice-driven donation flows
-- Payment processing (M-Pesa, Stripe)
-- Admin approval workflows for NGOs and field agents
-- Impact verification tracking
+**Who Can Use It:**
+- Donors: Anyone can donate via voice (no registration required for anonymous donations)
+- NGOs: Register and create verified campaigns after admin approval
+- Campaign Creators: Launch personal fundraising projects (requires approval)
+- Field Agents: Verify project impact and submit reports (requires approval)
+
+**How It Works:**
+1. Speak naturally: "Show me education projects in Nairobi"
+2. System finds matching campaigns and responds in voice
+3. Donate by voice: "I want to donate 100 USD"
+4. Choose payment: M-Pesa or card
+5. Confirm and complete
+
+## User Capabilities
+
+### For Donors
+
+**What You Can Do:**
+- Search campaigns by voice (category, location, urgency)
+- Browse active campaigns with voice navigation
+- Make donations using natural language
+- Track donation history
+- Receive voice confirmations and receipts
+- Switch between English and Amharic anytime
+
+**How to Donate:**
+
+Via Telegram Bot:
+1. Start bot: `/start`
+2. Send voice message: "Show campaigns about clean water"
+3. Bot lists campaigns and reads them aloud
+4. Say: "Donate 500 shillings to the first one"
+5. Choose M-Pesa or card payment
+6. Complete payment and receive confirmation
+
+Via Browser Miniapp:
+1. Open campaigns.html or donate.html
+2. Click microphone button
+3. Speak your search or donation intent
+4. System responds with voice + text
+5. Follow voice prompts to complete donation
+
+**Anonymous vs Registered:**
+- Anonymous: Donate freely, preference saved locally
+- Registered: Track donations, sync across devices, manage recurring gifts
+
+### For NGOs
+
+**What You Can Do:**
+- Register your organization (requires admin approval)
+- Create campaigns with goals and deadlines
+- Accept donations via multiple payment methods
+- Track campaign progress and donor analytics
+- Update campaign status and milestones
+- Withdraw funds when goals are met
+- Submit impact reports with field verification
+
+**How to Get Started:**
+
+1. Register via Telegram:
+```
+/register
+→ Select "Campaign Creator" or "NGO Admin"
+→ Provide organization details via voice
+→ Wait for admin approval (usually 24-48 hours)
+```
+
+2. Or via Browser:
+```
+Open ngo-register-wizard.html
+→ Click mic, speak each field
+→ System guides you through: name, location, mission, registration docs
+→ Submit for review
+```
+
+3. After Approval:
+```
+/campaigns → View your campaigns
+Create new campaign via voice or create-campaign-wizard.html
+Set goal, deadline, description
+Campaign goes live after review
+```
+
+**Managing Campaigns:**
+- Update progress via voice commands
+- Respond to donor questions
+- Request fund withdrawals when milestones hit
+- Submit impact verification reports
+
+### For Campaign Creators
+
+**What You Can Do:**
+- Launch personal fundraising projects (medical, education, business)
+- Tell your story via voice (no need to write)
+- Set funding goals and timelines
+- Share campaign links on social media
+- Receive donations via M-Pesa or cards
+- Update supporters with progress reports
+- Withdraw funds when needed
+
+**How to Launch a Campaign:**
+
+1. Register:
+```
+/register
+→ Select "Campaign Creator"
+→ Provide personal details
+→ Explain why you need to fundraise (voice recording)
+→ Wait for approval
+```
+
+2. Create Campaign:
+```
+Open create-campaign-wizard.html
+→ Click mic: "Medical treatment for my daughter"
+→ System asks: "How much do you need?"
+→ You say: "200,000 shillings for surgery"
+→ System: "When do you need it by?"
+→ You say: "End of March"
+→ Continue answering voice prompts
+→ Campaign created and goes live
+```
+
+3. Manage Campaign:
+```
+Check donations: /my_campaigns
+Update supporters via voice
+Share Telegram link or browser link
+```
+
+**Campaign Types:**
+- Medical emergencies
+- Education fees
+- Business startup capital
+- Community projects
+- Emergency relief
+
+### For Field Agents
+
+**What You Can Do:**
+- Verify project completion on the ground
+- Submit GPS-tagged photo evidence
+- Record voice impact reports
+- Validate fund usage
+- Approve or flag campaigns for review
+
+**How to Verify Projects:**
+
+1. Register as Field Agent:
+```
+/register
+→ Select "Field Agent"
+→ Provide credentials and regions covered
+→ Share verification experience
+→ Wait for admin approval
+```
+
+2. Conduct Verification:
+```
+Visit project site
+Take photos with GPS location
+Record voice report: "I visited Mwanza Water Project. 3 wells completed, serving 500 families. Photos attached."
+Submit via /verify or miniapp
+```
+
+3. System Actions:
+```
+→ Photos stored with GPS coordinates
+→ Voice report transcribed
+→ NGO receives verification
+→ Donors notified of impact
+→ Blockchain receipt updated
+```
+
+### For Administrators
+
+**What You Can Do:**
+- Review and approve NGO registrations
+- Approve campaign creator applications
+- Verify field agent credentials
+- Monitor platform activity and fraud
+- Approve fund withdrawals
+- Manage user roles and permissions
+
+**How to Manage:**
+
+1. Review Pending Requests:
+```
+/admin_requests
+→ See all pending registrations
+→ Review details, voice recordings, documentation
+```
+
+2. Approve or Reject:
+```
+/admin_approve <id>  → Grant access
+/admin_reject <id>   → Deny with reason
+```
+
+3. Monitor Activity:
+```
+Access analytics.html
+→ View donation trends
+→ Track campaign success rates
+→ Monitor voice command patterns
+→ Identify fraud patterns
+```
+
+## Core Features
+
+## Core Features
+
+**Voice-First Interface:**
+- Speak naturally, no keywords required
+- Multi-turn conversations (ask follow-up questions)
+- Context awareness (system remembers what you're talking about)
+- Dual delivery (hear response + see text)
+
+**Language Support:**
+- English and Amharic
+- Automatic language detection
+- Toggle anytime mid-conversation
+- Preference saved across sessions
+
+**Payment Methods:**
+- M-Pesa (Kenya, Tanzania mobile money)
+- Stripe (international credit/debit cards)
+- Multi-currency support (KES, USD, EUR, GBP)
+
+**Security:**
+- PIN protection for registered users
+- Phone number verification
+- Admin approval for NGOs and creators
+- Blockchain receipts for transparency
+
+**Accessibility:**
+- No typing required (voice-only interface available)
+- Works on basic smartphones
+- Low bandwidth friendly (audio compression)
+- Works via Telegram (no app install needed)
+
+## Real-World Usage Examples
+
+**Donor Searching for Campaigns:**
+```
+User (voice): "Show me urgent medical campaigns in Nairobi"
+Bot (voice): "I found 3 urgent medical campaigns in Nairobi. 
+              First one is 'Heart Surgery for Baby Amani', needs 150,000 shillings, 
+              85% funded with 5 days left. Would you like to hear more?"
+User (voice): "Yes, tell me about it"
+Bot (voice): "Baby Amani is 6 months old and needs urgent heart surgery..."
+User (voice): "I want to donate 5000 shillings"
+Bot (voice): "Great! 5000 shillings to Heart Surgery for Baby Amani. 
+              How would you like to pay? M-Pesa or card?"
+```
+
+**NGO Creating Campaign:**
+```
+NGO (voice in wizard): "Clean water project in Kisumu"
+System (voice): "Great title. How much do you need to raise?"
+NGO (voice): "2 million shillings"
+System (voice): "When do you need it by?"
+NGO (voice): "End of June"
+System (voice): "Perfect. Now tell me about the project..."
+NGO (voice): "We will drill 5 boreholes in rural Kisumu serving 2000 families 
+              who currently walk 3 kilometers for water..."
+System (voice): "Excellent. I've drafted your campaign. Review and submit?"
+```
+
+**Field Agent Verification:**
+```
+Agent (voice): "I'm at the Mwanza school project"
+System (voice): "Great. What's the status?"
+Agent (voice): "Construction is complete. 6 classrooms built, 
+                 300 students now attending. Photos uploaded with GPS."
+System (voice): "Verified. Impact report saved. NGO and donors will be notified."
+```
+
+**Campaign Creator Update:**
+```
+Creator (voice): "/my_campaigns"
+Bot (voice): "You have 1 active campaign: 'Sarah's College Fund'. 
+              Currently at 65,000 out of 150,000 shillings. 43% funded."
+Creator (voice): "Can I withdraw some funds?"
+Bot (voice): "You can withdraw up to 60,000 shillings (leaving 10% buffer). 
+              Would you like to proceed?"
+Creator (voice): "Yes, withdraw 50,000 to my M-Pesa"
+Bot (voice): "Withdrawal request submitted. Admin will approve within 24 hours."
+```
+
+## How Voice Commands Work
+
+**Natural Language Understanding:**
+The system doesn't need specific phrases. All these work:
+
+Searching:
+- "Show campaigns about education"
+- "Find me water projects"
+- "What campaigns are in Nairobi?"
+- "I want to help kids go to school"
+
+Donating:
+- "I want to donate 1000 shillings"
+- "Give 50 dollars to this campaign"
+- "Donate 5000"
+- "I'd like to support this with 2000 bob"
+
+Getting Info:
+- "Tell me more about this"
+- "What's the impact?"
+- "How much has been raised?"
+- "Who is running this campaign?"
+
+**Multi-turn Conversations:**
+```
+You: "Show education campaigns"
+Bot: [lists campaigns]
+You: "Tell me about the second one"
+Bot: [explains campaign]
+You: "Donate 3000"
+Bot: [processes donation]
+You: "Actually, show me health campaigns instead"
+Bot: [switches context, shows health campaigns]
+```
+
+## Platform Access Methods
+
+**1. Telegram Bot (Primary Interface):**
+- Add bot: @TrustVoiceBot (search in Telegram)
+- Send voice messages or type commands
+- Works on any phone with Telegram
+- No additional app needed
+- Best for: Regular users, quick donations
+
+**2. Browser Miniapps (Secondary Interface):**
+- Direct URL access: https://trustvoice.app
+- Click-to-speak interface
+- Works on phones and computers
+- No Telegram required
+- Best for: Campaign creation, browsing, admin tasks
+
+**3. Phone Calls (Planned):**
+- Dial platform number
+- Voice IVR system
+- No smartphone needed
+- Works on feature phones
+- Best for: Rural areas, elderly users
 
 ## Architecture
 
@@ -341,7 +680,7 @@ Browser-based voice interfaces:
 
 ## Payment Flows
 
-### M-Pesa (Kenya)
+### M-Pesa 
 
 1. User initiates donation via voice
 2. System sends STK push to phone
@@ -449,5 +788,4 @@ Context switching supported - users can switch between search, donate, and info 
 4. Submit pull request
 
 ## License
-
 Proprietary - All rights reserved.
