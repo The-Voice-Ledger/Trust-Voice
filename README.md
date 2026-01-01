@@ -37,7 +37,7 @@ Via Telegram Bot:
 1. Start bot: `/start`
 2. Send voice message: "Show campaigns about clean water"
 3. Bot lists campaigns and reads them aloud
-4. Say: "Donate 500 shillings to the first one"
+4. Say: "Donate 50 USD to the first one"
 5. Choose M-Pesa or card payment
 6. Complete payment and receive confirmation
 
@@ -122,7 +122,7 @@ Campaign goes live after review
 Open create-campaign-wizard.html
 → Click mic: "Medical treatment for my daughter"
 → System asks: "How much do you need?"
-→ You say: "200,000 shillings for surgery"
+→ You say: "2000 USD for surgery"
 → System: "When do you need it by?"
 → You say: "End of March"
 → Continue answering voice prompts
@@ -253,12 +253,12 @@ Access analytics.html
 ```
 User (voice): "Show me urgent medical campaigns in Nairobi"
 Bot (voice): "I found 3 urgent medical campaigns in Nairobi. 
-              First one is 'Heart Surgery for Baby Amani', needs 150,000 shillings, 
+              First one is 'Heart Surgery for Baby Amani', needs 150,000 USD, 
               85% funded with 5 days left. Would you like to hear more?"
 User (voice): "Yes, tell me about it"
 Bot (voice): "Baby Amani is 6 months old and needs urgent heart surgery..."
-User (voice): "I want to donate 5000 shillings"
-Bot (voice): "Great! 5000 shillings to Heart Surgery for Baby Amani. 
+User (voice): "I want to donate 5000 USD"
+Bot (voice): "Great! 5000 USD to Heart Surgery for Baby Amani. 
               How would you like to pay? M-Pesa or card?"
 ```
 
@@ -266,7 +266,7 @@ Bot (voice): "Great! 5000 shillings to Heart Surgery for Baby Amani.
 ```
 NGO (voice in wizard): "Clean water project in Kisumu"
 System (voice): "Great title. How much do you need to raise?"
-NGO (voice): "2 million shillings"
+NGO (voice): "20 000 USD"
 System (voice): "When do you need it by?"
 NGO (voice): "End of June"
 System (voice): "Perfect. Now tell me about the project..."
@@ -288,9 +288,9 @@ System (voice): "Verified. Impact report saved. NGO and donors will be notified.
 ```
 Creator (voice): "/my_campaigns"
 Bot (voice): "You have 1 active campaign: 'Sarah's College Fund'. 
-              Currently at 65,000 out of 150,000 shillings. 43% funded."
+              Currently at 65,000 out of 150,000 USD. 43% funded."
 Creator (voice): "Can I withdraw some funds?"
-Bot (voice): "You can withdraw up to 60,000 shillings (leaving 10% buffer). 
+Bot (voice): "You can withdraw up to 60,000 USD (leaving 10% buffer). 
               Would you like to proceed?"
 Creator (voice): "Yes, withdraw 50,000 to my M-Pesa"
 Bot (voice): "Withdrawal request submitted. Admin will approve within 24 hours."
@@ -308,7 +308,7 @@ Searching:
 - "I want to help kids go to school"
 
 Donating:
-- "I want to donate 1000 shillings"
+- "I want to donate 1000 USD"
 - "Give 50 dollars to this campaign"
 - "Donate 5000"
 - "I'd like to support this with 2000 bob"
@@ -646,7 +646,7 @@ Available roles:
 
 Voice commands:
 - Send voice message: "Show me education campaigns"
-- Send voice message: "Donate 1000 shillings to campaign X"
+- Send voice message: "Donate 100 USD to campaign X"
 - Send voice message: "What impact has this campaign achieved?"
 
 Text fallback:
