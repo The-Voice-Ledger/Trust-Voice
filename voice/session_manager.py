@@ -13,14 +13,22 @@ from typing import Dict, List, Optional, Any
 from enum import Enum
 from sqlalchemy.orm import Session
 
-# Redis connection
-redis_client = redis.Redis(
-    host=os.getenv('REDIS_HOST', 'localhost'),
-    port=int(os.getenv('REDIS_PORT', 6379)),
-    password=os.getenv('REDIS_PASSWORD', None),
-    db=int(os.getenv('REDIS_DB', 0)),
-    decode_responses=True  # Return strings instead of bytes
-)
+# Redis connection - use REDIS_URL if available (Railway, Heroku style)
+# Otherwise fall back to individual components for local development
+REDIS_URL = os.getenv('REDIS_URL')
+if REDIS_URL:
+    redis_client = redis.from_url(
+        REDIS_URL,
+        decode_responses=True
+    )
+else:
+    redis_client = redis.Redis(
+        host=os.getenv('REDIS_HOST', 'localhost'),
+        port=int(os.getenv('REDIS_PORT', 6379)),
+        password=os.getenv('REDIS_PASSWORD', None),
+        db=int(os.getenv('REDIS_DB', 0)),
+        decode_responses=True
+    )
 
 # Session TTL (time to live) - 30 minutes
 SESSION_TTL = int(os.getenv('REDIS_SESSION_TTL', 1800))
