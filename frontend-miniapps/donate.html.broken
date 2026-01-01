@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Donation Checkout v2.0</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        // Immediate check before anything else
+        window.addEventListener('error', function(e) {
+            const jsMarker = document.getElementById('jsTestMarker');
+            if (jsMarker) {
+                jsMarker.textContent = '❌ JS Error: ' + e.message;
+                jsMarker.style.color = 'red';
+            }
+        });
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const jsMarker = document.getElementById('jsTestMarker');
+            if (jsMarker) {
+                jsMarker.textContent = '✅ DOMContentLoaded fired';
+                jsMarker.style.color = 'orange';
+            }
+        });
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 16px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        
+        .icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: var(--tg-theme-hint-color, #999);
+            font-size: 14px;
+        }
+        
+        .campaign-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .campaign-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .campaign-org {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .amount-section {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .amount-presets {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .amount-btn {
+            background: white;
+            border: 2px solid transparent;
+            padding: 16px 12px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .amount-btn.active {
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+        
+        .custom-amount {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 18px;
+            width: 100%;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .payment-methods {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .payment-option {
+            background: white;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+        
+        .payment-option.active {
+            border-color: var(--tg-theme-button-color, #3390ec);
+        }
+        
+        .payment-icon {
+            font-size: 24px;
+        }
+        
+        .payment-info {
+            flex: 1;
+        }
+        
+        .payment-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .payment-desc {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+        }
+        
+        .summary {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+        
+        .summary-row.total {
+            font-size: 20px;
+            font-weight: 700;
+            padding-top: 12px;
+            border-top: 2px solid rgba(0,0,0,0.1);
+        }
+        
+        .donate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .donate-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .donate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .disclaimer {
+            text-align: center;
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999);
+            margin-top: 16px;
+            line-height: 1.5;
+        }        
+        .voice-amount-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .voice-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            font-weight: 600;
+        }
+        
+        .voice-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .voice-btn svg {
+            display: block;
+        }
+        
+        .voice-btn.recording {
+            background: #ef5350;
+            animation: recordPulse 1.5s infinite;
+        }
+        
+        @keyframes recordPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(239, 83, 80, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(239, 83, 80, 0);
+            }
+        }
+        
+        .voice-response {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 14px;
+            border-radius: 12px;
+            margin-top: 12px;
+            font-size: 15px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .voice-transcription {
+            font-size: 14px;
+            font-style: italic;
+            color: var(--tg-theme-hint-color, #666);
+            margin-bottom: 8px;
+            padding: 8px;
+            background: rgba(0,0,0,0.03);
+            border-radius: 8px;
+        }
+        
+        /* Voice help tooltip */
+        .voice-hint {
+            font-size: 13px;
+            color: var(--tg-theme-hint-color, #999);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .voice-hint::before {
+            content: "💡";
+            font-size: 14px;
+        }
+        
+        /* Confirmation states */
+        .voice-confirmation {
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            padding: 14px;
+            border-radius: 12px;
+            margin-top: 12px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .voice-confirmation.visible {
+            display: block;
+        }
+        
+        .voice-confirmation-text {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #2E7D32;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .voice-confirmation-text::before {
+            content: "✓";
+            font-size: 18px;
+        }
+        
+        .voice-confirmation-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .confirm-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .confirm-btn.yes {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .confirm-btn.no {
+            background: white;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+        
+        .voice-confirmation-box {
+            background: #e8f5e9;
+            border: 2px solid #4CAF50;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 16px 0;
+            display: none;
+        }
+        
+        .voice-confirmation-box.visible {
+            display: block;
+        }
+        
+        .voice-confirmation-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #2E7D32;
+        }
+        
+        .voice-confirmation-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .voice-confirm-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .voice-confirm-yes {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .voice-confirm-no {
+            background: #f44336;
+            color: white;
+        }
+        
+        /* Larger text for elderly */
+        body {
+            font-size: 18px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+        }
+        
+        .amount-btn {
+            font-size: 22px;
+            padding: 20px 12px;
+        }
+        
+        .payment-name {
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="window.location.href='index.html'" style="background: none; border: none; color: var(--tg-theme-link-color, #3390ec); font-size: 16px; cursor: pointer; padding: 8px 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to Menu
+    </button>
+    <div class="header">
+        <div class="icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path>
+                <path d="M12 18V6"></path>
+            </svg>
+        </div>
+        <h1>Complete Your Donation <span style="font-size:12px;opacity:0.5">v2.0</span></h1>
+        <div class="subtitle">💬 You can speak or tap to donate</div>
+    </div>
+    
+    <!-- VOICE-FIRST PROMPT CARD -->
+    <div class="voice-prompt-card" id="voicePromptCard" style="display: none;">
+        <div class="voice-prompt-icon">🎤</div>
+        <div class="voice-prompt-text">Say how much you'd like to donate</div>
+        <div class="voice-prompt-hint">Example: "I want to donate 500 birr" or "Fifty dollars"</div>
+        <button class="voice-primary-btn" id="voiceAmountBtn" onclick="startVoiceAmount()">
+            <span id="voiceAmountIcon">🎤</span>
+            <span id="voiceAmountText">Tap to Speak</span>
+        </button>
+        <button class="voice-help-btn" onclick="showVoiceHelp()">❓ What can I say?</button>
+    </div>
+    
+    <!-- Voice Confirmation Box -->
+    <div class="voice-confirmation-box" id="voiceConfirmation">
+        <div class="voice-confirmation-text" id="confirmationText">I heard: 500 birr. Is that correct?</div>
+        <div class="voice-confirmation-buttons">
+            <button class="voice-confirm-btn voice-confirm-yes" onclick="confirmVoiceAmount(true)">✅ Yes, Correct</button>
+            <button class="voice-confirm-btn voice-confirm-no" onclick="confirmVoiceAmount(false)">❌ No, Try Again</button>
+        </div>
+    </div>
+    
+    <div class="campaign-info" id="campaignInfo" style="display: none;">
+        <div class="campaign-title" id="campaignTitle">Loading...</div>
+        <div class="campaign-org" id="campaignOrg"></div>
+        <div class="campaign-progress" id="campaignProgress" style="margin-top: 12px; font-size: 14px; opacity: 0.9;"></div>
+    </div>
+    
+    <div id="loadingCampaign" style="text-align: center; padding: 40px; color: var(--tg-theme-hint-color, #999);">
+        <div style="font-size: 24px; margin-bottom: 12px;">⏳</div>
+        <div>Loading campaign details...</div>
+        <div id="jsTestMarker" style="color:red;margin-top:20px;font-size:14px;font-weight:bold;">⚠️ JavaScript not running yet</div>
+    </div>
+    
+    <div id="campaignError" style="display: none; text-align: center; padding: 40px; color: #f44336;">
+        <div style="font-size: 24px; margin-bottom: 12px;">⚠️</div>
+        <div id="errorMessage">Campaign not found</div>
+        <button onclick="window.location.href='campaigns.html'" style="margin-top: 16px; padding: 12px 24px; background: var(--tg-theme-button-color); color: white; border: none; border-radius: 8px; cursor: pointer;">Browse Campaigns</button>
+    </div>
+    
+    <div class="amount-section" id="amountSection" style="display: none;">
+        <div class="section-title">Select Amount</div>
+        <div class="amount-presets">
+            <button class="amount-btn" data-amount="10">$10</button>
+            <button class="amount-btn active" data-amount="25">$25</button>
+            <button class="amount-btn" data-amount="50">$50</button>
+            <button class="amount-btn" data-amount="100">$100</button>
+            <button class="amount-btn" data-amount="250">$250</button>
+            <button class="amount-btn" data-amount="500">$500</button>
+        </div>
+        
+        <div class="voice-amount-group">
+            <input 
+                type="number" 
+                class="custom-amount" 
+                id="customAmount" 
+                placeholder="Custom amount" 
+                min="1"
+            >
+            <button class="voice-btn" id="voiceBtn" onclick="startVoiceDonation()">
+                <svg id="voiceBtnIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+                <span>Say Amount</span>
+            </button>
+        </div>
+        
+        <div class="voice-hint">Or say "I want to donate 100 dollars"</div>
+        
+        <div id="voiceResponse" class="voice-response" style="display: none;">
+            <div class="voice-transcription" id="voiceTranscription"></div>
+            <div id="voiceMessage"></div>
+        </div>
+    </div>
+    
+    <div class="payment-methods" id="paymentSection" style="display: none;">
+        <div class="section-title">
+            Payment Method
+            <button class="voice-btn" style="float: right; padding: 10px 16px; font-size: 14px;" onclick="startVoicePayment()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+                <span id="voicePaymentText">Say Payment</span>
+            </button>
+        </div>
+        
+        <div class="voice-hint">Say "M-Pesa", "Card", or "Telegram Stars"</div>
+        
+        <div id="voicePaymentResponse" class="voice-response" style="display: none;">
+            <div class="voice-transcription" id="voicePaymentTranscription"></div>
+        </div>
+        
+        <div class="payment-option active" data-method="card">
+            <div class="payment-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                </svg>
+            </div>
+            <div class="payment-info">
+                <div class="payment-name">Credit/Debit Card</div>
+                <div class="payment-desc">Visa, Mastercard, Amex</div>
+            </div>
+        </div>
+        
+        <div class="payment-option" data-method="mpesa">
+            <div class="payment-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                    <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                </svg>
+            </div>
+            <div class="payment-info">
+                <div class="payment-name">M-Pesa</div>
+                <div class="payment-desc">Mobile money transfer</div>
+            </div>
+        </div>
+        
+        <div class="payment-option" data-method="telegram">
+            <div class="payment-icon">⭐</div>
+            <div class="payment-info">
+                <div class="payment-name">Telegram Stars</div>
+                <div class="payment-desc">Pay with Telegram</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="summary" id="summarySection" style="display: none;">
+        <div class="section-title">Summary</div>
+        <div class="summary-row">
+            <span>Donation Amount</span>
+            <span id="summaryAmount">$25.00</span>
+        </div>
+        <div class="summary-row">
+            <span>Processing Fee (2.9%)</span>
+            <span id="summaryFee">$0.73</span>
+        </div>
+        <div class="summary-row total">
+            <span>Total</span>
+            <span id="summaryTotal">$25.73</span>
+        </div>
+    </div>
+    
+    <button class="donate-btn" id="donateBtn" onclick="processDonation()" style="display: none;">
+        Donate Now
+    </button>
+    
+    <div class="disclaimer">
+        Your donation is secure and encrypted. You'll receive a receipt via Telegram. Tax deduction information will be provided for eligible donations.
+    </div>
+    
+    <script>
+        // IMMEDIATE TEST - this should show an alert if the script runs
+        alert('Main script started!');
+        
+        // Define Telegram WebApp wrapper first
+        const tg = window.Telegram?.WebApp || {
+            ready: () => {},
+            expand: () => {},
+            showAlert: (msg) => alert(msg),
+            showPopup: (params) => alert(params.message),
+            HapticFeedback: {
+                impactOccurred: () => {},
+                notificationOccurred: () => {}
+            },
+            initDataUnsafe: { user: { id: 'test' } }
+        };
+        
+        // Define variables at the top level
+        let selectedAmount = 25;
+        let selectedMethod = 'card';
+        let mediaRecorder;
+        let audioChunks = [];
+        let currentCampaign = null;
+        const API_BASE = window.location.origin;
+        
+        try {
+            // First thing: hide the JS test marker to prove JS is running
+            const jsMarker = document.getElementById('jsTestMarker');
+            if (jsMarker) {
+                jsMarker.textContent = '✅ JavaScript is running!';
+                jsMarker.style.color = 'green';
+            }
+            
+            tg.ready();
+            tg.expand();
+            
+            if (jsMarker) jsMarker.textContent += ' | Telegram ready';
+        } catch (mainError) {
+            const jsMarker = document.getElementById('jsTestMarker');
+            if (jsMarker) {
+                jsMarker.innerHTML = '❌ Script error:<br>' + mainError.message + '<br>at line ' + (mainError.lineNumber || 'unknown');
+                jsMarker.style.color = 'red';
+                jsMarker.style.fontSize = '11px';
+            }
+            console.error('Init error:', mainError);
+        }
+        
+        // Get campaign ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const campaignId = urlParams.get('campaign_id');
+        
+        // Update marker with campaign ID
+        const jsMarker2 = document.getElementById('jsTestMarker');
+        if (jsMarker2) jsMarker2.textContent += ` | Campaign ID: ${campaignId}`;
+        
+        // Show debug info on page for troubleshooting
+        try {
+            const debugDiv = document.createElement('div');
+            debugDiv.id = 'debugInfo';
+            debugDiv.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,0.8);color:#0f0;padding:8px;font-size:10px;z-index:9999;max-height:100px;overflow:auto';
+            debugDiv.textContent = `Debug: URL=${window.location.href} | ID=${campaignId} | Origin=${API_BASE}`;
+            document.body.appendChild(debugDiv);
+            if (jsMarker2) jsMarker2.textContent += ' | Debug div added';
+        } catch (e) {
+            if (jsMarker2) jsMarker2.textContent += ` | Debug div error: ${e.message}`;
+        }
+        
+        console.log('Donate page loaded');
+        console.log('Campaign ID from URL:', campaignId);
+        console.log('Full URL:', window.location.href);
+        
+        // Load campaign on page load
+        if (campaignId) {
+            console.log('Loading campaign:', campaignId);
+            const dbg = document.getElementById('debugInfo');
+            if (dbg) dbg.textContent += ' | Fetching...';
+            
+            // Show what we're about to do
+            const loadingDiv = document.getElementById('loadingCampaign');
+            if (loadingDiv) {
+                loadingDiv.innerHTML = `
+                    <div style="font-size: 24px; margin-bottom: 12px;">⏳</div>
+                    <div>Loading campaign ${campaignId}...</div>
+                    <div style="font-size:10px;margin-top:8px;opacity:0.7">API: ${API_BASE}/api/campaigns/${campaignId}</div>
+                `;
+            }
+            
+            loadCampaign(campaignId);
+        } else {
+            console.log('No campaign ID provided');
+            showError('No campaign selected. Please browse campaigns first.');
+        }
+        
+        // Load campaign from API
+        async function loadCampaign(id) {
+            const debugDiv = document.getElementById('debugInfo');
+            try {
+                console.log('[Donate] Fetching campaign from:', `${API_BASE}/api/campaigns/${id}`);
+                if (debugDiv) debugDiv.textContent += ' | API call started';
+                
+                // Add cache busting
+                const cacheBuster = new Date().getTime();
+                const response = await fetch(`${API_BASE}/api/campaigns/${id}?_=${cacheBuster}`);
+                
+                console.log('[Donate] Response status:', response.status);
+                if (debugDiv) debugDiv.textContent += ` | Status: ${response.status}`;
+                
+                if (!response.ok) {
+                    throw new Error(`Campaign not found (${response.status})`);
+                }
+                
+                const campaign = await response.json();
+                console.log('[Donate] Campaign data received:', campaign);
+                if (debugDiv) debugDiv.textContent += ` | Got: ${campaign.title}`;
+                
+                currentCampaign = campaign;
+                displayCampaign(campaign);
+                
+            } catch (error) {
+                console.error('[Donate] Failed to load campaign:', error);
+                console.error('[Donate] API_BASE was:', API_BASE);
+                console.error('[Donate] Campaign ID was:', id);
+                if (debugDiv) debugDiv.textContent += ` | ERROR: ${error.message}`;
+                showError(`Failed to load campaign: ${error.message}`);
+            }
+        }
+        
+        function displayCampaign(campaign) {
+            console.log('Displaying campaign:', campaign);
+            
+            document.getElementById('loadingCampaign').style.display = 'none';
+            document.getElementById('campaignInfo').style.display = 'block';
+            
+            document.getElementById('campaignTitle').textContent = campaign.title;
+            document.getElementById('campaignOrg').textContent = campaign.ngo_name || 'Anonymous NGO';
+            
+            // Show progress - use correct API field names
+            const raised = campaign.raised_amount_usd || campaign.amount_raised || 0;
+            const target = campaign.goal_amount_usd || campaign.target_amount || 0;
+            const percentage = target > 0 ? Math.round((raised / target) * 100) : 0;
+            
+            document.getElementById('campaignProgress').textContent = 
+                `$${raised.toLocaleString()} raised of $${target.toLocaleString()} goal (${percentage}%)`;
+            
+            // Show donation form sections
+            document.getElementById('amountSection').style.display = 'block';
+            document.getElementById('paymentSection').style.display = 'block';
+            document.getElementById('summarySection').style.display = 'block';
+            document.getElementById('donateBtn').style.display = 'block';
+        }
+        
+        function showError(message) {
+            const loadingDiv = document.getElementById('loadingCampaign');
+            if (loadingDiv) loadingDiv.style.display = 'none';
+            
+            document.getElementById('campaignInfo').style.display = 'none';
+            document.getElementById('campaignError').style.display = 'block';
+            document.getElementById('errorMessage').innerHTML = `
+                ${message}<br><br>
+                <small style="font-size:10px;opacity:0.7">
+                API_BASE: ${API_BASE}<br>
+                Campaign ID: ${campaignId}<br>
+                URL: ${window.location.href}
+                </small>
+            `;
+            
+            // Hide donation form sections
+            document.getElementById('amountSection').style.display = 'none';
+            document.getElementById('paymentSection').style.display = 'none';
+            document.getElementById('summarySection').style.display = 'none';
+            document.getElementById('donateBtn').style.display = 'none';
+        }
+        
+        // Amount selection
+        document.querySelectorAll('.amount-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedAmount = parseInt(btn.dataset.amount);
+                document.getElementById('customAmount').value = '';
+                updateSummary();
+            });
+        });
+        
+        // Custom amount
+        document.getElementById('customAmount').addEventListener('input', (e) => {
+            document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+            selectedAmount = parseFloat(e.target.value) || 0;
+            updateSummary();
+        });
+        
+        // Payment method selection
+        document.querySelectorAll('.payment-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
+                option.classList.add('active');
+                selectedMethod = option.dataset.method;
+            });
+        });
+        
+        // Update summary
+        function updateSummary() {
+            const fee = selectedAmount * 0.029;
+            const total = selectedAmount + fee;
+            
+            document.getElementById('summaryAmount').textContent = `$${selectedAmount.toFixed(2)}`;
+            document.getElementById('summaryFee').textContent = `$${fee.toFixed(2)}`;
+            document.getElementById('summaryTotal').textContent = `$${total.toFixed(2)}`;
+        }
+        
+        // Process donation
+        async function processDonation() {
+            if (!currentCampaign) {
+                tg.showAlert('Campaign not loaded. Please try again.');
+                return;
+            }
+            
+            if (selectedAmount <= 0) {
+                tg.showAlert('Please select or enter a donation amount.');
+                return;
+            }
+            
+            const total = (selectedAmount * 1.029).toFixed(2);
+            
+            tg.showConfirm(
+                `Confirm donation of $${total} to "${currentCampaign.title}" via ${selectedMethod}?`,
+                async (confirmed) => {
+                    if (confirmed) {
+                        // Show processing
+                        const btn = document.querySelector('.donate-btn');
+                        btn.textContent = 'Processing...';
+                        btn.disabled = true;
+                        
+                        try {
+                            // Create donation via API
+                            const response = await fetch(`${API_BASE}/api/donations/`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    campaign_id: currentCampaign.id,
+                                    amount: selectedAmount,
+                                    payment_method: selectedMethod,
+                                    user_id: tg.initDataUnsafe?.user?.id || null,
+                                    currency: 'USD'
+                                })
+                            });
+                            
+                            if (response.ok) {
+                                const donation = await response.json();
+                                
+                                tg.showAlert(`✅ Donation successful! Thank you for supporting ${currentCampaign.title}.\n\nReceipt sent to your Telegram.`);
+                                
+                                if (tg.HapticFeedback) {
+                                    tg.HapticFeedback.notificationOccurred('success');
+                                }
+                                
+                                setTimeout(() => {
+                                    tg.close();
+                                }, 2000);
+                            } else {
+                                throw new Error('Payment failed');
+                            }
+                        } catch (error) {
+                            console.error('Donation error:', error);
+                            tg.showAlert('Payment failed. Please try again.');
+                            btn.textContent = 'Donate Now';
+                            btn.disabled = false;
+                        }
+                    }
+                }
+            );
+        }
+        
+        // Voice Donation Functions
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let paymentMediaRecorder = null;
+        let paymentAudioChunks = [];
+        
+        async function startVoicePayment() {
+            const btn = event.target.closest('.voice-btn');
+            const text = document.getElementById('voicePaymentText');
+            
+            if (!paymentMediaRecorder || paymentMediaRecorder.state === 'inactive') {
+                // Start recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    paymentMediaRecorder = new MediaRecorder(stream);
+                    paymentAudioChunks = [];
+                    
+                    paymentMediaRecorder.ondataavailable = (event) => {
+                        paymentAudioChunks.push(event.data);
+                    };
+                    
+                    paymentMediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(paymentAudioChunks, { type: 'audio/webm' });
+                        await processVoicePayment(audioBlob);
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    paymentMediaRecorder.start();
+                    btn.classList.add('recording');
+                    text.textContent = 'Listening...';
+                    
+                } catch (error) {
+                    console.error('Microphone error:', error);
+                    tg.showAlert('Could not access microphone. Please check permissions.');
+                }
+            } else {
+                // Stop recording
+                paymentMediaRecorder.stop();
+                btn.classList.remove('recording');
+                text.textContent = 'Say Payment';
+            }
+        }
+        
+        async function processVoicePayment(audioBlob) {
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'payment.webm');
+            formData.append('user_id', tg.initDataUnsafe?.user?.id || 'guest');
+            
+            try {
+                const response = await fetch(API_BASE + '/api/voice/dictate-text', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    handleVoicePaymentResult(data);
+                } else {
+                    tg.showAlert('Failed to process voice command. Please try again.');
+                }
+            } catch (error) {
+                console.error('Voice payment error:', error);
+                tg.showAlert('Network error. Please check your connection.');
+            }
+        }
+        
+        function handleVoicePaymentResult(data) {
+            const transcription = data.transcription.toLowerCase();
+            const responseBox = document.getElementById('voicePaymentResponse');
+            const transcriptionDiv = document.getElementById('voicePaymentTranscription');
+            
+            transcriptionDiv.textContent = `You said: "${data.transcription}"`;
+            responseBox.style.display = 'block';
+            
+            // Match payment methods
+            let matchedMethod = null;
+            if (transcription.includes('mpesa') || transcription.includes('m-pesa') || transcription.includes('m pesa')) {
+                matchedMethod = 'mpesa';
+            } else if (transcription.includes('card') || transcription.includes('credit') || transcription.includes('debit')) {
+                matchedMethod = 'card';
+            } else if (transcription.includes('telegram') || transcription.includes('stars') || transcription.includes('star')) {
+                matchedMethod = 'telegram';
+            }
+            
+            if (matchedMethod) {
+                // Select the payment method
+                document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
+                const option = document.querySelector(`[data-method="${matchedMethod}"]`);
+                if (option) {
+                    option.classList.add('active');
+                    selectedMethod = matchedMethod;
+                    
+                    // Speak confirmation
+                    const methodName = matchedMethod === 'mpesa' ? 'M-Pesa' : 
+                                     matchedMethod === 'telegram' ? 'Telegram Stars' : 'Card';
+                    const confirmation = `Payment method set to ${methodName}`;
+                    speakText(confirmation);
+                    
+                    // Show visual confirmation
+                    const confirmDiv = document.createElement('div');
+                    confirmDiv.className = 'voice-confirmation';
+                    confirmDiv.textContent = `✓ ${confirmation}`;
+                    responseBox.appendChild(confirmDiv);
+                }
+            } else {
+                speakText("I didn't catch that. Please say M-Pesa, Card, or Telegram Stars.");
+            }
+            
+            // Hide after 5 seconds
+            setTimeout(() => {
+                responseBox.style.display = 'none';
+                responseBox.innerHTML = '<div class="voice-transcription" id="voicePaymentTranscription"></div>';
+            }, 5000);
+        }
+        
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+        
+        async function startVoiceDonation() {
+            const btn = document.getElementById('voiceBtn');
+            const icon = document.getElementById('voiceBtnIcon');
+            
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                // Start recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        audioChunks.push(event.data);
+                    };
+                    
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        await processVoiceDonation(audioBlob);
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    mediaRecorder.start();
+                    btn.classList.add('recording');
+                    icon.innerHTML = '<rect width="12" height="12" x="6" y="6" rx="2" stroke="currentColor" fill="currentColor"></rect>';
+                    
+                } catch (error) {
+                    console.error('Microphone error:', error);
+                    tg.showAlert('Could not access microphone. Please check permissions.');
+                }
+            } else {
+                // Stop recording
+                mediaRecorder.stop();
+                btn.classList.remove('recording');
+                icon.innerHTML = '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line>';
+            }
+        }
+        
+        async function processVoiceDonation(audioBlob) {
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'donate.webm');
+            formData.append('user_id', tg.initDataUnsafe?.user?.id || 'guest');
+            
+            try {
+                const response = await fetch(API_BASE + '/api/voice/dictate-text', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    displayVoiceDonationResult(data);
+                } else {
+                    tg.showAlert('Failed to process voice command. Please try again.');
+                }
+            } catch (error) {
+                console.error('Voice donation error:', error);
+                tg.showAlert('Network error. Please check your connection.');
+            }
+        }
+        
+        function displayVoiceDonationResult(data) {
+            const responseBox = document.getElementById('voiceResponse');
+            const transcription = document.getElementById('voiceTranscription');
+            const message = document.getElementById('voiceMessage');
+            
+            transcription.textContent = `You said: "${data.transcription}"`;
+            
+            // Extract amount from transcription
+            const amount = extractAmount(data.transcription);
+            
+            if (amount && amount > 0) {
+                message.textContent = `Setting donation to $${amount}`;
+                
+                // Set the amount
+                document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('customAmount').value = amount;
+                selectedAmount = amount;
+                updateSummary();
+                
+                // Speak confirmation
+                speakText(`I heard ${amount} dollars. Is that correct?`);
+                
+                // Show visual confirmation
+                const confirmDiv = document.createElement('div');
+                confirmDiv.className = 'voice-confirmation';
+                confirmDiv.textContent = `✓ Donation amount: $${amount}`;
+                message.insertAdjacentElement('afterend', confirmDiv);
+                
+            } else {
+                message.textContent = "Couldn't understand the amount. Please say a number like '50 dollars' or 'donate 100'.";
+                speakText("I didn't catch the amount. Please try again.");
+            }
+            
+            responseBox.style.display = 'block';
+            
+            // Hide after 6 seconds
+            setTimeout(() => {
+                responseBox.style.display = 'none';
+            }, 6000);
+        }
+        
+        function extractAmount(text) {
+            // Try to extract numbers from text
+            text = text.toLowerCase();
+            
+            // Remove common words
+            text = text.replace(/donate|donation|give|want to|i want to|dollars|dollar|usd|birr/gi, ' ');
+            
+            // Find numbers (including written numbers)
+            const numberWords = {
+                'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+                'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+                'twenty': 20, 'thirty': 30, 'forty': 40, 'fifty': 50,
+                'sixty': 60, 'seventy': 70, 'eighty': 80, 'ninety': 90,
+                'hundred': 100, 'thousand': 1000
+            };
+            
+            // Replace written numbers
+            for (const [word, value] of Object.entries(numberWords)) {
+                text = text.replace(new RegExp(word, 'gi'), value.toString());
+            }
+            
+            // Extract numeric values
+            const matches = text.match(/\d+(\.\d+)?/g);
+            if (matches && matches.length > 0) {
+                return parseFloat(matches[0]);
+            }
+            
+            return null;
+        }
+        
+        // Initial summary
+        updateSummary();
+    </script>
+</body>
+</html>

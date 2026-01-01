@@ -15,8 +15,8 @@ Architecture:
 """
 
 from sqlalchemy import (
-    Column, Integer, String, Float, Boolean, DateTime, 
-    Text, ForeignKey, JSON, Enum as SQLEnum
+    Column, Integer, String, Float, Boolean, DateTime, Date,
+    Text, ForeignKey, JSON, Enum as SQLEnum, UniqueConstraint, Index
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
@@ -650,3 +650,79 @@ class Payout(Base):
     def __repr__(self):
         return f"<Payout(id={self.id}, amount={self.amount} {self.currency}, status={self.status})>"
 
+
+class UserPreference(Base):
+    """
+    User preferences for personalized conversations
+    
+    LAB 9 Part 3: Stores user preferences across sessions for faster interactions
+    
+    Supported preference types:
+    - payment_provider: Default payment method (chapa, telebirr, mpesa)
+    - donation_amount: Default donation amount
+    - language: Preferred language (en, am)
+    - notification_preference: Notification settings (all, major, none)
+    - favorite_category: Preferred campaign category
+    """
+    __tablename__ = "user_preferences"
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    preference_key = Column(String(100), nullable=False)
+    preference_value = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = relationship("User", backref="preferences")
+    
+    __table_args__ = (
+        # Ensure one preference per key per user
+        # UniqueConstraint('user_id', 'preference_key', name='uq_user_preference'),
+    )
+    
+    def __repr__(self):
+        return f"<UserPreference(user_id={self.user_id}, key={self.preference_key}, value={self.preference_value})>"
+
+
+class ConversationEvent(Base):
+    """Track conversation events for analytics"""
+    __tablename__ = "conversation_events"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    session_id = Column(String(100), nullable=False, index=True)
+    event_type = Column(String(50), nullable=False, index=True)
+    conversation_state = Column(String(50), nullable=True)
+    current_step = Column(String(50), nullable=True)
+    event_data = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    
+    # Relationships
+    user = relationship("User", backref="conversation_events")
+    
+    def __repr__(self):
+        return f"<ConversationEvent(id={self.id}, type={self.event_type}, session={self.session_id})>"
+
+
+class ConversationMetrics(Base):
+    """Daily conversation metrics for analytics"""
+    __tablename__ = "conversation_metrics"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date, nullable=False, index=True)
+    conversation_type = Column(String(50), nullable=False)
+    started_count = Column(Integer, default=0)
+    completed_count = Column(Integer, default=0)
+    abandoned_count = Column(Integer, default=0)
+    avg_duration_seconds = Column(Integer, nullable=True)
+    avg_messages = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    __table_args__ = (
+        UniqueConstraint('date', 'conversation_type', name='uq_date_conversation_type'),
+    )
+    
+    def __repr__(self):
+        return f"<ConversationMetrics(date={self.date}, type={self.conversation_type}, started={self.started_count})>"

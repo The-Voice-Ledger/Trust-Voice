@@ -8,6 +8,7 @@
     <meta http-equiv="Expires" content="0">
     <title>Donation Checkout</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="js/voice-utils.js?v=4"></script>
     <style>
         * {
             margin: 0;
@@ -268,9 +269,14 @@
         <div class="subtitle">Support this campaign</div>
     </div>
     
-    <div class="campaign-info">
-        <div class="campaign-title">Clean Water for Rural Kenya</div>
-        <div class="campaign-org">Water for All NGO</div>
+    <div class="campaign-info" id="campaignInfo" style="display: none;">
+        <div class="campaign-title" id="campaignTitle">Loading...</div>
+        <div class="campaign-org" id="campaignOrg">Please wait...</div>
+        <div class="campaign-progress" id="campaignProgress" style="margin-top: 8px; font-size: 14px; opacity: 0.8;"></div>
+    </div>
+    
+    <div id="loadingCampaign" style="display: block; text-align: center; padding: 40px; color: var(--tg-theme-hint-color, #999);">
+        <div>Loading campaign details...</div>
     </div>
     
     <div class="amount-section">
@@ -379,8 +385,155 @@
         let selectedMethod = 'card';
         let mediaRecorder;
         let audioChunks = [];
+        let currentCampaign = null;
         
         const API_BASE = window.location.origin;
+        
+        // Voice Ledger Enhancement: Context tracking
+        let donationContext = {
+            app: 'donate',
+            campaign_id: null,
+            campaign_title: null,
+            selected_amount: 25,
+            selected_payment: 'card',
+            step: 'amount_selection',  // amount_selection, payment_selection, confirmation
+            available_actions: ['select_amount', 'select_payment', 'confirm_donation']
+        };
+        
+        function updateDonationContext() {
+            donationContext.campaign_id = currentCampaign?.id || null;
+            donationContext.campaign_title = currentCampaign?.title || null;
+            donationContext.selected_amount = selectedAmount;
+            donationContext.selected_payment = selectedMethod;
+            console.log('📍 Donation context updated:', donationContext);
+        }
+        
+        // Voice Ledger Enhancement: Use utilities from voice-utils.js
+        const ttsController = new window.VoiceUtils.TTSController(API_BASE);
+        
+        // Voice Ledger Enhancement: Retry with exponential backoff
+        async function attemptUpload(audioBlob, retryCount = 0) {
+            const MAX_RETRIES = 3;
+            const RETRY_DELAYS = [1000, 2000, 4000];
+            
+            try {
+                return await uploadAndProcessAudio(audioBlob);
+            } catch (error) {
+                if (error.isRetryable && error.isRetryable() && retryCount < MAX_RETRIES) {
+                    const delay = RETRY_DELAYS[retryCount];
+                    const responseBox = document.getElementById('voiceResponse');
+                    const message = document.getElementById('voiceMessage');
+                    
+                    message.textContent = `⚠️ Connection issue. Retrying in ${delay/1000}s... (${retryCount + 1}/${MAX_RETRIES})`;
+                    responseBox.style.display = 'block';
+                    
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return await attemptUpload(audioBlob, retryCount + 1);
+                } else {
+                    throw error;
+                }
+            }
+        }
+        
+        // Voice Ledger Enhancement: Upload with error categorization
+        async function uploadAndProcessAudio(audioBlob) {
+            // Network check
+            if (!navigator.onLine) {
+                throw new window.VoiceUtils.VoiceError('No internet connection', window.VoiceUtils.VoiceError.NETWORK, { offline: true });
+            }
+            
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'donate.webm');
+            formData.append('user_id', tg.initDataUnsafe?.user?.id || 'guest');
+            formData.append('user_language', window.VoiceUtils.getUserLanguage());
+            formData.append('campaign_id', currentCampaign?.id || campaignId || '1');
+            formData.append('context', JSON.stringify(donationContext));
+            
+            // 30-second timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+            
+            try {
+                const response = await fetch(API_BASE + '/api/voice/donate-by-voice', {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                // Categorize HTTP errors
+                if (!response.ok) {
+                    if (response.status >= 500) {
+                        throw new window.VoiceUtils.VoiceError('Server error', window.VoiceUtils.VoiceError.SERVER, { status: response.status });
+                    } else if (response.status >= 400) {
+                        throw new window.VoiceUtils.VoiceError('Invalid request', window.VoiceUtils.VoiceError.VALIDATION, { status: response.status });
+                    } else {
+                        throw new window.VoiceUtils.VoiceError('HTTP error', window.VoiceUtils.VoiceError.UNKNOWN, { status: response.status });
+                    }
+                }
+                
+                return await response.json();
+                
+            } catch (error) {
+                clearTimeout(timeoutId);
+                
+                // Categorize native errors
+                if (error.name === 'AbortError') {
+                    throw new window.VoiceUtils.VoiceError('Request timeout', window.VoiceUtils.VoiceError.TIMEOUT);
+                } else if (error instanceof TypeError && error.message.includes('fetch')) {
+                    throw new window.VoiceUtils.VoiceError('Network error', window.VoiceUtils.VoiceError.NETWORK);
+                } else if (error instanceof window.VoiceUtils.VoiceError) {
+                    throw error;
+                } else {
+                    throw new window.VoiceUtils.VoiceError(error.message || 'Unknown error', window.VoiceUtils.VoiceError.UNKNOWN, { originalError: error });
+                }
+            }
+        }
+        
+        // Get campaign ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const campaignId = urlParams.get('campaign_id');
+        
+        // Load campaign if ID provided
+        if (campaignId) {
+            loadCampaign(campaignId);
+        } else {
+            // No campaign ID - show error and redirect
+            document.getElementById('loadingCampaign').innerHTML = '<div>No campaign selected.<br><br><a href="campaigns.html" style="color: var(--tg-theme-link-color, #3390ec);">Browse Campaigns</a></div>';
+        }
+        
+        // Load campaign from API
+        async function loadCampaign(id) {
+            try {
+                document.getElementById('loadingCampaign').style.display = 'block';
+                document.getElementById('campaignInfo').style.display = 'none';
+                
+                const response = await fetch(`${API_BASE}/api/campaigns/${id}`);
+                if (!response.ok) throw new Error('Campaign not found');
+                
+                const campaign = await response.json();
+                currentCampaign = campaign;
+                
+                document.getElementById('campaignTitle').textContent = campaign.title;
+                document.getElementById('campaignOrg').textContent = campaign.ngo_name || 'Anonymous NGO';
+                
+                const raised = campaign.raised_amount_usd || 0;
+                const goal = campaign.goal_amount_usd || 0;
+                const percentage = goal > 0 ? Math.round((raised / goal) * 100) : 0;
+                document.getElementById('campaignProgress').textContent = 
+                    `$${raised.toLocaleString()} raised of $${goal.toLocaleString()} goal (${percentage}%)`;
+                
+                document.getElementById('loadingCampaign').style.display = 'none';
+                document.getElementById('campaignInfo').style.display = 'block';
+                
+                // Update donation context with loaded campaign
+                updateDonationContext();
+            } catch (error) {
+                console.error('Failed to load campaign:', error);
+                document.getElementById('loadingCampaign').textContent = 'Failed to load campaign. Please try again.';
+            }
+        }
         
         // Amount selection
         document.querySelectorAll('.amount-btn').forEach(btn => {
@@ -390,6 +543,7 @@
                 selectedAmount = parseInt(btn.dataset.amount);
                 document.getElementById('customAmount').value = '';
                 updateSummary();
+                updateDonationContext();  // Voice Ledger: Update context
             });
         });
         
@@ -398,6 +552,7 @@
             document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
             selectedAmount = parseFloat(e.target.value) || 0;
             updateSummary();
+            updateDonationContext();  // Voice Ledger: Update context
         });
         
         // Payment method selection
@@ -406,6 +561,8 @@
                 document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
                 option.classList.add('active');
                 selectedMethod = option.dataset.method;
+                donationContext.step = 'confirmation';
+                updateDonationContext();  // Voice Ledger: Update context
             });
         });
         
@@ -493,26 +650,59 @@
         }
         
         async function processVoiceDonation(audioBlob) {
-            const formData = new FormData();
-            formData.append('audio', audioBlob, 'donate.webm');
-            formData.append('user_id', tg.initDataUnsafe?.user?.id || 'guest');
-            formData.append('campaign_id', '1'); // Would come from URL params in real app
+            const responseBox = document.getElementById('voiceResponse');
+            const message = document.getElementById('voiceMessage');
             
             try {
-                const response = await fetch(API_BASE + '/api/voice/donate-by-voice', {
-                    method: 'POST',
-                    body: formData
-                });
+                // Voice Ledger: 3-step validation
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    displayVoiceDonationResult(data);
-                } else {
-                    tg.showAlert('Failed to process voice command. Please try again.');
+                // Step 1: Duration check
+                if (audioBlob.size === 0 || audioBlob.size < 1000) {
+                    message.textContent = '⏱️ Audio too short\n\nPlease speak for at least 1 second.';
+                    responseBox.style.display = 'block';
+                    setTimeout(() => responseBox.style.display = 'none', 3000);
+                    return;
                 }
+                
+                // Step 2: File size check
+                const maxSize = 25 * 1024 * 1024; // 25MB
+                if (audioBlob.size > maxSize) {
+                    message.textContent = '📦 Audio too large\n\nPlease keep recordings under 25MB.';
+                    responseBox.style.display = 'block';
+                    setTimeout(() => responseBox.style.display = 'none', 3000);
+                    return;
+                }
+                
+                // Step 3: Silent audio check
+                message.textContent = '🔍 Analyzing audio...';
+                responseBox.style.display = 'block';
+                
+                const hasSound = await window.VoiceUtils.checkAudioHasSound(audioBlob);
+                if (!hasSound) {
+                    message.textContent = `🔇 Silent Audio Detected\n\nNo sound detected.\n\nPlease:\n• Speak closer to microphone\n• Check microphone isn't muted\n• Try again with clear speech`;
+                    setTimeout(() => responseBox.style.display = 'none', 5000);
+                    return;
+                }
+                
+                console.log(`✓ Audio valid`);
+                
+                // Upload with retry
+                message.textContent = '☁️ Uploading...';
+                const data = await attemptUpload(audioBlob);
+                
+                displayVoiceDonationResult(data);
+                
             } catch (error) {
                 console.error('Voice donation error:', error);
-                tg.showAlert('Network error. Please check your connection.');
+                
+                if (error instanceof VoiceError) {
+                    message.textContent = error.getUserMessage();
+                } else {
+                    message.textContent = '❌ Error processing voice command\n\nPlease try again.';
+                }
+                
+                responseBox.style.display = 'block';
+                setTimeout(() => responseBox.style.display = 'none', 5000);
             }
         }
         
@@ -531,11 +721,11 @@
                 document.getElementById('customAmount').value = data.amount;
                 selectedAmount = data.amount;
                 updateSummary();
+                updateDonationContext();  // Update context after amount change
                 
-                // Play audio if available
+                // Play audio with TTS controls
                 if (data.audio_url) {
-                    const audio = new Audio(API_BASE + data.audio_url);
-                    audio.play().catch(e => console.log('Auto-play prevented:', e));
+                    ttsController.play(data.audio_url);
                 }
             } else {
                 message.textContent = data.response_text || "Couldn't understand the amount. Please try again.";

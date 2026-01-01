@@ -14,15 +14,16 @@ from database.models import Campaign, NGOOrganization
 router = APIRouter(prefix="/campaigns", tags=["Campaigns"])
 
 
-def enrich_campaign_response(campaign: Campaign) -> dict:
+def enrich_campaign_response(campaign: Campaign, db: Session = None) -> dict:
     """
-    Enrich campaign data with dynamic USD total calculation.
+    Enrich campaign data with dynamic USD total calculation and NGO name.
     
     Args:
         campaign: Campaign model instance
+        db: Database session (optional, for fetching NGO name)
         
     Returns:
-        dict: Campaign data with current_usd_total added
+        dict: Campaign data with current_usd_total and ngo_name added
     """
     campaign_dict = {
         "id": campaign.id,
@@ -35,10 +36,22 @@ def enrich_campaign_response(campaign: Campaign) -> dict:
         "raised_amounts": campaign.raised_amounts or {},
         "current_usd_total": campaign.get_current_usd_total(),
         "status": campaign.status,
+        "category": campaign.category,
         "location_gps": campaign.location_gps,
         "created_at": campaign.created_at,
         "updated_at": campaign.updated_at,
     }
+    
+    # Add NGO name and donation count if we have a database session
+    if db:
+        if campaign.ngo_id:
+            ngo = db.query(NGOOrganization).filter(NGOOrganization.id == campaign.ngo_id).first()
+            if ngo:
+                campaign_dict["ngo_name"] = ngo.name
+        
+        # Add donation count
+        campaign_dict["donation_count"] = len(campaign.donations) if campaign.donations else 0
+    
     return campaign_dict
 
 
@@ -86,9 +99,12 @@ class CampaignResponse(BaseModel):
     raised_amounts: Optional[dict] = {}  # Per-currency breakdown: {"USD": 1000, "EUR": 500}
     current_usd_total: Optional[float] = None  # Dynamic USD total with current rates
     status: str
+    category: Optional[str] = None  # Campaign category (water, education, health, etc.)
     location_gps: Optional[str]
     created_at: datetime
     updated_at: datetime
+    ngo_name: Optional[str] = None  # NGO organization name (fetched dynamically)
+    donation_count: Optional[int] = 0  # Number of donations to this campaign
     
     class Config:
         from_attributes = True
@@ -137,7 +153,7 @@ def create_campaign(campaign: CampaignCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_campaign)
     
-    return enrich_campaign_response(db_campaign)
+    return enrich_campaign_response(db_campaign, db)
 
 
 @router.get("/", response_model=List[CampaignResponse])
@@ -162,7 +178,7 @@ def list_campaigns(
         query = query.filter(Campaign.ngo_id == ngo_id)
     
     campaigns = query.offset(skip).limit(limit).all()
-    return [enrich_campaign_response(c) for c in campaigns]
+    return [enrich_campaign_response(c, db) for c in campaigns]
 
 
 @router.get("/{campaign_id}", response_model=CampaignResponse)
@@ -174,7 +190,7 @@ def get_campaign(campaign_id: int, db: Session = Depends(get_db)):
     if not campaign:
         raise HTTPException(status_code=404, detail=f"Campaign with id {campaign_id} not found")
     
-    return enrich_campaign_response(campaign)
+    return enrich_campaign_response(campaign, db)
 
 
 @router.patch("/{campaign_id}", response_model=CampaignResponse)
@@ -194,7 +210,7 @@ def update_campaign(campaign_id: int, updates: CampaignUpdate, db: Session = Dep
     db.commit()
     db.refresh(campaign)
     
-    return enrich_campaign_response(campaign)
+    return enrich_campaign_response(campaign, db)
 
 
 @router.delete("/{campaign_id}", status_code=204)

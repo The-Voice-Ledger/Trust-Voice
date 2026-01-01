@@ -14,10 +14,12 @@ Architecture follows Option A: Self-contained voice processing in mini app
 import logging
 import os
 import tempfile
+import uuid
 from pathlib import Path
 from typing import Optional
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
+from pydantic import BaseModel
 
 # Database imports
 from database.db import get_db
@@ -27,10 +29,11 @@ from database.models import Campaign, User
 from voice.asr.asr_infer import transcribe_audio, ASRError
 from voice.telegram.voice_responses import get_user_language_preference, detect_language, clean_text_for_tts
 from voice.tts.tts_provider import TTSProvider
+from voice.conversation.analytics import ConversationAnalytics
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/voice", tags=["miniapp-voice"])
+router = APIRouter(prefix="/voice", tags=["miniapp-voice"])
 
 # Initialize TTS provider
 tts_provider = TTSProvider()
@@ -39,15 +42,18 @@ tts_provider = TTSProvider()
 @router.post("/search-campaigns")
 async def voice_search_campaigns(
     audio: UploadFile = File(...),
-    user_id: str = Form(...)
+    user_id: str = Form(...),
+    context: Optional[str] = Form(None),
+    user_language: Optional[str] = Form(None)  # Optional - will use DB preference if not provided
 ):
     """
     Process voice search command from campaigns mini app.
+    Supports Amharic via AddisAI.
     
     Flow:
     1. Save uploaded audio to temporary file
-    2. Transcribe using ASR (with user's language preference)
-    3. Search campaigns based on transcribed text
+    2. Transcribe using ASR (with user's language preference from DB or parameter)
+    3. Search campaigns based on transcribed text AND context
     4. Generate text response
     5. Generate TTS audio response
     6. Return both text and audio URL
@@ -55,13 +61,25 @@ async def voice_search_campaigns(
     Args:
         audio: Audio file from MediaRecorder (webm/ogg)
         user_id: Telegram user ID for language preference lookup
+        context: Optional JSON context (app state, selected items, available actions)
+        user_language: Optional language override ('en' or 'am')
         
     Returns:
         JSON with transcription, results, and audio response URL
     """
+    import json
     temp_audio_path = None
+    context_data = None
     
     try:
+        # Parse context if provided
+        if context:
+            try:
+                context_data = json.loads(context)
+                logger.info(f"Voice search with context: view={context_data.get('view')}, app={context_data.get('app')}")
+            except json.JSONDecodeError:
+                logger.warning(f"Failed to parse context JSON: {context}")
+        
         logger.info(f"Voice search request from user {user_id}")
         
         # Step 1: Save uploaded audio to temporary file
@@ -72,16 +90,13 @@ async def voice_search_campaigns(
         
         logger.info(f"Audio saved to {temp_audio_path} ({len(content)} bytes)")
         
-        # Step 2: Get user's language preference
+        # Step 2: Get user's language preference (parameter → database → default)
         db = next(get_db())
-        user_language = get_user_language_preference(user_id)
-        
         if not user_language:
-            # Default to English if no preference set
-            user_language = "en"
-            logger.info(f"No language preference found for user {user_id}, defaulting to English")
-        
-        logger.info(f"User language preference: {user_language}")
+            user_language = get_user_language_preference(user_id) or "en"
+            logger.info(f"Using database language preference for user {user_id}: {user_language}")
+        else:
+            logger.info(f"Using provided language preference: {user_language}")
         
         # Step 3: Transcribe audio using existing ASR pipeline
         try:
@@ -100,29 +115,82 @@ async def voice_search_campaigns(
             logger.error(f"ASR error: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Speech recognition failed: {str(e)}")
         
-        # Step 4: Search campaigns based on transcribed text
+        # Step 4: Search campaigns based on transcribed text AND context
         search_query = transcribed_text.lower().strip()
         
-        campaigns = db.query(Campaign).filter(
-            Campaign.status == "active"
-        ).filter(
-            (Campaign.title.ilike(f"%{search_query}%")) |
-            (Campaign.description.ilike(f"%{search_query}%"))
-        ).limit(5).all()
+        # Enhance search with context awareness
+        context_aware_response = False
+        selected_campaign = None
+        
+        # Check if user is viewing a specific campaign and command relates to it
+        if context_data and context_data.get('view') == 'detail':
+            selected_campaign_data = context_data.get('selected_campaign')
+            if selected_campaign_data:
+                campaign_id = selected_campaign_data.get('id')
+                
+                # Handle context-aware commands like "donate to this campaign"
+                context_keywords = ['this', 'current', 'shown', 'displayed', 'selected']
+                if any(keyword in search_query for keyword in context_keywords):
+                    # User is referring to the currently viewed campaign
+                    selected_campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+                    if selected_campaign:
+                        context_aware_response = True
+                        logger.info(f"Context-aware: User referring to campaign {campaign_id}")
+        
+        # Perform search
+        if context_aware_response and selected_campaign:
+            # User is asking about the currently viewed campaign
+            campaigns = [selected_campaign]
+            logger.info(f"Using context: Campaign '{selected_campaign.title}'")
+        else:
+            # Regular search across all campaigns
+            campaigns = db.query(Campaign).filter(
+                Campaign.status == "active"
+            ).filter(
+                (Campaign.title.ilike(f"%{search_query}%")) |
+                (Campaign.description.ilike(f"%{search_query}%"))
+            ).limit(5).all()
         
         logger.info(f"Found {len(campaigns)} campaigns matching '{search_query}'")
         
         # Step 5: Generate text response
         if campaigns:
-            if user_language == "am":
-                response_text = f"ለ'{search_query}' {len(campaigns)} ዘመቻዎች አገኘሁ:\n\n"
+            # Check if this is a context-aware response
+            if context_aware_response and len(campaigns) == 1:
+                campaign = campaigns[0]
+                
+                # Generate response about the specific campaign
+                if 'donate' in search_query or 'give' in search_query or 'contribute' in search_query:
+                    if user_language == "am":
+                        response_text = f"በ{campaign.title} ላይ ለመለገስ፣ መለገስ ቁልፍን ይጫኑ።\n\n"
+                        response_text += f"ግብ: KES {campaign.goal_amount:,}\n"
+                        response_text += f"የተሰበሰበ: KES {campaign.raised_amount:,}"
+                    else:
+                        response_text = f"To donate to {campaign.title}, tap the Donate button.\n\n"
+                        response_text += f"Goal: KES {campaign.goal_amount:,}\n"
+                        response_text += f"Raised: KES {campaign.raised_amount:,}"
+                elif 'detail' in search_query or 'info' in search_query or 'about' in search_query:
+                    if user_language == "am":
+                        response_text = f"{campaign.title}\n\n{campaign.description[:200]}"
+                    else:
+                        response_text = f"{campaign.title}\n\n{campaign.description[:200]}"
+                else:
+                    # Generic response about the campaign
+                    if user_language == "am":
+                        response_text = f"እርስዎ {campaign.title} እየተመለከቱ ነው።"
+                    else:
+                        response_text = f"You're viewing {campaign.title}."
             else:
-                response_text = f"I found {len(campaigns)} campaigns for '{search_query}':\n\n"
-            
-            for i, campaign in enumerate(campaigns, 1):
-                response_text += f"{i}. {campaign.title}\n"
-                if campaign.goal_amount:
-                    response_text += f"   Goal: KES {campaign.goal_amount:,}\n"
+                # Regular search results
+                if user_language == "am":
+                    response_text = f"ለ'{search_query}' {len(campaigns)} ዘመቻዎች አገኘሁ:\n\n"
+                else:
+                    response_text = f"I found {len(campaigns)} campaigns for '{search_query}':\n\n"
+                
+                for i, campaign in enumerate(campaigns, 1):
+                    response_text += f"{i}. {campaign.title}\n"
+                    if campaign.goal_amount:
+                        response_text += f"   Goal: KES {campaign.goal_amount:,}\n"
         else:
             if user_language == "am":
                 response_text = f"ይቅርታ፣ ለ'{search_query}' ምንም ዘመቻ አላገኘሁም። እባክዎ እንደገና ይሞክሩ።"
@@ -178,6 +246,28 @@ async def voice_search_campaigns(
             "audio_url": audio_url if tts_success else None
         }
         
+        # LAB 9 Part 4: Track voice search event
+        try:
+            user_record = db.query(User).filter(User.telegram_user_id == user_id).first()
+            if user_record:
+                session_id = str(uuid.uuid4())
+                ConversationAnalytics.track_event(
+                    db=db,
+                    user_id=user_record.id,
+                    session_id=session_id,
+                    event_type="voice_search",
+                    conversation_state="miniapp_search",
+                    current_step="search_completed",
+                    metadata={
+                        "query": search_query,
+                        "results_count": len(campaigns),
+                        "context_aware": context_aware_response,
+                        "tts_success": tts_success
+                    }
+                )
+        except Exception as analytics_error:
+            logger.error(f"Analytics tracking failed: {analytics_error}")
+        
         logger.info(f"Voice search complete: {len(campaigns)} results, TTS: {tts_success}")
         
         return JSONResponse(content=response_data)
@@ -186,6 +276,28 @@ async def voice_search_campaigns(
         raise
     except Exception as e:
         logger.error(f"Voice search error: {str(e)}", exc_info=True)
+        
+        # LAB 9 Part 4: Track error
+        try:
+            db = next(get_db())
+            user_record = db.query(User).filter(User.telegram_user_id == user_id).first()
+            if user_record:
+                session_id = str(uuid.uuid4())
+                ConversationAnalytics.track_event(
+                    db=db,
+                    user_id=user_record.id,
+                    session_id=session_id,
+                    event_type="error_occurred",
+                    conversation_state="miniapp_search",
+                    current_step="error",
+                    metadata={
+                        "error_type": type(e).__name__,
+                        "error_message": str(e)
+                    }
+                )
+        except Exception as analytics_error:
+            logger.error(f"Analytics tracking failed: {analytics_error}")
+        
         raise HTTPException(status_code=500, detail=f"Voice search failed: {str(e)}")
         
     finally:
@@ -408,25 +520,32 @@ def _classify_analytics_query(text: str) -> str:
 async def voice_donate(
     audio: UploadFile = File(...),
     user_id: str = Form(...),
-    campaign_id: Optional[int] = Form(None)
+    campaign_id: Optional[int] = Form(None),
+    context: Optional[str] = Form(None),  # Voice Ledger: Accept context
+    user_language: Optional[str] = Form("en")  # Language preference
 ):
     """
-    Process voice donation command.
+    Process voice donation command with preference learning.
+    Supports Amharic via AddisAI.
     
     Example: "Donate 500 shillings" or "አምስት መቶ ብር ለግስ"
+    
+    Lab 9 Part 3: Auto-learns payment preferences from donations
     
     Args:
         audio: Audio file
         user_id: Telegram user ID
         campaign_id: Optional campaign ID if context is known
+        context: Optional donation context (amount, payment, step)
+        user_language: User's language preference ('en' or 'am')
         
     Returns:
-        JSON with donation intent and confirmation
+        JSON with donation intent, confirmation, and suggested defaults
     """
     temp_audio_path = None
     
     try:
-        logger.info(f"Voice donation request from user {user_id}")
+        logger.info(f"Voice donation request from user {user_id}, lang: {user_language}")
         
         # Save audio
         with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
@@ -434,9 +553,27 @@ async def voice_donate(
             temp_file.write(content)
             temp_audio_path = temp_file.name
         
-        # Get user language
+        # Get user language (prefer form parameter over database)
         db = next(get_db())
-        user_language = get_user_language_preference(user_id) or "en"
+        if not user_language or user_language == "en":
+            user_language = get_user_language_preference(user_id) or "en"
+        
+        # Lab 9 Part 3: Get user preferences for suggestions
+        from voice.conversation.preferences import PreferenceManager
+        from database.models import User
+        
+        user = db.query(User).filter(User.telegram_id == user_id).first()
+        suggested_payment = None
+        suggested_amount = None
+        
+        if user:
+            suggested_payment = PreferenceManager.get_preference(user.id, "payment_provider", db)
+            suggested_amount_str = PreferenceManager.get_preference(user.id, "donation_amount", db)
+            if suggested_amount_str:
+                try:
+                    suggested_amount = int(suggested_amount_str)
+                except ValueError:
+                    pass
         
         # Transcribe
         transcription_result = transcribe_audio(
@@ -484,6 +621,27 @@ async def voice_donate(
             audio_filename = Path(audio_path).name
             audio_url = f"/api/voice/audio/{audio_filename}"
         
+        # LAB 9 Part 4: Track voice donation attempt
+        try:
+            if user:
+                session_id = str(uuid.uuid4())
+                ConversationAnalytics.track_event(
+                    db=db,
+                    user_id=user.id,
+                    session_id=session_id,
+                    event_type="voice_donation",
+                    conversation_state="miniapp_donation",
+                    current_step="amount_recognized",
+                    metadata={
+                        "amount": amount,
+                        "campaign_id": campaign_id,
+                        "suggested_payment": suggested_payment,
+                        "suggested_amount": suggested_amount
+                    }
+                )
+        except Exception as analytics_error:
+            logger.error(f"Analytics tracking failed: {analytics_error}")
+        
         return JSONResponse(content={
             "success": True,
             "amount": amount,
@@ -492,11 +650,36 @@ async def voice_donate(
             "response_text": response_text,
             "audio_url": audio_url,
             "transcription": transcribed_text,
-            "requires_confirmation": True
+            "requires_confirmation": True,
+            # Lab 9 Part 3: Include preference suggestions
+            "suggested_payment": suggested_payment,
+            "suggested_amount": suggested_amount
         })
         
     except Exception as e:
         logger.error(f"Voice donation error: {str(e)}", exc_info=True)
+        
+        # LAB 9 Part 4: Track error
+        try:
+            db = next(get_db())
+            user_record = db.query(User).filter(User.telegram_user_id == user_id).first()
+            if user_record:
+                session_id = str(uuid.uuid4())
+                ConversationAnalytics.track_event(
+                    db=db,
+                    user_id=user_record.id,
+                    session_id=session_id,
+                    event_type="error_occurred",
+                    conversation_state="miniapp_donation",
+                    current_step="error",
+                    metadata={
+                        "error_type": type(e).__name__,
+                        "error_message": str(e)
+                    }
+                )
+        except Exception as analytics_error:
+            logger.error(f"Analytics tracking failed: {analytics_error}")
+        
         raise HTTPException(status_code=500, detail=str(e))
         
     finally:
@@ -852,3 +1035,237 @@ async def voice_dictate_text(
                 os.remove(temp_audio_path)
             except:
                 pass
+
+
+@router.post("/wizard-step")
+async def voice_wizard_step(
+    audio: UploadFile = File(...),
+    field_name: str = Form(...),
+    step_number: Optional[int] = Form(None),
+    user_language: Optional[str] = Form("en")
+):
+    """
+    Process voice input for campaign creation wizard with AI suggestions.
+    Supports Amharic via AddisAI for ASR.
+    
+    This endpoint:
+    1. Transcribes the audio (supports Amharic)
+    2. Validates the input for the specific field
+    3. Generates AI suggestions for improvement (title, description only)
+    4. Returns transcription + suggestion
+    
+    Args:
+        audio: Audio file from wizard
+        field_name: Field being filled (title, description, category, goal, deadline)
+        step_number: Current step number (1-5)
+        user_language: User's language preference ('en' or 'am')
+        
+    Returns:
+        JSON with transcription and optional AI suggestion
+    """
+    temp_audio_path = None
+    
+    try:
+        logger.info(f"Voice wizard step for field: {field_name}, step: {step_number}, lang: {user_language}")
+        
+        # Save audio
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
+            content = await audio.read()
+            temp_file.write(content)
+            temp_audio_path = temp_file.name
+        
+        # Transcribe with user's language preference
+        transcription_result = transcribe_audio(
+            temp_audio_path,
+            language=user_language,
+            user_preference=user_language
+        )
+        
+        transcribed_text = transcription_result.get("text", "").strip()
+        logger.info(f"Wizard transcription ({field_name}): '{transcribed_text}'")
+        
+        if not transcribed_text:
+            return JSONResponse(content={
+                "success": False,
+                "error": "no_transcription",
+                "transcription": "",
+                "suggestion": None
+            })
+        
+        # Generate AI suggestions based on field
+        suggestion = None
+        
+        if field_name == "title":
+            # Check title length and quality
+            if len(transcribed_text) > 60:
+                suggestion = f"Consider shortening: \"{transcribed_text[:50]}...\""
+            elif len(transcribed_text.split()) < 3:
+                suggestion = "Add more detail to make the title clearer (e.g., 'Clean Water for Rural Schools in Addis')"
+            elif not any(char.isupper() for char in transcribed_text):
+                # Suggest title case
+                suggestion = transcribed_text.title()
+        
+        elif field_name == "description":
+            word_count = len(transcribed_text.split())
+            if word_count < 20:
+                suggestion = "Add more details: What problem are you solving? Who will benefit? What's your plan?"
+            elif word_count > 200:
+                suggestion = "Consider breaking this into paragraphs for better readability"
+            
+            # Check for key elements
+            has_problem = any(word in transcribed_text.lower() for word in ['need', 'problem', 'lack', 'challenge'])
+            has_solution = any(word in transcribed_text.lower() for word in ['will', 'plan', 'build', 'provide', 'create'])
+            has_beneficiaries = any(word in transcribed_text.lower() for word in ['people', 'students', 'families', 'children', 'community'])
+            
+            if not (has_problem and has_solution):
+                suggestion = "Try including: 1) What problem you're solving, 2) Your solution, 3) Who benefits"
+        
+        elif field_name == "goal":
+            # Parse amount
+            import re
+            numbers = re.findall(r'\d+', transcribed_text)
+            if numbers:
+                amount = int(''.join(numbers))
+                if amount < 1000:
+                    suggestion = "This seems quite low. Consider if this is enough to achieve your goal."
+                elif amount > 1000000:
+                    suggestion = "This is a very large goal. Consider breaking it into phases."
+        
+        elif field_name == "category":
+            # No suggestions needed - will be matched on frontend
+            pass
+        
+        elif field_name == "deadline":
+            # Parse date mentions
+            if any(word in transcribed_text.lower() for word in ['tomorrow', 'next week', 'few days']):
+                suggestion = "Most successful campaigns run for 30-60 days. Consider a longer timeline."
+        
+        # Generate TTS confirmation (dual delivery like Telegram bot)
+        confirmation_text = f"I heard: {transcribed_text}"
+        if suggestion:
+            confirmation_text += f". {suggestion}"
+        
+        success_tts, audio_path, error_tts = await tts_provider.text_to_speech(
+            text=confirmation_text,
+            language=user_language
+        )
+        
+        audio_url = None
+        if success_tts and audio_path:
+            audio_filename = os.path.basename(audio_path)
+            audio_url = f"/tts_cache/{audio_filename}"
+        
+        return JSONResponse(content={
+            "success": True,
+            "transcription": transcribed_text,
+            "suggestion": suggestion,
+            "field_name": field_name,
+            "audio_url": audio_url
+        })
+        
+    except Exception as e:
+        logger.error(f"Voice wizard error: {str(e)}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": str(e),
+                "transcription": "",
+                "suggestion": None
+            }
+        )
+        
+    finally:
+        if temp_audio_path and os.path.exists(temp_audio_path):
+            try:
+                os.remove(temp_audio_path)
+            except:
+                pass
+
+
+class TTSRequest(BaseModel):
+    text: str
+    language: str = "en"
+
+
+class LanguagePreferenceRequest(BaseModel):
+    user_id: str
+    language: str
+
+
+@router.post("/set-language")
+async def set_language_preference(request: LanguagePreferenceRequest):
+    """
+    Save user's language preference to database.
+    Called when user toggles language in miniapp.
+    
+    Args:
+        request: LanguagePreferenceRequest with user_id and language
+        
+    Returns:
+        JSON confirmation
+    """
+    try:
+        db = next(get_db())
+        
+        # Find or create user
+        user = db.query(User).filter(User.telegram_user_id == request.user_id).first()
+        
+        if user:
+            user.language_preference = request.language
+            db.commit()
+            logger.info(f"Updated language preference for user {request.user_id}: {request.language}")
+        else:
+            # Anonymous user - can't save to database, localStorage only
+            logger.info(f"Anonymous user {request.user_id} language preference: {request.language} (localStorage only)")
+        
+        return JSONResponse(content={
+            "success": True,
+            "language": request.language,
+            "saved_to_db": user is not None
+        })
+        
+    except Exception as e:
+        logger.error(f"Failed to save language preference: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
+
+
+@router.post("/tts")
+async def text_to_speech_miniapp(request: TTSRequest):
+    """
+    Generate TTS audio for miniapps (supports Amharic via AddisAI).
+    
+    Args:
+        request: TTSRequest with text and language
+        
+    Returns:
+        JSON with audio_url
+    """
+    try:
+        logger.info(f"TTS request: lang={request.language}, text='{request.text[:50]}...'")
+        
+        # Generate TTS using TTSProvider (handles AddisAI for Amharic)
+        success, audio_path, error = await tts_provider.text_to_speech(
+            text=request.text,
+            language=request.language
+        )
+        
+        if not success or not audio_path:
+            raise HTTPException(status_code=500, detail=error or "TTS generation failed")
+        
+        # Return URL to audio file
+        audio_filename = os.path.basename(audio_path)
+        audio_url = f"/tts_cache/{audio_filename}"
+        
+        return JSONResponse(content={
+            "success": True,
+            "audio_url": audio_url,
+            "language": request.language
+        })
+        
+    except Exception as e:
+        logger.error(f"TTS error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

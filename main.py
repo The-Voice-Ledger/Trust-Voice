@@ -15,7 +15,7 @@ import logging
 load_dotenv()
 
 # Import routers
-from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin, auth, registrations, ngo_registrations, miniapp_voice
+from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin, auth, registrations, ngo_registrations, miniapp_voice, analytics
 
 # Configure logging
 logging.basicConfig(
@@ -45,17 +45,18 @@ app.add_middleware(
 # Register Routers
 # ============================================
 
-app.include_router(campaigns.router)
-app.include_router(donors.router)
-app.include_router(ngos.router)
-app.include_router(ngo_registrations.router)
-app.include_router(donations.router)
-app.include_router(payouts.router)
-app.include_router(webhooks.router)
-app.include_router(admin.router)
-app.include_router(auth.router)
-app.include_router(registrations.router)
-app.include_router(miniapp_voice.router)
+app.include_router(campaigns.router, prefix="/api")
+app.include_router(donors.router, prefix="/api")
+app.include_router(ngos.router, prefix="/api")
+app.include_router(ngo_registrations.router, prefix="/api")
+app.include_router(donations.router, prefix="/api")
+app.include_router(payouts.router, prefix="/api")
+app.include_router(webhooks.router)  # Keep webhooks at root (external callbacks)
+app.include_router(admin.router, prefix="/api")
+app.include_router(auth.router, prefix="/api")
+app.include_router(registrations.router, prefix="/api")
+app.include_router(miniapp_voice.router, prefix="/api")
+app.include_router(analytics.router, prefix="/api")
 
 # ============================================
 # Mount Frontend Static Files

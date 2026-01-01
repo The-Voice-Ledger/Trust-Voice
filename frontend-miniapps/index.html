@@ -199,8 +199,17 @@
                     </svg>
                 </div>
                 <div class="app-info">
-                    <div class="app-title">Register NGO</div>
-                    <div class="app-description">Submit your organization for verification</div>
+                    <div class="app-title">Register NGO 🎤</div>
+                    <div class="app-description">Voice-guided organization registration</div>
+                </div>
+                <div class="app-arrow">›</div>
+            </div>
+            
+            <div class="app-card" onclick="openApp('createcampaign')">
+                <div class="app-icon">✨</div>
+                <div class="app-info">
+                    <div class="app-title">Create Campaign 🎤</div>
+                    <div class="app-description">Voice-guided campaign creation wizard</div>
                 </div>
                 <div class="app-arrow">›</div>
             </div>
@@ -236,7 +245,8 @@
                 'campaigns': `${baseUrl}/campaigns.html`,
                 'admin': `${baseUrl}/admin.html`,
                 'donate': `${baseUrl}/donate.html`,
-                'ngoregister': `${baseUrl}/ngo-register.html`
+                'ngoregister': `${baseUrl}/ngo-register-wizard.html`,
+                'createcampaign': `${baseUrl}/create-campaign-wizard.html`
             };
             
             const url = appUrls[appName];

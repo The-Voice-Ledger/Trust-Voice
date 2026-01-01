@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Your NGO - Voice Wizard</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="js/voice-utils.js?v=4"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 24px;
+        }
+        
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.95;
+            line-height: 1.5;
+        }
+        
+        .wizard-card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .progress-bar {
+            background: #e0e0e0;
+            height: 6px;
+            border-radius: 3px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            transition: width 0.3s;
+        }
+        
+        .progress-text {
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 24px;
+        }
+        
+        .step {
+            display: none;
+        }
+        
+        .step.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .step-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .step-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .voice-prompt {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .voice-prompt-icon {
+            font-size: 24px;
+        }
+        
+        .voice-prompt-text {
+            flex: 1;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+        
+        .voice-button-large {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            margin-bottom: 16px;
+        }
+        
+        .voice-button-large:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+        
+        .voice-button-large.recording {
+            background: #ef5350;
+            animation: recordPulse 1.5s infinite;
+        }
+        
+        @keyframes recordPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(239, 83, 80, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 15px rgba(239, 83, 80, 0);
+            }
+        }
+        
+        .voice-button-large svg {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .or-divider {
+            text-align: center;
+            margin: 16px 0;
+            color: #999;
+            font-size: 14px;
+            position: relative;
+        }
+        
+        .or-divider::before,
+        .or-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: #ddd;
+        }
+        
+        .or-divider::before { left: 0; }
+        .or-divider::after { right: 0; }
+        
+        .manual-input {
+            margin-bottom: 16px;
+        }
+        
+        .manual-input label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .manual-input input,
+        .manual-input textarea,
+        .manual-input select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .manual-input input:focus,
+        .manual-input textarea:focus,
+        .manual-input select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .manual-input textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .hint {
+            font-size: 13px;
+            color: #999;
+            margin-top: 6px;
+        }
+        
+        .voice-transcription {
+            background: #f5f5f5;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+            animation: slideIn 0.3s;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .voice-transcription.show {
+            display: block;
+        }
+        
+        .voice-transcription-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .voice-transcription-text {
+            font-size: 15px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .ai-suggestion {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            display: none;
+        }
+        
+        .ai-suggestion.show {
+            display: block;
+            animation: slideIn 0.3s;
+        }
+        
+        .ai-suggestion-label {
+            font-size: 12px;
+            color: #856404;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        
+        .ai-suggestion-text {
+            font-size: 14px;
+            color: #856404;
+        }
+        
+        .navigation-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .btn-secondary {
+            flex: 1;
+            background: #e0e0e0;
+            color: #666;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+        
+        .btn-primary {
+            flex: 2;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .success-card {
+            display: none;
+            text-align: center;
+        }
+        
+        .success-card.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        .success-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        .success-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #4CAF50;
+            margin-bottom: 12px;
+        }
+        
+        .success-message {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading-spinner.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="window.location.href='index.html'">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Back
+            </button>
+            <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                <h1 style="margin: 0;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 8px;">
+                        <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
+                        <path d="M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/>
+                    </svg>
+                    Register Your NGO
+                </h1>
+                <button id="langToggle" onclick="toggleLanguage()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 4px; transition: all 0.3s; margin-left: auto;">
+                    🌐 EN
+                </button>
+            </div>
+            </h1>
+            <p class="subtitle">Use your voice to quickly register your organization on TrustVoice</p>
+        </div>
+        
+        <div class="wizard-card">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Step 1 of 6</div>
+            
+            <!-- Step 1: Organization Name -->
+            <div class="step active" id="step1">
+                <div class="step-title">Organization Name</div>
+                <div class="step-description">What is the official name of your organization?</div>
+                
+                <div class="voice-prompt">
+                    <div class="voice-prompt-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                        </svg>
+                    </div>
+                    <div class="voice-prompt-text">
+                        <strong>Voice Prompt:</strong><br>
+                        "Say your organization's name clearly"
+                    </div>
+                </div>
+                
+                <button class="voice-button-large" id="voiceBtn1" onclick="startVoiceInput('organization_name', 1)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                    <span id="voiceBtnText1">Tap to Speak</span>
+                </button>
+                
+                <div class="voice-transcription" id="transcription1">
+                    <div class="voice-transcription-label">
+                        <span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="23"></line>
+                                <line x1="8" y1="23" x2="16" y2="23"></line>
+                            </svg>
+                        </span>
+                        <span>You said:</span>
+                    </div>
+                    <div class="voice-transcription-text" id="transcriptionText1"></div>
+                    <div class="ai-suggestion" id="suggestion1">
+                        <div class="ai-suggestion-label">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                                <path d="M12 2v2m0 16v2m8.485-15.485l-1.414 1.414M4.929 4.929L3.515 3.515M22 12h-2M4 12H2m16.071 7.071l-1.414-1.414M4.929 19.071l-1.414 1.414"/>
+                                <circle cx="12" cy="12" r="5"/>
+                            </svg>
+                            AI Suggestion
+                        </div>
+                        <div class="ai-suggestion-text" id="suggestionText1"></div>
+                    </div>
+                </div>
+                
+                <div class="or-divider">or type manually</div>
+                
+                <div class="manual-input">
+                    <label>Organization Name</label>
+                    <input type="text" id="organization_name" placeholder="e.g., Education for All Foundation">
+                    <div class="hint">Official registered name</div>
+                </div>
+                
+                <div class="navigation-buttons">
+                    <button class="btn-primary" onclick="nextStep(2)">Next Step →</button>
+                </div>
+            </div>
+            
+            <!-- Step 2: Description & Mission -->
+            <div class="step" id="step2">
+                <div class="step-title">Organization Description</div>
+                <div class="step-description">Tell us about your organization's mission and what you do.</div>
+                
+                <div class="voice-prompt">
+                    <div class="voice-prompt-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                        </svg>
+                    </div>
+                    <div class="voice-prompt-text">
+                        <strong>Voice Prompt:</strong><br>
+                        "Describe your organization's mission and activities"
+                    </div>
+                </div>
+                
+                <button class="voice-button-large" id="voiceBtn2" onclick="startVoiceInput('description', 2)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                    <span id="voiceBtnText2">Tap to Speak</span>
+                </button>
+                
+                <div class="voice-transcription" id="transcription2">
+                    <div class="voice-transcription-label">
+                        <span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="23"></line>
+                                <line x1="8" y1="23" x2="16" y2="23"></line>
+                            </svg>
+                        </span>
+                        <span>You said:</span>
+                    </div>
+                    <div class="voice-transcription-text" id="transcriptionText2"></div>
+                    <div class="ai-suggestion" id="suggestion2">
+                        <div class="ai-suggestion-label">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                                <path d="M12 2v2m0 16v2m8.485-15.485l-1.414 1.414M4.929 4.929L3.515 3.515M22 12h-2M4 12H2m16.071 7.071l-1.414-1.414M4.929 19.071l-1.414 1.414"/>
+                                <circle cx="12" cy="12" r="5"/>
+                            </svg>
+                            AI Suggestion
+                        </div>
+                        <div class="ai-suggestion-text" id="suggestionText2"></div>
+                    </div>
+                </div>
+                
+                <div class="or-divider">or type manually</div>
+                
+                <div class="manual-input">
+                    <label>Description</label>
+                    <textarea id="description" placeholder="We provide education and resources to underserved communities..."></textarea>
+                    <div class="hint">Describe your mission, activities, and impact</div>
+                </div>
+                
+                <div class="navigation-buttons">
+                    <button class="btn-secondary" onclick="previousStep(1)">← Back</button>
+                    <button class="btn-primary" onclick="nextStep(3)">Next Step →</button>
+                </div>
+            </div>
+            
+            <!-- Step 3: Category & Focus Area -->
+            <div class="step" id="step3">
+                <div class="step-title">Focus Area</div>
+                <div class="step-description">What is your organization's primary focus area?</div>
+                
+                <div class="voice-prompt">
+                    <div class="voice-prompt-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                        </svg>
+                    </div>
+                    <div class="voice-prompt-text">
+                        <strong>Voice Prompt:</strong><br>
+                        "Say your focus area: Education, Health, Water, Environment, Food Relief, or Community Development"
+                    </div>
+                </div>
+                
+                <button class="voice-button-large" id="voiceBtn3" onclick="startVoiceInput('category', 3)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                    <span id="voiceBtnText3">Tap to Speak</span>
+                </button>
+                
+                <div class="voice-transcription" id="transcription3">
+                    <div class="voice-transcription-label">
+                        <span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="23"></line>
+                                <line x1="8" y1="23" x2="16" y2="23"></line>
+                            </svg>
+                        </span>
+                        <span>You said:</span>
+                    </div>
+                    <div class="voice-transcription-text" id="transcriptionText3"></div>
+                </div>
+                
+                <div class="or-divider">or select manually</div>
+                
+                <div class="manual-input">
+                    <label>Focus Area</label>
+                    <select id="category">
+                        <option value="">Select focus area...</option>
+                        <option value="education">Education</option>
+                        <option value="health">Healthcare</option>
+                        <option value="water">Clean Water</option>
+                        <option value="environment">Environment</option>
+                        <option value="food">Food Relief</option>
+                        <option value="community">Community Development</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="navigation-buttons">
+                    <button class="btn-secondary" onclick="previousStep(2)">← Back</button>
+                    <button class="btn-primary" onclick="nextStep(4)">Next Step →</button>
+                </div>
+            </div>
+            
+            <!-- Step 4: Contact Email -->
+            <div class="step" id="step4">
+                <div class="step-title">Contact Email</div>
+                <div class="step-description">What is your organization's primary contact email?</div>
+                
+                <div class="voice-prompt">
+                    <div class="voice-prompt-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                        </svg>
+                    </div>
+                    <div class="voice-prompt-text">
+                        <strong>Voice Prompt:</strong><br>
+                        "Say your email address slowly and clearly"
+                    </div>
+                </div>
+                
+                <button class="voice-button-large" id="voiceBtn4" onclick="startVoiceInput('email', 4)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                    <span id="voiceBtnText4">Tap to Speak</span>
+                </button>
+                
+                <div class="voice-transcription" id="transcription4">
+                    <div class="voice-transcription-label">
+                        <span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="23"></line>
+                                <line x1="8" y1="23" x2="16" y2="23"></line>
+                            </svg>
+                        </span>
+                        <span>You said:</span>
+                    </div>
+                    <div class="voice-transcription-text" id="transcriptionText4"></div>
+                    <div class="ai-suggestion" id="suggestion4">
+                        <div class="ai-suggestion-label">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                                <path d="M12 2v2m0 16v2m8.485-15.485l-1.414 1.414M4.929 4.929L3.515 3.515M22 12h-2M4 12H2m16.071 7.071l-1.414-1.414M4.929 19.071l-1.414 1.414"/>
+                                <circle cx="12" cy="12" r="5"/>
+                            </svg>
+                            AI Suggestion
+                        </div>
+                        <div class="ai-suggestion-text" id="suggestionText4"></div>
+                    </div>
+                </div>
+                
+                <div class="or-divider">or type manually</div>
+                
+                <div class="manual-input">
+                    <label>Email Address</label>
+                    <input type="email" id="email" placeholder="contact@yourorg.org">
+                    <div class="hint">This will be your primary contact email</div>
+                </div>
+                
+                <div class="navigation-buttons">
+                    <button class="btn-secondary" onclick="previousStep(3)">← Back</button>
+                    <button class="btn-primary" onclick="nextStep(5)">Next Step →</button>
+                </div>
+            </div>
+            
+            <!-- Step 5: Country & Location -->
+            <div class="step" id="step5">
+                <div class="step-title">Location</div>
+                <div class="step-description">Where is your organization based?</div>
+                
+                <div class="voice-prompt">
+                    <div class="voice-prompt-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                        </svg>
+                    </div>
+                    <div class="voice-prompt-text">
+                        <strong>Voice Prompt:</strong><br>
+                        "Say your country and region"
+                    </div>
+                </div>
+                
+                <button class="voice-button-large" id="voiceBtn5" onclick="startVoiceInput('location', 5)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                    <span id="voiceBtnText5">Tap to Speak</span>
+                </button>
+                
+                <div class="voice-transcription" id="transcription5">
+                    <div class="voice-transcription-label">
+                        <span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="23"></line>
+                                <line x1="8" y1="23" x2="16" y2="23"></line>
+                            </svg>
+                        </span>
+                        <span>You said:</span>
+                    </div>
+                    <div class="voice-transcription-text" id="transcriptionText5"></div>
+                </div>
+                
+                <div class="or-divider">or type manually</div>
+                
+                <div class="manual-input">
+                    <label>Country</label>
+                    <input type="text" id="country" placeholder="e.g., Kenya">
+                    <div class="hint">Where is your organization registered?</div>
+                </div>
+                
+                <div class="manual-input">
+                    <label>Region/State (Optional)</label>
+                    <input type="text" id="region" placeholder="e.g., Nairobi">
+                </div>
+                
+                <div class="navigation-buttons">
+                    <button class="btn-secondary" onclick="previousStep(4)">← Back</button>
+                    <button class="btn-primary" onclick="nextStep(6)">Next Step →</button>
+                </div>
+            </div>
+            
+            <!-- Step 6: Review & Submit -->
+            <div class="step" id="step6">
+                <div class="step-title">Review Your Information</div>
+                <div class="step-description">Please review your details before submitting.</div>
+                
+                <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="margin-bottom: 12px;">
+                        <strong>Organization:</strong><br>
+                        <span id="reviewName"></span>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <strong>Description:</strong><br>
+                        <span id="reviewDescription"></span>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <strong>Focus Area:</strong><br>
+                        <span id="reviewCategory"></span>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <strong>Email:</strong><br>
+                        <span id="reviewEmail"></span>
+                    </div>
+                    <div>
+                        <strong>Location:</strong><br>
+                        <span id="reviewLocation"></span>
+                    </div>
+                </div>
+                
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner"></div>
+                    <div>Submitting your registration...</div>
+                </div>
+                
+                <div class="navigation-buttons" id="submitButtons">
+                    <button class="btn-secondary" onclick="previousStep(5)">← Back</button>
+                    <button class="btn-primary" onclick="submitRegistration()">Submit Registration</button>
+                </div>
+            </div>
+            
+            <!-- Success Message -->
+            <div class="success-card" id="successCard">
+                <div class="success-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                </div>
+                <div class="success-title">Registration Submitted!</div>
+                <div class="success-message">
+                    Thank you for registering with TrustVoice! We'll review your application and send you a confirmation email within 2-3 business days.
+                </div>
+                <button class="btn-primary" onclick="window.location.href='index.html'">Return to Home</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        
+        const API_BASE = window.location.origin.replace(':8001', ':8001');
+        let currentStep = 1;
+        const totalSteps = 6;
+        let mediaRecorders = {};
+        let audioChunks = {};
+        
+        // Form data storage
+        const formData = {
+            organization_name: '',
+            description: '',
+            category: '',
+            email: '',
+            country: '',
+            region: ''
+        };
+        
+        // Update progress bar
+        function updateProgress() {
+            const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `Step ${currentStep} of ${totalSteps}`;
+        }
+        
+        // Navigate to next step
+        function nextStep(stepNumber) {
+            // Save current field value
+            const fields = ['organization_name', 'description', 'category', 'email', 'country'];
+            if (currentStep <= fields.length) {
+                const fieldId = fields[currentStep - 1];
+                const input = document.getElementById(fieldId);
+                if (input) {
+                    formData[fieldId] = input.value;
+                }
+                
+                // Also save region if on step 5
+                if (currentStep === 5) {
+                    const regionInput = document.getElementById('region');
+                    if (regionInput) {
+                        formData.region = regionInput.value;
+                    }
+                }
+            }
+            
+            // Update review section if going to step 6
+            if (stepNumber === 6) {
+                document.getElementById('reviewName').textContent = formData.organization_name || 'Not provided';
+                document.getElementById('reviewDescription').textContent = formData.description || 'Not provided';
+                document.getElementById('reviewCategory').textContent = formData.category || 'Not provided';
+                document.getElementById('reviewEmail').textContent = formData.email || 'Not provided';
+                document.getElementById('reviewLocation').textContent = 
+                    (formData.country || 'Not provided') + 
+                    (formData.region ? ', ' + formData.region : '');
+            }
+            
+            // Navigate
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            currentStep = stepNumber;
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            updateProgress();
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Navigate to previous step
+        function previousStep(stepNumber) {
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            currentStep = stepNumber;
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            updateProgress();
+            
+            // Restore saved values
+            const fields = ['organization_name', 'description', 'category', 'email', 'country', 'region'];
+            fields.forEach(field => {
+                const input = document.getElementById(field);
+                if (input && formData[field]) {
+                    input.value = formData[field];
+                }
+            });
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Voice input handler
+        async function startVoiceInput(fieldName, stepNum) {
+            const voiceBtn = document.getElementById(`voiceBtn${stepNum}`);
+            const voiceBtnText = document.getElementById(`voiceBtnText${stepNum}`);
+            
+            if (mediaRecorders[stepNum] && mediaRecorders[stepNum].state === 'recording') {
+                // Stop recording
+                mediaRecorders[stepNum].stop();
+                voiceBtn.classList.remove('recording');
+                voiceBtnText.textContent = 'Tap to Speak';
+            } else {
+                // Start recording
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorders[stepNum] = new MediaRecorder(stream);
+                    audioChunks[stepNum] = [];
+                    
+                    mediaRecorders[stepNum].ondataavailable = (event) => {
+                        audioChunks[stepNum].push(event.data);
+                    };
+                    
+                    mediaRecorders[stepNum].onstop = async () => {
+                        const audioBlob = new Blob(audioChunks[stepNum], { type: 'audio/webm' });
+                        
+                        // Voice Ledger: Check for silent audio
+                        const hasSound = await window.VoiceUtils.checkAudioHasSound(audioBlob);
+                        if (!hasSound) {
+                            tg.showAlert('🔇 Silent Audio\n\nNo sound detected. Please:\n• Speak closer to microphone\n• Check microphone isn\'t muted\n• Try again');
+                            stream.getTracks().forEach(track => track.stop());
+                            voiceBtn.classList.remove('recording');
+                            voiceBtnText.textContent = '🎤 Tap to Speak';
+                            return;
+                        }
+                        
+                        await processVoiceInput(audioBlob, fieldName, stepNum);
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    mediaRecorders[stepNum].start();
+                    voiceBtn.classList.add('recording');
+                    voiceBtnText.textContent = '🔴 Recording... Tap to Stop';
+                    
+                    // Speak prompt
+                    speakText(getVoicePrompt(fieldName));
+                    
+                } catch (error) {
+                    console.error('Microphone error:', error);
+                    tg.showAlert('Could not access microphone. Please check permissions.');
+                }
+            }
+        }
+        
+        // Get voice prompt for field
+        function getVoicePrompt(fieldName) {
+            const prompts = {
+                organization_name: 'Say your organization name',
+                description: 'Describe your organization',
+                category: 'Say your focus area',
+                email: 'Say your email address',
+                location: 'Say your country and region'
+            };
+            return prompts[fieldName] || 'Speak now';
+        }
+        
+        // Process voice input
+        async function processVoiceInput(audioBlob, fieldName, stepNum) {
+            // Voice Ledger: Retry logic with exponential backoff
+            const uploadWithRetry = async (retryCount = 0) => {
+                const MAX_RETRIES = 3;
+                const RETRY_DELAYS = [1000, 2000, 4000];
+                
+                try {
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob, 'voice.webm');
+                    formData.append('field_name', fieldName);
+                    formData.append('step_number', stepNum.toString());
+                    formData.append('user_language', window.VoiceUtils.getUserLanguage());
+                    
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 30000);
+                    
+                    const response = await fetch(`${API_BASE}/voice/wizard-step`, {
+                        method: 'POST',
+                        body: formData,
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        if (response.status >= 500) {
+                            throw new window.VoiceUtils.VoiceError('Server error', window.VoiceUtils.VoiceError.SERVER);
+                        } else if (response.status >= 400) {
+                            throw new window.VoiceUtils.VoiceError('Invalid request', window.VoiceUtils.VoiceError.VALIDATION);
+                        }
+                    }
+                    
+                    return await response.json();
+                    
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        throw new window.VoiceUtils.VoiceError('Request timeout', window.VoiceUtils.VoiceError.TIMEOUT);
+                    } else if (error instanceof window.VoiceUtils.VoiceError && error.isRetryable() && retryCount < MAX_RETRIES) {
+                        await new Promise(resolve => setTimeout(resolve, RETRY_DELAYS[retryCount]));
+                        return uploadWithRetry(retryCount + 1);
+                    }
+                    throw error;
+                }
+            };
+            
+            try {
+                const data = await uploadWithRetry();
+                displayVoiceResult(data, fieldName, stepNum);
+            } catch (error) {
+                console.error('Voice processing error:', error);
+                // Voice Ledger: User-friendly error messages
+                if (error instanceof window.VoiceUtils.VoiceError) {
+                    tg.showAlert(error.getUserMessage());
+                } else {
+                    tg.showAlert('❌ Voice Input Failed\n\nPlease try again or type instead.');
+                }
+            }
+        }
+        
+        // Display voice result
+        function displayVoiceResult(data, fieldName, stepNum) {
+            const transcription = data.transcription || '';
+            const suggestion = data.suggestion || '';
+            
+            // Show transcription
+            document.getElementById(`transcription${stepNum}`).classList.add('show');
+            document.getElementById(`transcriptionText${stepNum}`).textContent = transcription;
+            
+            // Fill input field
+            const input = document.getElementById(fieldName);
+            if (input) {
+                input.value = transcription;
+                
+                // Handle category matching
+                if (fieldName === 'category') {
+                    const categories = ['education', 'health', 'water', 'environment', 'food', 'community'];
+                    const lowerTrans = transcription.toLowerCase();
+                    const matched = categories.find(cat => lowerTrans.includes(cat));
+                    if (matched) {
+                        input.value = matched;
+                    }
+                }
+                
+                // Handle location splitting
+                if (fieldName === 'location') {
+                    const parts = transcription.split(',');
+                    document.getElementById('country').value = parts[0].trim();
+                    if (parts[1]) {
+                        document.getElementById('region').value = parts[1].trim();
+                    }
+                }
+            }
+            
+            // Show AI suggestion
+            if (suggestion) {
+                document.getElementById(`suggestion${stepNum}`).classList.add('show');
+                document.getElementById(`suggestionText${stepNum}`).textContent = suggestion;
+            }
+            
+            // Dual delivery: Play TTS audio response
+            if (data.audio_url) {
+                ttsController.play(data.audio_url);
+            }
+        }
+        
+        // Language toggle functions
+        function toggleLanguage() {
+            const currentLang = window.VoiceUtils.getUserLanguage();
+            const newLang = currentLang === 'en' ? 'am' : 'en';
+            window.VoiceUtils.setUserLanguage(newLang);
+            
+            const btn = document.getElementById('langToggle');
+            btn.textContent = newLang === 'en' ? '🌐 EN' : '🌐 አማ';
+            
+            // Save to backend for registered users
+            const userId = tg?.initDataUnsafe?.user?.id || 'guest';
+            if (userId !== 'guest') {
+                fetch(`${API_BASE || ''}/api/voice/set-language`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, language: newLang })
+                }).catch(err => console.error('Failed to save language preference:', err));
+            }
+        }
+        
+        function initLanguage() {
+            const lang = window.VoiceUtils.getUserLanguage();
+            const btn = document.getElementById('langToggle');
+            if (btn) {
+                btn.textContent = lang === 'en' ? '🌐 EN' : '🌐 አማ';
+            }
+        }
+        
+        // TTS using backend API (supports AddisAI for Amharic)
+        const ttsController = new window.VoiceUtils.TTSController(API_BASE);
+        
+        async function speakText(text) {
+            try {
+                const userLang = window.VoiceUtils.getUserLanguage();
+                const response = await fetch(`${API_BASE}/api/voice/tts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        text: text,
+                        language: userLang 
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.audio_url) {
+                        ttsController.play(data.audio_url);
+                    }
+                } else {
+                    console.error('TTS failed:', response.status);
+                }
+            } catch (error) {
+                console.error('TTS error:', error);
+            }
+        }
+        
+        // Submit registration
+        async function submitRegistration() {
+            // Final data collection
+            formData.organization_name = document.getElementById('organization_name').value;
+            formData.description = document.getElementById('description').value;
+            formData.category = document.getElementById('category').value;
+            formData.email = document.getElementById('email').value;
+            formData.country = document.getElementById('country').value;
+            formData.region = document.getElementById('region').value;
+            
+            // Validation
+            if (!formData.organization_name || !formData.email) {
+                tg.showAlert('Please provide at least organization name and email.');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('submitButtons').style.display = 'none';
+            document.getElementById('loadingSpinner').classList.add('show');
+            
+            try {
+                const response = await fetch(`${API_BASE}/ngos/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: formData.organization_name,
+                        description: formData.description,
+                        category: formData.category,
+                        email: formData.email,
+                        country: formData.country,
+                        region: formData.region,
+                        status: 'pending',
+                        telegram_user_id: tg.initDataUnsafe?.user?.id || null
+                    })
+                });
+                
+                if (response.ok) {
+                    // Hide loading
+                    document.getElementById('loadingSpinner').classList.remove('show');
+                    
+                    // Hide step 6, show success
+                    document.getElementById('step6').classList.remove('active');
+                    document.getElementById('successCard').classList.add('show');
+                    
+                    // Haptic feedback
+                    if (tg.HapticFeedback) {
+                        tg.HapticFeedback.notificationOccurred('success');
+                    }
+                    
+                    speakText('Registration submitted successfully! Check your email for confirmation.');
+                } else {
+                    throw new Error('Registration failed');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                document.getElementById('loadingSpinner').classList.remove('show');
+                document.getElementById('submitButtons').style.display = 'flex';
+                tg.showAlert('Failed to submit registration. Please try again.');
+            }
+        }
+        
+        // Initialize
+        initLanguage();
+        updateProgress();
+    </script>
+</body>
+</html>

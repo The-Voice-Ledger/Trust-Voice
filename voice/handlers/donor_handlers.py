@@ -40,6 +40,8 @@ async def handle_search_campaigns(
     """
     Search campaigns by category, location, or keyword.
     
+    LAB 8: Starts conversational search flow for multi-turn refinement.
+    
     Entities:
         - category (optional): education, health, water, environment
         - location (optional): region/city filter
@@ -49,6 +51,41 @@ async def handle_search_campaigns(
     """
     try:
         logger.info(f"Searching campaigns for user {user_id}")
+        
+        # ============================================================
+        # LAB 8: Start conversational search flow
+        # ============================================================
+        from voice.workflows.search_flow import SearchConversation
+        
+        # Use original transcript if available in context, otherwise build from entities
+        query_str = context.get("transcript", "")
+        
+        if not query_str:
+            # Fallback: Build query string from entities
+            query_parts = []
+            if entities.get("category"):
+                query_parts.append(entities["category"])
+            if entities.get("keyword"):
+                query_parts.append(entities["keyword"])
+            if entities.get("location"):
+                query_parts.append(f"in {entities['location']}")
+            
+            query_str = " ".join(query_parts) if query_parts else "all campaigns"
+        
+        # Start conversational search
+        result = await SearchConversation.start_search(user_id, query_str, db)
+        
+        return {
+            "success": True,
+            "message": result["message"],
+            "needs_clarification": False,
+            "missing_entities": [],
+            "data": {
+                "campaigns": [c["id"] for c in result.get("campaigns", [])],
+                "count": len(result.get("campaigns", []))
+            }
+        }
+        # ============================================================
         
         # Build query
         query = db.query(Campaign).filter(Campaign.status == "active")
@@ -201,42 +238,51 @@ async def handle_view_campaign_details(
     """
     Get detailed information about a specific campaign.
     
+    LAB 8: Uses SearchConversation for context-aware campaign references.
+    
     Entities:
-        - campaign_id (required): UUID or reference ("number 1")
+        - campaign_id (required): UUID or reference ("number 1", "campaign number one")
     
     Returns campaign details, progress, and recent donations.
     """
     try:
+        # ============================================================
+        # LAB 8: Use SearchConversation for session-aware details
+        # ============================================================
+        from voice.workflows.search_flow import SearchConversation
+        
+        # Get transcript from context (natural language query)
+        transcript = context.get("transcript", "")
+        
+        # If we have a transcript, use search flow's context-aware method
+        if transcript:
+            result = await SearchConversation.show_campaign_details(user_id, transcript, db)
+            
+            # If search flow handled it successfully, return
+            if "Campaign not found" not in result.get("message", "") and \
+               "Search for campaigns first" not in result.get("message", ""):
+                return {
+                    "success": True,
+                    "message": result["message"],
+                    "needs_clarification": False,
+                    "missing_entities": [],
+                    "data": result.get("data", {})
+                }
+        
+        # Fallback to old logic for direct campaign_id
         campaign_id = entities.get("campaign_id")
         
         # Try to parse UUID
         try:
             campaign_uuid = uuid.UUID(str(campaign_id))
         except (ValueError, AttributeError):
-            # Maybe it's a reference to recent search ("number 1")
-            last_results = context.get("last_search_campaigns", [])
-            if last_results:
-                # Try extracting from text (e.g., "number 1" -> index 0)
-                from voice.command_router import extract_campaign_reference
-                campaign_uuid_str = extract_campaign_reference(str(campaign_id), last_results)
-                if campaign_uuid_str:
-                    campaign_uuid = uuid.UUID(campaign_uuid_str)
-                else:
-                    return {
-                        "success": False,
-                        "message": "I couldn't understand which campaign you want. Try saying 'number 1' or the campaign name.",
-                        "needs_clarification": True,
-                        "missing_entities": ["campaign_id"],
-                        "data": {}
-                    }
-            else:
-                return {
-                    "success": False,
-                    "message": "I need to know which campaign. Try searching for campaigns first, then say 'number 1'.",
-                    "needs_clarification": True,
-                    "missing_entities": ["campaign_id"],
-                    "data": {}
-                }
+            return {
+                "success": False,
+                "message": "I couldn't understand which campaign you want. Try saying 'number 1' or the campaign name.",
+                "needs_clarification": True,
+                "missing_entities": ["campaign_id"],
+                "data": {}
+            }
         
         # Get campaign
         campaign = db.query(Campaign).filter(Campaign.id == campaign_uuid).first()
@@ -332,44 +378,53 @@ async def handle_make_donation(
         - campaign_id (required): Campaign UUID or reference
         - payment_method (optional): "mpesa" or "stripe"
     
-    Uses Lab 5's donation_handler for payment processing.
+    LAB 8: If entities are missing, starts conversational donation flow.
+    Uses Lab 5's donation_handler for payment processing when all details present.
     """
     try:
         amount = entities.get("amount")
         campaign_id = entities.get("campaign_id")
         payment_method = entities.get("payment_method", "mpesa")  # Default to M-Pesa
         
-        # Resolve campaign reference if needed
-        try:
-            campaign_uuid = uuid.UUID(str(campaign_id))
-        except (ValueError, AttributeError):
-            last_results = context.get("last_search_campaigns", [])
-            if last_results:
-                from voice.command_router import extract_campaign_reference
-                campaign_uuid_str = extract_campaign_reference(str(campaign_id), last_results)
-                if campaign_uuid_str:
-                    campaign_uuid = uuid.UUID(campaign_uuid_str)
-                else:
-                    return {
-                        "success": False,
-                        "message": "Which campaign would you like to donate to? Say 'number 1' or the campaign name.",
-                        "needs_clarification": True,
-                        "missing_entities": ["campaign_id"],
-                        "data": {}
-                    }
-            else:
-                # Use current campaign from context
-                current_campaign = context.get("current_campaign")
-                if current_campaign:
-                    campaign_uuid = uuid.UUID(current_campaign)
-                else:
-                    return {
-                        "success": False,
-                        "message": "Which campaign should I donate to? Search for campaigns first, then say 'donate to number 1'.",
-                        "needs_clarification": True,
-                        "missing_entities": ["campaign_id"],
-                        "data": {}
-                    }
+        # ============================================================
+        # LAB 8: Start conversational flow if missing entities
+        # ============================================================
+        if not amount or not campaign_id:
+            from voice.handlers.donation_handler import start_conversational_donation
+            return await start_conversational_donation(entities, user_id, db, context)
+        # ============================================================
+        
+        # Resolve campaign reference using transcript and SearchConversation
+        campaign_uuid = None
+        
+        # Try using transcript with SearchConversation first
+        transcript = context.get("transcript", "")
+        if transcript:
+            from voice.workflows.search_flow import SearchConversation
+            from voice.session_manager import SessionManager
+            
+            search_session = SessionManager.get_session(user_id)
+            if search_session and search_session["data"].get("campaign_ids"):
+                campaign_ids = search_session["data"]["campaign_ids"]
+                parsed_id = SearchConversation._parse_campaign_ref(transcript, campaign_ids)
+                if parsed_id:
+                    campaign_uuid = parsed_id
+        
+        # Fallback: try direct UUID parsing
+        if not campaign_uuid and campaign_id:
+            try:
+                campaign_uuid = uuid.UUID(str(campaign_id))
+            except (ValueError, AttributeError):
+                pass
+        
+        if not campaign_uuid:
+            return {
+                "success": False,
+                "message": "Which campaign would you like to donate to? Say 'number 1' or the campaign name.",
+                "needs_clarification": True,
+                "missing_entities": ["campaign_id"],
+                "data": {}
+            }
         
         # Get user's telegram_user_id for Lab 5 handler
         # Try UUID (registered) or telegram_user_id (guest)
@@ -568,6 +623,8 @@ async def handle_campaign_updates(
     """
     Get recent updates/progress from a campaign.
     
+    LAB 8: Uses SearchConversation for context-aware campaign references.
+    
     Entities:
         - campaign_id (required): Campaign UUID or reference
     
@@ -575,37 +632,36 @@ async def handle_campaign_updates(
     """
     try:
         campaign_id = entities.get("campaign_id")
+        campaign_uuid = None
         
-        # Resolve campaign reference
-        try:
-            campaign_uuid = uuid.UUID(str(campaign_id))
-        except (ValueError, AttributeError):
-            last_results = context.get("last_search_campaigns", [])
-            current_campaign = context.get("current_campaign")
+        # Try using transcript with SearchConversation first
+        transcript = context.get("transcript", "")
+        if transcript:
+            from voice.workflows.search_flow import SearchConversation
+            from voice.session_manager import SessionManager
             
-            if current_campaign:
-                campaign_uuid = uuid.UUID(current_campaign)
-            elif last_results:
-                from voice.command_router import extract_campaign_reference
-                campaign_uuid_str = extract_campaign_reference(str(campaign_id), last_results)
-                if campaign_uuid_str:
-                    campaign_uuid = uuid.UUID(campaign_uuid_str)
-                else:
-                    return {
-                        "success": False,
-                        "message": "Which campaign's updates do you want? Say 'number 1' or search for campaigns first.",
-                        "needs_clarification": True,
-                        "missing_entities": ["campaign_id"],
-                        "data": {}
-                    }
-            else:
-                return {
-                    "success": False,
-                    "message": "I need to know which campaign. Search for campaigns first, then say 'updates for number 1'.",
-                    "needs_clarification": True,
-                    "missing_entities": ["campaign_id"],
-                    "data": {}
-                }
+            search_session = SessionManager.get_session(user_id)
+            if search_session and search_session["data"].get("campaign_ids"):
+                campaign_ids = search_session["data"]["campaign_ids"]
+                parsed_id = SearchConversation._parse_campaign_ref(transcript, campaign_ids)
+                if parsed_id:
+                    campaign_uuid = parsed_id
+        
+        # Fallback: try direct UUID parsing
+        if not campaign_uuid and campaign_id:
+            try:
+                campaign_uuid = uuid.UUID(str(campaign_id))
+            except (ValueError, AttributeError):
+                pass
+        
+        if not campaign_uuid:
+            return {
+                "success": False,
+                "message": "Which campaign's updates do you want? Say 'number 1' or search for campaigns first.",
+                "needs_clarification": True,
+                "missing_entities": ["campaign_id"],
+                "data": {}
+            }
         
         # Get campaign
         campaign = db.query(Campaign).filter(Campaign.id == campaign_uuid).first()
@@ -684,6 +740,8 @@ async def handle_impact_report(
     """
     View impact verification report for a campaign.
     
+    LAB 8: Uses SearchConversation for context-aware campaign references.
+    
     Entities:
         - campaign_id (required): Campaign UUID or reference
     
@@ -691,37 +749,36 @@ async def handle_impact_report(
     """
     try:
         campaign_id = entities.get("campaign_id")
+        campaign_uuid = None
         
-        # Resolve campaign reference
-        try:
-            campaign_uuid = uuid.UUID(str(campaign_id))
-        except (ValueError, AttributeError):
-            last_results = context.get("last_search_campaigns", [])
-            current_campaign = context.get("current_campaign")
+        # Try using transcript with SearchConversation first
+        transcript = context.get("transcript", "")
+        if transcript:
+            from voice.workflows.search_flow import SearchConversation
+            from voice.session_manager import SessionManager
             
-            if current_campaign:
-                campaign_uuid = uuid.UUID(current_campaign)
-            elif last_results:
-                from voice.command_router import extract_campaign_reference
-                campaign_uuid_str = extract_campaign_reference(str(campaign_id), last_results)
-                if campaign_uuid_str:
-                    campaign_uuid = uuid.UUID(campaign_uuid_str)
-                else:
-                    return {
-                        "success": False,
-                        "message": "Which campaign's impact do you want to see? Say 'number 1' or search first.",
-                        "needs_clarification": True,
-                        "missing_entities": ["campaign_id"],
-                        "data": {}
-                    }
-            else:
-                return {
-                    "success": False,
-                    "message": "I need to know which campaign. Search for campaigns first, then say 'impact for number 1'.",
-                    "needs_clarification": True,
-                    "missing_entities": ["campaign_id"],
-                    "data": {}
-                }
+            search_session = SessionManager.get_session(user_id)
+            if search_session and search_session["data"].get("campaign_ids"):
+                campaign_ids = search_session["data"]["campaign_ids"]
+                parsed_id = SearchConversation._parse_campaign_ref(transcript, campaign_ids)
+                if parsed_id:
+                    campaign_uuid = parsed_id
+        
+        # Fallback: try direct UUID parsing
+        if not campaign_uuid and campaign_id:
+            try:
+                campaign_uuid = uuid.UUID(str(campaign_id))
+            except (ValueError, AttributeError):
+                pass
+        
+        if not campaign_uuid:
+            return {
+                "success": False,
+                "message": "Which campaign's impact do you want to see? Say 'number 1' or search first.",
+                "needs_clarification": True,
+                "missing_entities": ["campaign_id"],
+                "data": {}
+            }
         
         # Get campaign
         campaign = db.query(Campaign).filter(Campaign.id == campaign_uuid).first()

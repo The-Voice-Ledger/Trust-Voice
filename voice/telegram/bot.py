@@ -682,8 +682,9 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 # Use UUID for registered users, telegram_user_id for guests
                 user_id = str(user.id) if user else telegram_user_id
                 
-                # Get conversation context
+                # Get conversation context and add transcript
                 context = get_context(user_id)
+                context["transcript"] = transcript  # Add transcript for handlers to use
                 
                 # Route command through Lab 6 router
                 router_result = await route_command(
@@ -767,6 +768,64 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     logger.info(f"Text message from {user.first_name}: {text}")
     
+    # ====================================================================
+    # LAB 8: Multi-turn conversation check
+    # ====================================================================
+    # Check if user is in active conversation (e.g., donation flow, search)
+    from voice.session_manager import SessionManager, is_in_conversation, get_conversation_state, ConversationState
+    from voice.workflows.donation_flow import route_donation_message
+    from voice.workflows.search_flow import route_search_message
+    from voice.conversation.analytics import ConversationAnalytics
+    from database.models import User as DBUser
+    
+    if is_in_conversation(telegram_user_id):
+        # Route to appropriate conversation handler
+        db = SessionLocal()
+        try:
+            state = get_conversation_state(telegram_user_id)
+            
+            if state == ConversationState.DONATING.value:
+                result = await route_donation_message(telegram_user_id, update.message.text, db)
+                await update.message.reply_text(result["message"])
+                return
+            
+            elif state == ConversationState.SEARCHING_CAMPAIGNS.value:
+                result = await route_search_message(telegram_user_id, update.message.text, db)
+                await update.message.reply_text(result["message"])
+                return
+        
+        except Exception as e:
+            logger.error(f"Conversation routing error: {e}")
+            
+            # LAB 9 Part 4: Track errors
+            try:
+                db_user = db.query(DBUser).filter(DBUser.telegram_user_id == telegram_user_id).first()
+                session_data = SessionManager.get_session(telegram_user_id)
+                session_id = session_data.get("data", {}).get("session_id") if session_data else None
+                
+                if db_user and session_id:
+                    ConversationAnalytics.track_event(
+                        db=db,
+                        user_id=db_user.id,
+                        session_id=session_id,
+                        event_type="error_occurred",
+                        conversation_state=state,
+                        current_step="error",
+                        metadata={
+                            "error_type": type(e).__name__,
+                            "error_message": str(e)
+                        }
+                    )
+            except Exception as track_error:
+                logger.error(f"Failed to track error: {track_error}")
+            
+            # Fall through to normal NLU
+        finally:
+            db.close()
+    # ====================================================================
+    # End Lab 8
+    # ====================================================================
+    
     # Import NLU directly for text
     from voice.nlu.nlu_infer import extract_intent_and_entities
     from voice.nlu.context import ConversationContext
@@ -794,9 +853,10 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         user = db.query(User).filter(User.telegram_user_id == telegram_user_id).first()
         user_id = str(user.id) if user else telegram_user_id
         
-        # Get conversation context
+        # Get conversation context and add transcript
         from voice.context.conversation_manager import get_context
         context_data = get_context(user_id)
+        context_data["transcript"] = text  # Add transcript for handlers to use
         
         # Route through Lab 6
         router_result = await route_command(

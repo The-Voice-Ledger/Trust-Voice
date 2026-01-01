@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Campaign Browser</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="js/voice-utils.js?v=4"></script>
     <style>
         * {
             margin: 0;
@@ -246,13 +250,18 @@
             </svg>
             Back to Menu
         </button>
-        <h1>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-            </svg>
-            Campaign Browser
-        </h1>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 style="margin: 0;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                Campaign Browser
+            </h1>
+            <button id="langToggle" onclick="toggleLanguage()" style="background: none; border: 1px solid var(--tg-theme-button-color, #3390ec); border-radius: 8px; padding: 6px 12px; font-size: 14px; cursor: pointer; color: var(--tg-theme-button-color, #3390ec);">
+                🌐 EN
+            </button>
+        </div>
         <div class="subtitle">Browse and support active campaigns</div>
     </div>
     
@@ -307,6 +316,21 @@
         let mediaRecorder = null;
         let audioChunks = [];
         const API_BASE = window.location.origin.replace(':8001', ':8001');
+        
+        // Voice Ledger Enhancement: Context tracking
+        let currentView = 'list';  // 'list' or 'detail'
+        let currentCampaign = null;  // Selected campaign when viewing details
+        let voiceContext = {
+            app: 'campaigns',
+            view: 'list',
+            available_actions: ['view_campaign', 'filter_campaigns', 'search_campaigns']
+        };
+        
+        // Voice Ledger Enhancement: Use utilities from voice-utils.js
+        // Access via window.VoiceUtils (no destructuring to avoid scope conflicts)
+        
+        // Global TTS controller instance
+        const ttsController = new window.VoiceUtils.TTSController(API_BASE);
         
         // Mock campaign data
         const mockCampaigns = [
@@ -378,20 +402,128 @@
             }
         ];
         
+        // Language toggle function
+        function toggleLanguage() {
+            const currentLang = window.VoiceUtils.getUserLanguage();
+            const newLang = currentLang === 'en' ? 'am' : 'en';
+            window.VoiceUtils.setUserLanguage(newLang);
+            
+            const btn = document.getElementById('langToggle');
+            btn.textContent = newLang === 'en' ? '🌐 EN' : '🌐 አማ';
+            
+            // Save preference to backend for registered users
+            const userId = tg.initDataUnsafe?.user?.id;
+            if (userId && userId !== 'unknown') {
+                fetch(`${API_BASE}/api/voice/set-language`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        user_id: userId,
+                        language: newLang 
+                    })
+                }).catch(err => console.error('Failed to save language preference:', err));
+            }
+            
+            console.log(`Language switched to: ${newLang === 'en' ? 'English' : 'Amharic'}`);
+        }
+        
+        // Initialize language button
+        function initLanguage() {
+            const lang = window.VoiceUtils.getUserLanguage();
+            const btn = document.getElementById('langToggle');
+            if (btn) {
+                btn.textContent = lang === 'en' ? '🌐 EN' : '🌐 አማ';
+            }
+        }
+        
         // Load campaigns
         async function loadCampaigns() {
             const loading = document.getElementById('loading');
             const campaignsDiv = document.getElementById('campaigns');
             
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 800));
+            try {
+                const response = await fetch(`${API_BASE}/api/campaigns/?status=active`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load campaigns');
+                }
+                
+                const campaigns = await response.json();
+                
+                // Transform API data to match our display format
+                allCampaigns = campaigns.map(c => ({
+                    id: c.id,
+                    title: c.title,
+                    org: c.ngo_name || 'Anonymous NGO',
+                    description: c.description || 'No description available',
+                    category: c.category || 'other',
+                    raised: c.raised_amount_usd || 0,
+                    goal: c.goal_amount_usd || 0,
+                    donors: c.donation_count || 0,
+                    status: c.status === 'active' ? 'Active' : c.status
+                }));
+                
+            } catch (error) {
+                console.error('Error loading campaigns:', error);
+                
+                // Fallback to mock data if API fails
+                allCampaigns = mockCampaigns;
+                
+                tg.showAlert('Using offline data. Some information may not be current.');
+            } finally {
+                loading.style.display = 'none';
+                campaignsDiv.style.display = 'block';
+                renderCampaigns();
+                updateVoiceContext();  // Voice Ledger: Update context after loading
+            }
+        }
+        
+        // Voice Ledger Enhancement: Update voice context dynamically
+        function updateVoiceContext() {
+            voiceContext = {
+                app: 'campaigns',
+                view: currentView,
+                user_id: tg.initDataUnsafe?.user?.id || 'guest',
+                timestamp: new Date().toISOString()
+            };
             
-            allCampaigns = mockCampaigns;
+            if (currentView === 'detail' && currentCampaign) {
+                // Viewing campaign details - provide specific campaign context
+                voiceContext.view = 'detail';
+                voiceContext.selected_campaign = {
+                    id: currentCampaign.id,
+                    title: currentCampaign.title,
+                    org: currentCampaign.org,
+                    category: currentCampaign.category,
+                    raised: currentCampaign.raised,
+                    goal: currentCampaign.goal,
+                    progress: Math.round((currentCampaign.raised / currentCampaign.goal) * 100)
+                };
+                voiceContext.available_actions = [
+                    'donate_to_campaign',
+                    'share_campaign',
+                    'view_more_details',
+                    'go_back'
+                ];
+            } else if (currentView === 'list') {
+                // Viewing list - provide visible campaigns context
+                voiceContext.view = 'list';
+                voiceContext.total_campaigns = allCampaigns.length;
+                voiceContext.visible_campaigns = allCampaigns.slice(0, 10).map(c => ({
+                    id: c.id,
+                    title: c.title,
+                    category: c.category
+                }));
+                voiceContext.current_filter = currentFilter;
+                voiceContext.available_actions = [
+                    'view_campaign_details',
+                    'filter_campaigns',
+                    'search_campaigns',
+                    'refresh_campaigns'
+                ];
+            }
             
-            loading.style.display = 'none';
-            campaignsDiv.style.display = 'block';
-            
-            renderCampaigns();
+            console.log('Voice context updated:', voiceContext);
         }
         
         // Render campaigns
@@ -421,7 +553,7 @@
                 const progress = (campaign.raised / campaign.goal) * 100;
                 
                 return `
-                    <div class="campaign-card" onclick="openCampaign(${campaign.id})">
+                    <div class="campaign-card">
                         <div class="campaign-header">
                             <div>
                                 <div class="campaign-title">${campaign.title}</div>
@@ -447,16 +579,27 @@
                                 <span class="stat-value">${campaign.donors}</span>
                             </div>
                         </div>
+                        <button onclick="event.stopPropagation(); openCampaign(${campaign.id})" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 12px;">
+                            Donate Now
+                        </button>
                     </div>
                 `;
             }).join('');
+            
+            updateVoiceContext();  // Voice Ledger: Update context after rendering
         }
         
         // Open campaign details
         function openCampaign(id) {
             const campaign = allCampaigns.find(c => c.id === id);
             if (campaign) {
-                tg.showAlert(`Campaign: ${campaign.title}\n\nThis would open the full campaign details and donation flow.`);
+                // Voice Ledger: Update to detail view
+                currentView = 'detail';
+                currentCampaign = campaign;
+                updateVoiceContext();
+                
+                // Navigate to donation page with campaign ID
+                window.location.href = `donate.html?campaign_id=${id}`;
             }
         }
         
@@ -467,12 +610,14 @@
                 btn.classList.add('active');
                 currentFilter = btn.dataset.filter;
                 renderCampaigns();
+                updateVoiceContext();  // Voice Ledger: Update context after filter change
             });
         });
         
         // Search input
         document.getElementById('searchInput').addEventListener('input', () => {
             renderCampaigns();
+            updateVoiceContext();  // Voice Ledger: Update context after search
         });
         
         // Voice Search Functionality
@@ -523,56 +668,48 @@
         
         async function processVoiceCommand(audioBlob) {
             try {
-                // Show loading state
+                // Voice Ledger Step 1: Duration check
+                const approximateDuration = audioBlob.size / 16000; // Rough estimate
+                if (approximateDuration < 0.5) {
+                    tg.showPopup({
+                        title: '⏱️ Recording Too Short',
+                        message: 'Your recording was less than 1 second.\n\nPlease hold the voice button and speak for at least 1 second.',
+                        buttons: [{type: 'ok'}]
+                    });
+                    return;
+                }
+                
+                // Voice Ledger Step 2: File size check
+                const maxSize = 25 * 1024 * 1024; // 25MB
+                if (audioBlob.size > maxSize) {
+                    tg.showPopup({
+                        title: '📦 Recording Too Large',
+                        message: 'Your recording exceeds 25MB.\n\nPlease keep recordings under 2 minutes.',
+                        buttons: [{type: 'ok'}]
+                    });
+                    return;
+                }
+                
+                // Voice Ledger Step 3: Silent audio detection
                 voiceResponse.classList.add('show');
-                voiceText.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg> Processing your voice command...';
+                voiceText.textContent = '🔍 Validating audio...';
                 
-                // Get user ID from Telegram
-                const userId = tg.initDataUnsafe?.user?.id || 'unknown';
+                const hasSound = await window.VoiceUtils.checkAudioHasSound(audioBlob);
                 
-                // Prepare form data
-                const formData = new FormData();
-                formData.append('audio', audioBlob, 'voice_search.webm');
-                formData.append('user_id', userId);
-                
-                // Send to backend
-                const response = await fetch(`${API_BASE}/api/voice/search-campaigns`, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                // Display text response
-                voiceText.textContent = result.response_text || 'Found your campaigns!';
-                
-                // Play audio response if available
-                if (result.has_audio && result.audio_url) {
-                    const audio = new Audio(`${API_BASE}${result.audio_url}`);
-                    audio.play().catch(e => console.log('Audio playback failed:', e));
-                }
-                
-                // Apply search filter based on transcription
-                if (result.transcription) {
-                    document.getElementById('searchInput').value = result.transcription;
-                    renderCampaigns();
-                }
-                
-                // If campaigns were returned, display them
-                if (result.campaigns && result.campaigns.length > 0) {
-                    // The search input update above will trigger renderCampaigns
-                    // which will show matching campaigns
-                    console.log(`Voice search found ${result.campaigns.length} campaigns`);
-                }
-                
-                // Hide response after 5 seconds
-                setTimeout(() => {
+                if (!hasSound) {
+                    voiceText.textContent = '';
                     voiceResponse.classList.remove('show');
-                }, 5000);
+                    
+                    tg.showPopup({
+                        title: '🔇 No Speech Detected',
+                        message: 'I couldn\'t detect any speech in your recording.\n\nTips:\n• Speak clearly into the microphone\n• Reduce background noise\n• Hold the button while speaking\n• Ensure microphone is not muted',
+                        buttons: [{type: 'ok'}]
+                    });
+                    return;
+                }
+                
+                // All checks passed - proceed with upload with retry
+                await attemptUpload(audioBlob);
                 
             } catch (error) {
                 console.error('Voice processing error:', error);
@@ -583,7 +720,144 @@
             }
         }
         
+        // Voice Ledger Enhancement: Upload with exponential backoff retry
+        async function attemptUpload(audioBlob, retryCount = 0) {
+            const MAX_RETRIES = 3;
+            const RETRY_DELAYS = [1000, 2000, 4000]; // 1s, 2s, 4s
+            
+            try {
+                return await uploadAndProcessAudio(audioBlob);
+                
+            } catch (error) {
+                // Only retry if error is retryable and we haven't exceeded max attempts
+                if (error.isRetryable && error.isRetryable() && retryCount < MAX_RETRIES) {
+                    const delay = RETRY_DELAYS[retryCount];
+                    
+                    // Show retry notification
+                    voiceText.textContent = `⚠️ Connection issue. Retrying in ${delay/1000}s... (${retryCount + 1}/${MAX_RETRIES})`;
+                    
+                    // Wait with exponential backoff
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    
+                    // Retry recursively
+                    return await attemptUpload(audioBlob, retryCount + 1);
+                    
+                } else {
+                    // Max retries exceeded or non-retryable error
+                    throw error;
+                }
+            }
+        }
+        
+        // Voice Ledger Enhancement: Actual upload function with error categorization
+        async function uploadAndProcessAudio(audioBlob) {
+            // Show loading state
+            voiceResponse.classList.add('show');
+            voiceText.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg> Processing your voice command...';
+            
+            // Get user ID from Telegram
+            const userId = tg.initDataUnsafe?.user?.id || 'unknown';
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'voice_search.webm');
+            formData.append('user_id', userId);
+            formData.append('user_language', window.VoiceUtils.getUserLanguage());
+            formData.append('context', JSON.stringify(voiceContext));
+            
+            try {
+                // Network connectivity check
+                if (!navigator.onLine) {
+                    throw new window.VoiceUtils.VoiceError(
+                        'No internet connection',
+                        window.VoiceUtils.VoiceError.NETWORK,
+                        { offline: true }
+                    );
+                }
+                
+                // Send with timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+                
+                const response = await fetch(`${API_BASE}/api/voice/search-campaigns`, {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                // Categorize HTTP errors
+                if (!response.ok) {
+                    if (response.status >= 500) {
+                        throw new window.VoiceUtils.VoiceError(
+                            'Server error',
+                            window.VoiceUtils.VoiceError.SERVER,
+                            { status: response.status }
+                        );
+                    } else if (response.status === 400) {
+                        throw new window.VoiceUtils.VoiceError(
+                            'Invalid request',
+                            window.VoiceUtils.VoiceError.VALIDATION,
+                            { status: response.status }
+                        );
+                    } else {
+                        throw new window.VoiceUtils.VoiceError(
+                            'HTTP error',
+                            window.VoiceUtils.VoiceError.UNKNOWN,
+                            { status: response.status }
+                        );
+                    }
+                }
+                
+                const result = await response.json();
+                
+                // Display text response
+                voiceText.textContent = result.response_text || 'Found your campaigns!';
+                
+                // Play audio response with TTS controls
+                if (result.has_audio && result.audio_url) {
+                    ttsController.play(result.audio_url);
+                }
+                
+                // Apply search filter based on transcription
+                if (result.transcription) {
+                    document.getElementById('searchInput').value = result.transcription;
+                    renderCampaigns();
+                }
+                
+                // If campaigns were returned, display them
+                if (result.campaigns && result.campaigns.length > 0) {
+                    console.log(`Voice search found ${result.campaigns.length} campaigns`);
+                }
+                
+                // Hide response after 5 seconds
+                setTimeout(() => {
+                    voiceResponse.classList.remove('show');
+                }, 5000);
+                
+                return result;
+                
+            } catch (error) {
+                // Categorize native errors
+                if (error.name === 'AbortError') {
+                    throw new window.VoiceUtils.VoiceError('Request timeout', window.VoiceUtils.VoiceError.TIMEOUT);
+                } else if (error instanceof TypeError && error.message.includes('fetch')) {
+                    throw new window.VoiceUtils.VoiceError('Network error', window.VoiceUtils.VoiceError.NETWORK);
+                } else if (error instanceof window.VoiceUtils.VoiceError) {
+                    throw error; // Already categorized
+                } else {
+                    throw new window.VoiceUtils.VoiceError(
+                        error.message || 'Unknown error',
+                        window.VoiceUtils.VoiceError.UNKNOWN,
+                        { originalError: error }
+                    );
+                }
+            }
+        }
+        
         // Initial load
+        initLanguage();
         loadCampaigns();
     </script>
 </body>
