@@ -75,7 +75,10 @@ if TELEGRAM_WEBHOOK_AVAILABLE:
 # Mount Frontend Static Files
 # ============================================
 
-# Serve frontend mini apps at root path
+# Serve admin dashboard at /admin (must come before root mount)
+app.mount("/admin", StaticFiles(directory="frontend", html=True), name="admin-frontend")
+
+# Serve public miniapps at root path
 app.mount("/", StaticFiles(directory="frontend-miniapps", html=True), name="frontend-miniapps")
 
 
