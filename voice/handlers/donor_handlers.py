@@ -72,8 +72,13 @@ async def handle_search_campaigns(
             
             query_str = " ".join(query_parts) if query_parts else "all campaigns"
         
-        # Start conversational search
-        result = await SearchConversation.start_search(user_id, query_str, db)
+        # Start conversational search - pass entities for accurate filtering
+        result = await SearchConversation.start_search(
+            user_id=user_id,
+            query=query_str,
+            db=db,
+            entities=entities  # Use NLU-extracted entities instead of re-parsing
+        )
         
         return {
             "success": True,
