@@ -8,7 +8,7 @@
     <meta http-equiv="Expires" content="0">
     <title>Donation Checkout</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="js/voice-utils.js?v=3"></script>
+    <script src="js/voice-utils.js?v=4"></script>
     <style>
         * {
             margin: 0;
@@ -445,6 +445,7 @@
             const formData = new FormData();
             formData.append('audio', audioBlob, 'donate.webm');
             formData.append('user_id', tg.initDataUnsafe?.user?.id || 'guest');
+            formData.append('user_language', window.VoiceUtils.getUserLanguage());
             formData.append('campaign_id', currentCampaign?.id || campaignId || '1');
             formData.append('context', JSON.stringify(donationContext));
             

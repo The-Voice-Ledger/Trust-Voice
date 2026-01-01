@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register Your NGO - Voice Wizard</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="js/voice-utils.js?v=3"></script>
+    <script src="js/voice-utils.js?v=4"></script>
     <style>
         * {
             margin: 0;
@@ -412,12 +412,18 @@
                 </svg>
                 Back
             </button>
-            <h1>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 8px;">
-                    <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
-                    <path d="M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/>
-                </svg>
-                Register Your NGO
+            <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                <h1 style="margin: 0;">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 8px;">
+                        <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
+                        <path d="M9 9v.01M9 12v.01M9 15v.01M9 18v.01"/>
+                    </svg>
+                    Register Your NGO
+                </h1>
+                <button id="langToggle" onclick="toggleLanguage()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 4px; transition: all 0.3s; margin-left: auto;">
+                    🌐 EN
+                </button>
+            </div>
             </h1>
             <p class="subtitle">Use your voice to quickly register your organization on TrustVoice</p>
         </div>
@@ -985,6 +991,7 @@
                     formData.append('audio', audioBlob, 'voice.webm');
                     formData.append('field_name', fieldName);
                     formData.append('step_number', stepNum.toString());
+                    formData.append('user_language', window.VoiceUtils.getUserLanguage());
                     
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -1072,18 +1079,65 @@
                 document.getElementById(`suggestionText${stepNum}`).textContent = suggestion;
             }
             
-            // Speak confirmation
-            speakText(`I heard: ${transcription}`);
+            // Dual delivery: Play TTS audio response
+            if (data.audio_url) {
+                ttsController.play(data.audio_url);
+            }
         }
         
-        // Text-to-speech
-        function speakText(text) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.rate = 0.9;
-                utterance.pitch = 1;
-                window.speechSynthesis.speak(utterance);
+        // Language toggle functions
+        function toggleLanguage() {
+            const currentLang = window.VoiceUtils.getUserLanguage();
+            const newLang = currentLang === 'en' ? 'am' : 'en';
+            window.VoiceUtils.setUserLanguage(newLang);
+            
+            const btn = document.getElementById('langToggle');
+            btn.textContent = newLang === 'en' ? '🌐 EN' : '🌐 አማ';
+            
+            // Save to backend for registered users
+            const userId = tg?.initDataUnsafe?.user?.id || 'guest';
+            if (userId !== 'guest') {
+                fetch(`${API_BASE || ''}/api/voice/set-language`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, language: newLang })
+                }).catch(err => console.error('Failed to save language preference:', err));
+            }
+        }
+        
+        function initLanguage() {
+            const lang = window.VoiceUtils.getUserLanguage();
+            const btn = document.getElementById('langToggle');
+            if (btn) {
+                btn.textContent = lang === 'en' ? '🌐 EN' : '🌐 አማ';
+            }
+        }
+        
+        // TTS using backend API (supports AddisAI for Amharic)
+        const ttsController = new window.VoiceUtils.TTSController(API_BASE);
+        
+        async function speakText(text) {
+            try {
+                const userLang = window.VoiceUtils.getUserLanguage();
+                const response = await fetch(`${API_BASE}/api/voice/tts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        text: text,
+                        language: userLang 
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.audio_url) {
+                        ttsController.play(data.audio_url);
+                    }
+                } else {
+                    console.error('TTS failed:', response.status);
+                }
+            } catch (error) {
+                console.error('TTS error:', error);
             }
         }
         
@@ -1151,6 +1205,7 @@
         }
         
         // Initialize
+        initLanguage();
         updateProgress();
     </script>
 </body>

@@ -215,11 +215,53 @@ async function checkAudioHasSound(audioBlob) {
     });
 }
 
+// Language Detection (Amharic support)
+function detectLanguage(text) {
+    /**
+     * Detect language from text using Unicode character ranges.
+     * 
+     * Returns:
+     *   'am' for Amharic (Ethiopian)
+     *   'en' for English (default)
+     */
+    if (!text) return 'en';
+    
+    // Count Amharic characters (Unicode range U+1200 to U+137F)
+    let amharicChars = 0;
+    for (let i = 0; i < text.length; i++) {
+        const code = text.charCodeAt(i);
+        if (code >= 0x1200 && code <= 0x137F) {
+            amharicChars++;
+        }
+    }
+    
+    // If >30% of characters are Amharic, classify as Amharic
+    if (amharicChars > text.length * 0.3) {
+        return 'am';
+    }
+    
+    return 'en';
+}
+
+// Get user language preference from localStorage
+function getUserLanguage() {
+    return localStorage.getItem('user_language') || 'en';
+}
+
+// Set user language preference
+function setUserLanguage(language) {
+    localStorage.setItem('user_language', language);
+    console.log(`Language preference set to: ${language}`);
+}
+
 // Export utilities
 window.VoiceUtils = {
     VoiceError,
     TTSController,
-    checkAudioHasSound
+    checkAudioHasSound,
+    detectLanguage,
+    getUserLanguage,
+    setUserLanguage
 };
 
 console.log('✅ voice-utils.js loaded successfully');

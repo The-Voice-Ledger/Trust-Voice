@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Optional
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
+from pydantic import BaseModel
 
 # Database imports
 from database.db import get_db
@@ -42,14 +43,16 @@ tts_provider = TTSProvider()
 async def voice_search_campaigns(
     audio: UploadFile = File(...),
     user_id: str = Form(...),
-    context: Optional[str] = Form(None)
+    context: Optional[str] = Form(None),
+    user_language: Optional[str] = Form(None)  # Optional - will use DB preference if not provided
 ):
     """
     Process voice search command from campaigns mini app.
+    Supports Amharic via AddisAI.
     
     Flow:
     1. Save uploaded audio to temporary file
-    2. Transcribe using ASR (with user's language preference)
+    2. Transcribe using ASR (with user's language preference from DB or parameter)
     3. Search campaigns based on transcribed text AND context
     4. Generate text response
     5. Generate TTS audio response
@@ -59,6 +62,7 @@ async def voice_search_campaigns(
         audio: Audio file from MediaRecorder (webm/ogg)
         user_id: Telegram user ID for language preference lookup
         context: Optional JSON context (app state, selected items, available actions)
+        user_language: Optional language override ('en' or 'am')
         
     Returns:
         JSON with transcription, results, and audio response URL
@@ -86,16 +90,13 @@ async def voice_search_campaigns(
         
         logger.info(f"Audio saved to {temp_audio_path} ({len(content)} bytes)")
         
-        # Step 2: Get user's language preference
+        # Step 2: Get user's language preference (parameter → database → default)
         db = next(get_db())
-        user_language = get_user_language_preference(user_id)
-        
         if not user_language:
-            # Default to English if no preference set
-            user_language = "en"
-            logger.info(f"No language preference found for user {user_id}, defaulting to English")
-        
-        logger.info(f"User language preference: {user_language}")
+            user_language = get_user_language_preference(user_id) or "en"
+            logger.info(f"Using database language preference for user {user_id}: {user_language}")
+        else:
+            logger.info(f"Using provided language preference: {user_language}")
         
         # Step 3: Transcribe audio using existing ASR pipeline
         try:
@@ -520,10 +521,12 @@ async def voice_donate(
     audio: UploadFile = File(...),
     user_id: str = Form(...),
     campaign_id: Optional[int] = Form(None),
-    context: Optional[str] = Form(None)  # Voice Ledger: Accept context
+    context: Optional[str] = Form(None),  # Voice Ledger: Accept context
+    user_language: Optional[str] = Form("en")  # Language preference
 ):
     """
     Process voice donation command with preference learning.
+    Supports Amharic via AddisAI.
     
     Example: "Donate 500 shillings" or "አምስት መቶ ብር ለግስ"
     
@@ -534,6 +537,7 @@ async def voice_donate(
         user_id: Telegram user ID
         campaign_id: Optional campaign ID if context is known
         context: Optional donation context (amount, payment, step)
+        user_language: User's language preference ('en' or 'am')
         
     Returns:
         JSON with donation intent, confirmation, and suggested defaults
@@ -541,7 +545,7 @@ async def voice_donate(
     temp_audio_path = None
     
     try:
-        logger.info(f"Voice donation request from user {user_id}")
+        logger.info(f"Voice donation request from user {user_id}, lang: {user_language}")
         
         # Save audio
         with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
@@ -549,9 +553,10 @@ async def voice_donate(
             temp_file.write(content)
             temp_audio_path = temp_file.name
         
-        # Get user language
+        # Get user language (prefer form parameter over database)
         db = next(get_db())
-        user_language = get_user_language_preference(user_id) or "en"
+        if not user_language or user_language == "en":
+            user_language = get_user_language_preference(user_id) or "en"
         
         # Lab 9 Part 3: Get user preferences for suggestions
         from voice.conversation.preferences import PreferenceManager
@@ -1036,13 +1041,15 @@ async def voice_dictate_text(
 async def voice_wizard_step(
     audio: UploadFile = File(...),
     field_name: str = Form(...),
-    step_number: Optional[int] = Form(None)
+    step_number: Optional[int] = Form(None),
+    user_language: Optional[str] = Form("en")
 ):
     """
     Process voice input for campaign creation wizard with AI suggestions.
+    Supports Amharic via AddisAI for ASR.
     
     This endpoint:
-    1. Transcribes the audio
+    1. Transcribes the audio (supports Amharic)
     2. Validates the input for the specific field
     3. Generates AI suggestions for improvement (title, description only)
     4. Returns transcription + suggestion
@@ -1051,6 +1058,7 @@ async def voice_wizard_step(
         audio: Audio file from wizard
         field_name: Field being filled (title, description, category, goal, deadline)
         step_number: Current step number (1-5)
+        user_language: User's language preference ('en' or 'am')
         
     Returns:
         JSON with transcription and optional AI suggestion
@@ -1058,7 +1066,7 @@ async def voice_wizard_step(
     temp_audio_path = None
     
     try:
-        logger.info(f"Voice wizard step for field: {field_name}, step: {step_number}")
+        logger.info(f"Voice wizard step for field: {field_name}, step: {step_number}, lang: {user_language}")
         
         # Save audio
         with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
@@ -1066,11 +1074,11 @@ async def voice_wizard_step(
             temp_file.write(content)
             temp_audio_path = temp_file.name
         
-        # Transcribe (default to English for wizard)
+        # Transcribe with user's language preference
         transcription_result = transcribe_audio(
             temp_audio_path,
-            language="en",
-            user_preference="en"
+            language=user_language,
+            user_preference=user_language
         )
         
         transcribed_text = transcription_result.get("text", "").strip()
@@ -1132,11 +1140,27 @@ async def voice_wizard_step(
             if any(word in transcribed_text.lower() for word in ['tomorrow', 'next week', 'few days']):
                 suggestion = "Most successful campaigns run for 30-60 days. Consider a longer timeline."
         
+        # Generate TTS confirmation (dual delivery like Telegram bot)
+        confirmation_text = f"I heard: {transcribed_text}"
+        if suggestion:
+            confirmation_text += f". {suggestion}"
+        
+        success_tts, audio_path, error_tts = await tts_provider.text_to_speech(
+            text=confirmation_text,
+            language=user_language
+        )
+        
+        audio_url = None
+        if success_tts and audio_path:
+            audio_filename = os.path.basename(audio_path)
+            audio_url = f"/tts_cache/{audio_filename}"
+        
         return JSONResponse(content={
             "success": True,
             "transcription": transcribed_text,
             "suggestion": suggestion,
-            "field_name": field_name
+            "field_name": field_name,
+            "audio_url": audio_url
         })
         
     except Exception as e:
@@ -1157,3 +1181,91 @@ async def voice_wizard_step(
                 os.remove(temp_audio_path)
             except:
                 pass
+
+
+class TTSRequest(BaseModel):
+    text: str
+    language: str = "en"
+
+
+class LanguagePreferenceRequest(BaseModel):
+    user_id: str
+    language: str
+
+
+@router.post("/set-language")
+async def set_language_preference(request: LanguagePreferenceRequest):
+    """
+    Save user's language preference to database.
+    Called when user toggles language in miniapp.
+    
+    Args:
+        request: LanguagePreferenceRequest with user_id and language
+        
+    Returns:
+        JSON confirmation
+    """
+    try:
+        db = next(get_db())
+        
+        # Find or create user
+        user = db.query(User).filter(User.telegram_user_id == request.user_id).first()
+        
+        if user:
+            user.language_preference = request.language
+            db.commit()
+            logger.info(f"Updated language preference for user {request.user_id}: {request.language}")
+        else:
+            # Anonymous user - can't save to database, localStorage only
+            logger.info(f"Anonymous user {request.user_id} language preference: {request.language} (localStorage only)")
+        
+        return JSONResponse(content={
+            "success": True,
+            "language": request.language,
+            "saved_to_db": user is not None
+        })
+        
+    except Exception as e:
+        logger.error(f"Failed to save language preference: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e)}
+        )
+
+
+@router.post("/tts")
+async def text_to_speech_miniapp(request: TTSRequest):
+    """
+    Generate TTS audio for miniapps (supports Amharic via AddisAI).
+    
+    Args:
+        request: TTSRequest with text and language
+        
+    Returns:
+        JSON with audio_url
+    """
+    try:
+        logger.info(f"TTS request: lang={request.language}, text='{request.text[:50]}...'")
+        
+        # Generate TTS using TTSProvider (handles AddisAI for Amharic)
+        success, audio_path, error = await tts_provider.text_to_speech(
+            text=request.text,
+            language=request.language
+        )
+        
+        if not success or not audio_path:
+            raise HTTPException(status_code=500, detail=error or "TTS generation failed")
+        
+        # Return URL to audio file
+        audio_filename = os.path.basename(audio_path)
+        audio_url = f"/tts_cache/{audio_filename}"
+        
+        return JSONResponse(content={
+            "success": True,
+            "audio_url": audio_url,
+            "language": request.language
+        })
+        
+    except Exception as e:
+        logger.error(f"TTS error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

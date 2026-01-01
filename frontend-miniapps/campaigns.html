@@ -8,7 +8,7 @@
     <meta http-equiv="Expires" content="0">
     <title>Campaign Browser</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="js/voice-utils.js?v=2"></script>
+    <script src="js/voice-utils.js?v=4"></script>
     <style>
         * {
             margin: 0;
@@ -250,13 +250,18 @@
             </svg>
             Back to Menu
         </button>
-        <h1>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-            </svg>
-            Campaign Browser
-        </h1>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 style="margin: 0;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                Campaign Browser
+            </h1>
+            <button id="langToggle" onclick="toggleLanguage()" style="background: none; border: 1px solid var(--tg-theme-button-color, #3390ec); border-radius: 8px; padding: 6px 12px; font-size: 14px; cursor: pointer; color: var(--tg-theme-button-color, #3390ec);">
+                🌐 EN
+            </button>
+        </div>
         <div class="subtitle">Browse and support active campaigns</div>
     </div>
     
@@ -396,6 +401,40 @@
                 status: "Active"
             }
         ];
+        
+        // Language toggle function
+        function toggleLanguage() {
+            const currentLang = window.VoiceUtils.getUserLanguage();
+            const newLang = currentLang === 'en' ? 'am' : 'en';
+            window.VoiceUtils.setUserLanguage(newLang);
+            
+            const btn = document.getElementById('langToggle');
+            btn.textContent = newLang === 'en' ? '🌐 EN' : '🌐 አማ';
+            
+            // Save preference to backend for registered users
+            const userId = tg.initDataUnsafe?.user?.id;
+            if (userId && userId !== 'unknown') {
+                fetch(`${API_BASE}/api/voice/set-language`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        user_id: userId,
+                        language: newLang 
+                    })
+                }).catch(err => console.error('Failed to save language preference:', err));
+            }
+            
+            console.log(`Language switched to: ${newLang === 'en' ? 'English' : 'Amharic'}`);
+        }
+        
+        // Initialize language button
+        function initLanguage() {
+            const lang = window.VoiceUtils.getUserLanguage();
+            const btn = document.getElementById('langToggle');
+            if (btn) {
+                btn.textContent = lang === 'en' ? '🌐 EN' : '🌐 አማ';
+            }
+        }
         
         // Load campaigns
         async function loadCampaigns() {
@@ -723,6 +762,7 @@
             const formData = new FormData();
             formData.append('audio', audioBlob, 'voice_search.webm');
             formData.append('user_id', userId);
+            formData.append('user_language', window.VoiceUtils.getUserLanguage());
             formData.append('context', JSON.stringify(voiceContext));
             
             try {
@@ -817,6 +857,7 @@
         }
         
         // Initial load
+        initLanguage();
         loadCampaigns();
     </script>
 </body>
