@@ -72,17 +72,6 @@ if TELEGRAM_WEBHOOK_AVAILABLE:
     logger.info("✅ Telegram webhook router registered")
 
 # ============================================
-# Mount Frontend Static Files
-# ============================================
-
-# Serve admin dashboard at /admin (must come before root mount)
-app.mount("/admin", StaticFiles(directory="frontend", html=True), name="admin-frontend")
-
-# Serve public miniapps at root path
-app.mount("/", StaticFiles(directory="frontend-miniapps", html=True), name="frontend-miniapps")
-
-
-# ============================================
 # Health Check Endpoint
 # ============================================
 
@@ -150,6 +139,19 @@ async def shutdown_event():
     # TODO: Close database connections
     # TODO: Close Redis connection
     # TODO: Cleanup resources
+
+
+# ============================================
+# Mount Frontend Static Files (MUST BE LAST)
+# ============================================
+# Static file mounts act as catch-all routes, so they must come after
+# all API endpoints to avoid intercepting API requests
+
+# Serve admin dashboard at /admin (must come before root mount)
+app.mount("/admin", StaticFiles(directory="frontend", html=True), name="admin-frontend")
+
+# Serve public miniapps at root path
+app.mount("/", StaticFiles(directory="frontend-miniapps", html=True), name="frontend-miniapps")
 
 
 # ============================================
