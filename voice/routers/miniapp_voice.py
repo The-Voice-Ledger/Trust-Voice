@@ -30,6 +30,8 @@ from voice.asr.asr_infer import transcribe_audio, ASRError
 from voice.telegram.voice_responses import get_user_language_preference, detect_language, clean_text_for_tts
 from voice.tts.tts_provider import TTSProvider
 from voice.conversation.analytics import ConversationAnalytics
+from voice.nlu.nlu_infer import extract_intent_and_entities
+from voice.nlu.intents import IntentType
 
 logger = logging.getLogger(__name__)
 
@@ -115,52 +117,93 @@ async def voice_search_campaigns(
             logger.error(f"ASR error: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Speech recognition failed: {str(e)}")
         
-        # Step 4: Search campaigns based on transcribed text AND context
-        search_query = transcribed_text.lower().strip()
+        # Step 4: Use NLU to extract intent and entities
+        try:
+            nlu_result = extract_intent_and_entities(
+                transcript=transcribed_text,
+                language=detected_language,
+                user_context=context_data
+            )
+            
+            intent = nlu_result.get('intent')
+            entities = nlu_result.get('entities', {})
+            logger.info(f"NLU extracted intent: {intent}, entities: {entities}")
+            
+        except Exception as e:
+            logger.error(f"NLU error: {str(e)}, falling back to keyword search")
+            # Fallback to simple keyword extraction if NLU fails
+            intent = IntentType.SEARCH_CAMPAIGNS
+            entities = {}
         
-        # Enhance search with context awareness
+        # Step 5: Build database query based on intent and entities
+        query = db.query(Campaign).filter(Campaign.status == "active")
+        
+        # Extract search parameters from entities
+        category = entities.get('category')
+        campaign_name = entities.get('campaign_name')
+        location = entities.get('location')
+        
+        # Context-aware: Check if referring to currently viewed campaign
         context_aware_response = False
-        selected_campaign = None
-        
-        # Check if user is viewing a specific campaign and command relates to it
         if context_data and context_data.get('view') == 'detail':
             selected_campaign_data = context_data.get('selected_campaign')
-            if selected_campaign_data:
+            if selected_campaign_data and intent == IntentType.VIEW_CAMPAIGN_DETAILS:
                 campaign_id = selected_campaign_data.get('id')
+                campaigns = db.query(Campaign).filter(Campaign.id == campaign_id).limit(1).all()
+                context_aware_response = True
+                logger.info(f"Context-aware: Using campaign {campaign_id}")
+        
+        if not context_aware_response:
+            # Apply filters based on extracted entities
+            if category:
+                query = query.filter(Campaign.category.ilike(f"%{category}%"))
+                logger.info(f"Filtering by category: {category}")
+            
+            if campaign_name:
+                query = query.filter(
+                    (Campaign.title.ilike(f"%{campaign_name}%")) |
+                    (Campaign.description.ilike(f"%{campaign_name}%"))
+                )
+                logger.info(f"Filtering by campaign name: {campaign_name}")
+            
+            if location:
+                query = query.filter(
+                    (Campaign.location.ilike(f"%{location}%")) |
+                    (Campaign.description.ilike(f"%{location}%"))
+                )
+                logger.info(f"Filtering by location: {location}")
+            
+            # If no specific filters, search in title and description
+            if not any([category, campaign_name, location]):
+                # Extract keywords from transcript (remove common words)
+                keywords = [word for word in transcribed_text.lower().split() 
+                           if word not in ['show', 'me', 'tell', 'about', 'find', 'search', 'for', 'the', 'a', 'an', 'campaigns', 'campaign']]
                 
-                # Handle context-aware commands like "donate to this campaign"
-                context_keywords = ['this', 'current', 'shown', 'displayed', 'selected']
-                if any(keyword in search_query for keyword in context_keywords):
-                    # User is referring to the currently viewed campaign
-                    selected_campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
-                    if selected_campaign:
-                        context_aware_response = True
-                        logger.info(f"Context-aware: User referring to campaign {campaign_id}")
+                if keywords:
+                    # Build OR conditions for each keyword
+                    from sqlalchemy import or_
+                    conditions = []
+                    for keyword in keywords:
+                        conditions.extend([
+                            Campaign.title.ilike(f"%{keyword}%"),
+                            Campaign.description.ilike(f"%{keyword}%"),
+                            Campaign.category.ilike(f"%{keyword}%")
+                        ])
+                    query = query.filter(or_(*conditions))
+                    logger.info(f"Searching with keywords: {keywords}")
+            
+            campaigns = query.limit(5).all()
         
-        # Perform search
-        if context_aware_response and selected_campaign:
-            # User is asking about the currently viewed campaign
-            campaigns = [selected_campaign]
-            logger.info(f"Using context: Campaign '{selected_campaign.title}'")
-        else:
-            # Regular search across all campaigns
-            campaigns = db.query(Campaign).filter(
-                Campaign.status == "active"
-            ).filter(
-                (Campaign.title.ilike(f"%{search_query}%")) |
-                (Campaign.description.ilike(f"%{search_query}%"))
-            ).limit(5).all()
+        logger.info(f"Found {len(campaigns)} campaigns for query: '{transcribed_text}'")
         
-        logger.info(f"Found {len(campaigns)} campaigns matching '{search_query}'")
-        
-        # Step 5: Generate text response
+        # Step 6: Generate text response
         if campaigns:
             # Check if this is a context-aware response
             if context_aware_response and len(campaigns) == 1:
                 campaign = campaigns[0]
                 
                 # Generate response about the specific campaign
-                if 'donate' in search_query or 'give' in search_query or 'contribute' in search_query:
+                if intent == IntentType.MAKE_DONATION or 'donate' in transcribed_text.lower():
                     if user_language == "am":
                         response_text = f"በ{campaign.title} ላይ ለመለገስ፣ መለገስ ቁልፍን ይጫኑ።\n\n"
                         response_text += f"ግብ: KES {campaign.goal_amount:,}\n"
@@ -169,7 +212,7 @@ async def voice_search_campaigns(
                         response_text = f"To donate to {campaign.title}, tap the Donate button.\n\n"
                         response_text += f"Goal: KES {campaign.goal_amount:,}\n"
                         response_text += f"Raised: KES {campaign.raised_amount:,}"
-                elif 'detail' in search_query or 'info' in search_query or 'about' in search_query:
+                elif intent == IntentType.VIEW_CAMPAIGN_DETAILS or 'detail' in transcribed_text.lower() or 'about' in transcribed_text.lower():
                     if user_language == "am":
                         response_text = f"{campaign.title}\n\n{campaign.description[:200]}"
                     else:
@@ -181,21 +224,24 @@ async def voice_search_campaigns(
                     else:
                         response_text = f"You're viewing {campaign.title}."
             else:
-                # Regular search results
+                # Regular search results - use extracted entities for response
+                search_term = category or campaign_name or location or "your search"
                 if user_language == "am":
-                    response_text = f"ለ'{search_query}' {len(campaigns)} ዘመቻዎች አገኘሁ:\n\n"
+                    response_text = f"ለ'{search_term}' {len(campaigns)} ዘመቻዎች አገኘሁ:\n\n"
                 else:
-                    response_text = f"I found {len(campaigns)} campaigns for '{search_query}':\n\n"
+                    response_text = f"I found {len(campaigns)} campaigns for '{search_term}':\n\n"
                 
                 for i, campaign in enumerate(campaigns, 1):
                     response_text += f"{i}. {campaign.title}\n"
                     if campaign.goal_amount:
                         response_text += f"   Goal: KES {campaign.goal_amount:,}\n"
         else:
+            # No campaigns found - use extracted entities in response
+            search_term = category or campaign_name or location or "your search"
             if user_language == "am":
-                response_text = f"ይቅርታ፣ ለ'{search_query}' ምንም ዘመቻ አላገኘሁም። እባክዎ እንደገና ይሞክሩ።"
+                response_text = f"ይቅርታ፣ ለ'{search_term}' ምንም ዘመቻ አላገኘሁም። እባክዎ እንደገና ይሞክሩ።"
             else:
-                response_text = f"Sorry, I couldn't find any campaigns matching '{search_query}'. Please try another search."
+                response_text = f"Sorry, I couldn't find any campaigns matching '{search_term}'. Please try another search."
         
         # Step 6: Generate TTS audio response
         tts_success = False
