@@ -1,6 +1,6 @@
 # TrustVoice
 
-Voice-first donation platform for African changemakers. Supports NGO donations and crowdfunding through voice interfaces (Telegram bot, phone calls) with multiple payment methods.
+A Voice-first donation platform for African changemakers. Supports NGO donations and crowdfunding through voice interfaces (Telegram bot, phone calls) with multiple payment methods.
 
 ## What Is This?
 
