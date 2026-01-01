@@ -23,7 +23,8 @@ class SearchConversation:
     async def start_search(
         user_id: str,
         query: str,
-        db: Session
+        db: Session,
+        entities: Optional[Dict[str, str]] = None
     ) -> Dict:
         """
         Initial campaign search
@@ -32,12 +33,23 @@ class SearchConversation:
             user_id: Telegram user ID
             query: Search query (e.g., "health campaigns in Nairobi")
             db: Database session
+            entities: Pre-extracted entities from NLU (preferred over parsing query)
         """
         # Create search session
         SessionManager.create_session(user_id, ConversationState.SEARCHING_CAMPAIGNS)
         
-        # Parse query for filters
-        filters = SearchConversation._parse_query(query)
+        # Use pre-extracted entities if available, otherwise parse query
+        if entities:
+            filters = {
+                k: v for k, v in entities.items()
+                if k in ['category', 'region', 'keyword', 'location'] and v
+            }
+            # Map 'location' to 'region' for consistency
+            if 'location' in filters:
+                filters['region'] = filters.pop('location')
+        else:
+            # Fallback: Parse query for filters
+            filters = SearchConversation._parse_query(query)
         
         # Debug: Log what filters were extracted
         print(f"[DEBUG] Search query: '{query}'")
