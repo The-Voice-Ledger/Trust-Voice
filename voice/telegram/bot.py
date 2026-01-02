@@ -948,16 +948,27 @@ async def initialize_bot_for_webhooks():
     application.add_handler(registration_handler)
     application.add_handler(language_change_handler)
     application.add_handler(CommandHandler("help", help_command))
+    
+    # Campaign and donation commands
     application.add_handler(CommandHandler("campaigns", campaigns_command))
     application.add_handler(CommandHandler("donations", donations_command))
     application.add_handler(CommandHandler("my_campaigns", my_campaigns_command))
+    
+    # PIN commands
     application.add_handler(get_set_pin_handler())
-    application.add_handler(CallbackQueryHandler(handle_campaign_selection, pattern="^campaign:"))
-    application.add_handler(CallbackQueryHandler(handle_donation_amount, pattern="^amount:"))
-    application.add_handler(CallbackQueryHandler(handle_payment_method, pattern="^pay:"))
+    application.add_handler(get_change_pin_handler())
+    
+    # Phone verification
+    application.add_handler(CommandHandler("verify_phone", verify_phone_command))
+    application.add_handler(CommandHandler("unverify_phone", unverify_phone_command))
+    application.add_handler(MessageHandler(filters.CONTACT, handle_contact_share))
+    
+    # Admin commands
     application.add_handler(CommandHandler("admin_requests", admin_requests_command))
     application.add_handler(CommandHandler("admin_approve", admin_approve_command))
     application.add_handler(CommandHandler("admin_reject", admin_reject_command))
+    
+    # Voice and text handlers
     application.add_handler(MessageHandler(filters.VOICE, handle_voice_message))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
     application.add_error_handler(error_handler)
