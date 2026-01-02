@@ -21,6 +21,11 @@ logger = logging.getLogger(__name__)
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
+    logger.error("❌ DATABASE_URL environment variable not set!")
+    logger.error("Available environment variables:")
+    for key in sorted(os.environ.keys()):
+        if "DATABASE" in key or "RAILWAY" in key or "NEON" in key:
+            logger.error(f"  {key}={os.environ[key][:50]}...")
     raise ValueError("DATABASE_URL environment variable not set!")
 
 # Create engine
