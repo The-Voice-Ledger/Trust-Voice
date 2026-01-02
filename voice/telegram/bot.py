@@ -885,6 +885,107 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.error(f"Update {update} caused error: {context.error}")
 
 
+async def initialize_bot_for_webhooks():
+    """
+    Initialize the Telegram bot for webhook mode (production).
+    Called by main.py during FastAPI startup.
+    """
+    if not TELEGRAM_BOT_TOKEN:
+        raise ValueError("TELEGRAM_BOT_TOKEN environment variable not set")
+    
+    webhook_url = os.getenv("TELEGRAM_WEBHOOK_URL", "")
+    if not webhook_url:
+        raise ValueError("TELEGRAM_WEBHOOK_URL not set for webhook mode")
+    
+    logger.info("🚀 Initializing Telegram bot for WEBHOOK mode")
+    logger.info(f"   Webhook URL: {webhook_url}")
+    
+    # Pre-load Amharic model if local fallback is enabled
+    if os.getenv("USE_LOCAL_AMHARIC_FALLBACK", "true").lower() == "true":
+        try:
+            from voice.asr.asr_infer import load_amharic_model
+            logger.info("Pre-loading Amharic model at startup...")
+            load_amharic_model()
+            logger.info("✓ Amharic model loaded successfully")
+        except Exception as e:
+            logger.warning(f"Could not pre-load Amharic model: {e}")
+    
+    # Create application
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    
+    # Registration conversation handler
+    registration_handler = ConversationHandler(
+        entry_points=[CommandHandler("register", register_command)],
+        states={
+            SELECTING_ROLE: [CallbackQueryHandler(handle_role_selection, pattern="^role:")],
+            SELECTING_LANGUAGE: [CallbackQueryHandler(handle_language_selection, pattern="^lang:")],
+            ENTERING_FULL_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_full_name)],
+            ENTERING_ORG_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_org_name)],
+            ENTERING_LOCATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_location)],
+            ENTERING_PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_phone)],
+            ENTERING_REASON: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_reason)],
+            ENTERING_VERIFICATION_EXP: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_verification_exp)],
+            ENTERING_COVERAGE_REGIONS: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_coverage_regions)],
+            ENTERING_GPS_PHONE: [CallbackQueryHandler(handle_gps_phone, pattern="^gps:")],
+            ENTERING_PIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_pin_entry)],
+            CONFIRMING_PIN: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_pin_confirm)]
+        },
+        fallbacks=[CommandHandler("cancel", cancel_registration)],
+        per_message=False
+    )
+    
+    # Language change conversation handler
+    language_change_handler = ConversationHandler(
+        entry_points=[CommandHandler("language", language_command)],
+        states={
+            SELECTING_LANGUAGE: [CallbackQueryHandler(language_selection, pattern="^lang:")]
+        },
+        fallbacks=[CommandHandler("language", language_command)]
+    )
+    
+    # Add all handlers
+    application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(registration_handler)
+    application.add_handler(language_change_handler)
+    application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("campaigns", campaigns_command))
+    application.add_handler(CommandHandler("donations", donations_command))
+    application.add_handler(CommandHandler("my_campaigns", my_campaigns_command))
+    application.add_handler(get_set_pin_handler())
+    application.add_handler(CallbackQueryHandler(handle_campaign_selection, pattern="^campaign:"))
+    application.add_handler(CallbackQueryHandler(handle_donation_amount, pattern="^amount:"))
+    application.add_handler(CallbackQueryHandler(handle_payment_method, pattern="^pay:"))
+    application.add_handler(CommandHandler("admin_requests", admin_requests_command))
+    application.add_handler(CommandHandler("admin_approve", admin_approve_command))
+    application.add_handler(CommandHandler("admin_reject", admin_reject_command))
+    application.add_handler(MessageHandler(filters.VOICE, handle_voice_message))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
+    application.add_error_handler(error_handler)
+    
+    # Register bot application with webhook handler
+    try:
+        from voice.telegram.webhook import set_bot_application
+        set_bot_application(application)
+        logger.info("✅ Bot application registered with webhook handler")
+    except ImportError as e:
+        logger.error(f"❌ Failed to import webhook handler: {e}")
+        raise
+    
+    # Set webhook with Telegram
+    await application.bot.set_webhook(
+        url=webhook_url,
+        allowed_updates=["message", "callback_query"],
+        drop_pending_updates=True
+    )
+    logger.info(f"✅ Webhook configured: {webhook_url}")
+    
+    # Initialize the application
+    await application.initialize()
+    logger.info("✅ Bot initialized and ready for webhooks")
+    
+    return application
+
+
 def main():
     """Start the bot"""
     

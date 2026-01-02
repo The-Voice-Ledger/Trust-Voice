@@ -127,6 +127,19 @@ async def startup_event():
     logger.info(f"Environment: {os.getenv('APP_ENV')}")
     logger.info(f"Database: {os.getenv('DATABASE_URL', 'Not configured')[:50]}...")
     
+    # Initialize Telegram bot if in production
+    app_env = os.getenv("APP_ENV", "development")
+    telegram_webhook_url = os.getenv("TELEGRAM_WEBHOOK_URL", "")
+    
+    if app_env == "production" and telegram_webhook_url:
+        logger.info("🤖 Initializing Telegram bot in webhook mode...")
+        try:
+            from voice.telegram.bot import initialize_bot_for_webhooks
+            await initialize_bot_for_webhooks()
+            logger.info("✅ Telegram bot initialized successfully")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize Telegram bot: {e}")
+    
     # TODO: Initialize database connection pool
     # TODO: Connect to Redis
     # TODO: Warm up AI models
