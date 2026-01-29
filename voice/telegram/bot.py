@@ -695,10 +695,64 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             transcript = result["stages"]["asr"]["transcript"]
             
             # ==================================================================
+            # Check if we're waiting for clarification from previous message
+            # ==================================================================
+            db = SessionLocal()
+            try:
+                user = db.query(User).filter(User.telegram_user_id == telegram_user_id).first()
+                user_id = str(user.id) if user else telegram_user_id
+                
+                from voice.session_manager import SessionManager, ConversationState
+                session = SessionManager.get_session(user_id)
+                
+                # If waiting for clarification, use pending intent and merge entities
+                if session and session.get("state") == ConversationState.WAITING_FOR_CLARIFICATION:
+                    pending_data = session.get("data", {})
+                    original_intent = pending_data.get("pending_intent")
+                    original_entities = pending_data.get("pending_entities", {})
+                    missing_entities = pending_data.get("missing_entities", [])
+                    
+                    logger.info(f"Continuing clarification flow - original intent: {original_intent}, missing: {missing_entities}")
+                    
+                    # Try to extract the missing entity from current transcript
+                    # For now, use simple heuristics - can be improved with NER
+                    for missing_field in missing_entities:
+                        if missing_field == "title":
+                            original_entities["title"] = transcript
+                        elif missing_field == "goal_amount" or missing_field == "amount":
+                            # Extract number from transcript
+                            import re
+                            numbers = re.findall(r'\d+', transcript)
+                            if numbers:
+                                original_entities[missing_field] = float(numbers[0])
+                        elif missing_field == "category":
+                            # Common categories
+                            transcript_lower = transcript.lower()
+                            if "water" in transcript_lower:
+                                original_entities["category"] = "water"
+                            elif "education" in transcript_lower or "school" in transcript_lower:
+                                original_entities["category"] = "education"
+                            elif "health" in transcript_lower or "medical" in transcript_lower:
+                                original_entities["category"] = "health"
+                            else:
+                                # Use transcript as category
+                                original_entities["category"] = transcript
+                    
+                    # Use original intent with updated entities
+                    intent = original_intent
+                    entities = original_entities
+                    
+                    # Clear session
+                    SessionManager.end_session(user_id)
+                    logger.info(f"Merged clarification - Intent: {intent}, Entities: {entities}")
+                
+            except Exception as e:
+                logger.error(f"Error checking clarification state: {e}")
+            
+            # ==================================================================
             # LAB 6: Unified Command Router (All Users)
             # ==================================================================
             # Route ALL users through Lab 6 (registered & guests)
-            db = SessionLocal()
             try:
                 user = db.query(User).filter(User.telegram_user_id == telegram_user_id).first()
                 
@@ -727,6 +781,21 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 # Update current campaign if returned
                 if "campaign_id" in router_result.get("data", {}):
                     set_current_campaign(user_id, router_result["data"]["campaign_id"])
+                
+                # Handle clarification flow - store incomplete intent
+                if router_result.get("needs_clarification"):
+                    from voice.session_manager import SessionManager
+                    SessionManager.start_session(
+                        user_id=user_id,
+                        state=ConversationState.WAITING_FOR_CLARIFICATION,
+                        data={
+                            "pending_intent": intent,
+                            "pending_entities": entities,
+                            "missing_entities": router_result.get("missing_entities", []),
+                            "original_transcript": transcript
+                        }
+                    )
+                    logger.info(f"Started clarification flow for {intent}, waiting for: {router_result.get('missing_entities')}")
                 
                 # Use Lab 6 response
                 response = router_result.get("message", "I didn't understand that. Try saying 'help'.")
