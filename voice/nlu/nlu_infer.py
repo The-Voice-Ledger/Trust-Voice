@@ -209,7 +209,7 @@ def _validate_and_normalize(result: Dict[str, Any]) -> Dict[str, Any]:
         result["intent"] = IntentType.UNCLEAR.value
     
     # Normalize currency codes
-    if "currency" in result["entities"]:
+    if "currency" in result["entities"] and result["entities"]["currency"]:
         currency = result["entities"]["currency"].upper()
         if currency in SUPPORTED_CURRENCIES:
             result["entities"]["currency"] = currency

@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-01-29T08:55:44.696431",
+  "total_tests": 10,
+  "passed": 10,
+  "failed": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "test": "10. API Credentials",
+      "status": "PASS",
+      "details": "All required API keys configured",
+      "duration": "0.00s",
+      "timestamp": "2026-01-29T08:55:24.469113"
+    },
+    {
+      "test": "9. Database Integration",
+      "status": "PASS",
+      "details": "Found 27 campaigns, 3 users, 0 verifications",
+      "duration": "0.43s",
+      "timestamp": "2026-01-29T08:55:24.898189"
+    },
+    {
+      "test": "1. ASR - English Transcription",
+      "status": "PASS",
+      "details": "Input: 'Show me water projects in Kenya'\nOutput: 'Show me water projects in Kenya.'\nMethod: whisper_api, Confidence: 0.00%",
+      "duration": "2.25s",
+      "timestamp": "2026-01-29T08:55:27.148720"
+    },
+    {
+      "test": "2. NLU - Intent Extraction",
+      "status": "PASS",
+      "details": "All 4 intents correctly classified",
+      "duration": "7.20s",
+      "timestamp": "2026-01-29T08:55:34.352634"
+    },
+    {
+      "test": "3. TTS - English Audio Generation",
+      "status": "PASS",
+      "details": "All 3 audio files generated",
+      "duration": "0.00s",
+      "timestamp": "2026-01-29T08:55:34.354299"
+    },
+    {
+      "test": "4. Voice Campaign Search",
+      "status": "PASS",
+      "details": "Found 5 campaigns, generated audio response",
+      "duration": "0.03s",
+      "timestamp": "2026-01-29T08:55:34.387222"
+    },
+    {
+      "test": "5. Voice Donation Intent",
+      "status": "PASS",
+      "details": "Intent: make_donation, Amount: 50.0 USD",
+      "duration": "2.33s",
+      "timestamp": "2026-01-29T08:55:36.719742"
+    },
+    {
+      "test": "6. Voice Campaign Creation",
+      "status": "PASS",
+      "details": "Intent: create_campaign, Category: None",
+      "duration": "3.58s",
+      "timestamp": "2026-01-29T08:55:40.301647"
+    },
+    {
+      "test": "7. Voice Verification Report",
+      "status": "PASS",
+      "details": "Intent: report_impact",
+      "duration": "1.83s",
+      "timestamp": "2026-01-29T08:55:42.133931"
+    },
+    {
+      "test": "8. End-to-End Pipeline",
+      "status": "PASS",
+      "details": "Transcript: 'What campaigns are available?'\nIntent: search_campaigns\nResponse: '{'type': 'intent_ready', 'message': 'Intent search_campaigns ready for execution', 'entities': {}}'",
+      "duration": "2.56s",
+      "timestamp": "2026-01-29T08:55:44.694729"
+    }
+  ]
+}
