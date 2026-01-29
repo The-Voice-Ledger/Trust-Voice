@@ -77,16 +77,14 @@ def process_voice_message_task(
             audio_file_path = temp_file.name
         
         # Run the async voice pipeline in sync context
+        # Note: cleanup_audio=True means pipeline will delete temp files
         result = process_voice_message(
             audio_file_path=audio_file_path,
             user_id=user_id,
             user_language=language  # Fixed: use 'user_language' not 'language'
         )
         
-        # Clean up temp file
-        os.unlink(audio_file_path)
-        
-        # Clean up Redis key
+        # Clean up Redis key (no longer need audio data stored)
         redis_client.delete(audio_key)
         
         logger.info(f"Voice processing complete for user {user_id}")
