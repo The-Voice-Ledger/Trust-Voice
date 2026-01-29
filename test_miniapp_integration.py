@@ -41,9 +41,9 @@ def test_files_exist():
     print("\n✅ Test 1: Mini App Files Exist")
     
     files = [
-        'miniapp/index.html',
-        'miniapp/styles.css',
-        'miniapp/app.js'
+        'frontend-miniapps/field-agent.html',
+        'frontend-miniapps/field-agent.css',
+        'frontend-miniapps/field-agent.js'
     ]
     
     base_path = Path(__file__).parent
@@ -69,7 +69,7 @@ def test_miniapp_html():
     print("\n✅ Test 2: Mini App HTML Loads")
     
     try:
-        response = requests.get(f'{API_BASE}/miniapp/index.html')
+        response = requests.get(f'{API_BASE}/field-agent.html')
         if response.status_code == 200:
             has_telegram_sdk = 'telegram-web-app.js' in response.text
             has_step1 = 'data-step="1"' in response.text
@@ -99,7 +99,7 @@ def test_miniapp_css():
     print("\n✅ Test 3: Mini App CSS Loads")
     
     try:
-        response = requests.get(f'{API_BASE}/miniapp/styles.css')
+        response = requests.get(f'{API_BASE}/field-agent.css')
         if response.status_code == 200:
             has_variables = '--primary-color' in response.text
             has_animations = '@keyframes' in response.text
@@ -126,7 +126,7 @@ def test_miniapp_js():
     print("\n✅ Test 4: Mini App JavaScript Loads")
     
     try:
-        response = requests.get(f'{API_BASE}/miniapp/app.js')
+        response = requests.get(f'{API_BASE}/field-agent.js')
         if response.status_code == 200:
             has_telegram_init = 'Telegram.WebApp' in response.text
             has_go_to_step = 'goToStep' in response.text

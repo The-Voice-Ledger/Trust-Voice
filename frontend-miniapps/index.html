@@ -213,6 +213,15 @@
                 </div>
                 <div class="app-arrow">›</div>
             </div>
+            
+            <div class="app-card" onclick="openApp('fieldagent')">
+                <div class="app-icon">📸</div>
+                <div class="app-info">
+                    <div class="app-title">Field Agent Verification</div>
+                    <div class="app-description">Submit photo verification with GPS location</div>
+                </div>
+                <div class="app-arrow">›</div>
+            </div>
         </div>
         
         <div class="user-info">
@@ -246,7 +255,8 @@
                 'admin': `${baseUrl}/admin.html`,
                 'donate': `${baseUrl}/donate.html`,
                 'ngoregister': `${baseUrl}/ngo-register-wizard.html`,
-                'createcampaign': `${baseUrl}/create-campaign-wizard.html`
+                'createcampaign': `${baseUrl}/create-campaign-wizard.html`,
+                'fieldagent': `${baseUrl}/field-agent.html`
             };
             
             const url = appUrls[appName];
