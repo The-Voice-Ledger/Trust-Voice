@@ -95,6 +95,47 @@ async def health_check():
     }
 
 
+@app.get("/health/redis")
+async def redis_health_check():
+    """
+    Redis connection health check.
+    
+    Tests Redis connectivity and reports:
+    - Connection status
+    - Redis server info
+    - REDIS_URL configuration
+    """
+    from voice.session_manager import redis_client
+    
+    try:
+        # Test PING
+        ping_result = redis_client.ping()
+        
+        # Get Redis server info
+        info = redis_client.info()
+        
+        return {
+            "status": "healthy",
+            "redis": {
+                "connected": ping_result,
+                "redis_url_configured": bool(os.getenv('REDIS_URL')),
+                "server_version": info.get('redis_version'),
+                "used_memory_human": info.get('used_memory_human'),
+                "connected_clients": info.get('connected_clients'),
+                "uptime_in_days": info.get('uptime_in_days')
+            }
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "redis": {
+                "connected": False,
+                "error": str(e),
+                "redis_url_configured": bool(os.getenv('REDIS_URL'))
+            }
+        }
+
+
 @app.get("/")
 async def root():
     """Root endpoint with API information."""

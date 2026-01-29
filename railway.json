@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "uvicorn main:app --host 0.0.0.0 --port $PORT",
+    "startCommand": "if [ \"$RAILWAY_SERVICE_NAME\" = \"worker\" ]; then celery -A voice.tasks.celery_app worker --loglevel=info --concurrency=2; else uvicorn main:app --host 0.0.0.0 --port $PORT; fi",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
