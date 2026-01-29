@@ -815,9 +815,13 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             logger.error(f"Voice processing failed: {result.get('error')}")
             
     except Exception as e:
-        await processing_msg.delete()
-        await update.message.reply_text(f"❌ Error: {str(e)}")
-        logger.error(f"Voice handling error: {str(e)}")
+        # Don't try to delete processing_msg - it's already deleted at line 689
+        error_msg = "Sorry, something went wrong. Please try again."
+        if language == "am":
+            error_msg = "ይቅርታ፣ የሆነ ችግር ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።"
+        
+        await update.message.reply_text(f"❌ {error_msg}")
+        logger.error(f"Error handling voice message: {e}", exc_info=True)
 
 
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
