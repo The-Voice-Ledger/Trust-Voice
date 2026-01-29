@@ -248,6 +248,33 @@ function getUserLanguage() {
     return localStorage.getItem('user_language') || 'en';
 }
 
+// Fetch and set user language from backend (Telegram user profile)
+async function initializeUserLanguage() {
+    try {
+        const tg = window.Telegram?.WebApp;
+        const userId = tg?.initDataUnsafe?.user?.id;
+        
+        if (!userId) {
+            console.log('No Telegram user ID, defaulting to English');
+            return 'en';
+        }
+        
+        const response = await fetch(`/api/auth/language/${userId}`);
+        if (response.ok) {
+            const data = await response.json();
+            const language = data.language || 'en';
+            localStorage.setItem('user_language', language);
+            console.log(`User language initialized from backend: ${language}`);
+            return language;
+        }
+    } catch (error) {
+        console.error('Failed to fetch user language:', error);
+    }
+    
+    // Fallback to localStorage or default
+    return getUserLanguage();
+}
+
 // Set user language preference
 function setUserLanguage(language) {
     localStorage.setItem('user_language', language);
@@ -261,7 +288,8 @@ window.VoiceUtils = {
     checkAudioHasSound,
     detectLanguage,
     getUserLanguage,
-    setUserLanguage
+    setUserLanguage,
+    initializeUserLanguage  // NEW: Initialize language from backend
 };
 
 console.log('✅ voice-utils.js loaded successfully');

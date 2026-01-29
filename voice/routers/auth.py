@@ -295,3 +295,25 @@ def logout():
         "message": "Logged out successfully. Please discard your token.",
         "action": "client_side_logout"
     }
+
+
+@router.get("/language/{telegram_user_id}")
+def get_user_language(telegram_user_id: str, db: Session = Depends(get_db)):
+    """
+    Get user's preferred language by Telegram user ID.
+    
+    Used by miniapps to initialize language preference from database.
+    Falls back to 'en' if user not found or preference not set.
+    
+    Args:
+        telegram_user_id: Telegram user ID from initDataUnsafe
+        
+    Returns:
+        {"language": "en" | "am"}
+    """
+    user = db.query(User).filter(User.telegram_user_id == telegram_user_id).first()
+    
+    if not user or not user.preferred_language:
+        return {"language": "en"}
+    
+    return {"language": user.preferred_language}

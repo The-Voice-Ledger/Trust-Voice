@@ -12,11 +12,18 @@ BASE_URL = os.getenv("BASE_URL", "https://web-production-dd7cf.up.railway.app")
 def test_voice_wizard_step():
     """Test voice input through the wizard endpoint"""
     
-    # Create a test audio file (empty OGG for now, just testing the pipeline)
-    test_audio = Path("test_audio.ogg")
-    if not test_audio.exists():
-        # Create minimal OGG file header
-        test_audio.write_bytes(b'OggS\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00')
+    # Create a simple valid audio file (1-second silence WAV)
+    import wave
+    import struct
+    
+    test_audio = Path("test_audio.wav")
+    with wave.open(str(test_audio), 'wb') as wav_file:
+        wav_file.setnchannels(1)  # Mono
+        wav_file.setsampwidth(2)  # 16-bit
+        wav_file.setframerate(16000)  # 16kHz
+        # Write 1 second of silence
+        for _ in range(16000):
+            wav_file.writeframes(struct.pack('h', 0))
     
     print(f"Testing voice wizard endpoint at {BASE_URL}/api/voice/wizard-step")
     

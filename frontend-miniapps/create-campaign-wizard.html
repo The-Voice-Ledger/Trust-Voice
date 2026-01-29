@@ -871,12 +871,16 @@
         }
         
         // Initialize language button
-        function initLanguage() {
+        async function initLanguage() {
+            // Fetch user's language from backend first
+            await window.VoiceUtils.initializeUserLanguage();
+            
             const lang = window.VoiceUtils.getUserLanguage();
             const btn = document.getElementById('langToggle');
             if (btn) {
                 btn.textContent = lang === 'en' ? '🌐 EN' : '🌐 አማ';
             }
+            console.log(`Language initialized: ${lang}`);
         }
         
         async function speakText(text) {
