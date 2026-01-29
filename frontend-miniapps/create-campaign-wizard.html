@@ -738,6 +738,13 @@
                     try {
                         const result = await uploadWithRetry();
                         
+                        console.log('Voice result:', result);
+                        
+                        // Check if result is valid
+                        if (!result || !result.transcription) {
+                            throw new Error('Invalid response from server');
+                        }
+                        
                         // Fill field with transcription
                         const field = document.getElementById(fieldName);
                         if (field.tagName === 'SELECT') {
