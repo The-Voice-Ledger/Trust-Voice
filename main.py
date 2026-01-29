@@ -15,7 +15,7 @@ import logging
 load_dotenv()
 
 # Import routers
-from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin, auth, registrations, ngo_registrations, miniapp_voice, analytics
+from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin, auth, registrations, ngo_registrations, miniapp_voice, analytics, field_agent
 
 # Import Telegram webhook router for production deployment
 try:
@@ -63,6 +63,7 @@ app.include_router(webhooks.router)  # Keep webhooks at root (external callbacks
 app.include_router(admin.router, prefix="/api")
 app.include_router(auth.router, prefix="/api")
 app.include_router(registrations.router, prefix="/api")
+app.include_router(field_agent.router, prefix="/api")
 app.include_router(miniapp_voice.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 

@@ -81,6 +81,13 @@ from voice.telegram.phone_verification import (
     handle_contact_share,
     unverify_phone_command
 )
+from voice.telegram.field_agent_handlers import (
+    handle_photo_message,
+    handle_location_message,
+    cancel_verification_command,
+    my_verifications_command,
+    pending_campaigns_command
+)
 
 # Configure logging
 logging.basicConfig(
@@ -968,7 +975,14 @@ async def initialize_bot_for_webhooks():
     application.add_handler(CommandHandler("admin_approve", admin_approve_command))
     application.add_handler(CommandHandler("admin_reject", admin_reject_command))
     
-    # Voice and text handlers
+    # Field agent commands and handlers
+    application.add_handler(CommandHandler("my_verifications", my_verifications_command))
+    application.add_handler(CommandHandler("pending_campaigns", pending_campaigns_command))
+    application.add_handler(CommandHandler("cancel_verification", cancel_verification_command))
+    application.add_handler(MessageHandler(filters.PHOTO, handle_photo_message))
+    application.add_handler(MessageHandler(filters.LOCATION, handle_location_message))
+    
+    # Voice and text handlers (must be last - catch-all)
     application.add_handler(MessageHandler(filters.VOICE, handle_voice_message))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
     application.add_error_handler(error_handler)
