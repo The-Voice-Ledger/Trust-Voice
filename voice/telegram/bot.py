@@ -645,7 +645,15 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         from voice.session_manager import redis_client
         import base64
         audio_key = f"audio:{telegram_user_id}:{voice.file_unique_id}"
-        redis_client.setex(audio_key, 300, base64.b64encode(audio_data).decode())
+        audio_b64 = base64.b64encode(audio_data).decode()
+        redis_client.setex(audio_key, 300, audio_b64)
+        logger.info(f"Stored audio in Redis: {audio_key} ({len(audio_b64)} chars, TTL=300s)")
+        
+        # Verify storage immediately
+        verify_data = redis_client.get(audio_key)
+        if not verify_data:
+            raise Exception(f"Failed to store audio in Redis - verification failed for key: {audio_key}")
+        logger.info(f"✓ Redis storage verified: {len(verify_data)} chars retrieved")
         
         # Queue voice processing task in Celery
         task = process_voice_message_task.delay(
