@@ -502,11 +502,11 @@ class ImpactVerification(Base):
     """
     __tablename__ = "impact_verifications"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    campaign_id = Column(UUID(as_uuid=True), ForeignKey("campaigns.id"), nullable=False)
+    id = Column(Integer, primary_key=True)
+    campaign_id = Column(Integer, ForeignKey("campaigns.id"), nullable=False)
     
     # Field Agent Info
-    field_agent_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    field_agent_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     
     # Verification Details
     verification_date = Column(DateTime, default=datetime.utcnow)

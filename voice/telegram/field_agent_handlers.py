@@ -7,9 +7,12 @@ Integrates with field_agent API router for photo storage and verification submis
 
 import logging
 import httpx
-from typing import Optional
+import io
+from typing import Optional, Tuple
 from telegram import Update
 from telegram.ext import ContextTypes
+from PIL import Image
+from PIL.ExifTags import TAGS, GPSTAGS
 
 from database.db import SessionLocal
 from database.models import User
@@ -19,6 +22,68 @@ logger = logging.getLogger(__name__)
 
 # Internal API base URL (for bot to call our own API)
 API_BASE_URL = "http://localhost:8000/api/field-agent"
+
+
+def extract_gps_from_exif(photo_bytes: bytes) -> Optional[Tuple[float, float]]:
+    """
+    Extract GPS coordinates from photo EXIF data.
+    
+    Args:
+        photo_bytes: Raw photo file bytes
+        
+    Returns:
+        Tuple of (latitude, longitude) or None if GPS data not found
+    """
+    try:
+        image = Image.open(io.BytesIO(photo_bytes))
+        exif_data = image._getexif()
+        
+        if not exif_data:
+            return None
+        
+        # Find GPS info tag
+        gps_info = None
+        for tag_id, value in exif_data.items():
+            tag_name = TAGS.get(tag_id, tag_id)
+            if tag_name == "GPSInfo":
+                gps_info = value
+                break
+        
+        if not gps_info:
+            return None
+        
+        # Parse GPS info
+        gps_data = {}
+        for key in gps_info.keys():
+            decode = GPSTAGS.get(key, key)
+            gps_data[decode] = gps_info[key]
+        
+        # Extract latitude
+        if "GPSLatitude" not in gps_data or "GPSLatitudeRef" not in gps_data:
+            return None
+        
+        lat = gps_data["GPSLatitude"]
+        lat_ref = gps_data["GPSLatitudeRef"]
+        latitude = lat[0] + lat[1] / 60 + lat[2] / 3600
+        if lat_ref == "S":
+            latitude = -latitude
+        
+        # Extract longitude
+        if "GPSLongitude" not in gps_data or "GPSLongitudeRef" not in gps_data:
+            return None
+        
+        lon = gps_data["GPSLongitude"]
+        lon_ref = gps_data["GPSLongitudeRef"]
+        longitude = lon[0] + lon[1] / 60 + lon[2] / 3600
+        if lon_ref == "W":
+            longitude = -longitude
+        
+        logger.info(f"Extracted GPS from EXIF: {latitude}, {longitude}")
+        return (latitude, longitude)
+        
+    except Exception as e:
+        logger.warning(f"Failed to extract GPS from EXIF: {e}")
+        return None
 
 
 async def handle_photo_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -59,6 +124,26 @@ async def handle_photo_message(update: Update, context: ContextTypes.DEFAULT_TYP
         
         logger.info(f"Photo received from field agent {telegram_user_id}: {file_id} ({file_size} bytes)")
         
+        # Try to extract GPS from EXIF data
+        gps_coords = None
+        try:
+            file = await context.bot.get_file(file_id)
+            photo_bytes = await file.download_as_bytearray()
+            gps_coords = extract_gps_from_exif(bytes(photo_bytes))
+            
+            if gps_coords:
+                latitude, longitude = gps_coords
+                logger.info(f"GPS extracted from photo EXIF: {latitude}, {longitude}")
+                
+                # Update session with GPS coordinates
+                session = VerificationSession(telegram_user_id)
+                session.update({
+                    "gps_latitude": latitude,
+                    "gps_longitude": longitude
+                })
+        except Exception as e:
+            logger.warning(f"Failed to extract/download photo for EXIF: {e}")
+        
         # Store photo metadata using PhotoStorage
         photo_id = PhotoStorage.save_photo_metadata(
             telegram_user_id=telegram_user_id,
@@ -78,16 +163,28 @@ async def handle_photo_message(update: Update, context: ContextTypes.DEFAULT_TYP
         
         message = (
             f"✅ Photo {photo_count} received!\n\n"
-            f"📸 Total photos: {photo_count}\n\n"
+            f"📸 Total photos: {photo_count}\n"
         )
+        
+        # Show GPS status
+        if gps_coords:
+            latitude, longitude = gps_coords
+            message += f"📍 GPS extracted from photo: {latitude:.6f}, {longitude:.6f}\n\n"
+        else:
+            message += "⚠️ No GPS data in photo. You can manually share your location.\n\n"
         
         if photo_count < 3:
             message += "💡 You can send more photos (up to 3 recommended for higher trust score).\n\n"
         
         message += (
             "When you're ready to submit your verification:\n"
-            "1. Send your GPS location 📍\n"
-            "2. Say or type: 'Submit field report for [campaign name]'\n\n"
+        )
+        
+        if not gps_coords:
+            message += "1. Send your GPS location 📍\n"
+        
+        message += (
+            f"{'2' if not gps_coords else '1'}. Say or type: 'Submit field report for [campaign name]'\n\n"
             "Or type /cancel_verification to start over."
         )
         

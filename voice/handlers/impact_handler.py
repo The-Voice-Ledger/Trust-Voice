@@ -116,7 +116,6 @@ async def process_impact_report(
         
         # Create verification record
         verification = ImpactVerification(
-            id=uuid.uuid4(),
             campaign_id=campaign_id,
             field_agent_id=user.id,
             verification_date=datetime.utcnow(),
@@ -157,7 +156,7 @@ async def process_impact_report(
             "status": status,
             "auto_approved": auto_approved,
             "campaign_title": campaign.title,
-            "agent_name": user.preferred_name or user.full_name
+            "agent_name": getattr(user, 'preferred_name', None) or user.full_name
         }
         
         # If auto-approved, initiate agent payout
