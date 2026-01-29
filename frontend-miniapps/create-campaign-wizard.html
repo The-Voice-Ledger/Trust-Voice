@@ -704,7 +704,7 @@
                             formData.append('user_language', window.VoiceUtils.getUserLanguage());
                             
                             const controller = new AbortController();
-                            const timeoutId = setTimeout(() => controller.abort(), 30000);
+                            const timeoutId = setTimeout(() => controller.abort(), 60000); // Increased to 60s for Amharic model
                             
                             const response = await fetch('/api/voice/wizard-step', {
                                 method: 'POST',
