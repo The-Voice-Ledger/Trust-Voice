@@ -40,7 +40,7 @@ class VoiceProcessingTask(Task):
 )
 def process_voice_message_task(
     self,
-    audio_file_path: str,
+    audio_key: str,
     user_id: str,
     language: str = "en"
 ) -> Dict[str, Any]:
@@ -48,15 +48,33 @@ def process_voice_message_task(
     Process voice message asynchronously
     
     Args:
-        audio_file_path: Path to downloaded audio file
+        audio_key: Redis key containing base64-encoded audio data
         user_id: User identifier (telegram_user_id or phone number)
         language: User's preferred language (en/am)
     
     Returns:
         Dict with processing results and response text
     """
+    import tempfile
+    import base64
+    from voice.session_manager import redis_client
+    
     try:
         logger.info(f"Processing voice message for user {user_id}, language: {language}")
+        
+        # Retrieve audio from Redis
+        audio_data_b64 = redis_client.get(audio_key)
+        if not audio_data_b64:
+            raise ValueError(f"Audio data not found in Redis for key: {audio_key}")
+        
+        # Decode base64 audio
+        audio_data = base64.b64decode(audio_data_b64)
+        logger.info(f"Retrieved {len(audio_data)} bytes from Redis")
+        
+        # Save to temporary file for processing
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".ogg") as temp_file:
+            temp_file.write(audio_data)
+            audio_file_path = temp_file.name
         
         # Run the async voice pipeline in sync context
         result = process_voice_message(
@@ -64,6 +82,12 @@ def process_voice_message_task(
             user_id=user_id,
             user_language=language  # Fixed: use 'user_language' not 'language'
         )
+        
+        # Clean up temp file
+        os.unlink(audio_file_path)
+        
+        # Clean up Redis key
+        redis_client.delete(audio_key)
         
         logger.info(f"Voice processing complete for user {user_id}")
         return result

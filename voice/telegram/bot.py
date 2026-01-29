@@ -633,15 +633,23 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         voice = update.message.voice
         file = await context.bot.get_file(voice.file_id)
         
-        # Save to temp directory
-        audio_path = AUDIO_TEMP_DIR / f"telegram_{telegram_user_id}_{voice.file_unique_id}.ogg"
-        await file.download_to_drive(audio_path)
+        # Download audio file to memory (not disk - worker is in separate container)
+        from io import BytesIO
+        audio_buffer = BytesIO()
+        await file.download_to_memory(audio_buffer)
+        audio_data = audio_buffer.getvalue()
         
-        logger.info(f"Voice message downloaded: {audio_path}")
+        logger.info(f"Voice message downloaded: {len(audio_data)} bytes")
+        
+        # Store audio in Redis temporarily (TTL 5 minutes)
+        from voice.session_manager import redis_client
+        import base64
+        audio_key = f"audio:{telegram_user_id}:{voice.file_unique_id}"
+        redis_client.setex(audio_key, 300, base64.b64encode(audio_data).decode())
         
         # Queue voice processing task in Celery
         task = process_voice_message_task.delay(
-            audio_file_path=str(audio_path),
+            audio_key=audio_key,
             user_id=telegram_user_id,
             language=language
         )
