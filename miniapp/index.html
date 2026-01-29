@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1f2937">
+    <title>TrustVoice - Field Agent Verification</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <h1>📸 Impact Verification</h1>
+            <p>Document your field visit</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step step-active" data-step="1">
+                    <span class="step-number">1</span>
+                    <span class="step-label">Photos</span>
+                </div>
+                <div class="step" data-step="2">
+                    <span class="step-number">2</span>
+                    <span class="step-label">Location</span>
+                </div>
+                <div class="step" data-step="3">
+                    <span class="step-number">3</span>
+                    <span class="step-label">Details</span>
+                </div>
+                <div class="step" data-step="4">
+                    <span class="step-number">4</span>
+                    <span class="step-label">Review</span>
+                </div>
+            </div>
+
+            <!-- Step 1: Photo Upload -->
+            <section class="step-section active" data-step="1">
+                <h2>📸 Upload Photos</h2>
+                <p class="section-hint">Upload 3-5 photos of the project site (recommended for higher trust score)</p>
+                
+                <div class="photo-grid" id="photoGrid">
+                    <!-- Photos will be added here -->
+                </div>
+
+                <div class="photo-upload-area">
+                    <input 
+                        type="file" 
+                        id="photoInput" 
+                        accept="image/*" 
+                        capture="environment"
+                        multiple
+                        style="display: none"
+                    >
+                    <button class="btn btn-primary" onclick="triggerPhotoUpload()">
+                        <span>📷</span> Take Photo
+                    </button>
+                    <button class="btn btn-secondary" onclick="selectExistingPhotos()">
+                        <span>📁</span> Choose from Gallery
+                    </button>
+                </div>
+
+                <div class="photo-stats">
+                    <p>Photos: <span id="photoCount">0</span>/5</p>
+                    <p class="text-sm text-gray">Minimum 1 photo recommended</p>
+                </div>
+
+                <button class="btn btn-next" onclick="goToStep(2)">Next →</button>
+            </section>
+
+            <!-- Step 2: Location -->
+            <section class="step-section" data-step="2">
+                <h2>📍 Location</h2>
+                <p class="section-hint">Share your GPS location or verify extracted coordinates</p>
+                
+                <div class="location-display" id="locationDisplay">
+                    <div class="location-status">
+                        <p class="text-gray">Waiting for location...</p>
+                    </div>
+                </div>
+
+                <div id="mapContainer" class="map-container" style="display: none;">
+                    <div id="map"></div>
+                </div>
+
+                <div class="location-actions">
+                    <button class="btn btn-primary" onclick="getLocationFromPhone()">
+                        <span>📍</span> Get My Location
+                    </button>
+                    <button class="btn btn-secondary" onclick="manualLocationEntry()">
+                        <span>✏️</span> Enter Manually
+                    </button>
+                </div>
+
+                <div id="manualLocationForm" style="display: none;" class="manual-location-form">
+                    <input 
+                        type="number" 
+                        id="latitudeInput" 
+                        placeholder="Latitude" 
+                        step="0.0001"
+                        class="input-field"
+                    >
+                    <input 
+                        type="number" 
+                        id="longitudeInput" 
+                        placeholder="Longitude" 
+                        step="0.0001"
+                        class="input-field"
+                    >
+                    <button class="btn btn-primary" onclick="saveManualLocation()">Save Location</button>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+                    <button class="btn btn-next" onclick="goToStep(3)">Next →</button>
+                </div>
+            </section>
+
+            <!-- Step 3: Details -->
+            <section class="step-section" data-step="3">
+                <h2>📝 Verification Details</h2>
+                <p class="section-hint">Describe what you observed during your site visit</p>
+
+                <div class="form-group">
+                    <label for="campaignSelect">Campaign *</label>
+                    <select id="campaignSelect" class="input-field">
+                        <option value="">Select a campaign...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Observations & Notes *</label>
+                    <textarea 
+                        id="description" 
+                        class="input-field"
+                        placeholder="Describe the project status, challenges, and opportunities. Min 50 characters."
+                        rows="4"
+                    ></textarea>
+                    <p class="character-count" id="charCount">0/300</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="beneficiaryCount">Number of Beneficiaries</label>
+                    <input 
+                        type="number" 
+                        id="beneficiaryCount" 
+                        class="input-field"
+                        placeholder="e.g., 450"
+                        min="1"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="testimonials">Beneficiary Quotes</label>
+                    <textarea 
+                        id="testimonials" 
+                        class="input-field"
+                        placeholder="What did beneficiaries say? (optional)"
+                        rows="3"
+                    ></textarea>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
+                    <button class="btn btn-next" onclick="goToStep(4)">Review →</button>
+                </div>
+            </section>
+
+            <!-- Step 4: Review & Submit -->
+            <section class="step-section" data-step="4">
+                <h2>✅ Review & Submit</h2>
+                <p class="section-hint">Check your information before submitting</p>
+
+                <div class="review-section">
+                    <h3>📸 Photos</h3>
+                    <div class="review-photos" id="reviewPhotos"></div>
+                </div>
+
+                <div class="review-section">
+                    <h3>📍 Location</h3>
+                    <p id="reviewLocation" class="text-gray">Not yet provided</p>
+                </div>
+
+                <div class="review-section">
+                    <h3>📋 Campaign</h3>
+                    <p id="reviewCampaign" class="text-gray">Not yet selected</p>
+                </div>
+
+                <div class="review-section">
+                    <h3>📝 Observations</h3>
+                    <p id="reviewDescription" class="text-gray">Not yet provided</p>
+                </div>
+
+                <div class="review-section">
+                    <h3>👥 Beneficiaries</h3>
+                    <p id="reviewBeneficiaries" class="text-gray">Not specified</p>
+                </div>
+
+                <div class="trust-score-preview" id="trustScorePreview">
+                    <h3>Trust Score Preview</h3>
+                    <div class="score-breakdown" id="scoreBreakdown"></div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn btn-secondary" onclick="goToStep(3)">← Back</button>
+                    <button class="btn btn-submit" onclick="submitVerification()">
+                        <span>🚀</span> Submit Verification
+                    </button>
+                </div>
+            </section>
+
+            <!-- Loading Indicator -->
+            <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Submitting verification...</p>
+            </div>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="success-message" style="display: none;">
+                <div class="success-content">
+                    <h2>✅ Verification Submitted!</h2>
+                    <div id="successDetails"></div>
+                    <button class="btn btn-primary" onclick="resetForm()">New Verification</button>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-message" style="display: none;">
+                <p id="errorText"></p>
+                <button class="btn btn-secondary" onclick="closeError()">OK</button>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p class="text-sm">TrustVoice Field Agent Verification</p>
+            <p class="text-xs text-gray">Earn $30 USD for each approved verification</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

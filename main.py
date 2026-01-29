@@ -161,6 +161,9 @@ async def shutdown_event():
 # Static file mounts act as catch-all routes, so they must come after
 # all API endpoints to avoid intercepting API requests
 
+# Serve field agent mini app at /miniapp
+app.mount("/miniapp", StaticFiles(directory="miniapp", html=True), name="field-agent-miniapp")
+
 # Serve admin dashboard at /admin (must come before root mount)
 app.mount("/admin", StaticFiles(directory="frontend", html=True), name="admin-frontend")
 

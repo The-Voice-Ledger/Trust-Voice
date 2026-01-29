@@ -1,0 +1,694 @@
+/* ========================================
+   TrustVoice Field Agent Mini App
+   Telegram Web App Styles
+   ======================================== */
+
+:root {
+    --primary-color: #3b82f6;
+    --primary-dark: #1f4fb8;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --background: #f3f4f6;
+    --surface: #ffffff;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    --radius: 8px;
+    --spacing: 16px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--background);
+    color: var(--text-primary);
+    line-height: 1.6;
+    font-size: 16px;
+}
+
+/* ========================================
+   Layout
+   ======================================== */
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.header {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    padding: 24px var(--spacing);
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header h1 {
+    font-size: 24px;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.header p {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.main-content {
+    flex: 1;
+    padding: var(--spacing);
+    padding-bottom: 80px;
+}
+
+.footer {
+    background-color: var(--surface);
+    border-top: 1px solid var(--border-color);
+    padding: var(--spacing);
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* ========================================
+   Step Indicator
+   ======================================== */
+
+.step-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    gap: 8px;
+}
+
+.step {
+    flex: 1;
+    text-align: center;
+}
+
+.step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 8px;
+    background-color: var(--border-color);
+    color: var(--text-secondary);
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.step.step-active .step-number {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.step-label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.step.step-active .step-label {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* ========================================
+   Step Sections
+   ======================================== */
+
+.step-section {
+    background-color: var(--surface);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    display: none;
+}
+
+.step-section.active {
+    display: block;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.step-section h2 {
+    font-size: 20px;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.section-hint {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+/* ========================================
+   Photo Upload
+   ======================================== */
+
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.photo-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background-color: var(--background);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-item .delete-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background-color: var(--danger-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.photo-item:hover .delete-btn {
+    opacity: 1;
+}
+
+.photo-upload-area {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.photo-upload-area button {
+    flex: 1;
+}
+
+.photo-stats {
+    background-color: var(--background);
+    padding: 12px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.photo-stats p {
+    margin: 4px 0;
+}
+
+/* ========================================
+   Location
+   ======================================== */
+
+.location-display {
+    background-color: var(--background);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.location-status {
+    width: 100%;
+}
+
+.location-status p {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.map-container {
+    height: 300px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+.location-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.location-actions button {
+    flex: 1;
+}
+
+.manual-location-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background-color: var(--background);
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+}
+
+/* ========================================
+   Forms
+   ======================================== */
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.input-field {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input-field::placeholder {
+    color: var(--text-secondary);
+}
+
+textarea.input-field {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.character-count {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+/* ========================================
+   Review Section
+   ======================================== */
+
+.review-section {
+    background-color: var(--background);
+    padding: 16px;
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+}
+
+.review-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.review-section p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.review-photos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.review-photos img {
+    width: 100%;
+    border-radius: var(--radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   Trust Score Preview
+   ======================================== */
+
+.trust-score-preview {
+    background: linear-gradient(135deg, #f0f4ff, #f9fafb);
+    border: 2px solid var(--primary-color);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.trust-score-preview h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--primary-color);
+}
+
+.score-breakdown {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.score-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.score-item:last-child {
+    border-bottom: none;
+}
+
+.score-item-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.score-item-value {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.total-score {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 8px;
+    margin-top: 8px;
+    border-top: 2px solid rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.approval-indicator {
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 8px;
+    text-align: center;
+}
+
+.approval-indicator.approved {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+}
+
+.approval-indicator.pending {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--warning-color);
+}
+
+/* ========================================
+   Buttons
+   ======================================== */
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+    width: 100%;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.btn-primary:disabled {
+    background-color: var(--border-color);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background-color: var(--background);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background-color: var(--border-color);
+}
+
+.btn-next {
+    background-color: var(--primary-color);
+    color: white;
+    width: 100%;
+    margin-top: 24px;
+}
+
+.btn-next:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-submit {
+    background-color: var(--success-color);
+    color: white;
+    font-size: 18px;
+}
+
+.btn-submit:hover {
+    background-color: #059669;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.nav-buttons .btn {
+    flex: 1;
+}
+
+/* ========================================
+   Status Messages
+   ======================================== */
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-overlay p {
+    color: white;
+    margin-top: 16px;
+    font-size: 14px;
+}
+
+.success-message {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.success-content {
+    background-color: white;
+    border-radius: var(--radius);
+    padding: 32px 20px;
+    text-align: center;
+    max-width: 400px;
+}
+
+.success-content h2 {
+    font-size: 24px;
+    color: var(--success-color);
+    margin-bottom: 16px;
+}
+
+#successDetails {
+    text-align: left;
+    background-color: var(--background);
+    padding: 16px;
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.error-message {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    background-color: var(--danger-color);
+    color: white;
+    padding: 16px;
+    border-radius: var(--radius);
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.error-message p {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.error-message .btn {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* ========================================
+   Utility Classes
+   ======================================== */
+
+.text-sm {
+    font-size: 14px;
+}
+
+.text-xs {
+    font-size: 12px;
+}
+
+.text-gray {
+    color: var(--text-secondary);
+}
+
+/* ========================================
+   Responsive
+   ======================================== */
+
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 20px;
+    }
+
+    .step-indicator {
+        margin-bottom: 24px;
+    }
+
+    .step-number {
+        width: 36px;
+        height: 36px;
+        font-size: 12px;
+    }
+
+    .main-content {
+        padding: 12px;
+        padding-bottom: 60px;
+    }
+
+    .photo-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .nav-buttons {
+        flex-direction: column;
+    }
+
+    .nav-buttons .btn {
+        width: 100%;
+    }
+}
