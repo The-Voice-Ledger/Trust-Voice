@@ -48,7 +48,9 @@ class EntityType(str, Enum):
     CURRENCY = "currency"
     CAMPAIGN_ID = "campaign_id"
     CAMPAIGN_NAME = "campaign_name"
+    TITLE = "title"  # Campaign title (alias for campaign_name)
     CATEGORY = "category"
+    GOAL_AMOUNT = "goal_amount"  # Fundraising goal
     LOCATION = "location"
     DATE = "date"
     LANGUAGE = "language"
@@ -127,12 +129,12 @@ INTENT_SCHEMAS: Dict[IntentType, Dict[str, Any]] = {
     
     IntentType.CREATE_CAMPAIGN: {
         "description": "NGO wants to create a new campaign",
-        "required_entities": [EntityType.CAMPAIGN_NAME, EntityType.CATEGORY],
-        "optional_entities": [EntityType.AMOUNT, EntityType.LOCATION],
+        "required_entities": [EntityType.CAMPAIGN_NAME, EntityType.GOAL_AMOUNT, EntityType.CATEGORY],
+        "optional_entities": [EntityType.LOCATION],
         "examples": [
-            "Create a new water project campaign",
-            "Start a school building campaign in Nairobi",
-            "Register health project needing $10,000"
+            "Create a new water project campaign with a goal of 5000 dollars",
+            "Start a school building campaign in Nairobi needing $10,000",
+            "Register health project with 20000 dollar goal"
         ]
     },
     

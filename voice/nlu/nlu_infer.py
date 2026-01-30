@@ -142,21 +142,33 @@ INTENT CLASSIFICATION GUIDELINES:
 - Be GENEROUS with intent matching - if user mentions the platform, features, or asks general questions, use "system_info"
 - Only use "unclear" if truly ambiguous and doesn't match any intent pattern
 
+ENTITY EXTRACTION RULES:
+- campaign_name / title: The name of the campaign (e.g., "Clean water for Bamenda", "School project")
+- goal_amount: Fundraising goal (e.g., "5000", "ten thousand") - extract numbers from speech
+- amount: Donation amount (different from goal_amount)
+- category: Campaign category (Water, Education, Healthcare, etc.) - be flexible with matching
+- Numbers: "fifty" = 50, "hundred" = 100, "thousand" = 1000, "5k" = 5000, "10,000" = 10000
+- If user says just a number in response to goal question, extract as goal_amount
+- If user says "water", "education", etc. in context, extract as category
+
 IMPORTANT:
 - Return ONLY valid JSON
 - Use intent values exactly as defined (e.g., "make_donation", not "donate")
-- Extract all mentioned entities
+- Extract all mentioned entities with correct field names
 - Prefer "system_info" over "unclear" for general platform questions
 - For Amharic input, extract intent even if you need to translate
-- Be generous with amounts - "fifty" = 50, "hundred" = 100
+- When user provides clarification (single value), extract it as the appropriate entity type
 
 Response Format:
 {{
     "intent": "intent_name",
     "entities": {{
         "amount": 50,
+        "goal_amount": 5000,
         "currency": "USD",
-        "campaign_name": "Example Campaign"
+        "campaign_name": "Example Campaign",
+        "title": "Example Campaign",
+        "category": "water"
     }},
     "confidence": 0.95,
     "requires_clarification": false,
@@ -221,6 +233,22 @@ def _validate_and_normalize(result: Dict[str, Any]) -> Dict[str, Any]:
         except (ValueError, TypeError):
             del result["entities"]["amount"]
     
+    # Normalize goal_amount to float
+    if "goal_amount" in result["entities"]:
+        try:
+            result["entities"]["goal_amount"] = float(result["entities"]["goal_amount"])
+        except (ValueError, TypeError):
+            del result["entities"]["goal_amount"]
+    
+    # Normalize campaign_name to also set title (for create_campaign)
+    if "campaign_name" in result["entities"] and result["entities"]["campaign_name"]:
+        # Also set as "title" for campaign creation
+        result["entities"]["title"] = result["entities"]["campaign_name"]
+    
+    # Normalize title to also set campaign_name (bidirectional)
+    if "title" in result["entities"] and result["entities"]["title"]:
+        result["entities"]["campaign_name"] = result["entities"]["title"]
+    
     return result
 
 
@@ -275,6 +303,7 @@ def _generate_missing_entity_question(
         (IntentType.MAKE_DONATION, EntityType.CAMPAIGN_NAME): "Which campaign would you like to support?",
         (IntentType.VIEW_CAMPAIGN_DETAILS, EntityType.CAMPAIGN_NAME): "Which campaign would you like to learn about?",
         (IntentType.CREATE_CAMPAIGN, EntityType.CAMPAIGN_NAME): "What would you like to name this campaign?",
+        (IntentType.CREATE_CAMPAIGN, EntityType.GOAL_AMOUNT): "What is your fundraising goal amount in dollars?",
         (IntentType.CREATE_CAMPAIGN, EntityType.CATEGORY): "What category is this campaign? (e.g., Water, Education, Healthcare)",
         (IntentType.CHANGE_LANGUAGE, EntityType.LANGUAGE): "Which language would you prefer? English or Amharic?",
     }
