@@ -771,11 +771,14 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 
                 # Handle clarification flow - store incomplete intent
                 if router_result.get("needs_clarification"):
-                    from voice.session_manager import SessionManager
-                    SessionManager.start_session(
+                    from voice.session_manager import SessionManager, ConversationState
+                    session = SessionManager.create_session(
                         user_id=user_id,
-                        state=ConversationState.WAITING_FOR_CLARIFICATION,
-                        data={
+                        state=ConversationState.WAITING_FOR_CLARIFICATION
+                    )
+                    SessionManager.update_session(
+                        user_id=user_id,
+                        data_update={
                             "pending_intent": intent,
                             "pending_entities": entities,
                             "missing_entities": router_result.get("missing_entities", []),

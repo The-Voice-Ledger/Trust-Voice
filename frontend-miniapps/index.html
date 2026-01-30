@@ -231,19 +231,22 @@
     </div>
     
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+        // Check if Telegram WebApp is available
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
         
         // Display user info
-        const user = tg.initDataUnsafe?.user;
+        const user = tg?.initDataUnsafe?.user;
         if (user) {
             document.getElementById('userName').textContent = 
                 user.first_name + (user.last_name ? ' ' + user.last_name : '');
             document.getElementById('userId').textContent = `User ID: ${user.id}`;
         } else {
             document.getElementById('userName').textContent = 'Welcome!';
-            document.getElementById('userId').textContent = 'User info not available';
+            document.getElementById('userId').textContent = 'Open in Telegram to see user info';
         }
         
         // Open specific mini app
@@ -269,7 +272,7 @@
         // Add haptic feedback on touch (if available)
         document.querySelectorAll('.app-card').forEach(card => {
             card.addEventListener('touchstart', () => {
-                if (tg.HapticFeedback) {
+                if (tg?.HapticFeedback) {
                     tg.HapticFeedback.impactOccurred('light');
                 }
             });

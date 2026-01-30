@@ -42,6 +42,7 @@ class ConversationState(Enum):
     CREATING_CAMPAIGN = "creating"         # Creating new campaign
     REGISTERING_NGO = "registering_ngo"    # NGO registration
     ASKING_ANALYTICS = "analytics"         # Analytics queries
+    WAITING_FOR_CLARIFICATION = "waiting_for_clarification"  # Waiting for missing entity
 
 
 class DonationStep(Enum):
