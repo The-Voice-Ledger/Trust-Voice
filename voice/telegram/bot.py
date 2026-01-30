@@ -694,8 +694,26 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             entities = result.get("entities", {})
             transcript = result["stages"]["asr"]["transcript"]
             
+            # Use response from worker if available (worker already did routing)
+            if "response" in result and "message" in result["response"]:
+                response = result["response"]["message"]
+                
+                # Add transcript for transparency
+                full_response = f"💬 You said: \"{transcript}\"\n\n{response}"
+                
+                # Send with dual delivery (text + voice)
+                await send_voice_reply(
+                    update=update,
+                    text=full_response,
+                    language=language,
+                    parse_mode="HTML"
+                )
+                
+                logger.info(f"✅ Voice processed: {intent}")
+                return
+            
             # ==================================================================
-            # LAB 6: Unified Command Router (All Users)
+            # LAB 6: Unified Command Router (All Users - FALLBACK ONLY)
             # ==================================================================
             # Route ALL users through Lab 6 (registered & guests)
             db = SessionLocal()
