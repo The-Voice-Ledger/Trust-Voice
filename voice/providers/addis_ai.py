@@ -290,7 +290,7 @@ def get_addisai_provider() -> AddisAIProvider:
 def transcribe_sync(audio_path: str, language: str = "am") -> Dict[str, Any]:
     """
     Synchronous wrapper for AddisAI transcription.
-    Creates new event loop to avoid conflicts.
+    Uses asyncio.run() for clean event loop management.
     
     Args:
         audio_path: Path to audio file
@@ -303,11 +303,22 @@ def transcribe_sync(audio_path: str, language: str = "am") -> Dict[str, Any]:
     
     provider = get_addisai_provider()
     
-    # Create new event loop for this transcription
+    # Use asyncio.run() which properly handles event loop lifecycle
+    # This works even if called from sync context
     try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        result = loop.run_until_complete(provider.transcribe(audio_path, language))
-        return result
-    finally:
-        loop.close()
+        # Check if we're already in an event loop
+        try:
+            loop = asyncio.get_running_loop()
+            # If we're in a loop, we can't use asyncio.run()
+            # Create a task and run it
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(asyncio.run, provider.transcribe(audio_path, language))
+                result = future.result(timeout=30)
+            return result
+        except RuntimeError:
+            # No event loop running, safe to use asyncio.run()
+            result = asyncio.run(provider.transcribe(audio_path, language))
+            return result
+    except Exception as e:
+        raise AddisAIError(f"AddisAI transcription failed: {str(e)}")

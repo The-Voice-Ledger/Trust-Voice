@@ -243,9 +243,23 @@ function detectLanguage(text) {
     return 'en';
 }
 
-// Get user language preference from localStorage
+// Get user language preference from localStorage with timestamp check
 function getUserLanguage() {
-    return localStorage.getItem('user_language') || 'en';
+    const cached = localStorage.getItem('user_language');
+    const cacheTime = localStorage.getItem('user_language_timestamp');
+    
+    // Cache expires after 1 hour (3600000 ms)
+    const CACHE_TTL = 3600000;
+    const now = Date.now();
+    
+    if (cached && cacheTime && (now - parseInt(cacheTime)) < CACHE_TTL) {
+        return cached;
+    }
+    
+    // Cache expired or missing, clear it
+    localStorage.removeItem('user_language');
+    localStorage.removeItem('user_language_timestamp');
+    return 'en';
 }
 
 // Fetch and set user language from backend (Telegram user profile)
@@ -263,7 +277,11 @@ async function initializeUserLanguage() {
         if (response.ok) {
             const data = await response.json();
             const language = data.language || 'en';
+            
+            // Store with timestamp for cache expiration
             localStorage.setItem('user_language', language);
+            localStorage.setItem('user_language_timestamp', Date.now().toString());
+            
             console.log(`User language initialized from backend: ${language}`);
             return language;
         }
@@ -271,13 +289,14 @@ async function initializeUserLanguage() {
         console.error('Failed to fetch user language:', error);
     }
     
-    // Fallback to localStorage or default
-    return getUserLanguage();
+    // Fallback to default (don't use stale cache)
+    return 'en';
 }
 
 // Set user language preference
 function setUserLanguage(language) {
     localStorage.setItem('user_language', language);
+    localStorage.setItem('user_language_timestamp', Date.now().toString());
     console.log(`Language preference set to: ${language}`);
 }
 
