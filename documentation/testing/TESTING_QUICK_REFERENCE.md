@@ -174,3 +174,25 @@ psql $DATABASE_URL -c "SELECT id, trust_score, status, agent_payout_status, crea
 ---
 
 **Happy Testing! 🚀**
+
+
+async def handle_message(update: Update, context):
+    """Handle both voice and text messages"""
+    
+    # Track input type for analytics
+    if update.message.voice:
+        input_type = "voice"
+        audio_path = await download_voice(update.message.voice)
+        user_message = await transcribe_voice_message(audio_path)
+    else:
+        input_type = "text"
+        user_message = update.message.text
+    
+    # Process request
+    response = await process_user_request(user_message)
+    
+    # ALWAYS send dual response (TrustVoice pattern)
+    await send_voice_reply(update, response)
+    
+    # Log for monitoring
+    logger.info(f"Input: {input_type}, Response: text+voice")

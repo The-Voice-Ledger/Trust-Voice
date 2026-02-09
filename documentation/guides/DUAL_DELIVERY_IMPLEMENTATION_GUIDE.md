@@ -94,13 +94,24 @@ User Action (Voice/Text)
 ### 1.3 TTS Provider Routing
 
 ```python
-Language Detection (Unicode-based)
+Language Detection (Preference-First)
          ↓
     ┌─────────────┐
-    │ Amharic?    │
-    │ (U+1200-    │
-    │  U+137F)    │
+    │ User Pref?  │
+    │ (from DB)   │
     └─────────────┘
+         ↓
+    Yes ↓         ↓ No
+        ↓         ↓
+┌───────────┐  ┌─────────────┐
+│ Use User   │  │ Detect from │
+│ Preference │  │ Text        │
+│            │  │ (Unicode)   │
+└───────────┘  └─────────────┘
+         ↓              ↓
+    ┌─────────────────────┐
+    │ Amharic (am)?       │
+    └─────────────────────┘
          ↓
     Yes ↓         ↓ No
         ↓         ↓
@@ -174,26 +185,50 @@ asyncio.create_task(generate_and_send_voice())
 - Amharic → AddisAI (native support, free)
 - English → OpenAI (best quality, $0.015/1K chars)
 
-### 2.4 Why Unicode-Based Language Detection?
+### 2.4 Why User Preference-Based Language Routing?
 
-**Alternatives Considered:**
-1. **User preference** - Requires registration/setup
-2. **ML model** - Overkill, adds latency
-3. **Unicode ranges** - Simple, fast, accurate ✅
+**Requirement:** Respect user's explicit language choice from registration.
 
-**Implementation:**
+**Options Evaluated:**
+1. **Unicode-based text detection** - Per-message analysis, inconsistent
+2. **User preference from DB** - Consistent, respects accessibility choice ✅
+3. **Hybrid (preference + fallback)** - Best of both worlds ✅
+
+**Decision:** Prioritize user preference, fall back to text detection:
+1. Explicit `language` parameter (highest priority)
+2. User's `preferred_language` from registration
+3. Unicode-based text detection (fallback for anonymous users)
+
+**Rationale:**
+- **Accessibility-first**: User chose language during registration for a reason (literacy level)
+- **Consistent with INPUT**: STT already uses user preference
+- **Predictable UX**: Same TTS voice every time, not per-message
+- **Voice-first design**: Illiterate users expect their chosen language
+- **Graceful degradation**: Falls back to text detection if no preference
+
+**Example Flow:**
 ```python
-def detect_language(text: str) -> str:
-    # Amharic: U+1200 to U+137F
-    amharic_chars = sum(1 for char in text if '\u1200' <= char <= '\u137F')
-    
-    if amharic_chars > len(text) * 0.3:
-        return "am"  # >30% Amharic characters
-    
-    return "en"  # Default to English
+# 1. User registers, selects Amharic
+user.preferred_language = 'am'
+
+# 2. User sends voice in Amharic
+STT uses user.preferred_language ('am') → AddisAI transcription
+
+# 3. Bot responds with text
+TTS uses user.preferred_language ('am') → AddisAI voice output
+
+# Result: Consistent Amharic experience end-to-end
 ```
 
-**Accuracy:** 99%+ for pure language text, 95%+ for mixed text
+**vs Old Approach (Text Detection Only):**
+```python
+# Bot response: "✅ OK"
+detect_language("✅ OK") → 'en' (no Amharic chars)
+→ OpenAI TTS → English voice
+
+# Amharic user hears unexpected English voice!
+# Inconsistent with their registration choice
+```
 
 ### 2.5 Why Text Cleaning?
 
@@ -293,22 +328,47 @@ async def send_voice_reply(
         reply_to_message_id=reply_to_message_id
     )
     
-    # 2. Generate voice in background
+    # 2. Look up user preference and generate voice in background
     if send_voice:
+        # Look up user preference from database
+        user_preference_language = None
+        try:
+            db = SessionLocal()
+            try:
+                user = db.query(UserIdentity).filter_by(
+                    telegram_user_id=str(chat_id)
+                ).first()
+                if user and user.preferred_language:
+                    user_preference_language = user.preferred_language
+            finally:
+                db.close()
+        except Exception as e:
+            logger.warning(f"Could not lookup user preference: {e}")
+        
+        # Spawn background task with preference
         asyncio.create_task(
             _generate_and_send_voice(
-                bot, chat_id, message, language, text_msg.message_id
+                bot, chat_id, message, language, 
+                text_msg.message_id, user_preference_language
             )
         )
 
-async def _generate_and_send_voice(...):
+async def _generate_and_send_voice(
+    bot, chat_id, message, language, 
+    reply_to_message_id, user_preference_language
+):
     """Background TTS generation"""
     # Clean text
     clean_text = clean_text_for_tts(message)
     
-    # Detect language
+    # Prioritize: explicit > user preference > text detection
     if language is None:
-        language = detect_language(clean_text)
+        if user_preference_language:
+            language = user_preference_language  # Use registration choice
+            logger.info(f"Using user preference: {language}")
+        else:
+            language = detect_language(clean_text)  # Fallback
+            logger.info(f"Using text detection: {language}")
     
     # Route to TTS provider
     if language == "am":
@@ -1034,25 +1094,26 @@ async def _generate_and_send_voice(...):
 
 ### 10.1 What Worked Well
 
-**1. Async Background Tasks**
+**1. User Preference-Based TTS Routing**
+- Consistent language experience (registration → STT → TTS)
+- Respects user's accessibility choice
+- Predictable voice output
+- Graceful fallback to text detection
+
+**2. Async Background Tasks**
 - Non-blocking voice generation
 - No perceived latency increase
 - Simple implementation with `asyncio.create_task()`
 
-**2. Dual Provider Routing**
+**3. Dual Provider Routing**
 - Best quality for each language
 - Cost optimization (free Amharic, paid English)
 - Easy to add more providers
 
-**3. Text Cleaning**
+**4. Text Cleaning**
 - Significantly improved TTS quality
 - Regex-based (fast, no ML needed)
 - Easy to customize
-
-**4. Unicode Language Detection**
-- 99%+ accuracy
-- Zero API calls
-- Instant classification
 
 **5. Graceful Degradation**
 - TTS failure doesn't break UX
@@ -1088,27 +1149,32 @@ async def _generate_and_send_voice(...):
 
 ### 10.3 Key Takeaways
 
-**1. Start Simple**
+**1. Consistency is Critical**
+- INPUT (STT) and OUTPUT (TTS) must use same language
+- User preference from registration is the source of truth
+- Text detection only as fallback for edge cases
+
+**2. Start Simple**
 - Built basic dual delivery first
 - Added optimizations later
 - Avoid premature optimization
 
-**2. Test with Real Users**
+**3. Test with Real Users**
 - Internal testing missed edge cases
 - Real users found issues quickly
 - Collect feedback continuously
 
-**3. Monitor Costs Early**
+**4. Monitor Costs Early**
 - TTS costs add up quickly
 - Set up billing alerts day 1
 - Optimize based on actual usage
 
-**4. Document Everything**
+**5. Document Everything**
 - This guide written during implementation
 - Easier to maintain/replicate
 - Helps onboarding new developers
 
-**5. Make Failures Silent**
+**6. Make Failures Silent**
 - TTS failure shouldn't break UX
 - Log errors but don't show users
 - Graceful degradation critical
