@@ -5,6 +5,7 @@ Handles callbacks from M-Pesa and Stripe when payment status changes.
 These endpoints should be registered with payment processors.
 """
 
+import os
 from fastapi import APIRouter, Request, HTTPException, Depends
 from sqlalchemy.orm import Session
 import logging
@@ -47,6 +48,15 @@ async def mpesa_callback(request: Request, db: Session = Depends(get_db)):
     }
     """
     try:
+        # Verify webhook authenticity (basic IP whitelist or shared secret)
+        # In production, validate request comes from Safaricom IPs
+        mpesa_secret = os.getenv("MPESA_WEBHOOK_SECRET")
+        if mpesa_secret:
+            auth_header = request.headers.get("Authorization")
+            if not auth_header or auth_header != f"Bearer {mpesa_secret}":
+                logger.warning(f"M-Pesa webhook: Invalid authorization")
+                raise HTTPException(401, "Unauthorized")
+        
         payload = await request.json()
         logger.info(f"M-Pesa webhook received: {payload}")
         
@@ -80,29 +90,42 @@ async def mpesa_callback(request: Request, db: Session = Depends(get_db)):
             donation.status = 'completed'
             donation.payment_intent_id = receipt_number or donation.payment_intent_id
             
-            # Update campaign total (per-currency bucket + cached USD)
+            # Update campaign total using atomic operations to prevent race conditions
             campaign = db.query(Campaign).filter(
                 Campaign.id == donation.campaign_id
             ).first()
             
             if campaign:
-                # Add to currency-specific bucket
+                # Initialize raised_amounts if needed
                 if not campaign.raised_amounts:
                     campaign.raised_amounts = {}
                 
                 currency = donation.currency
-                current_amount = campaign.raised_amounts.get(currency, 0.0)
-                campaign.raised_amounts[currency] = current_amount + float(donation.amount)
                 
-                # Also update cached USD total
+                # Convert to USD using currency service
                 from services.currency_service import currency_service
-                amount_usd = currency_service.convert_to_usd(
-                    float(donation.amount),
-                    donation.currency
-                )
-                campaign.raised_amount_usd += amount_usd
+                try:
+                    amount_usd = currency_service.convert_to_usd(
+                        float(donation.amount),
+                        donation.currency
+                    )
+                except Exception as e:
+                    logger.error(f"Currency conversion error: {e}")
+                    amount_usd = float(donation.amount)  # Assume USD if conversion fails
                 
-                # Mark raised_amounts as modified
+                # Use atomic increment for USD total (prevents race condition)
+                from sqlalchemy import update
+                db.execute(
+                    update(Campaign)
+                    .where(Campaign.id == campaign.id)
+                    .values(raised_amount_usd=Campaign.raised_amount_usd + amount_usd)
+                )
+                
+                # Update per-currency bucket (requires JSON merge)
+                current_currency_amount = campaign.raised_amounts.get(currency, 0.0)
+                campaign.raised_amounts[currency] = current_currency_amount + float(donation.amount)
+                
+                # Mark raised_amounts as modified for SQLAlchemy
                 from sqlalchemy.orm.attributes import flag_modified
                 flag_modified(campaign, "raised_amounts")
             
@@ -171,29 +194,42 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             if donation:
                 donation.status = 'completed'
                 
-                # Update campaign total (per-currency bucket + cached USD)
+                # Update campaign total using atomic operations (same as M-Pesa)
                 campaign = db.query(Campaign).filter(
                     Campaign.id == donation.campaign_id
                 ).first()
                 
                 if campaign:
-                    # Add to currency-specific bucket
+                    # Initialize raised_amounts if needed
                     if not campaign.raised_amounts:
                         campaign.raised_amounts = {}
                     
                     currency = donation.currency
-                    current_amount = campaign.raised_amounts.get(currency, 0.0)
-                    campaign.raised_amounts[currency] = current_amount + float(donation.amount)
                     
-                    # Also update cached USD total
+                    # Convert to USD
                     from services.currency_service import currency_service
-                    amount_usd = currency_service.convert_to_usd(
-                        float(donation.amount),
-                        donation.currency
-                    )
-                    campaign.raised_amount_usd += amount_usd
+                    try:
+                        amount_usd = currency_service.convert_to_usd(
+                            float(donation.amount),
+                            donation.currency
+                        )
+                    except Exception as e:
+                        logger.error(f"Currency conversion error: {e}")
+                        amount_usd = float(donation.amount)
                     
-                    # Mark raised_amounts as modified
+                    # Atomic increment for USD total
+                    from sqlalchemy import update
+                    db.execute(
+                        update(Campaign)
+                        .where(Campaign.id == campaign.id)
+                        .values(raised_amount_usd=Campaign.raised_amount_usd + amount_usd)
+                    )
+                    
+                    # Update per-currency bucket
+                    current_currency_amount = campaign.raised_amounts.get(currency, 0.0)
+                    campaign.raised_amounts[currency] = current_currency_amount + float(donation.amount)
+                    
+                    # Mark as modified
                     from sqlalchemy.orm.attributes import flag_modified
                     flag_modified(campaign, "raised_amounts")
                 

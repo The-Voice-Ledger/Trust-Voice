@@ -349,6 +349,14 @@ class Campaign(Base):
     total_trust_score = Column(Float, default=0.0)  # Sum of all trust scores
     avg_trust_score = Column(Float, default=0.0)  # Average trust score (calculated)
     
+    # Transparency Video (IPFS)
+    video_ipfs_hash = Column(String(100), nullable=True)  # QmXxxx... IPFS content hash
+    video_ipfs_url = Column(String(500), nullable=True)   # https://gateway.pinata.cloud/ipfs/QmXxxx...
+    video_uploaded_at = Column(DateTime, nullable=True)
+    video_duration_seconds = Column(Integer, nullable=True)  # Video length
+    video_thumbnail_url = Column(String(500), nullable=True)  # Optional thumbnail image
+    video_file_size_bytes = Column(Integer, nullable=True)  # File size for bandwidth estimates
+    
     # Dates
     start_date = Column(DateTime)
     end_date = Column(DateTime)
@@ -464,8 +472,21 @@ class Donation(Base):
     payment_intent_id = Column(String(255))  # Stripe Payment Intent ID or M-Pesa transaction ID
     transaction_hash = Column(String(66))  # If crypto, blockchain tx hash
     
-    # Blockchain Receipt
+    # Blockchain Receipt (Legacy field, kept for compatibility)
     blockchain_receipt_url = Column(Text)  # IPFS URL with receipt NFT
+    
+    # NFT Tax Receipt (Blockchain-based, verifiable by tax authorities)
+    receipt_nft_token_id = Column(Integer, nullable=True)  # NFT token ID on blockchain
+    receipt_nft_contract = Column(String(42), nullable=True)  # Contract address (0x...)
+    receipt_nft_network = Column(String(20), nullable=True)  # polygon, ethereum, base, arbitrum
+    receipt_nft_tx_hash = Column(String(66), nullable=True)  # Minting transaction hash
+    receipt_metadata_ipfs = Column(String(100), nullable=True)  # QmXxxx... metadata hash
+    receipt_minted_at = Column(DateTime, nullable=True)
+    
+    # Donor Tax Information (optional, for receipt generation)
+    donor_tax_id = Column(String(50), nullable=True)  # SSN, EIN, Tax ID (encrypted)
+    donor_full_legal_name = Column(String(200), nullable=True)  # Legal name for tax docs
+    donor_wallet_address = Column(String(42), nullable=True)  # 0x... for NFT minting
     
     # Status
     status = Column(String(20), default="pending")

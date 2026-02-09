@@ -253,13 +253,50 @@ def _validate_and_normalize(result: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _fallback_response(transcript: str) -> Dict[str, Any]:
-    """Generate fallback response when NLU fails"""
+    """Generate fallback response when NLU fails - uses keyword matching"""
+    transcript_lower = transcript.lower()
+    
+    # Simple keyword matching for common intents
+    if any(word in transcript_lower for word in ['donate', 'give', 'contribute', 'support']):
+        return {
+            "intent": IntentType.MAKE_DONATION.value,
+            "entities": {},
+            "confidence": 0.3,
+            "requires_clarification": True,
+            "clarification_question": "I heard you want to donate. Which campaign and how much?"
+        }
+    
+    if any(word in transcript_lower for word in ['search', 'find', 'show', 'list', 'browse']):
+        return {
+            "intent": IntentType.SEARCH_CAMPAIGNS.value,
+            "entities": {},
+            "confidence": 0.3,
+            "requires_clarification": False
+        }
+    
+    if any(word in transcript_lower for word in ['help', 'how', 'what can']):
+        return {
+            "intent": IntentType.GET_HELP.value,
+            "entities": {},
+            "confidence": 0.4,
+            "requires_clarification": False
+        }
+    
+    if any(word in transcript_lower for word in ['hello', 'hi', 'hey', 'greetings']):
+        return {
+            "intent": IntentType.GREETING.value,
+            "entities": {},
+            "confidence": 0.5,
+            "requires_clarification": False
+        }
+    
+    # Default: unclear intent
     return {
         "intent": IntentType.UNCLEAR.value,
         "entities": {},
         "confidence": 0.0,
         "requires_clarification": True,
-        "clarification_question": "I didn't quite understand that. Could you please rephrase?"
+        "clarification_question": "I didn't quite understand that. Could you please rephrase? You can donate, search campaigns, or ask for help."
     }
 
 

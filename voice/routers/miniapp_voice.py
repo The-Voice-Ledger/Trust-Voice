@@ -116,6 +116,9 @@ async def voice_search_campaigns(
         except ASRError as e:
             logger.error(f"ASR error: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Speech recognition failed: {str(e)}")
+        except Exception as e:
+            logger.error(f"Unexpected ASR error: {str(e)}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Audio processing failed: {str(e)}")
         
         # Step 4: Use NLU to extract intent and entities
         try:
@@ -129,9 +132,13 @@ async def voice_search_campaigns(
             entities = nlu_result.get('entities', {})
             logger.info(f"NLU extracted intent: {intent}, entities: {entities}")
             
-        except Exception as e:
+        except NLUError as e:
             logger.error(f"NLU error: {str(e)}, falling back to keyword search")
             # Fallback to simple keyword extraction if NLU fails
+            intent = IntentType.SEARCH_CAMPAIGNS
+            entities = {}
+        except Exception as e:
+            logger.error(f"Unexpected NLU error: {str(e)}, using fallback")
             intent = IntentType.SEARCH_CAMPAIGNS
             entities = {}
         

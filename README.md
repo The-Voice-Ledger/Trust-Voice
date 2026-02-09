@@ -440,6 +440,19 @@ Trust-Voice/
 - User preferences
 - Session management
 
+**Campaign Transparency:**
+- Video uploads with GPS capture
+- IPFS permanent storage via Pinata (50MB limit)
+- GPS verification against field agent reports
+- 500m verification threshold for location matching
+
+**Blockchain Tax Receipts:**
+- NFT tax receipts minted on Base/Polygon networks
+- ERC-721 standard with metadata on IPFS
+- Donor wallet addresses for blockchain verification
+- Transaction tracking and explorer links
+- ~$0.01 per NFT mint cost
+
 ## API Endpoints
 
 **Voice Processing:**
@@ -454,11 +467,19 @@ Trust-Voice/
 - `POST /api/campaigns/` - Create campaign
 - `GET /api/campaigns/{id}` - Get campaign details
 - `PUT /api/campaigns/{id}` - Update campaign
+- `POST /api/campaigns/{id}/video` - Upload campaign video (with GPS)
+- `GET /api/campaigns/{id}/video` - Get video details + GPS verification
+- `DELETE /api/campaigns/{id}/video` - Delete campaign video
+- `GET /api/campaigns/{id}/verify-location` - Verify GPS match with field agent
 
 **Donations:**
 - `POST /api/donations/` - Record donation
 - `GET /api/donations/` - List donations
 - `GET /api/donations/{id}` - Get donation details
+- `POST /api/donations/{id}/mint-nft-receipt` - Mint blockchain NFT receipt
+- `GET /api/donations/{id}/nft-receipt` - Get NFT receipt details
+- `GET /api/donations/{id}/verify-receipt` - Verify NFT on blockchain
+- `GET /api/donations/user/{user_id}/tax-summary` - Annual tax summary
 
 **Webhooks:**
 - `POST /webhooks/mpesa` - M-Pesa callback
@@ -480,6 +501,9 @@ Trust-Voice/
 - Telegram bot token
 - OpenAI API key
 - AddisAI API key (for Amharic)
+- Pinata API credentials (for IPFS video storage)
+- Web3 provider RPC URL (Alchemy/Infura for blockchain)
+- Foundry (for smart contract development)
 
 ### Local Development
 
@@ -545,6 +569,18 @@ OPENAI_API_KEY=sk-proj-your-key
 ADDIS_AI_API_KEY=sk_your-key
 ADDIS_AI_URL=https://api.addisassistant.com/api/v1/chat_generate
 
+# IPFS (Pinata)
+PINATA_API_KEY=your-pinata-api-key
+PINATA_API_SECRET=your-pinata-secret
+PINATA_JWT=your-pinata-jwt
+
+# Blockchain (Base/Polygon)
+WEB3_PROVIDER_URL=https://base-mainnet.g.alchemy.com/v2/your-key
+BASE_SEPOLIA_RPC_URL=https://base-sepolia.g.alchemy.com/v2/your-key
+CONTRACT_ADDRESS=0x... (deployed NFT contract address)
+PRIVATE_KEY_SEP=0x... (deployment wallet private key - NEVER commit)
+ETHERSCAN_API_KEY=your-etherscan-api-key
+
 # Payments
 STRIPE_SECRET_KEY=sk_test_your-key
 MPESA_CONSUMER_KEY=your-key
@@ -573,6 +609,37 @@ The platform supports English and Amharic:
 Language detection uses Unicode range analysis (U+1200-U+137F for Amharic). Users can toggle language preference in miniapps, saved to database for registered users or localStorage for anonymous users.
 
 ## Deployment
+
+### Smart Contract Deployment
+
+1. Navigate to blockchain directory:
+```bash
+cd blockchain
+```
+
+2. Compile contracts:
+```bash
+forge build
+```
+
+3. Run tests:
+```bash
+forge test
+```
+
+4. Deploy to Base Sepolia testnet:
+```bash
+forge script script/Deploy.s.sol:DeployScript \
+  --rpc-url $BASE_SEPOLIA_RPC_URL \
+  --private-key $PRIVATE_KEY_SEP \
+  --broadcast \
+  --verify \
+  --verifier-url "https://api.etherscan.io/v2/api?chainid=84532" \
+  --etherscan-api-key $ETHERSCAN_API_KEY \
+  --via-ir
+```
+
+5. Update .env with deployed contract address
 
 ### Railway Deployment
 

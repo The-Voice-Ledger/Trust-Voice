@@ -37,14 +37,21 @@ async def process_impact_report(
     """
     Process an impact report from a field agent.
     
+    GPS Verification Workflow:
+    1. Campaign creator uploads transparency video with GPS (optional)
+    2. Field agent visits site and submits verification with GPS
+    3. System calculates distance between video GPS and verification GPS
+    4. If within 500m → location verified (increases trust)
+    5. GET /campaigns/{id}/verify-location shows verification status
+    
     Args:
         db: Database session
         telegram_user_id: Field agent's Telegram ID
         campaign_id: Campaign being verified
         description: Agent's observations and notes
         photo_urls: List of uploaded photo URLs (Telegram file IDs)
-        gps_latitude: Site visit latitude
-        gps_longitude: Site visit longitude
+        gps_latitude: Site visit latitude (compared against campaign video GPS)
+        gps_longitude: Site visit longitude (compared against campaign video GPS)
         beneficiary_count: Number of beneficiaries observed
         testimonials: Quotes from beneficiaries
     

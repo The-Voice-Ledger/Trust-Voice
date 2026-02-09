@@ -122,3 +122,4 @@ librosa==0.10.1
 torch==2.8.0
 torchaudio==2.8.0
 transformers==4.57.3
+web3==6.15.1

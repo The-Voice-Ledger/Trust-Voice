@@ -71,7 +71,7 @@ async def initiate_voice_donation(
                 created_at=datetime.utcnow()
             )
             db.add(donor)
-            db.flush()
+            db.flush()  # Get donor ID but don't commit yet
             logger.info(f"Created donor record for user {telegram_user_id}")
         
         # Validate campaign
@@ -88,39 +88,7 @@ async def initiate_voice_donation(
                 "error": f"Campaign is not active (status: {campaign.status})"
             }
         
-        # Convert amount to USD if needed
-        amount_usd = amount
-        if currency != "USD":
-            # TODO: Use currency conversion service
-            # For now, simple conversion rates
-            conversion_rates = {
-                "KES": 0.0077,  # 1 KES = 0.0077 USD
-                "TZS": 0.00038,  # 1 TZS = 0.00038 USD
-                "UGX": 0.00027,  # 1 UGX = 0.00027 USD
-                "EUR": 1.10,     # 1 EUR = 1.10 USD
-                "GBP": 1.27      # 1 GBP = 1.27 USD
-            }
-            amount_usd = amount * conversion_rates.get(currency, 1.0)
-        
-        # Create donation record (pending)
-        donation = Donation(
-            id=uuid.uuid4(),
-            donor_id=donor.id,
-            campaign_id=campaign_id,
-            amount_usd=amount_usd,
-            currency=currency,
-            status="pending",
-            payment_method=payment_method or "mpesa",  # Default to M-Pesa
-            created_at=datetime.utcnow()
-        )
-        db.add(donation)
-        db.commit()
-        
-        logger.info(f"Created donation {donation.id}: ${amount_usd} USD to campaign {campaign_id}")
-        
-        # Determine payment method
-        # Use M-Pesa if phone number starts with +254 (Kenya) or amount in KES
-        # Otherwise use Stripe
+        # Determine payment method and validate requirements
         if not payment_method:
             if donor.phone_number and donor.phone_number.startswith("+254"):
                 payment_method = "mpesa"
@@ -129,11 +97,64 @@ async def initiate_voice_donation(
             else:
                 payment_method = "stripe"
         
-        # Initiate payment
-        if payment_method == "mpesa":
-            return await _initiate_mpesa_payment(db, donation, donor, campaign, amount, currency)
-        else:
-            return await _initiate_stripe_payment(db, donation, donor, campaign, amount_usd)
+        # Validate phone number for M-Pesa
+        if payment_method == "mpesa" and not donor.phone_number:
+            return {
+                "success": False,
+                "error": "Phone number required for M-Pesa payments. Please update your profile with /settings"
+            }
+        
+        # Convert amount to USD using currency service
+        amount_usd = amount
+        if currency != "USD":
+            try:
+                from services.currency_service import currency_service
+                amount_usd = currency_service.convert_to_usd(amount, currency)
+            except Exception as e:
+                logger.error(f"Currency conversion failed: {e}")
+                return {
+                    "success": False,
+                    "error": f"Unable to convert {currency} to USD. Please try USD directly."
+                }
+        
+        # Create donation record (pending) - DON'T COMMIT YET
+        donation = Donation(
+            id=uuid.uuid4(),
+            donor_id=donor.id,
+            campaign_id=campaign_id,
+            amount_usd=amount_usd,
+            currency=currency,
+            status="pending",
+            payment_method=payment_method,
+            created_at=datetime.utcnow()
+        )
+        db.add(donation)
+        db.flush()  # Get donation ID but don't commit transaction yet
+        
+        logger.info(f"Created donation {donation.id}: ${amount_usd} USD to campaign {campaign_id}")
+        
+        # Initiate payment - only commit if successful
+        try:
+            if payment_method == "mpesa":
+                result = await _initiate_mpesa_payment(db, donation, donor, campaign, amount, currency)
+            else:
+                result = await _initiate_stripe_payment(db, donation, donor, campaign, amount_usd)
+            
+            # Payment initiated successfully - commit the transaction
+            if result.get("success"):
+                db.commit()
+                logger.info(f"✅ Payment initiated and donation committed: {donation.id}")
+            else:
+                # Payment initiation failed - rollback
+                db.rollback()
+                logger.warning(f"⚠️ Payment initiation failed, donation rolled back: {result.get('error')}")
+            
+            return result
+        except Exception as e:
+            # Any error - rollback the transaction
+            db.rollback()
+            logger.error(f"❌ Payment initiation error, rolled back: {e}")
+            raise
         
     except Exception as e:
         db.rollback()
@@ -165,13 +186,19 @@ async def _initiate_mpesa_payment(
         
         # M-Pesa expects KES amount
         if currency != "KES":
-            # Convert to KES (rough conversion)
-            amount_kes = amount * 130  # 1 USD ≈ 130 KES
+            # Convert to KES using currency service
+            try:
+                from services.currency_service import currency_service
+                amount_kes = currency_service.convert(amount, currency, "KES")
+            except Exception:
+                # Fallback to approximate rate
+                amount_kes = amount * 130  # 1 USD ≈ 130 KES
         else:
             amount_kes = amount
         
-        # Round to nearest whole number (M-Pesa doesn't accept decimals)
-        amount_kes = int(round(amount_kes))
+        # Floor to nearest whole number (favor donor, M-Pesa doesn't accept decimals)
+        import math
+        amount_kes = int(math.floor(amount_kes))
         
         logger.info(f"Initiating M-Pesa STK Push: {phone}, {amount_kes} KES for donation {donation.id}")
         

@@ -1,0 +1,263 @@
+{
+  "contractName": "TaxReceiptNFT",
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "donor",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "name": "donationId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "tokenURI",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "ReceiptMinted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "name": "donationId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "ReceiptBurned",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "name": "donor",
+          "type": "address"
+        },
+        {
+          "name": "donationId",
+          "type": "uint256"
+        },
+        {
+          "name": "tokenURI",
+          "type": "string"
+        }
+      ],
+      "name": "mintReceipt",
+      "outputs": [
+        {
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "donor",
+          "type": "address"
+        },
+        {
+          "name": "donationId",
+          "type": "uint256"
+        },
+        {
+          "name": "tokenURI",
+          "type": "string"
+        }
+      ],
+      "name": "mintSoulboundReceipt",
+      "outputs": [
+        {
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "donors",
+          "type": "address[]"
+        },
+        {
+          "name": "donationIds",
+          "type": "uint256[]"
+        },
+        {
+          "name": "tokenURIs",
+          "type": "string[]"
+        }
+      ],
+      "name": "batchMintReceipts",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "donationId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getReceiptByDonation",
+      "outputs": [
+        {
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "donationId",
+          "type": "uint256"
+        }
+      ],
+      "name": "receiptExists",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getDonationByToken",
+      "outputs": [
+        {
+          "name": "donationId",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "burnReceipt",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "name": "newTokenURI",
+          "type": "string"
+        }
+      ],
+      "name": "updateTokenURI",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "ownerOf",
+      "outputs": [
+        {
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "tokenURI",
+      "outputs": [
+        {
+          "name": "uri",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalSupply",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x...",
+  "deployedBytecode": "0x...",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
