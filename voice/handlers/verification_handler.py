@@ -262,7 +262,7 @@ async def complete_campaign_verification(
             "auto_approved": auto_approved,
             "campaign_title": campaign.title,
             "campaign_status": campaign.status,
-            "agent_name": user.preferred_name or user.full_name
+            "agent_name": user.full_name
         }
         
         # If auto-approved, initiate agent payout
@@ -465,7 +465,7 @@ async def get_campaign_verification_status(
             "status": campaign.status,
             "best_trust_score": best_verification.trust_score,
             "best_verification": {
-                "agent_name": agent.preferred_name or agent.full_name if agent else "Unknown",
+                "agent_name": agent.full_name if agent else "Unknown",
                 "trust_score": best_verification.trust_score,
                 "verification_date": best_verification.verification_date.strftime("%b %d, %Y"),
                 "photo_count": len(best_verification.photos) if best_verification.photos else 0,

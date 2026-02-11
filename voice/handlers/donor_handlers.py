@@ -502,7 +502,7 @@ async def handle_donation_history(
             }
         
         # Calculate stats
-        total_donated = sum(d.amount_usd for d in donations)
+        total_donated = sum(float(d.amount) for d in donations)
         donation_count = len(donations)
         
         # Format for voice (first 5)
@@ -512,7 +512,7 @@ async def handle_donation_history(
             campaign_name = campaign.title if campaign else "Unknown Campaign"
             
             date = donation.created_at.strftime("%B %d")
-            summary = f"Number {i}: {int(donation.amount_usd)} dollars to {campaign_name} on {date}."
+            summary = f"Number {i}: {int(donation.amount)} {donation.currency} to {campaign_name} on {date}."
             donation_summaries.append(summary)
         
         donations_text = " ".join(donation_summaries)

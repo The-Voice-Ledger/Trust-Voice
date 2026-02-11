@@ -280,10 +280,8 @@ async def upload_campaign_video(
         is_authorized = True
     
     # Check if user is NGO admin for this campaign
-    if campaign.ngo_id:
-        ngo = db.query(NGOOrganization).filter(NGOOrganization.id == campaign.ngo_id).first()
-        if ngo and ngo.admin_user_id == current_user.id:
-            is_authorized = True
+    if campaign.ngo_id and current_user.ngo_id == campaign.ngo_id:
+        is_authorized = True
     
     # Check if user is super admin
     if current_user.role in ["SYSTEM_ADMIN", "super_admin"]:
@@ -508,10 +506,8 @@ async def delete_campaign_video(
     if campaign.creator_user_id == current_user.id:
         is_authorized = True
     
-    if campaign.ngo_id:
-        ngo = db.query(NGOOrganization).filter(NGOOrganization.id == campaign.ngo_id).first()
-        if ngo and ngo.admin_user_id == current_user.id:
-            is_authorized = True
+    if campaign.ngo_id and current_user.ngo_id == campaign.ngo_id:
+        is_authorized = True
     
     if current_user.role in ["SYSTEM_ADMIN", "super_admin"]:
         is_authorized = True

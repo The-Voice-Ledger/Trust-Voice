@@ -534,15 +534,15 @@ async def handle_check_donation_status(
         date_str = donation.created_at.strftime("%B %d")
 
         status_messages = {
-            "pending": f"Your donation of {int(donation.amount_usd)} dollars to {campaign_name} on {date_str} is still being processed.",
-            "completed": f"Great news! Your donation of {int(donation.amount_usd)} dollars to {campaign_name} on {date_str} was completed successfully. Thank you!",
-            "failed": f"Unfortunately, your donation of {int(donation.amount_usd)} dollars to {campaign_name} on {date_str} failed. Please try again.",
-            "refunded": f"Your donation of {int(donation.amount_usd)} dollars to {campaign_name} on {date_str} has been refunded."
+            "pending": f"Your donation of {int(donation.amount)} {donation.currency} to {campaign_name} on {date_str} is still being processed.",
+            "completed": f"Great news! Your donation of {int(donation.amount)} {donation.currency} to {campaign_name} on {date_str} was completed successfully. Thank you!",
+            "failed": f"Unfortunately, your donation of {int(donation.amount)} {donation.currency} to {campaign_name} on {date_str} failed. Please try again.",
+            "refunded": f"Your donation of {int(donation.amount)} {donation.currency} to {campaign_name} on {date_str} has been refunded."
         }
 
         message = status_messages.get(
             donation.status,
-            f"Your last donation of {int(donation.amount_usd)} dollars to {campaign_name} has status: {donation.status}."
+            f"Your last donation of {int(donation.amount)} {donation.currency} to {campaign_name} has status: {donation.status}."
         )
 
         return {
@@ -553,7 +553,7 @@ async def handle_check_donation_status(
             "data": {
                 "donation_id": str(donation.id),
                 "status": donation.status,
-                "amount": float(donation.amount_usd)
+                "amount": float(donation.amount)
             }
         }
 
