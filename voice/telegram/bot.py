@@ -694,8 +694,9 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             entities = result.get("entities", {})
             transcript = result["stages"]["asr"]["transcript"]
             
-            # Use response from worker if available (worker already did routing)
-            if "response" in result and "message" in result["response"]:
+            # Use response from worker only for clarification questions
+            # (intent_ready is a placeholder — actual execution happens via route_command below)
+            if "response" in result and result["response"].get("type") == "clarification":
                 response = result["response"]["message"]
                 
                 # Add transcript for transparency
@@ -709,7 +710,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                     parse_mode="HTML"
                 )
                 
-                logger.info(f"✅ Voice processed: {intent}")
+                logger.info(f"✅ Voice processed (clarification): {intent}")
                 return
             
             # ==================================================================
