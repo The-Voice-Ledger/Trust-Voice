@@ -63,10 +63,9 @@ async def initiate_voice_donation(
         if not donor:
             # Create donor from user
             donor = Donor(
-                id=uuid.uuid4(),
                 telegram_user_id=telegram_user_id,
                 phone_number=user.phone_number,
-                full_name=user.full_name,
+                preferred_name=user.full_name,
                 email=None,  # Optional
                 created_at=datetime.utcnow()
             )
@@ -119,10 +118,9 @@ async def initiate_voice_donation(
         
         # Create donation record (pending) - DON'T COMMIT YET
         donation = Donation(
-            id=uuid.uuid4(),
             donor_id=donor.id,
             campaign_id=campaign_id,
-            amount_usd=amount_usd,
+            amount=amount_usd,
             currency=currency,
             status="pending",
             payment_method=payment_method,
@@ -216,7 +214,7 @@ async def _initiate_mpesa_payment(
         
         if result.get("success"):
             # Update donation with transaction info
-            donation.payment_transaction_id = result.get("CheckoutRequestID")
+            donation.payment_intent_id = result.get("CheckoutRequestID")
             db.commit()
             
             instructions = (
@@ -237,7 +235,7 @@ async def _initiate_mpesa_payment(
             }
         else:
             donation.status = "failed"
-            donation.payment_error = result.get("error", "M-Pesa payment failed")
+            logger.warning(f"M-Pesa payment failed for donation {donation.id}: {result.get('error')}")
             db.commit()
             
             return {
@@ -249,7 +247,6 @@ async def _initiate_mpesa_payment(
     except Exception as e:
         logger.error(f"M-Pesa payment error: {str(e)}")
         donation.status = "failed"
-        donation.payment_error = str(e)
         db.commit()
         
         return {
@@ -290,8 +287,7 @@ async def _initiate_stripe_payment(
             payment_intent = result["payment_intent"]
             
             # Update donation with Stripe info
-            donation.payment_transaction_id = payment_intent["id"]
-            donation.stripe_payment_intent_id = payment_intent["id"]
+            donation.payment_intent_id = payment_intent["id"]
             db.commit()
             
             # Generate checkout URL (this would be your hosted checkout page)
@@ -317,7 +313,7 @@ async def _initiate_stripe_payment(
             }
         else:
             donation.status = "failed"
-            donation.payment_error = result.get("error", "Stripe payment failed")
+            logger.warning(f"Stripe payment failed for donation {donation.id}: {result.get('error')}")
             db.commit()
             
             return {
@@ -329,7 +325,6 @@ async def _initiate_stripe_payment(
     except Exception as e:
         logger.error(f"Stripe payment error: {str(e)}")
         donation.status = "failed"
-        donation.payment_error = str(e)
         db.commit()
         
         return {
@@ -407,16 +402,16 @@ async def get_donation_status(
             "success": True,
             "donation": {
                 "id": str(donation.id),
-                "amount": donation.amount_usd,
+                "amount": float(donation.amount),
                 "currency": donation.currency,
                 "status": donation.status,
                 "status_emoji": status_emojis.get(donation.status, "❓"),
                 "status_text": status_text.get(donation.status, "Unknown"),
                 "campaign_title": campaign.title if campaign else "Unknown",
                 "created_at": donation.created_at.isoformat(),
-                "transaction_id": donation.payment_transaction_id,
+                "transaction_id": donation.payment_intent_id,
                 "payment_method": donation.payment_method,
-                "error": donation.payment_error if donation.status == "failed" else None
+                "error": None
             }
         }
         

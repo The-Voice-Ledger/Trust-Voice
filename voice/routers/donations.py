@@ -186,8 +186,7 @@ async def create_donation(
         
         db_donation.status = "pending"  # Waiting for client to confirm payment
         db_donation.payment_intent_id = payment_intent['id']
-        # Store client_secret to return to frontend
-        db_donation.status_message = payment_intent['client_secret']
+        # client_secret returned in response for frontend payment confirmation
         
     elif donation.payment_method == "crypto":
         # TODO: Implement blockchain transaction
@@ -431,7 +430,7 @@ async def mint_tax_receipt_nft(
             "image": "ipfs://QmTrustVoiceReceiptTemplateImage",  # TODO: Design receipt image
             "external_url": f"https://trustvoice.org/receipts/{donation_id}",
             "attributes": [
-                {"trait_type": "Donor_Name", "value": donor.full_name if donor else "Anonymous"},
+                {"trait_type": "Donor_Name", "value": donor.preferred_name if donor else "Anonymous"},
                 {"trait_type": "Campaign_Name", "value": campaign.title},
                 {"trait_type": "NGO_Name", "value": ngo.name if ngo else "Individual Campaign"},
                 {"trait_type": "Amount", "value": str(donation.amount)},
@@ -580,7 +579,7 @@ async def get_tax_receipt(donation_id: int, db: Session = Depends(get_db)):
             "category": campaign.category
         },
         "donor": {
-            "name": donor.full_name if donor and not donation.is_anonymous else "Anonymous",
+            "name": donor.preferred_name if donor and not donation.is_anonymous else "Anonymous",
             "anonymous": donation.is_anonymous
         },
         "nft_receipt": None,
