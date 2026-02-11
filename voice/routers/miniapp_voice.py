@@ -248,8 +248,8 @@ async def voice_search_campaigns(
                 
                 for i, campaign in enumerate(campaigns, 1):
                     response_text += f"{i}. {campaign.title}\n"
-                    if campaign.goal_amount:
-                        response_text += f"   Goal: KES {campaign.goal_amount:,}\n"
+                    if campaign.goal_amount_usd:
+                        response_text += f"   Goal: ${campaign.goal_amount_usd:,}\n"
         else:
             # No campaigns found - use extracted entities in response
             search_term = category or campaign_name or location or "your search"
@@ -521,13 +521,13 @@ async def voice_analytics_query(
             all_donations = db.query(Donation).all()
             total_raised = sum(d.amount for d in all_donations)
             active_camps = db.query(Campaign).filter(Campaign.status == "active").count()
-            total_donors = db.query(User).filter(User.role == "donor").count()
+            total_donors = db.query(User).filter(User.role.ilike("donor")).count()
             avg_donation = total_raised / len(all_donations) if all_donations else 0
             
             if user_language == "am":
                 response_text = f"አጠቃላይ ለጋሾች {total_donors}፣ ንቁ ዘመቻዎች {active_camps}፣ አማካይ ለገሳ {avg_donation:,.0f} ብር።"
             else:
-                response_text = f"Total donors: {total_donors}, Active campaigns: {active_camps}, Average donation: KES {avg_donation:,.0f}."
+                response_text = f"Total donors: {total_donors}, Active campaigns: {active_camps}, Average donation: ${avg_donation:,.0f}."
             
             data = {
                 "total_raised": total_raised,
@@ -634,7 +634,7 @@ async def voice_donate(
         from voice.conversation.preferences import PreferenceManager
         from database.models import User
         
-        user = db.query(User).filter(User.telegram_id == user_id).first()
+        user = db.query(User).filter(User.telegram_user_id == user_id).first()
         suggested_payment = None
         suggested_amount = None
         
@@ -679,7 +679,7 @@ async def voice_donate(
         if user_language == "am":
             response_text = f"ለማረጋገጥ፡ {amount} ብር መለገስ ይፈልጋሉ?"
         else:
-            response_text = f"To confirm: You want to donate KES {amount}?"
+            response_text = f"To confirm: You want to donate ${amount}?"
         
         # Generate TTS
         clean_text = clean_text_for_tts(response_text)

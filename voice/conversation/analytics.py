@@ -83,7 +83,7 @@ class ConversationAnalytics:
         
         try:
             # Get user from database
-            user = db.query(User).filter(User.telegram_id == user_id).first()
+            user = db.query(User).filter(User.telegram_user_id == user_id).first()
             
             # Create event
             event = ConversationEvent(

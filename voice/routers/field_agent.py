@@ -470,17 +470,28 @@ async def get_pending_campaigns(
         for campaign in campaigns:
             if campaign.id not in verified_campaign_ids:
                 # Get NGO name
-                ngo_name = campaign.ngo.organization_name if campaign.ngo else "Unknown NGO"
+                ngo_name = campaign.ngo.name if campaign.ngo else "Unknown NGO"
+                
+                # Parse GPS from location_gps string ("lat,lng")
+                gps_lat = None
+                gps_lng = None
+                if campaign.location_gps:
+                    try:
+                        parts = campaign.location_gps.split(",")
+                        gps_lat = float(parts[0].strip())
+                        gps_lng = float(parts[1].strip())
+                    except (ValueError, IndexError):
+                        pass
                 
                 pending.append(PendingCampaign(
                     id=str(campaign.id),
                     title=campaign.title,
                     description=campaign.description or "",
                     ngo_name=ngo_name,
-                    target_amount_usd=float(campaign.target_amount_usd),
-                    current_amount_usd=float(campaign.current_amount_usd),
-                    gps_latitude=campaign.gps_latitude,
-                    gps_longitude=campaign.gps_longitude,
+                    target_amount_usd=float(campaign.goal_amount_usd or 0),
+                    current_amount_usd=float(campaign.raised_amount_usd or 0),
+                    gps_latitude=gps_lat,
+                    gps_longitude=gps_lng,
                     status=campaign.status,
                     created_at=campaign.created_at.isoformat()
                 ))
