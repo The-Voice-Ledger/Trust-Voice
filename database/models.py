@@ -16,12 +16,13 @@ Architecture:
 
 from sqlalchemy import (
     Column, Integer, String, Float, Boolean, DateTime, Date,
-    Text, ForeignKey, JSON, Enum as SQLEnum, UniqueConstraint, Index
+    Text, ForeignKey, JSON, Enum as SQLEnum, UniqueConstraint, Index,
+    Numeric, CheckConstraint
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 import enum
 import uuid
 
@@ -261,7 +262,7 @@ class Donor(Base):
     stripe_customer_id = Column(String(100))  # Stripe Customer ID (auto-created)
     
     # Stats
-    total_donated_usd = Column(Float, default=0.0)
+    total_donated_usd = Column(Numeric(12, 2), default=0.0)
     is_verified = Column(Boolean, default=False)  # Email/phone verified
     
     # Timestamps
@@ -329,8 +330,8 @@ class Campaign(Base):
     # Basic Info
     title = Column(String(255), nullable=False)
     description = Column(Text)
-    goal_amount_usd = Column(Float, nullable=False)
-    raised_amount_usd = Column(Float, default=0.0)  # Cached USD total (denormalized)
+    goal_amount_usd = Column(Numeric(12, 2), nullable=False)
+    raised_amount_usd = Column(Numeric(12, 2), default=0.0)  # Cached USD total (denormalized)
     raised_amounts = Column(JSON, default=dict)  # Per-currency totals: {"USD": 1000, "EUR": 500}
     
     # Classification
@@ -346,8 +347,8 @@ class Campaign(Base):
     
     # Verification Metrics (for impact reports)
     verification_count = Column(Integer, default=0)  # Number of field agent verifications
-    total_trust_score = Column(Float, default=0.0)  # Sum of all trust scores
-    avg_trust_score = Column(Float, default=0.0)  # Average trust score (calculated)
+    total_trust_score = Column(Numeric(8, 2), default=0.0)  # Sum of all trust scores
+    avg_trust_score = Column(Numeric(5, 2), default=0.0)  # Average trust score (calculated)
     
     # Transparency Video (IPFS)
     video_ipfs_hash = Column(String(100), nullable=True)  # QmXxxx... IPFS content hash
@@ -464,7 +465,7 @@ class Donation(Base):
     campaign_id = Column(Integer, ForeignKey("campaigns.id"), nullable=False)
     
     # Amount in donor's chosen currency
-    amount = Column(Float, nullable=False)
+    amount = Column(Numeric(12, 2), nullable=False)
     currency = Column(String(3), nullable=False, default="USD")  # ISO 4217: USD, EUR, KES, GBP, etc.
     
     # Payment Method
@@ -547,7 +548,7 @@ class ImpactVerification(Base):
     status = Column(String(20), default="pending")  # pending, approved, rejected
     
     # Agent Payout
-    agent_payout_amount_usd = Column(Float)  # Typically $30
+    agent_payout_amount_usd = Column(Numeric(8, 2))  # Typically $30
     agent_payout_status = Column(String(20))  # initiated, completed, failed
     agent_payout_transaction_id = Column(String(100))  # M-Pesa ConversationID
     
@@ -624,7 +625,7 @@ class Payout(Base):
     recipient_name = Column(String(200))
     
     # Payment details
-    amount = Column(Float, nullable=False)
+    amount = Column(Numeric(12, 2), nullable=False)
     currency = Column(String(3), default='USD')  # USD, EUR, GBP, KES, etc.
     payment_method = Column(String(20), default='bank_transfer')  # mpesa_b2c, bank_transfer, stripe_payout
     
@@ -699,7 +700,7 @@ class UserPreference(Base):
     
     __table_args__ = (
         # Ensure one preference per key per user
-        # UniqueConstraint('user_id', 'preference_key', name='uq_user_preference'),
+        UniqueConstraint('user_id', 'preference_key', name='uq_user_preference'),
     )
     
     def __repr__(self):

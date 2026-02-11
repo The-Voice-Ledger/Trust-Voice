@@ -3,7 +3,10 @@
  * Handles all HTTP requests to the backend
  */
 
-const API_BASE_URL = 'http://localhost:8001';
+// Use relative URL so it works in all environments (dev, staging, production)
+const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? `http://localhost:${window.location.port || 8001}` 
+    : '';
 
 const api = {
     /**

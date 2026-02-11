@@ -35,8 +35,16 @@ class TTSProvider:
         self.cache_enabled = True
         
     def _get_cache_path(self, text: str, language: str, voice: str) -> Path:
-        """Generate cache file path based on text hash"""
-        text_hash = hashlib.md5(f"{text}_{language}_{voice}".encode()).hexdigest()
+        """Generate cache file path based on text hash.
+        
+        Includes language and voice in hash to prevent cross-engine cache collisions
+        (e.g., same text cached by OpenAI shouldn't serve AddisAI Amharic requests).
+        Uses SHA256 for collision resistance.
+        """
+        # Include engine identifier to prevent cross-provider cache hits
+        engine = "addisai" if language == "am" and self.addisai_api_key else "openai"
+        cache_key = f"{text}_{language}_{voice}_{engine}"
+        text_hash = hashlib.sha256(cache_key.encode()).hexdigest()
         return TTS_CACHE_DIR / f"{text_hash}.mp3"
     
     async def text_to_speech(

@@ -22,9 +22,12 @@ logger = logging.getLogger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT settings
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production-trustvoice-2025")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY") or os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    logger.critical("❌ JWT_SECRET_KEY (or SECRET_KEY) environment variable is required!")
+    raise RuntimeError("JWT_SECRET_KEY environment variable is required. Set JWT_SECRET_KEY or SECRET_KEY.")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+ACCESS_TOKEN_EXPIRE_MINUTES = 30  # 30 minutes default
 
 # PIN Authentication settings
 MAX_FAILED_ATTEMPTS = 5

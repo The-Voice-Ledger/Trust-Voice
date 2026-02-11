@@ -190,9 +190,13 @@ async def _initiate_mpesa_payment(
             try:
                 from services.currency_service import currency_service
                 amount_kes = currency_service.convert(amount, currency, "KES")
-            except Exception:
-                # Fallback to approximate rate
-                amount_kes = amount * 130  # 1 USD ≈ 130 KES
+            except Exception as conv_err:
+                logger.error(f"Currency conversion failed ({currency}→KES): {conv_err}. Aborting to prevent incorrect charge.")
+                return {
+                    "success": False,
+                    "donation_id": donation.id,
+                    "error": f"Currency conversion unavailable. Please try again or donate in KES."
+                }
         else:
             amount_kes = amount
         

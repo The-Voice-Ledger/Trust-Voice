@@ -5,6 +5,8 @@
   },
   "deploy": {
     "startCommand": "if [ \"$RAILWAY_SERVICE_NAME\" = \"worker\" ]; then celery -A voice.tasks.celery_app worker --loglevel=info --concurrency=2 -Q voice,notifications,celery; else uvicorn main:app --host 0.0.0.0 --port $PORT; fi",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 30,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

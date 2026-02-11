@@ -61,23 +61,30 @@ async function loadRegistrations() {
             return;
         }
         
-        // Populate table
+        // Populate table (sanitize user input to prevent XSS)
+        const escapeHtml = (str) => {
+            if (!str) return '-';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        };
+        
         tbody.innerHTML = registrations.map(reg => `
             <tr>
-                <td><strong>${reg.full_name}</strong></td>
-                <td>${reg.phone_number}</td>
+                <td><strong>${escapeHtml(reg.full_name)}</strong></td>
+                <td>${escapeHtml(reg.phone_number)}</td>
                 <td>${formatRole(reg.role)}</td>
-                <td>${reg.organization || '-'}</td>
-                <td>${reg.reason || '-'}</td>
+                <td>${escapeHtml(reg.organization) || '-'}</td>
+                <td>${escapeHtml(reg.reason) || '-'}</td>
                 <td>${formatDate(reg.created_at)}</td>
-                <td><span class="status-badge status-${reg.status}">${reg.status}</span></td>
+                <td><span class="status-badge status-${escapeHtml(reg.status)}">${escapeHtml(reg.status)}</span></td>
                 <td>
                     ${reg.status === 'pending' ? `
                         <div class="actions-cell">
-                            <button onclick="openApprovalModal(${reg.id}, '${reg.full_name}')" class="btn btn-success btn-sm">
+                            <button onclick="openApprovalModal(${parseInt(reg.id)}, '${escapeHtml(reg.full_name)}')" class="btn btn-success btn-sm">
                                 ✅ Approve
                             </button>
-                            <button onclick="openRejectionModal(${reg.id}, '${reg.full_name}')" class="btn btn-danger btn-sm">
+                            <button onclick="openRejectionModal(${parseInt(reg.id)}, '${escapeHtml(reg.full_name)}')" class="btn btn-danger btn-sm">
                                 ❌ Reject
                             </button>
                         </div>

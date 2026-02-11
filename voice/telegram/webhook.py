@@ -33,6 +33,14 @@ async def telegram_webhook(request: Request):
     URL: https://your-app.railway.app/webhooks/telegram
     """
     try:
+        # Validate webhook secret token (prevents forged updates)
+        expected_secret = os.getenv("TELEGRAM_WEBHOOK_SECRET")
+        if expected_secret:
+            received_secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
+            if received_secret != expected_secret:
+                logger.warning("Telegram webhook: invalid secret token")
+                raise HTTPException(status_code=403, detail="Invalid secret token")
+        
         # Get the update data
         data = await request.json()
         update_id = data.get('update_id', 'unknown')
@@ -57,10 +65,12 @@ async def telegram_webhook(request: Request):
     except json.JSONDecodeError as e:
         logger.error(f"❌ Invalid JSON from Telegram: {e}")
         raise HTTPException(status_code=400, detail="Invalid JSON")
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"❌ Telegram webhook error: {e}", exc_info=True)
         # Still return 200 to avoid Telegram retries flooding us
-        return {"ok": False, "error": str(e)}
+        return {"ok": False, "error": "Internal processing error"}
 
 
 @router.get("")
@@ -82,8 +92,7 @@ async def telegram_webhook_info():
         "status": "ready",
         "environment": app_env,
         "mode": "webhook" if app_env == "production" else "polling",
-        "webhook_url": webhook_url if webhook_url else "not_configured",
-        "bot_username": application.bot.username if application else "unknown"
+        "webhook_configured": bool(webhook_url)
     }
 
 
@@ -91,11 +100,19 @@ async def telegram_webhook_info():
 async def set_webhook(request: Request):
     """
     Manually trigger webhook setup.
-    Only works in production environment.
+    Only works in production environment. Requires admin secret.
     
     Call this after deployment to configure Telegram webhook:
     POST /webhooks/telegram/set
+    Header: X-Admin-Secret: <ADMIN_API_SECRET>
     """
+    # Require admin secret for webhook management
+    admin_secret = os.getenv("ADMIN_API_SECRET")
+    if admin_secret:
+        provided_secret = request.headers.get("X-Admin-Secret", "")
+        if provided_secret != admin_secret:
+            raise HTTPException(status_code=403, detail="Unauthorized")
+    
     app_env = os.getenv("APP_ENV", "development")
     
     if app_env != "production":

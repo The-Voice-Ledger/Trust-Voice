@@ -34,25 +34,35 @@ from voice.tts.tts_provider import tts_provider
 
 def detect_language(text: str) -> str:
     """
-    Detect language from text using Unicode character ranges.
+    Detect language from text using Unicode character ranges and keyword heuristics.
     
     Used as fallback when user preference is not available.
+    Supports Amharic (Ethiopic script), Swahili (keyword detection),
+    and defaults to English.
     
     Args:
         text: Text to analyze
         
     Returns:
-        'am' for Amharic, 'en' for English (default)
+        Language code: 'am', 'sw', or 'en' (default)
     """
     if not text:
         return "en"
     
-    # Count Amharic characters (Unicode range U+1200 to U+137F)
+    # Count Amharic/Ethiopic characters (Unicode range U+1200 to U+137F)
     amharic_chars = sum(1 for char in text if '\u1200' <= char <= '\u137F')
     
     # If >30% of characters are Amharic, classify as Amharic
     if amharic_chars > len(text) * 0.3:
         return "am"
+    
+    # Swahili detection via common words (Latin script, so can't use Unicode ranges)
+    text_lower = text.lower()
+    swahili_markers = ['habari', 'asante', 'sana', 'karibu', 'tafadhali', 'ndio', 'hapana',
+                       'changia', 'msaada', 'pesa', 'shilingi', 'kampeni', 'watu']
+    swahili_count = sum(1 for word in swahili_markers if word in text_lower)
+    if swahili_count >= 2:
+        return "sw"
     
     return "en"  # Default to English
 
@@ -61,8 +71,8 @@ def clean_text_for_tts(text: str) -> str:
     """
     Clean text for natural TTS synthesis.
     
-    Removes HTML tags, Markdown formatting, URLs, and normalizes whitespace
-    to make text sound natural when read aloud.
+    Removes HTML tags, Markdown formatting, URLs, normalizes whitespace,
+    and converts symbols to spoken words for natural voice output.
     
     Args:
         text: Raw text with formatting
@@ -90,6 +100,24 @@ def clean_text_for_tts(text: str) -> str:
     
     # Remove inline code markers
     text = re.sub(r'`([^`]+)`', r'\1', text)
+    
+    # Remove emoji (common in bot responses)
+    text = re.sub(r'[✅❌📱📲💡🔍🎉✨🌍💰📊❓🔊🗣️📝🏦]', '', text)
+    
+    # Convert symbols to spoken words for natural TTS
+    symbol_replacements = {
+        "$": " dollars ",
+        "€": " euros ",
+        "£": " pounds ",
+        "KES": " Kenyan shillings ",
+        "ETB": " Ethiopian birr ",
+        "%": " percent ",
+        "&": " and ",
+        "#": " number ",
+        "@": " at ",
+    }
+    for symbol, word in symbol_replacements.items():
+        text = text.replace(symbol, word)
     
     # Normalize whitespace
     text = re.sub(r'\s+', ' ', text)

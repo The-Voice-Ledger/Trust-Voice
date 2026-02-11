@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field, EmailStr
 
 from database.db import get_db
 from database.models import PendingNGORegistration, NGOOrganization, User
+from voice.routers.admin import get_current_user
 
 router = APIRouter(prefix="/ngo-registrations", tags=["ngo-registrations"])
 
@@ -95,13 +96,11 @@ class NGORegistrationResponse(BaseModel):
 
 class ApprovalRequest(BaseModel):
     """Admin approval request"""
-    admin_id: int
     admin_notes: Optional[str] = None
 
 
 class RejectionRequest(BaseModel):
     """Admin rejection request"""
-    admin_id: int
     rejection_reason: str = Field(..., min_length=10)
 
 
@@ -218,12 +217,13 @@ def get_ngo_registration(
 def approve_ngo_registration(
     registration_id: int,
     approval: ApprovalRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Approve NGO registration and create NGOOrganization record.
     
-    Admin only.
+    Admin only (authenticated via JWT).
     """
     # Get pending registration
     pending = db.query(PendingNGORegistration).filter(
@@ -242,9 +242,8 @@ def approve_ngo_registration(
             detail=f"Registration is already {pending.status}"
         )
     
-    # Verify admin exists
-    admin = db.query(User).filter(User.id == approval.admin_id).first()
-    if not admin or admin.role != 'SYSTEM_ADMIN':
+    # Verify admin role from JWT token
+    if current_user.role not in ('SYSTEM_ADMIN', 'super_admin'):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admins can approve registrations"
@@ -269,7 +268,7 @@ def approve_ngo_registration(
     
     # Update pending registration
     pending.status = 'APPROVED'
-    pending.reviewed_by_admin_id = approval.admin_id
+    pending.reviewed_by_admin_id = current_user.id
     pending.reviewed_at = datetime.utcnow()
     pending.admin_notes = approval.admin_notes
     pending.ngo_id = ngo.id
@@ -285,12 +284,13 @@ def approve_ngo_registration(
 def reject_ngo_registration(
     registration_id: int,
     rejection: RejectionRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Reject NGO registration.
     
-    Admin only.
+    Admin only (authenticated via JWT).
     """
     # Get pending registration
     pending = db.query(PendingNGORegistration).filter(
@@ -309,9 +309,8 @@ def reject_ngo_registration(
             detail=f"Registration is already {pending.status}"
         )
     
-    # Verify admin exists
-    admin = db.query(User).filter(User.id == rejection.admin_id).first()
-    if not admin or admin.role != 'SYSTEM_ADMIN':
+    # Verify admin role from JWT token
+    if current_user.role not in ('SYSTEM_ADMIN', 'super_admin'):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admins can reject registrations"
@@ -319,7 +318,7 @@ def reject_ngo_registration(
     
     # Update pending registration
     pending.status = 'REJECTED'
-    pending.reviewed_by_admin_id = rejection.admin_id
+    pending.reviewed_by_admin_id = current_user.id
     pending.reviewed_at = datetime.utcnow()
     pending.rejection_reason = rejection.rejection_reason
     pending.updated_at = datetime.utcnow()
@@ -333,14 +332,14 @@ def reject_ngo_registration(
 @router.post("/{registration_id}/request-info", response_model=NGORegistrationResponse)
 def request_more_info(
     registration_id: int,
-    admin_id: int,
     notes: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Request more information from NGO applicant.
     
-    Admin only.
+    Admin only (authenticated via JWT).
     """
     pending = db.query(PendingNGORegistration).filter(
         PendingNGORegistration.id == registration_id
@@ -352,9 +351,8 @@ def request_more_info(
             detail=f"Registration {registration_id} not found"
         )
     
-    # Verify admin
-    admin = db.query(User).filter(User.id == admin_id).first()
-    if not admin or admin.role != 'SYSTEM_ADMIN':
+    # Verify admin role from JWT token
+    if current_user.role not in ('SYSTEM_ADMIN', 'super_admin'):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admins can request info"
@@ -362,7 +360,7 @@ def request_more_info(
     
     pending.status = 'NEEDS_INFO'
     pending.admin_notes = notes
-    pending.reviewed_by_admin_id = admin_id
+    pending.reviewed_by_admin_id = current_user.id
     pending.updated_at = datetime.utcnow()
     
     db.commit()

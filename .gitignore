@@ -76,10 +76,15 @@ coverage.xml
 # Temporary Files
 *.tmp
 *.bak
+*.backup
+*.deprecated
 *.swp
 *~.nib
 tmp/
 temp/
+
+# TTS Cache (generated audio)
+voice/tts/tts_cache/
 
 # Audio/Media Files (large files)
 *.wav

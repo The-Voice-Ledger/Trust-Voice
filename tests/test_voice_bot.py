@@ -341,7 +341,7 @@ async def test_bot_responses():
     sys.path.insert(0, str(Path(__file__).parent.parent))
     
     from voice.pipeline import process_voice_message
-    from voice.telegram.bot import handle_voice_intent
+    from voice.command_router import route_command
     import asyncio
     
     print("\n🤖 Testing Bot Responses (Full Pipeline + Intent Router)")
@@ -390,13 +390,16 @@ async def test_bot_responses():
             entities = result.get('entities', {})
             confidence = result.get('confidence', 0)
             
-            # Get rich response from voice intent router (await since we're in async function)
-            response = await handle_voice_intent(
-                intent=intent,
-                entities=entities,
-                telegram_user_id="test_user_response",
-                language="en"
-            )
+            # Get rich response from voice command router
+            from database.db import get_db_session
+            with get_db_session() as db:
+                route_result = await route_command(
+                    intent=intent,
+                    entities=entities,
+                    user_id="test_user_response",
+                    db=db
+                )
+            response = route_result.get('message', '')
             
             print(f"\n   📝 Transcript: \"{transcript}\"")
             print(f"   🎯 Intent: {intent} (confidence: {confidence:.2f})")

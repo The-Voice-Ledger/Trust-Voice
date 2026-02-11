@@ -169,16 +169,7 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             event = stripe_service.construct_webhook_event(payload, signature)
         except ValueError as e:
             logger.error(f"Stripe: Invalid webhook payload: {str(e)}")
-            # In test mode, allow test signatures
-            if signature == 'test_sig':
-                import json
-                event_dict = json.loads(payload)
-                event = type('obj', (object,), {
-                    'type': event_dict.get('type'),
-                    'data': type('obj', (object,), {'object': type('obj', (object,), event_dict.get('data', {}).get('object', {}))})()
-                })()
-            else:
-                raise HTTPException(status_code=400, detail="Invalid payload")
+            raise HTTPException(status_code=400, detail="Invalid payload")
         
         logger.info(f"Stripe webhook received: {event.type}")
         

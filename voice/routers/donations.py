@@ -13,6 +13,8 @@ from datetime import datetime
 
 from database.db import get_db
 from database.models import Donation, Campaign, Donor
+from voice.routers.admin import get_current_user
+from database.models import User
 
 router = APIRouter(prefix="/donations", tags=["Donations"])
 
@@ -272,16 +274,14 @@ def get_campaign_donations(
 def update_donation_status(
     donation_id: int,
     status_update: DonationStatusUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Update donation payment status.
     
-    This endpoint is typically called by webhook handlers
-    when payment processors send status updates.
-    
-    In production, this should be protected and only accessible
-    to internal services or verified webhook sources.
+    Admin only. This endpoint should only be used for manual overrides.
+    Normal status updates come via webhook handlers.
     """
     donation = db.query(Donation).filter(Donation.id == donation_id).first()
     
@@ -373,7 +373,8 @@ def list_donations(
 async def mint_tax_receipt_nft(
     donation_id: int,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Mint NFT tax receipt for a completed donation.

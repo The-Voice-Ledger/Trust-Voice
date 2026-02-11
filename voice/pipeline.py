@@ -99,6 +99,7 @@ def process_voice_message(
             "success": True,
             "transcript": transcript,
             "language": asr_result.get("language"),
+            "confidence": asr_result.get("confidence"),
             "method": asr_result.get("method"),
             "model": asr_result.get("model")
         }

@@ -13,7 +13,7 @@ import math
 
 from database.db import get_db
 from database.models import Campaign, NGOOrganization, User, ImpactVerification
-from services.auth_service import get_current_user
+from voice.routers.admin import get_current_user
 
 logger = logging.getLogger(__name__)
 

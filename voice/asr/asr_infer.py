@@ -12,10 +12,12 @@ import os
 import logging
 from pathlib import Path
 from typing import Optional, Dict, Literal
-import torch
-from transformers import AutoProcessor, AutoModelForSpeechSeq2Seq
 from openai import OpenAI
 import httpx
+
+# Note: torch and transformers are lazy-loaded inside load_amharic_model()
+# to avoid ~1.5GB memory overhead and ~5s startup delay in processes
+# that only use the Whisper API (web server, most Celery workers).
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -51,6 +53,10 @@ def load_amharic_model():
         if 'amharic_model' in _model_cache:
             logger.info("Using cached Amharic model")
             return _model_cache['amharic_model']
+        
+        # Lazy-load heavy ML libraries only when actually needed
+        import torch
+        from transformers import AutoProcessor, AutoModelForSpeechSeq2Seq
         
         logger.info(f"Loading Amharic model: {AMHARIC_MODEL_NAME}")
         logger.info("This may take a few minutes on first run (~1.5GB download)")
@@ -122,10 +128,24 @@ def transcribe_with_whisper_api(
                 response_format="verbose_json"
             )
         
+        # Extract confidence from segment-level data if available
+        # Whisper verbose_json includes segments with avg_logprob and no_speech_prob
+        asr_confidence = None
+        if hasattr(response, 'segments') and response.segments:
+            avg_logprobs = [s.get('avg_logprob', s.avg_logprob if hasattr(s, 'avg_logprob') else -1) 
+                          for s in response.segments 
+                          if hasattr(s, 'avg_logprob') or (isinstance(s, dict) and 'avg_logprob' in s)]
+            if avg_logprobs:
+                import math
+                # Convert avg log probability to a 0-1 confidence score
+                mean_logprob = sum(avg_logprobs) / len(avg_logprobs)
+                asr_confidence = round(math.exp(mean_logprob), 3)  # e^logprob ≈ probability
+        
         result = {
             "text": response.text,
             "language": response.language,
             "duration": response.duration if hasattr(response, 'duration') else None,
+            "confidence": asr_confidence,
             "method": "whisper_api",
             "model": "whisper-1"
         }
@@ -151,6 +171,7 @@ def transcribe_with_amharic_model(audio_file_path: str) -> Dict[str, any]:
     """
     try:
         import librosa
+        import torch
         
         # Load the model
         processor, model, device = load_amharic_model()

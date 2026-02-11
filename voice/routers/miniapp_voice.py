@@ -22,15 +22,16 @@ from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 
 # Database imports
-from database.db import get_db
+from database.db import get_db, get_db_session
 from database.models import Campaign, User
 
 # Voice processing imports - using ACTUAL architecture
 from voice.asr.asr_infer import transcribe_audio, ASRError
+from voice.audio_utils import validate_audio_file
 from voice.telegram.voice_responses import get_user_language_preference, detect_language, clean_text_for_tts
 from voice.tts.tts_provider import TTSProvider
 from voice.conversation.analytics import ConversationAnalytics
-from voice.nlu.nlu_infer import extract_intent_and_entities
+from voice.nlu.nlu_infer import extract_intent_and_entities, NLUError
 from voice.nlu.intents import IntentType
 
 logger = logging.getLogger(__name__)
@@ -72,6 +73,7 @@ async def voice_search_campaigns(
     import json
     temp_audio_path = None
     context_data = None
+    db = None
     
     try:
         # Parse context if provided
@@ -91,6 +93,12 @@ async def voice_search_campaigns(
             temp_audio_path = temp_file.name
         
         logger.info(f"Audio saved to {temp_audio_path} ({len(content)} bytes)")
+        
+        # Step 1b: Validate audio file before processing
+        is_valid, validation_error = validate_audio_file(temp_audio_path)
+        if not is_valid:
+            logger.warning(f"Audio validation failed: {validation_error}")
+            raise HTTPException(status_code=400, detail=f"Invalid audio: {validation_error}")
         
         # Step 2: Get user's language preference (parameter → database → default)
         db = next(get_db())
@@ -324,20 +332,21 @@ async def voice_search_campaigns(
         logger.info(f"Voice search complete: {len(campaigns)} results, TTS: {tts_success}")
         
         return JSONResponse(content=response_data)
-        
+    
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Voice search error: {str(e)}", exc_info=True)
         
         # LAB 9 Part 4: Track error
+        db_err = None
         try:
-            db = next(get_db())
-            user_record = db.query(User).filter(User.telegram_user_id == user_id).first()
+            db_err = next(get_db())
+            user_record = db_err.query(User).filter(User.telegram_user_id == user_id).first()
             if user_record:
                 session_id = str(uuid.uuid4())
                 ConversationAnalytics.track_event(
-                    db=db,
+                    db=db_err,
                     user_id=user_record.id,
                     session_id=session_id,
                     event_type="error_occurred",
@@ -350,10 +359,16 @@ async def voice_search_campaigns(
                 )
         except Exception as analytics_error:
             logger.error(f"Analytics tracking failed: {analytics_error}")
+        finally:
+            if db_err:
+                db_err.close()
         
         raise HTTPException(status_code=500, detail=f"Voice search failed: {str(e)}")
         
     finally:
+        # Close database session
+        if db:
+            db.close()
         # Cleanup temporary audio file
         if temp_audio_path and os.path.exists(temp_audio_path):
             try:
@@ -420,6 +435,7 @@ async def voice_analytics_query(
         JSON with query results and audio response
     """
     temp_audio_path = None
+    db = None
     
     try:
         logger.info(f"Analytics voice query from user {user_id}")
@@ -546,6 +562,8 @@ async def voice_analytics_query(
         raise HTTPException(status_code=500, detail=str(e))
         
     finally:
+        if db:
+            db.close()
         if temp_audio_path and os.path.exists(temp_audio_path):
             try:
                 os.remove(temp_audio_path)
@@ -596,6 +614,7 @@ async def voice_donate(
         JSON with donation intent, confirmation, and suggested defaults
     """
     temp_audio_path = None
+    db = None
     
     try:
         logger.info(f"Voice donation request from user {user_id}, lang: {user_language}")
@@ -713,13 +732,14 @@ async def voice_donate(
         logger.error(f"Voice donation error: {str(e)}", exc_info=True)
         
         # LAB 9 Part 4: Track error
+        db_err = None
         try:
-            db = next(get_db())
-            user_record = db.query(User).filter(User.telegram_user_id == user_id).first()
+            db_err = next(get_db())
+            user_record = db_err.query(User).filter(User.telegram_user_id == user_id).first()
             if user_record:
                 session_id = str(uuid.uuid4())
                 ConversationAnalytics.track_event(
-                    db=db,
+                    db=db_err,
                     user_id=user_record.id,
                     session_id=session_id,
                     event_type="error_occurred",
@@ -732,10 +752,15 @@ async def voice_donate(
                 )
         except Exception as analytics_error:
             logger.error(f"Analytics tracking failed: {analytics_error}")
+        finally:
+            if db_err:
+                db_err.close()
         
         raise HTTPException(status_code=500, detail=str(e))
         
     finally:
+        if db:
+            db.close()
         if temp_audio_path and os.path.exists(temp_audio_path):
             try:
                 os.remove(temp_audio_path)
@@ -761,9 +786,19 @@ async def voice_admin_query(
         JSON with query results and audio response
     """
     temp_audio_path = None
+    db = None
     
     try:
         logger.info(f"Admin voice query from user {user_id}")
+        
+        # Verify user has admin role
+        db = next(get_db())
+        admin_user = db.query(User).filter(
+            User.telegram_user_id == str(user_id)
+        ).first()
+        
+        if not admin_user or admin_user.role not in ('SYSTEM_ADMIN', 'super_admin', 'ngo_admin'):
+            raise HTTPException(status_code=403, detail="Admin access required")
         
         # Save audio
         with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
@@ -771,8 +806,7 @@ async def voice_admin_query(
             temp_file.write(content)
             temp_audio_path = temp_file.name
         
-        # Get user language
-        db = next(get_db())
+        # Get user language (reuse existing db session)
         user_language = get_user_language_preference(user_id) or "en"
         
         # Transcribe
@@ -871,6 +905,8 @@ async def voice_admin_query(
         raise HTTPException(status_code=500, detail=str(e))
         
     finally:
+        if db:
+            db.close()
         if temp_audio_path and os.path.exists(temp_audio_path):
             try:
                 os.remove(temp_audio_path)
@@ -912,6 +948,7 @@ async def voice_admin_command(
         JSON with command confirmation (requires user confirmation before execution)
     """
     temp_audio_path = None
+    db = None
     
     try:
         logger.info(f"Admin voice command from user {user_id}")
@@ -1002,6 +1039,8 @@ async def voice_admin_command(
         raise HTTPException(status_code=500, detail=str(e))
         
     finally:
+        if db:
+            db.close()
         if temp_audio_path and os.path.exists(temp_audio_path):
             try:
                 os.remove(temp_audio_path)
@@ -1029,6 +1068,7 @@ async def voice_dictate_text(
         JSON with transcribed text
     """
     temp_audio_path = None
+    db = None
     
     try:
         logger.info(f"Voice dictation from user {user_id} for field: {field_name}")
@@ -1083,6 +1123,8 @@ async def voice_dictate_text(
         raise HTTPException(status_code=500, detail=str(e))
         
     finally:
+        if db:
+            db.close()
         if temp_audio_path and os.path.exists(temp_audio_path):
             try:
                 os.remove(temp_audio_path)
@@ -1258,6 +1300,7 @@ async def set_language_preference(request: LanguagePreferenceRequest):
     Returns:
         JSON confirmation
     """
+    db = None
     try:
         db = next(get_db())
         
@@ -1284,6 +1327,9 @@ async def set_language_preference(request: LanguagePreferenceRequest):
             status_code=500,
             content={"success": False, "error": str(e)}
         )
+    finally:
+        if db:
+            db.close()
 
 
 @router.post("/tts")

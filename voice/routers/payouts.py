@@ -97,7 +97,7 @@ class PayoutResponse(BaseModel):
 
 
 @router.post("/", response_model=PayoutResponse, status_code=201)
-def create_payout(payout: PayoutCreate, db: Session = Depends(get_db)):
+def create_payout(payout: PayoutCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     Initiate payout via M-Pesa, bank transfer, or Stripe.
     
@@ -260,7 +260,7 @@ def create_payout(payout: PayoutCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{payout_id}", response_model=PayoutResponse)
-def get_payout(payout_id: int, db: Session = Depends(get_db)):
+def get_payout(payout_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Get payout details by ID."""
     payout = db.query(Payout).filter(Payout.id == payout_id).first()
     if not payout:
@@ -269,7 +269,7 @@ def get_payout(payout_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/campaign/{campaign_id}", response_model=List[PayoutResponse])
-def list_campaign_payouts(campaign_id: int, db: Session = Depends(get_db)):
+def list_campaign_payouts(campaign_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """List all payouts for a campaign."""
     campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
     if not campaign:
@@ -286,7 +286,8 @@ def list_payouts(
     ngo_id: Optional[int] = None,
     skip: int = 0,
     limit: int = 100,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     List payouts with optional filters.

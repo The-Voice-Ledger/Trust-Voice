@@ -100,9 +100,12 @@ def extract_intent_and_entities(
     except json.JSONDecodeError as e:
         logger.error(f"Failed to parse NLU response: {e}")
         return _fallback_response(transcript)
+    except NLUError:
+        # Re-raise configuration errors (e.g., missing API key)
+        raise
     except Exception as e:
-        logger.error(f"NLU extraction error: {str(e)}")
-        raise NLUError(f"Intent extraction failed: {str(e)}")
+        logger.error(f"NLU API error: {str(e)}, falling back to keyword extraction")
+        return _fallback_response(transcript)
 
 
 def _build_system_prompt(language: str) -> str:

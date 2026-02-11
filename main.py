@@ -14,6 +14,13 @@ import logging
 # Load environment variables FIRST (before any imports that need them)
 load_dotenv()
 
+# Configure logging (must be before any logger usage)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 # Import routers
 from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin, auth, registrations, ngo_registrations, miniapp_voice, analytics, field_agent
 
@@ -24,13 +31,6 @@ try:
 except ImportError:
     TELEGRAM_WEBHOOK_AVAILABLE = False
     logger.warning("Telegram webhook router not available")
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 # Create FastAPI app
 app = FastAPI(
@@ -45,8 +45,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-Requested-With"],
 )
 
 # ============================================
@@ -167,7 +167,15 @@ async def startup_event():
     """Run on application startup."""
     logger.info("TrustVoice API starting up...")
     logger.info(f"Environment: {os.getenv('APP_ENV')}")
-    logger.info(f"Database: {os.getenv('DATABASE_URL', 'Not configured')[:50]}...")
+    
+    # Log DB connection (masked)
+    db_url = os.getenv('DATABASE_URL', 'Not configured')
+    if '@' in db_url:
+        # Mask credentials: postgresql://user:pass@host -> postgresql://***@host
+        parts = db_url.split('@')
+        logger.info(f"Database: ***@{parts[-1][:40]}...")
+    else:
+        logger.info(f"Database: {db_url[:30]}...")
     
     # Initialize Telegram bot if in production
     app_env = os.getenv("APP_ENV", "development")

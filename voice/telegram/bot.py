@@ -728,7 +728,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                 session = SessionManager.get_session(user_id)
                 
                 # If waiting for clarification, use pending intent and merge entities
-                if session and session.get("state") == ConversationState.WAITING_FOR_CLARIFICATION:
+                if session and session.get("state") == ConversationState.WAITING_FOR_CLARIFICATION.value:
                     pending_data = session.get("data", {})
                     original_intent = pending_data.get("pending_intent")
                     original_entities = pending_data.get("pending_entities", {})
@@ -736,24 +736,51 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                     
                     logger.info(f"Continuing clarification flow - original intent: {original_intent}, missing: {missing_entities}")
                     
-                    # Try to extract the missing entity from current transcript
-                    for missing_field in missing_entities:
-                        if missing_field == "title":
-                            original_entities["title"] = transcript
-                        elif missing_field == "goal_amount" or missing_field == "amount":
-                            import re
-                            numbers = re.findall(r'\d+', transcript)
-                            if numbers:
-                                original_entities[missing_field] = float(numbers[0])
-                        elif missing_field == "category":
-                            transcript_lower = transcript.lower()
-                            if "water" in transcript_lower:
-                                original_entities["category"] = "water"
-                            elif "education" in transcript_lower or "school" in transcript_lower:
-                                original_entities["category"] = "education"
-                            elif "health" in transcript_lower or "medical" in transcript_lower:
-                                original_entities["category"] = "health"
-                            else:
+                    # Use NLU to extract the missing entities from the clarification response
+                    # Provide context so NLU knows what we're looking for
+                    from voice.nlu.nlu_infer import extract_intent_and_entities
+                    clarification_context = {
+                        "original_intent": original_intent,
+                        "existing_entities": original_entities,
+                        "missing_entities": missing_entities,
+                        "is_clarification": True
+                    }
+                    try:
+                        clarification_result = extract_intent_and_entities(
+                            transcript=transcript,
+                            language=user_language,
+                            user_context=clarification_context
+                        )
+                        # Merge newly extracted entities with originals
+                        new_entities = clarification_result.get("entities", {})
+                        for key, value in new_entities.items():
+                            if value is not None:
+                                original_entities[key] = value
+                        
+                        # If NLU didn't find the missing entity, try simple extraction as fallback
+                        for missing_field in missing_entities:
+                            if missing_field not in original_entities or original_entities.get(missing_field) is None:
+                                if missing_field == "title":
+                                    original_entities["title"] = transcript
+                                elif missing_field in ("goal_amount", "amount"):
+                                    import re
+                                    numbers = re.findall(r'\d+', transcript)
+                                    if numbers:
+                                        original_entities[missing_field] = float(numbers[0])
+                                elif missing_field == "category":
+                                    original_entities["category"] = transcript
+                    except Exception as nlu_err:
+                        logger.warning(f"NLU clarification failed: {nlu_err}, using simple extraction")
+                        # Fallback to simple extraction
+                        for missing_field in missing_entities:
+                            if missing_field == "title":
+                                original_entities["title"] = transcript
+                            elif missing_field in ("goal_amount", "amount"):
+                                import re
+                                numbers = re.findall(r'\d+', transcript)
+                                if numbers:
+                                    original_entities[missing_field] = float(numbers[0])
+                            elif missing_field == "category":
                                 original_entities["category"] = transcript
                     
                     # Use original intent with updated entities
@@ -888,12 +915,12 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         try:
             state = get_conversation_state(telegram_user_id)
             
-            if state == ConversationState.DONATING.value:
+            if state == ConversationState.DONATING:
                 result = await route_donation_message(telegram_user_id, update.message.text, db)
                 await update.message.reply_text(result["message"])
                 return
             
-            elif state == ConversationState.SEARCHING_CAMPAIGNS.value:
+            elif state == ConversationState.SEARCHING_CAMPAIGNS:
                 result = await route_search_message(telegram_user_id, update.message.text, db)
                 await update.message.reply_text(result["message"])
                 return

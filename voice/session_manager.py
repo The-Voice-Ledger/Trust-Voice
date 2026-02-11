@@ -6,12 +6,15 @@ Handles conversation state, user context, and session lifecycle using Redis.
 
 import os
 import json
+import logging
 import redis
 import uuid
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 from enum import Enum
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 # Redis connection - use REDIS_URL if available (Railway, Heroku style)
 # Otherwise fall back to individual components for local development
@@ -34,14 +37,14 @@ try:
     
     # Test connection on initialization
     redis_client.ping()
-    print("✅ Redis connected successfully")
+    logger.info("Redis connected successfully")
 except redis.ConnectionError as e:
-    print(f"❌ Redis connection failed: {e}")
-    print("⚠️  Voice pipeline will not work without Redis. Please configure REDIS_URL.")
+    logger.error(f"Redis connection failed: {e}")
+    logger.warning("Voice pipeline will not work without Redis. Please configure REDIS_URL.")
     # In production, you might want to raise an exception here
     # For development, we'll allow it to continue but warn
 except Exception as e:
-    print(f"⚠️  Redis initialization warning: {e}")
+    logger.warning(f"Redis initialization warning: {e}")
 
 # Session TTL (time to live) - 30 minutes
 SESSION_TTL = int(os.getenv('REDIS_SESSION_TTL', 1800))
@@ -124,7 +127,7 @@ class SessionManager:
                     db=db
                 )
             except Exception as e:
-                print(f"⚠️  Analytics tracking failed: {e}")
+                logger.warning(f"Analytics tracking failed: {e}")
         
         return session
     
@@ -193,7 +196,7 @@ class SessionManager:
                     db=db
                 )
             except Exception as e:
-                print(f"⚠️  Analytics tracking failed: {e}")
+                logger.warning(f"Analytics tracking failed: {e}")
         
         # Update fields
         if state:
@@ -265,7 +268,7 @@ class SessionManager:
                         db=db
                     )
             except Exception as e:
-                print(f"⚠️  Analytics tracking failed: {e}")
+                logger.warning(f"Analytics tracking failed: {e}")
         
         key = SessionManager._get_key(user_id)
         return redis_client.delete(key) > 0

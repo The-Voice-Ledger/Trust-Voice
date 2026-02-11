@@ -2,6 +2,7 @@
 AddisAI Provider for Amharic Voice Processing
 Implements Speech-to-Text and Text-to-Speech using AddisAI API
 """
+import asyncio
 import os
 import json
 import httpx
@@ -10,6 +11,12 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+# Retry configuration
+MAX_RETRIES = 1  # One retry (total 2 attempts)
+RETRY_DELAY_SECONDS = 2.0
+# HTTP status codes worth retrying (server errors, rate limits)
+RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 
 
 class AddisAIError(Exception):
@@ -70,89 +77,99 @@ class AddisAIProvider:
         """
         logger.info(f"AddisAI transcription request - Language: {language}, File: {audio_path}")
         
-        try:
-            # Verify file exists
-            if not os.path.exists(audio_path):
-                raise AddisAIError(f"Audio file not found: {audio_path}")
-            
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                # Open file and prepare multipart upload
-                with open(audio_path, 'rb') as audio_file:
-                    # AddisAI uses chat_generate with 'chat_audio_input' field
-                    # This returns BOTH transcription AND conversational response
-                    request_data = {
-                        "target_language": language,  # "am" or "om"
-                        "generation_config": {
-                            "temperature": 0.7
+        last_error = None
+        for attempt in range(MAX_RETRIES + 1):
+            try:
+                # Verify file exists
+                if not os.path.exists(audio_path):
+                    raise AddisAIError(f"Audio file not found: {audio_path}")
+                
+                async with httpx.AsyncClient(timeout=self.timeout) as client:
+                    # Open file and prepare multipart upload
+                    with open(audio_path, 'rb') as audio_file:
+                        request_data = {
+                            "target_language": language,
+                            "generation_config": {
+                                "temperature": 0.7
+                            }
                         }
-                    }
-                    
-                    files = {
-                        "chat_audio_input": (Path(audio_path).name, audio_file, "audio/wav"),
-                        "request_data": (None, json.dumps(request_data), "application/json")
-                    }
-                    
-                    # Use configured STT endpoint (actually chat_generate)
-                    stt_url = f"{self.base_url}{self.stt_endpoint}"
-                    logger.info(f"Calling AddisAI STT: {stt_url}")
-                    
-                    response = await client.post(
-                        stt_url,
-                        headers={"X-API-Key": self.api_key},
-                        files=files
-                    )
-                    
-                    # Check for errors
-                    if response.status_code != 200:
-                        error_msg = f"AddisAI API error: {response.status_code} - {response.text}"
-                        logger.error(error_msg)
-                        raise AddisAIError(error_msg)
-                    
-                    result = response.json()
-                    
-                    # AddisAI chat_generate returns transcription in 'transcription_clean' field
-                    # Extract from response structure: {"status": "success", "data": {...}}
-                    data = result.get("data", result)
-                    transcript = data.get("transcription_clean", data.get("text", ""))
-                    
-                    # Remove markdown code blocks if present (AddisAI wraps in ```)
-                    transcript = transcript.strip()
-                    if transcript.startswith("```"):
-                        # Remove opening ```[language]
-                        lines = transcript.split('\n')
-                        if lines[0].startswith("```"):
-                            lines = lines[1:]
-                        # Remove closing ```
-                        if lines and lines[-1].strip() == "```":
-                            lines = lines[:-1]
-                        transcript = '\n'.join(lines).strip()
-                    
-                    logger.info(f"AddisAI transcription successful: {len(transcript)} chars")
-                    
-                    # Normalize response format
-                    return {
-                        "text": transcript,
-                        "language": language,
-                        "confidence": data.get("confidence", 0.95),  # AddisAI is high quality
-                        "duration": data.get("duration", 0),
-                        "provider": "addisai",
-                        "raw_response": result  # Include full response for NLU later
-                    }
+                        
+                        files = {
+                            "chat_audio_input": (Path(audio_path).name, audio_file, "audio/wav"),
+                            "request_data": (None, json.dumps(request_data), "application/json")
+                        }
+                        
+                        stt_url = f"{self.base_url}{self.stt_endpoint}"
+                        if attempt > 0:
+                            logger.info(f"Retrying AddisAI STT (attempt {attempt + 1}): {stt_url}")
+                        else:
+                            logger.info(f"Calling AddisAI STT: {stt_url}")
+                        
+                        response = await client.post(
+                            stt_url,
+                            headers={"X-API-Key": self.api_key},
+                            files=files
+                        )
+                        
+                        # Check for retryable errors
+                        if response.status_code in RETRYABLE_STATUS_CODES and attempt < MAX_RETRIES:
+                            logger.warning(f"AddisAI STT returned {response.status_code}, retrying in {RETRY_DELAY_SECONDS}s...")
+                            await asyncio.sleep(RETRY_DELAY_SECONDS)
+                            continue
+                        
+                        # Check for non-retryable errors
+                        if response.status_code != 200:
+                            error_msg = f"AddisAI API error: {response.status_code} - {response.text}"
+                            logger.error(error_msg)
+                            raise AddisAIError(error_msg)
+                        
+                        result = response.json()
+                        
+                        # Extract transcription from response
+                        data = result.get("data", result)
+                        transcript = data.get("transcription_clean", data.get("text", ""))
+                        
+                        # Remove markdown code blocks if present
+                        transcript = transcript.strip()
+                        if transcript.startswith("```"):
+                            lines = transcript.split('\n')
+                            if lines[0].startswith("```"):
+                                lines = lines[1:]
+                            if lines and lines[-1].strip() == "```":
+                                lines = lines[:-1]
+                            transcript = '\n'.join(lines).strip()
+                        
+                        logger.info(f"AddisAI transcription successful: {len(transcript)} chars")
+                        
+                        return {
+                            "text": transcript,
+                            "language": language,
+                            "confidence": data.get("confidence", 0.95),
+                            "duration": data.get("duration", 0),
+                            "provider": "addisai",
+                            "raw_response": result
+                        }
+            
+            except (httpx.TimeoutException, httpx.RequestError) as e:
+                last_error = e
+                if attempt < MAX_RETRIES:
+                    logger.warning(f"AddisAI STT {type(e).__name__}, retrying in {RETRY_DELAY_SECONDS}s...")
+                    await asyncio.sleep(RETRY_DELAY_SECONDS)
+                    continue
+                error_msg = f"AddisAI API {'timeout' if isinstance(e, httpx.TimeoutException) else 'connection error'} after {MAX_RETRIES + 1} attempts"
+                logger.error(error_msg)
+                raise AddisAIError(error_msg) from e
+            
+            except AddisAIError:
+                raise
+            
+            except Exception as e:
+                error_msg = f"AddisAI transcription failed: {str(e)}"
+                logger.error(error_msg)
+                raise AddisAIError(error_msg) from e
         
-        except httpx.TimeoutException as e:
-            error_msg = f"AddisAI API timeout after {self.timeout}s"
-            logger.error(error_msg)
-            raise AddisAIError(error_msg) from e
-        
-        except httpx.RequestError as e:
-            error_msg = f"AddisAI API connection error: {str(e)}"
-            logger.error(error_msg)
-            raise AddisAIError(error_msg) from e
-        
-        except Exception as e:
-            error_msg = f"AddisAI transcription failed: {str(e)}"
-            logger.error(error_msg)
-            raise AddisAIError(error_msg) from e
+        # Should not reach here, but just in case
+        raise AddisAIError(f"AddisAI transcription failed after {MAX_RETRIES + 1} attempts") from last_error
     
     async def text_to_speech(
         self, 
@@ -176,49 +193,65 @@ class AddisAIProvider:
         """
         logger.info(f"AddisAI TTS request - Language: {language}, Text length: {len(text)}")
         
-        try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                tts_url = f"{self.base_url}/audio/speech"
-                
-                payload = {
-                    "text": text,
-                    "language": language
-                }
-                
-                if voice_id:
-                    payload["voice_id"] = voice_id
-                
-                response = await client.post(
-                    tts_url,
-                    headers={
-                        "X-API-Key": self.api_key,
-                        "Content-Type": "application/json"
-                    },
-                    json=payload
-                )
-                
-                if response.status_code != 200:
-                    error_msg = f"AddisAI TTS error: {response.status_code} - {response.text}"
-                    logger.error(error_msg)
-                    raise AddisAIError(error_msg)
-                
-                logger.info(f"AddisAI TTS successful: {len(response.content)} bytes")
-                return response.content
+        last_error = None
+        for attempt in range(MAX_RETRIES + 1):
+            try:
+                async with httpx.AsyncClient(timeout=self.timeout) as client:
+                    tts_url = f"{self.base_url}/audio/speech"
+                    
+                    payload = {
+                        "text": text,
+                        "language": language
+                    }
+                    
+                    if voice_id:
+                        payload["voice_id"] = voice_id
+                    
+                    if attempt > 0:
+                        logger.info(f"Retrying AddisAI TTS (attempt {attempt + 1})")
+                    
+                    response = await client.post(
+                        tts_url,
+                        headers={
+                            "X-API-Key": self.api_key,
+                            "Content-Type": "application/json"
+                        },
+                        json=payload
+                    )
+                    
+                    # Check for retryable errors
+                    if response.status_code in RETRYABLE_STATUS_CODES and attempt < MAX_RETRIES:
+                        logger.warning(f"AddisAI TTS returned {response.status_code}, retrying in {RETRY_DELAY_SECONDS}s...")
+                        await asyncio.sleep(RETRY_DELAY_SECONDS)
+                        continue
+                    
+                    if response.status_code != 200:
+                        error_msg = f"AddisAI TTS error: {response.status_code} - {response.text}"
+                        logger.error(error_msg)
+                        raise AddisAIError(error_msg)
+                    
+                    logger.info(f"AddisAI TTS successful: {len(response.content)} bytes")
+                    return response.content
+            
+            except (httpx.TimeoutException, httpx.RequestError) as e:
+                last_error = e
+                if attempt < MAX_RETRIES:
+                    logger.warning(f"AddisAI TTS {type(e).__name__}, retrying in {RETRY_DELAY_SECONDS}s...")
+                    await asyncio.sleep(RETRY_DELAY_SECONDS)
+                    continue
+                error_msg = f"AddisAI TTS {'timeout' if isinstance(e, httpx.TimeoutException) else 'connection error'} after {MAX_RETRIES + 1} attempts"
+                logger.error(error_msg)
+                raise AddisAIError(error_msg) from e
+            
+            except AddisAIError:
+                raise
+            
+            except Exception as e:
+                error_msg = f"AddisAI TTS failed: {str(e)}"
+                logger.error(error_msg)
+                raise AddisAIError(error_msg) from e
         
-        except httpx.TimeoutException as e:
-            error_msg = f"AddisAI TTS timeout after {self.timeout}s"
-            logger.error(error_msg)
-            raise AddisAIError(error_msg) from e
-        
-        except httpx.RequestError as e:
-            error_msg = f"AddisAI TTS connection error: {str(e)}"
-            logger.error(error_msg)
-            raise AddisAIError(error_msg) from e
-        
-        except Exception as e:
-            error_msg = f"AddisAI TTS failed: {str(e)}"
-            logger.error(error_msg)
-            raise AddisAIError(error_msg) from e
+        raise AddisAIError(f"AddisAI TTS failed after {MAX_RETRIES + 1} attempts") from last_error
     
     async def chat_completion(
         self,

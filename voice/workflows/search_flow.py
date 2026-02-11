@@ -8,12 +8,15 @@ Enables users to:
 - View details on specific results ("tell me about #1")
 """
 
+import logging
 from typing import Dict, List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from database.models import Campaign
 from voice.session_manager import SessionManager, ConversationState
 import re
+
+logger = logging.getLogger(__name__)
 
 
 class SearchConversation:
@@ -51,9 +54,7 @@ class SearchConversation:
             # Fallback: Parse query for filters
             filters = SearchConversation._parse_query(query)
         
-        # Debug: Log what filters were extracted
-        print(f"[DEBUG] Search query: '{query}'")
-        print(f"[DEBUG] Extracted filters: {filters}")
+        logger.debug(f"Search query: '{query}', extracted filters: {filters}")
         
         # Search campaigns
         campaigns = SearchConversation._search_with_filters(filters, db)

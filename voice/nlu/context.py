@@ -1,6 +1,10 @@
 """
 Conversation Context Manager for TrustVoice
-Tracks user conversations across multiple voice messages
+Tracks user conversations across multiple voice messages.
+
+Note: This module provides NLU-specific context (intents, entities, campaign focus).
+For conversation flow state, see voice.session_manager.SessionManager (Redis-backed).
+When Redis is available, get_context() merges data from both sources.
 """
 
 import logging
@@ -31,7 +35,10 @@ class ConversationContext:
     @classmethod
     def get_context(cls, user_id: str) -> Optional[Dict[str, Any]]:
         """
-        Get conversation context for a user
+        Get conversation context for a user.
+        
+        Merges in-memory NLU context with Redis session data when available,
+        providing a unified view of the conversation state.
         
         Args:
             user_id: Unique user identifier (phone/telegram_id)
@@ -40,19 +47,40 @@ class ConversationContext:
             Context dictionary or None if expired
         """
         with cls._lock:
-            if user_id not in cls._conversations:
-                return None
+            context = None
             
-            context = cls._conversations[user_id]
+            if user_id in cls._conversations:
+                ctx = cls._conversations[user_id]
+                
+                # Check if conversation has timed out
+                last_activity = ctx.get("last_activity")
+                if last_activity and datetime.now() - last_activity > cls.TIMEOUT:
+                    logger.info(f"Conversation timeout for user {user_id}")
+                    del cls._conversations[user_id]
+                else:
+                    context = ctx.copy()
             
-            # Check if conversation has timed out
-            last_activity = context.get("last_activity")
-            if last_activity and datetime.now() - last_activity > cls.TIMEOUT:
-                logger.info(f"Conversation timeout for user {user_id}")
-                del cls._conversations[user_id]
-                return None
+            # Merge with Redis session data if available
+            try:
+                from voice.session_manager import SessionManager
+                session = SessionManager.get_session(user_id)
+                if session:
+                    session_data = session.get("data", {})
+                    if context is None:
+                        context = {
+                            "created_at": datetime.now(),
+                            "turn_count": 0,
+                            "intents_history": [],
+                            "collected_entities": {}
+                        }
+                    # Add session state info to context for NLU awareness
+                    context["session_state"] = session.get("state")
+                    context["pending_intent"] = session_data.get("pending_intent")
+                    context["pending_entities"] = session_data.get("pending_entities")
+            except Exception:
+                pass  # Redis unavailable, use in-memory only
             
-            return context.copy()
+            return context
     
     @classmethod
     def update_context(

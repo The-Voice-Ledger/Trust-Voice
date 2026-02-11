@@ -28,6 +28,9 @@ from voice.conversation.preferences import (
 from voice.conversation.analytics import ConversationAnalytics
 import re
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DonationConversation:
@@ -421,10 +424,9 @@ class DonationConversation:
             db.add(donation)
             db.commit()
             
-            # TODO: Initiate payment with Chapa/Telebirr/M-Pesa
-            # For now, mark as complete
-            donation.status = "completed"
-            db.commit()
+            # Payment will be confirmed via webhook callback (M-Pesa/Stripe)
+            # Donation stays in 'pending' status until payment processor confirms
+            logger.info(f"Donation {donation.id} created as pending, awaiting payment confirmation")
             
             # LAB 9 Part 3: Learn from completed donation
             PreferenceManager.learn_from_donation(
