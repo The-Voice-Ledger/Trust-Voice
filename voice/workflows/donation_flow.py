@@ -155,6 +155,7 @@ class DonationConversation:
         # LAB 9 Part 4: Track campaign selection
         session_data = SessionManager.get_session(user_id)
         session_id = session_data.get("data", {}).get("session_id")
+        user = db.query(User).filter(User.telegram_user_id == user_id).first()
         if user and session_id:
             ConversationAnalytics.track_event(
                 db=db,
@@ -168,7 +169,6 @@ class DonationConversation:
         
         # LAB 9 Part 3: Suggest amount based on user history
         amount_suggestion = ""
-        user = db.query(User).filter(User.telegram_user_id == user_id).first()
         if user:
             suggested_amount = PreferenceManager.get_preference(
                 user.id, "donation_amount", db

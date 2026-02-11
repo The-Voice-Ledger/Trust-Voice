@@ -450,7 +450,7 @@ async def get_campaign_verifications(
             
             verification_list.append({
                 "id": str(v.id),
-                "agent_name": agent.preferred_name or agent.full_name if agent else "Unknown",
+                "agent_name": agent.full_name if agent else "Unknown",
                 "trust_score": v.trust_score,
                 "status": v.status,
                 "verification_date": v.verification_date.strftime("%b %d, %Y"),

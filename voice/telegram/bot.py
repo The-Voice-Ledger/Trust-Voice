@@ -509,10 +509,20 @@ async def donations_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             return
         
-        total_donated = sum(d.amount for d in donations)
+        # Convert all donations to USD for total
+        total_donated_usd = 0.0
+        for d in donations:
+            if d.currency == "USD":
+                total_donated_usd += float(d.amount)
+            else:
+                try:
+                    from services.currency_service import currency_service
+                    total_donated_usd += currency_service.convert_to_usd(float(d.amount), d.currency)
+                except Exception:
+                    total_donated_usd += float(d.amount)  # Fallback: treat as USD
         
         message = f"💰 <b>Your Donation History</b>\n\n"
-        message += f"Total Donated: ${total_donated:,.2f}\n"
+        message += f"Total Donated: ${total_donated_usd:,.2f} USD\n"
         message += f"Donations: {len(donations)}\n\n"
         
         for idx, donation in enumerate(donations[:5], 1):
