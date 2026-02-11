@@ -269,18 +269,27 @@ class SearchConversation:
                 break
         
         # Keywords (anything not category/region)
-        # Remove category/region words and generic terms
-        keyword = query_lower
+        # Remove category/region words and generic terms using word boundaries
+        keyword_words = query_lower.split()
+        
+        stop_words = set()
         for cat_words in categories.values():
             for word in cat_words:
-                keyword = keyword.replace(word, "")
-        for region in regions:
-            keyword = keyword.replace(region, "")
+                stop_words.update(word.split())
+        stop_words.update(region.lower() for region in regions)
         
         # Remove generic terms that don't help search
-        generic_terms = ["campaign", "campaigns", "project", "projects", "show", "me", "find", "search", "in", "for", "active", "available", "current", "can", "you", "please", "tell", "what", "are", "the"]
-        for term in generic_terms:
-            keyword = keyword.replace(term, "")
+        generic_terms = {
+            "campaign", "campaigns", "project", "projects", "show", "me",
+            "find", "search", "in", "for", "active", "available", "current",
+            "can", "you", "please", "tell", "what", "are", "the", "list",
+            "all", "browse", "every", "give", "get", "see", "look", "want",
+            "i", "to", "a", "an", "my", "some", "any", "about", "with"
+        }
+        stop_words.update(generic_terms)
+        
+        remaining = [w for w in keyword_words if w not in stop_words]
+        keyword = " ".join(remaining).strip()
         
         keyword = keyword.strip()
         if keyword and len(keyword) > 3:
@@ -294,7 +303,8 @@ class SearchConversation:
         query = db.query(Campaign).filter(Campaign.status == "active")
         
         if filters.get("category"):
-            query = query.filter(Campaign.category == filters["category"])
+            # Case-insensitive match (NLU may return "Education", DB stores "education")
+            query = query.filter(Campaign.category.ilike(filters["category"]))
         
         if filters.get("region"):
             region = filters["region"]
