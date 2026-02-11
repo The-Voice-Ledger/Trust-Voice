@@ -394,7 +394,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "/help - Show this help"
         )
     
-    await update.message.reply_text(help_text, parse_mode="HTML")
+    await send_voice_reply(update=update, text=help_text, language=language, parse_mode="HTML")
 
 
 async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -418,6 +418,9 @@ async def campaigns_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     from database.db import SessionLocal
     from database.models import Campaign
     
+    telegram_user_id = str(update.effective_user.id)
+    language = get_user_language(telegram_user_id)
+    
     db = SessionLocal()
     try:
         campaigns = db.query(Campaign).filter(
@@ -425,9 +428,11 @@ async def campaigns_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ).order_by(Campaign.created_at.desc()).limit(10).all()
         
         if not campaigns:
-            await update.message.reply_text(
-                "📋 No active campaigns found.\n\n"
-                "Check back soon or use voice commands to search!"
+            await send_voice_reply(
+                update=update,
+                text="📋 No active campaigns found.\n\nCheck back soon or use voice commands to search!",
+                language=language,
+                parse_mode=None
             )
             return
         
@@ -453,7 +458,7 @@ async def campaigns_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         message += "💬 Use voice or text to donate!"
         
-        await update.message.reply_text(message, parse_mode="HTML")
+        await send_voice_reply(update=update, text=message, language=language, parse_mode="HTML")
         
     finally:
         db.close()
@@ -469,6 +474,7 @@ async def donations_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /donations command - View user's donation history"""
     user = update.effective_user
     telegram_user_id = str(user.id)
+    language = get_user_language(telegram_user_id)
     
     from database.db import SessionLocal
     from database.models import Donor, Donation
@@ -481,9 +487,11 @@ async def donations_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ).first()
         
         if not donor:
-            await update.message.reply_text(
-                "💰 You haven't made any donations yet.\n\n"
-                "Use /campaigns to see active campaigns!"
+            await send_voice_reply(
+                update=update,
+                text="💰 You haven't made any donations yet.\n\nUse /campaigns to see active campaigns!",
+                language=language,
+                parse_mode=None
             )
             return
         
@@ -493,9 +501,11 @@ async def donations_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ).order_by(Donation.created_at.desc()).limit(10).all()
         
         if not donations:
-            await update.message.reply_text(
-                "💰 You haven't made any donations yet.\n\n"
-                "Use /campaigns to see active campaigns!"
+            await send_voice_reply(
+                update=update,
+                text="💰 You haven't made any donations yet.\n\nUse /campaigns to see active campaigns!",
+                language=language,
+                parse_mode=None
             )
             return
         
@@ -525,7 +535,7 @@ async def donations_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         message += "🙏 Thank you for your support!"
         
-        await update.message.reply_text(message, parse_mode="HTML")
+        await send_voice_reply(update=update, text=message, language=language, parse_mode="HTML")
         
     finally:
         db.close()
@@ -535,6 +545,7 @@ async def my_campaigns_command(update: Update, context: ContextTypes.DEFAULT_TYP
     """Handle /my_campaigns command - View user's created campaigns"""
     user = update.effective_user
     telegram_user_id = str(user.id)
+    language = get_user_language(telegram_user_id)
     
     from database.db import SessionLocal
     from database.models import User, Campaign
@@ -547,16 +558,21 @@ async def my_campaigns_command(update: Update, context: ContextTypes.DEFAULT_TYP
         ).first()
         
         if not db_user:
-            await update.message.reply_text(
-                "⚠️ Please register first: /start"
+            await send_voice_reply(
+                update=update,
+                text="⚠️ Please register first: /start",
+                language=language,
+                parse_mode=None
             )
             return
         
         # Check if user is campaign creator
         if db_user.role not in ["CAMPAIGN_CREATOR", "SYSTEM_ADMIN"]:
-            await update.message.reply_text(
-                "⚠️ This command is for Campaign Creators only.\n\n"
-                "To create campaigns, register as a Campaign Creator: /register"
+            await send_voice_reply(
+                update=update,
+                text="⚠️ This command is for Campaign Creators only.\n\nTo create campaigns, register as a Campaign Creator: /register",
+                language=language,
+                parse_mode=None
             )
             return
         
@@ -566,9 +582,11 @@ async def my_campaigns_command(update: Update, context: ContextTypes.DEFAULT_TYP
         ).order_by(Campaign.created_at.desc()).all()
         
         if not campaigns:
-            await update.message.reply_text(
-                "📋 You haven't created any campaigns yet.\n\n"
-                "Use voice commands to create your first campaign!"
+            await send_voice_reply(
+                update=update,
+                text="📋 You haven't created any campaigns yet.\n\nUse voice commands to create your first campaign!",
+                language=language,
+                parse_mode=None
             )
             return
         
@@ -598,7 +616,7 @@ async def my_campaigns_command(update: Update, context: ContextTypes.DEFAULT_TYP
         if len(campaigns) > 10:
             message += f"... and {len(campaigns) - 10} more\n"
         
-        await update.message.reply_text(message, parse_mode="HTML")
+        await send_voice_reply(update=update, text=message, language=language, parse_mode="HTML")
         
     finally:
         db.close()
@@ -749,7 +767,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                     try:
                         clarification_result = extract_intent_and_entities(
                             transcript=transcript,
-                            language=user_language,
+                            language=language,
                             user_context=clarification_context
                         )
                         # Merge newly extracted entities with originals
@@ -860,7 +878,7 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             if language == "am":
                 error_msg = "ይቅርታ፣ የድምፅ መልእክትዎን ማስኬድ አልቻልኩም። እባክዎ እንደገና ይሞክሩ።"
             
-            await update.message.reply_text(f"❌ {error_msg}\n\nError: {result.get('error')}")
+            await update.message.reply_text(f"❌ {error_msg}")
             logger.error(f"Voice processing failed: {result.get('error')}")
             
     except Exception as e:
@@ -918,12 +936,12 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
             
             if state == ConversationState.DONATING:
                 result = await route_donation_message(telegram_user_id, update.message.text, db)
-                await update.message.reply_text(result["message"])
+                await send_voice_reply(update=update, text=result["message"], language=language, parse_mode=None)
                 return
             
             elif state == ConversationState.SEARCHING_CAMPAIGNS:
                 result = await route_search_message(telegram_user_id, update.message.text, db)
-                await update.message.reply_text(result["message"])
+                await send_voice_reply(update=update, text=result["message"], language=language, parse_mode=None)
                 return
         
         except Exception as e:
@@ -958,15 +976,97 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     # End Lab 8
     # ====================================================================
     
+    # ====================================================================
+    # C5 Fix: Check for pending clarification (bot asked a question)
+    # ====================================================================
+    db = SessionLocal()
+    try:
+        user_record = db.query(User).filter(User.telegram_user_id == telegram_user_id).first()
+        user_id_for_session = str(user_record.id) if user_record else telegram_user_id
+        
+        session = SessionManager.get_session(user_id_for_session)
+        if session and session.get("state") == ConversationState.WAITING_FOR_CLARIFICATION.value:
+            pending_data = session.get("data", {})
+            original_intent = pending_data.get("pending_intent")
+            original_entities = pending_data.get("pending_entities", {})
+            missing_entities = pending_data.get("missing_entities", [])
+            
+            logger.info(f"Text clarification for {original_intent}, missing: {missing_entities}")
+            
+            # Extract missing entities from the user's text response
+            import re as _re
+            for missing_field in missing_entities:
+                if missing_field == "title":
+                    original_entities["title"] = update.message.text
+                elif missing_field in ("goal_amount", "amount"):
+                    numbers = _re.findall(r'\d+', update.message.text)
+                    if numbers:
+                        original_entities[missing_field] = float(numbers[0])
+                elif missing_field == "category":
+                    original_entities["category"] = update.message.text.strip().lower()
+                elif missing_field == "language":
+                    original_entities["language"] = update.message.text.strip().lower()
+                else:
+                    original_entities[missing_field] = update.message.text.strip()
+            
+            # Clear clarification state
+            SessionManager.end_session(user_id_for_session)
+            
+            # Get conversation context
+            from voice.context.conversation_manager import get_context as _get_ctx
+            ctx = _get_ctx(user_id_for_session)
+            ctx["transcript"] = update.message.text
+            
+            # Route with original intent and merged entities
+            router_result = await route_command(
+                intent=original_intent,
+                entities=original_entities,
+                user_id=user_id_for_session,
+                db=db,
+                conversation_context=ctx
+            )
+            
+            # Handle nested clarification (still missing something)
+            if router_result.get("needs_clarification"):
+                SessionManager.create_session(
+                    user_id=user_id_for_session,
+                    state=ConversationState.WAITING_FOR_CLARIFICATION
+                )
+                SessionManager.update_session(
+                    user_id=user_id_for_session,
+                    data_update={
+                        "pending_intent": original_intent,
+                        "pending_entities": original_entities,
+                        "missing_entities": router_result.get("missing_entities", [])
+                    }
+                )
+            
+            response = router_result.get("message", "I didn't understand that. Try saying 'help'.")
+            await send_voice_reply(update=update, text=response, language=language, parse_mode="HTML")
+            return
+    finally:
+        db.close()
+    # ====================================================================
+    # End C5 Fix
+    # ====================================================================
+    
     # Import NLU directly for text
-    from voice.nlu.nlu_infer import extract_intent_and_entities
+    from voice.nlu.nlu_infer import extract_intent_and_entities, NLUError
     from voice.nlu.context import ConversationContext
     
     # Get context
     user_context = ConversationContext.get_context(telegram_user_id)
     
-    # Extract intent
-    nlu_result = extract_intent_and_entities(text, language, user_context)
+    # Extract intent (M8: handle NLU errors gracefully)
+    try:
+        nlu_result = extract_intent_and_entities(text, language, user_context)
+    except (NLUError, Exception) as nlu_err:
+        logger.error(f"NLU failed for text input: {nlu_err}")
+        nlu_result = {
+            "intent": "unknown",
+            "entities": {},
+            "confidence": 0.0
+        }
     
     # Update context
     ConversationContext.update_context(

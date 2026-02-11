@@ -221,12 +221,12 @@ async def voice_search_campaigns(
                 if intent == IntentType.MAKE_DONATION or 'donate' in transcribed_text.lower():
                     if user_language == "am":
                         response_text = f"በ{campaign.title} ላይ ለመለገስ፣ መለገስ ቁልፍን ይጫኑ።\n\n"
-                        response_text += f"ግብ: KES {campaign.goal_amount:,}\n"
-                        response_text += f"የተሰበሰበ: KES {campaign.raised_amount:,}"
+                        response_text += f"ግብ: ${campaign.goal_amount_usd:,.0f}\n"
+                        response_text += f"የተሰበሰበ: ${campaign.raised_amount_usd:,.0f}"
                     else:
                         response_text = f"To donate to {campaign.title}, tap the Donate button.\n\n"
-                        response_text += f"Goal: KES {campaign.goal_amount:,}\n"
-                        response_text += f"Raised: KES {campaign.raised_amount:,}"
+                        response_text += f"Goal: ${campaign.goal_amount_usd:,.0f}\n"
+                        response_text += f"Raised: ${campaign.raised_amount_usd:,.0f}"
                 elif intent == IntentType.VIEW_CAMPAIGN_DETAILS or 'detail' in transcribed_text.lower() or 'about' in transcribed_text.lower():
                     if user_language == "am":
                         response_text = f"{campaign.title}\n\n{campaign.description[:200]}"
@@ -297,8 +297,8 @@ async def voice_search_campaigns(
                     "id": c.id,
                     "title": c.title,
                     "description": c.description,
-                    "goal_amount": c.goal_amount,
-                    "current_amount": c.current_amount,
+                    "goal_amount": float(c.goal_amount_usd or 0),
+                    "current_amount": float(c.raised_amount_usd or 0),
                     "ngo_id": c.ngo_id
                 }
                 for c in campaigns
@@ -320,7 +320,7 @@ async def voice_search_campaigns(
                     conversation_state="miniapp_search",
                     current_step="search_completed",
                     metadata={
-                        "query": search_query,
+                        "query": transcribed_text,
                         "results_count": len(campaigns),
                         "context_aware": context_aware_response,
                         "tts_success": tts_success

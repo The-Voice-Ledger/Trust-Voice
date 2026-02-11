@@ -64,6 +64,9 @@ REQUIRED_ENTITIES: Dict[str, List[str]] = {
     "greeting": [],
     "change_language": ["language"],  # Which language?
     "system_info": [],  # System information
+    "thank_you": [],  # Thank you messages
+    "check_donation_status": [],  # Check last donation
+    "register_ngo": [],  # NGO registration (entities checked in handler)
     "unknown": []
 }
 
