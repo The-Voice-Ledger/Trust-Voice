@@ -14,7 +14,7 @@ from database.db import get_db
 from voice.conversation.analytics import ConversationAnalytics
 from typing import Optional
 
-router = APIRouter(prefix="/api/analytics", tags=["analytics"])
+router = APIRouter(prefix="/analytics", tags=["analytics"])
 
 
 @router.get("/conversation-metrics")

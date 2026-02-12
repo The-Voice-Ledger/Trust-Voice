@@ -153,6 +153,7 @@ async def create_donation(
     # Process payment based on method
     # Note: In production, these would be actual API calls
     # For now, we'll use mock/stub implementations
+    stripe_client_secret = None
     
     if donation.payment_method == "mpesa":
         # Initiate M-Pesa STK Push
@@ -186,7 +187,8 @@ async def create_donation(
         
         db_donation.status = "pending"  # Waiting for client to confirm payment
         db_donation.payment_intent_id = payment_intent['id']
-        # client_secret returned in response for frontend payment confirmation
+        # Store client_secret to return to frontend for payment confirmation
+        stripe_client_secret = payment_intent.get('client_secret')
         
     elif donation.payment_method == "crypto":
         # TODO: Implement blockchain transaction
@@ -197,7 +199,27 @@ async def create_donation(
     db.flush()
     db.refresh(db_donation)
     
-    return db_donation
+    # Build response — include client_secret for Stripe payments
+    response = {
+        "id": db_donation.id,
+        "donor_id": db_donation.donor_id,
+        "campaign_id": db_donation.campaign_id,
+        "amount": db_donation.amount,
+        "currency": db_donation.currency,
+        "payment_method": db_donation.payment_method,
+        "payment_intent_id": db_donation.payment_intent_id,
+        "transaction_hash": db_donation.transaction_hash,
+        "nft_token_id": db_donation.nft_token_id,
+        "donor_message": db_donation.donor_message,
+        "is_anonymous": db_donation.is_anonymous,
+        "status": db_donation.status,
+        "created_at": db_donation.created_at,
+        "updated_at": db_donation.updated_at,
+    }
+    if donation.payment_method == "stripe" and stripe_client_secret:
+        response["stripe_client_secret"] = stripe_client_secret
+    
+    return response
 
 
 @router.get("/{donation_id}", response_model=DonationResponse)

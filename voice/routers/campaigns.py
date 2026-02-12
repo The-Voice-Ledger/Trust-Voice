@@ -162,16 +162,39 @@ def create_campaign(campaign: CampaignCreate, db: Session = Depends(get_db)):
     return enrich_campaign_response(db_campaign, db)
 
 
-@router.get("/", response_model=List[CampaignResponse])
+class PaginatedCampaignResponse(BaseModel):
+    """Paginated campaign list for web frontend."""
+    items: List[CampaignResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+@router.get("/")
 def list_campaigns(
     status: Optional[str] = None,
     ngo_id: Optional[int] = None,
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    sort: Optional[str] = "newest",
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db)
 ):
     """
-    List all campaigns with optional filters
+    List campaigns with optional filters, search, sort, and pagination.
+    
+    Query Parameters:
+      - status: active, paused, completed
+      - ngo_id: Filter by NGO
+      - category: Filter by category (education, health, water, etc.)
+      - search: Full-text search in title and description
+      - sort: newest (default), oldest, most_funded, goal_high, goal_low
+      - page & page_size: If provided, returns paginated response with total count
+      - skip & limit: Legacy offset/limit (used when page is not provided)
     """
     query = db.query(Campaign)
     
@@ -183,6 +206,42 @@ def list_campaigns(
     if ngo_id:
         query = query.filter(Campaign.ngo_id == ngo_id)
     
+    if category:
+        query = query.filter(Campaign.category.ilike(category))
+    
+    if search:
+        search_term = f"%{search}%"
+        query = query.filter(
+            (Campaign.title.ilike(search_term)) | (Campaign.description.ilike(search_term))
+        )
+    
+    # Sorting
+    if sort == "oldest":
+        query = query.order_by(Campaign.created_at.asc())
+    elif sort == "most_funded":
+        query = query.order_by(Campaign.raised_amount_usd.desc())
+    elif sort == "goal_high":
+        query = query.order_by(Campaign.goal_amount_usd.desc())
+    elif sort == "goal_low":
+        query = query.order_by(Campaign.goal_amount_usd.asc())
+    else:  # newest (default)
+        query = query.order_by(Campaign.created_at.desc())
+    
+    # Paginated response (when page is specified)
+    if page is not None:
+        page = max(1, page)
+        page_size = min(max(1, page_size or 12), 100)
+        total = query.count()
+        campaigns = query.offset((page - 1) * page_size).limit(page_size).all()
+        return {
+            "items": [enrich_campaign_response(c, db) for c in campaigns],
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": math.ceil(total / page_size) if total > 0 else 0
+        }
+    
+    # Legacy response (flat list)
     campaigns = query.offset(skip).limit(limit).all()
     return [enrich_campaign_response(c, db) for c in campaigns]
 

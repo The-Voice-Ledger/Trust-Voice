@@ -115,3 +115,4 @@ dump.rdb
 node_modules/
 package-lock.json
 yarn.lock
+web-frontend/node_modules/

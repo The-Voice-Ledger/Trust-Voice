@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Import routers
 from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin, auth, registrations, ngo_registrations, miniapp_voice, analytics, field_agent
+from voice.routers.websocket import router as websocket_router
 
 # Import Telegram webhook router for production deployment
 try:
@@ -39,8 +40,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS configuration (allow web dashboard to call API)
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+# CORS configuration (allow web dashboard and SPA frontend to call API)
+DEFAULT_ORIGINS = "http://localhost:3000,http://localhost:5173,http://localhost:8000,http://localhost:8001"
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", DEFAULT_ORIGINS).split(",")
+ALLOWED_ORIGINS = [o.strip() for o in ALLOWED_ORIGINS if o.strip()]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -66,6 +69,7 @@ app.include_router(registrations.router, prefix="/api")
 app.include_router(field_agent.router, prefix="/api")
 app.include_router(miniapp_voice.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
+app.include_router(websocket_router)  # WebSocket routes at root (/ws/donations, /ws/campaign/{id})
 
 # Register Telegram webhook router if available (for production deployment)
 if TELEGRAM_WEBHOOK_AVAILABLE:
@@ -212,6 +216,34 @@ async def shutdown_event():
 
 # Serve admin dashboard at /admin (must come before root mount)
 app.mount("/admin", StaticFiles(directory="frontend", html=True), name="admin-frontend")
+
+# Serve web frontend SPA at /app (must come before root catch-all)
+import pathlib
+from fastapi.responses import FileResponse
+
+_web_frontend_dist = pathlib.Path("web-frontend/dist")
+if _web_frontend_dist.exists():
+    # Mount static assets first (JS, CSS, images)
+    app.mount("/app/assets", StaticFiles(directory=str(_web_frontend_dist / "assets")), name="web-assets")
+
+    # SPA catch-all: any /app/* route that isn't a static file serves index.html
+    # This allows React Router to handle client-side routing on refresh/direct nav
+    @app.get("/app/{full_path:path}")
+    async def serve_spa(full_path: str):
+        # Check if the requested path is an actual file in dist
+        file_path = _web_frontend_dist / full_path
+        if file_path.is_file():
+            return FileResponse(str(file_path))
+        # Otherwise serve index.html for client-side routing
+        return FileResponse(str(_web_frontend_dist / "index.html"))
+
+    @app.get("/app")
+    async def serve_spa_root():
+        return FileResponse(str(_web_frontend_dist / "index.html"))
+
+    logger.info("✅ Web frontend SPA mounted at /app with client-side routing support")
+else:
+    logger.info("ℹ️  Web frontend not built yet — /app not mounted (run: cd web-frontend && npm run build)")
 
 # Serve public miniapps at root path
 app.mount("/", StaticFiles(directory="frontend-miniapps", html=True), name="frontend-miniapps")
