@@ -1,15 +1,42 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { listCampaigns } from '../api/campaigns';
 import { getAnalyticsSummary } from '../api/analytics';
 import ProgressBar from '../components/ProgressBar';
 import VoiceButton from '../components/VoiceButton';
 import { voiceSearchCampaigns } from '../api/voice';
+import {
+  HiOutlineChatBubbleLeftRight, HiOutlineCheckBadge,
+  HiOutlineChartBarSquare, HiOutlineRocketLaunch,
+  HiOutlineGlobeAlt, HiOutlineChartBar, HiOutlineCog6Tooth,
+  HiOutlineHeart, HiOutlineBuildingOffice2, HiOutlinePlusCircle,
+  HiOutlineCamera, HiOutlinePlayCircle, HiOutlineMapPin,
+  HiOutlineUserGroup, HiOutlineArrowRight, HiOutlineVideoCameraSlash,
+} from 'react-icons/hi2';
+import { HiOutlineMicrophone, HiOutlineEye, HiOutlineCreditCard } from 'react-icons/hi';
+import {
+  MdOutlineWaterDrop, MdOutlineSchool, MdOutlineLocalHospital,
+  MdOutlineConstruction, MdOutlineRestaurant, MdOutlineForest,
+  MdOutlineHouse, MdOutlineChildCare, MdHandshake,
+} from 'react-icons/md';
+
+const CATEGORY_ICONS = {
+  water: MdOutlineWaterDrop,
+  education: MdOutlineSchool,
+  health: MdOutlineLocalHospital,
+  infrastructure: MdOutlineConstruction,
+  food: MdOutlineRestaurant,
+  environment: MdOutlineForest,
+  shelter: MdOutlineHouse,
+  children: MdOutlineChildCare,
+};
 
 /**
- * Landing — the rich homepage with hero, media showcase,
- * feature cards, live stats and featured campaigns.
+ * Landing — rich homepage with hero, Swiper video carousel,
+ * feature cards, live stats and CTA.
  */
 export default function Landing() {
   const { t } = useTranslation();
@@ -18,7 +45,7 @@ export default function Landing() {
   const [loadingFeatured, setLoadingFeatured] = useState(true);
 
   useEffect(() => {
-    listCampaigns({ page: 1, pageSize: 6, status: 'active', sort: 'most_funded' })
+    listCampaigns({ page: 1, pageSize: 8, status: 'active', sort: 'most_funded' })
       .then((d) => setFeatured(d.items || (Array.isArray(d) ? d : [])))
       .catch(() => {})
       .finally(() => setLoadingFeatured(false));
@@ -31,170 +58,152 @@ export default function Landing() {
   return (
     <div className="relative">
       {/* ════════ HERO ════════ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white">
-        {/* Decorative blobs */}
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-pink-400/20 rounded-full blur-3xl" />
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950 text-white">
+        {/* Decorative elements */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-60" />
+        <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-[120px]" />
+        <div className="absolute -bottom-32 -left-32 w-[400px] h-[400px] bg-purple-500/20 rounded-full blur-[120px]" />
 
-        <div className="relative max-w-6xl mx-auto px-4 py-20 sm:py-28 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur rounded-full px-4 py-1.5 text-sm font-medium mb-6">
-            <span className="text-lg">🎙️</span>
-            {t('landing.badge')}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-24 sm:py-32 text-center">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-5 py-2 text-sm font-medium mb-8 border border-white/10">
+            <HiOutlineMicrophone className="w-4 h-4 text-indigo-300" />
+            <span className="text-indigo-200">{t('landing.badge')}</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
-            {t('landing.hero_title')}
+          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1]">
+            <span className="bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent">
+              {t('landing.hero_title')}
+            </span>
           </h1>
-          <p className="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto mb-10">
+          <p className="text-lg sm:text-xl text-indigo-200/70 max-w-2xl mx-auto mb-12">
             {t('landing.hero_subtitle')}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
               to="/campaigns"
-              className="px-8 py-3.5 rounded-xl bg-white text-indigo-700 font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+              className="group px-8 py-4 rounded-2xl bg-white text-indigo-700 font-bold text-lg shadow-xl shadow-indigo-500/25 hover:shadow-2xl hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all flex items-center gap-2"
             >
               {t('landing.explore_btn')}
+              <HiOutlineArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <VoiceButton
               apiCall={voiceSearchCampaigns}
               onResult={() => {}}
-              className="!bg-white/20 !backdrop-blur !border-white/30 !text-white !hover:bg-white/30"
+              className="!bg-white/10 !backdrop-blur-md !border-white/20 !text-white hover:!bg-white/20 !rounded-2xl !px-8 !py-4"
             />
           </div>
         </div>
       </section>
 
       {/* ════════ LIVE STATS BAR ════════ */}
-      <section className="bg-white border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 py-6 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
-          <StatCard value={stats?.started ?? '—'} label={t('landing.stat_conversations')} icon="💬" />
-          <StatCard value={stats?.completed ?? '—'} label={t('landing.stat_completed')} icon="✅" />
+      <section className="relative -mt-8 z-10 max-w-5xl mx-auto px-4 sm:px-6">
+        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 px-6 py-6 grid grid-cols-2 sm:grid-cols-4 gap-6">
+          <StatCard value={stats?.started ?? '—'} label={t('landing.stat_conversations')} Icon={HiOutlineChatBubbleLeftRight} color="indigo" />
+          <StatCard value={stats?.completed ?? '—'} label={t('landing.stat_completed')} Icon={HiOutlineCheckBadge} color="emerald" />
           <StatCard
             value={stats?.completion_rate != null ? `${Math.round(stats.completion_rate)}%` : '—'}
             label={t('landing.stat_success_rate')}
-            icon="📊"
+            Icon={HiOutlineChartBarSquare}
+            color="amber"
           />
-          <StatCard value={featured.length > 0 ? `${featured.length}+` : '—'} label={t('landing.stat_active_campaigns')} icon="🚀" />
+          <StatCard value={featured.length > 0 ? `${featured.length}+` : '—'} label={t('landing.stat_active_campaigns')} Icon={HiOutlineRocketLaunch} color="pink" />
         </div>
       </section>
 
-      {/* ════════ MEDIA SHOWCASE — Featured Campaigns with Videos/Images ════════ */}
-      <section className="max-w-6xl mx-auto px-4 py-16">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-900 mb-3">{t('landing.showcase_title')}</h2>
+      {/* ════════ MEDIA SHOWCASE — Swiper Carousel ════════ */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
+        <div className="text-center mb-12">
+          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-2">Featured</p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">{t('landing.showcase_title')}</h2>
           <p className="text-gray-500 max-w-lg mx-auto">{t('landing.showcase_subtitle')}</p>
         </div>
 
         {loadingFeatured ? (
-          <div className="text-center py-12 text-gray-400">{t('common.loading')}</div>
-        ) : featured.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">{t('home.no_campaigns')}</div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featured.map((c) => (
-              <MediaCard key={c.id} campaign={c} t={t} />
-            ))}
+          <div className="flex justify-center py-16">
+            <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
           </div>
+        ) : featured.length === 0 ? (
+          <div className="text-center py-16 text-gray-400">{t('home.no_campaigns')}</div>
+        ) : (
+          <Swiper
+            modules={[Navigation, Pagination, Autoplay]}
+            spaceBetween={24}
+            slidesPerView={1}
+            navigation
+            pagination={{ clickable: true }}
+            autoplay={{ delay: 5000, disableOnInteraction: true }}
+            breakpoints={{
+              640: { slidesPerView: 2 },
+              1024: { slidesPerView: 3 },
+            }}
+            className="pb-14"
+          >
+            {featured.map((c) => (
+              <SwiperSlide key={c.id}>
+                <MediaCard campaign={c} t={t} />
+              </SwiperSlide>
+            ))}
+          </Swiper>
         )}
 
-        <div className="text-center mt-10">
+        <div className="text-center mt-8">
           <Link
             to="/campaigns"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-50 text-indigo-700 font-semibold hover:bg-indigo-100 transition"
+            className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-50 text-indigo-700 font-semibold hover:bg-indigo-100 transition-all"
           >
-            {t('landing.view_all_campaigns')} →
+            {t('landing.view_all_campaigns')}
+            <HiOutlineArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
       </section>
 
       {/* ════════ HOW IT WORKS ════════ */}
-      <section className="bg-gray-50 border-y border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 py-16">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">{t('landing.how_title')}</h2>
+      <section className="bg-gray-50/80 border-y border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
+          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider text-center mb-2">Process</p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-14">{t('landing.how_title')}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <StepCard step="1" icon="🎙️" title={t('landing.step1_title')} desc={t('landing.step1_desc')} />
-            <StepCard step="2" icon="👁️" title={t('landing.step2_title')} desc={t('landing.step2_desc')} />
-            <StepCard step="3" icon="💳" title={t('landing.step3_title')} desc={t('landing.step3_desc')} />
-            <StepCard step="4" icon="📸" title={t('landing.step4_title')} desc={t('landing.step4_desc')} />
+            <StepCard step="1" Icon={HiOutlineMicrophone} title={t('landing.step1_title')} desc={t('landing.step1_desc')} />
+            <StepCard step="2" Icon={HiOutlineEye} title={t('landing.step2_title')} desc={t('landing.step2_desc')} />
+            <StepCard step="3" Icon={HiOutlineCreditCard} title={t('landing.step3_title')} desc={t('landing.step3_desc')} />
+            <StepCard step="4" Icon={HiOutlineCamera} title={t('landing.step4_title')} desc={t('landing.step4_desc')} />
           </div>
         </div>
       </section>
 
-      {/* ════════ PLATFORM FEATURES — App Cards Grid ════════ */}
-      <section className="max-w-6xl mx-auto px-4 py-16">
-        <h2 className="text-3xl font-bold text-gray-900 text-center mb-4">{t('landing.features_title')}</h2>
-        <p className="text-gray-500 text-center max-w-lg mx-auto mb-12">{t('landing.features_subtitle')}</p>
+      {/* ════════ PLATFORM FEATURES ════════ */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
+        <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider text-center mb-2">Platform</p>
+        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-4">{t('landing.features_title')}</h2>
+        <p className="text-gray-500 text-center max-w-lg mx-auto mb-14">{t('landing.features_subtitle')}</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          <FeatureCard
-            to="/campaigns"
-            icon="🔍"
-            title={t('landing.feat_campaigns')}
-            desc={t('landing.feat_campaigns_desc')}
-            color="indigo"
-          />
-          <FeatureCard
-            to="/analytics"
-            icon="📊"
-            title={t('landing.feat_analytics')}
-            desc={t('landing.feat_analytics_desc')}
-            color="emerald"
-          />
-          <FeatureCard
-            to="/admin"
-            icon="⚙️"
-            title={t('landing.feat_admin')}
-            desc={t('landing.feat_admin_desc')}
-            color="amber"
-          />
-          <FeatureCard
-            to="/donate"
-            icon="💝"
-            title={t('landing.feat_donate')}
-            desc={t('landing.feat_donate_desc')}
-            color="pink"
-          />
-          <FeatureCard
-            to="/register-ngo"
-            icon="🏛️"
-            title={t('landing.feat_ngo')}
-            desc={t('landing.feat_ngo_desc')}
-            badge="🎤"
-            color="blue"
-          />
-          <FeatureCard
-            to="/create-campaign"
-            icon="✨"
-            title={t('landing.feat_create')}
-            desc={t('landing.feat_create_desc')}
-            badge="🎤"
-            color="violet"
-          />
-          <FeatureCard
-            to="/field-agent"
-            icon="📸"
-            title={t('landing.feat_field')}
-            desc={t('landing.feat_field_desc')}
-            color="teal"
-          />
+          <FeatureCard to="/campaigns" Icon={HiOutlineGlobeAlt} title={t('landing.feat_campaigns')} desc={t('landing.feat_campaigns_desc')} color="indigo" />
+          <FeatureCard to="/analytics" Icon={HiOutlineChartBar} title={t('landing.feat_analytics')} desc={t('landing.feat_analytics_desc')} color="emerald" />
+          <FeatureCard to="/admin" Icon={HiOutlineCog6Tooth} title={t('landing.feat_admin')} desc={t('landing.feat_admin_desc')} color="amber" />
+          <FeatureCard to="/donate" Icon={HiOutlineHeart} title={t('landing.feat_donate')} desc={t('landing.feat_donate_desc')} color="pink" />
+          <FeatureCard to="/register-ngo" Icon={HiOutlineBuildingOffice2} title={t('landing.feat_ngo')} desc={t('landing.feat_ngo_desc')} color="blue" hasMic />
+          <FeatureCard to="/create-campaign" Icon={HiOutlinePlusCircle} title={t('landing.feat_create')} desc={t('landing.feat_create_desc')} color="violet" hasMic />
+          <FeatureCard to="/field-agent" Icon={HiOutlineCamera} title={t('landing.feat_field')} desc={t('landing.feat_field_desc')} color="teal" />
         </div>
       </section>
 
       {/* ════════ FOR TESTERS — Georgetown CTA ════════ */}
-      <section className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
-        <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4">{t('landing.tester_title')}</h2>
-          <p className="text-white/80 max-w-xl mx-auto mb-8">{t('landing.tester_desc')}</p>
+      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-60" />
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 py-20 text-center">
+          <h2 className="text-2xl sm:text-4xl font-bold mb-4">{t('landing.tester_title')}</h2>
+          <p className="text-white/70 max-w-xl mx-auto mb-10 text-lg">{t('landing.tester_desc')}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/register-ngo"
-              className="px-6 py-3 rounded-xl bg-white text-indigo-700 font-bold hover:bg-indigo-50 transition"
+              className="px-8 py-4 rounded-2xl bg-white text-indigo-700 font-bold hover:bg-indigo-50 transition shadow-lg shadow-indigo-900/20"
             >
               {t('landing.tester_register')}
             </Link>
             <Link
               to="/login"
-              className="px-6 py-3 rounded-xl bg-white/20 text-white font-bold border border-white/30 hover:bg-white/30 transition"
+              className="px-8 py-4 rounded-2xl bg-white/10 backdrop-blur text-white font-bold border border-white/20 hover:bg-white/20 transition"
             >
               {t('landing.tester_login')}
             </Link>
@@ -207,50 +216,69 @@ export default function Landing() {
 
 /* ── Sub-components ──────────────────────── */
 
-function StatCard({ value, label, icon }) {
+function StatCard({ value, label, Icon, color = 'indigo' }) {
+  const colors = {
+    indigo: 'bg-indigo-50 text-indigo-600',
+    emerald: 'bg-emerald-50 text-emerald-600',
+    amber: 'bg-amber-50 text-amber-600',
+    pink: 'bg-pink-50 text-pink-600',
+  };
   return (
-    <div>
-      <div className="text-2xl font-bold text-gray-900">{icon} {value}</div>
-      <p className="text-xs text-gray-500 mt-1">{label}</p>
+    <div className="flex flex-col items-center text-center">
+      <div className={`w-10 h-10 rounded-xl ${colors[color]} flex items-center justify-center mb-2`}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <div className="text-2xl font-bold text-gray-900">{value}</div>
+      <p className="text-xs text-gray-500 mt-0.5">{label}</p>
     </div>
   );
 }
 
-function StepCard({ step, icon, title, desc }) {
+function StepCard({ step, Icon, title, desc }) {
   return (
-    <div className="text-center">
-      <div className="w-14 h-14 rounded-2xl bg-indigo-100 text-2xl flex items-center justify-center mx-auto mb-4">
-        {icon}
+    <div className="relative text-center group">
+      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center mx-auto mb-5 shadow-lg shadow-indigo-200/50 group-hover:shadow-xl group-hover:shadow-indigo-300/50 transition-shadow">
+        <Icon className="w-7 h-7" />
       </div>
-      <div className="text-xs font-bold text-indigo-500 uppercase mb-1">Step {step}</div>
+      <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 text-xs font-bold mb-2">{step}</div>
       <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
       <p className="text-sm text-gray-500">{desc}</p>
     </div>
   );
 }
 
-function FeatureCard({ to, icon, title, desc, badge, color = 'indigo' }) {
-  const bg = {
-    indigo: 'bg-indigo-50 hover:bg-indigo-100 border-indigo-100',
-    emerald: 'bg-emerald-50 hover:bg-emerald-100 border-emerald-100',
-    amber: 'bg-amber-50 hover:bg-amber-100 border-amber-100',
-    pink: 'bg-pink-50 hover:bg-pink-100 border-pink-100',
-    blue: 'bg-blue-50 hover:bg-blue-100 border-blue-100',
-    violet: 'bg-violet-50 hover:bg-violet-100 border-violet-100',
-    teal: 'bg-teal-50 hover:bg-teal-100 border-teal-100',
+function FeatureCard({ to, Icon, title, desc, hasMic, color = 'indigo' }) {
+  const colorMap = {
+    indigo: 'from-indigo-500 to-indigo-600 shadow-indigo-200/50 hover:shadow-indigo-300/60',
+    emerald: 'from-emerald-500 to-emerald-600 shadow-emerald-200/50 hover:shadow-emerald-300/60',
+    amber: 'from-amber-500 to-amber-600 shadow-amber-200/50 hover:shadow-amber-300/60',
+    pink: 'from-pink-500 to-pink-600 shadow-pink-200/50 hover:shadow-pink-300/60',
+    blue: 'from-blue-500 to-blue-600 shadow-blue-200/50 hover:shadow-blue-300/60',
+    violet: 'from-violet-500 to-violet-600 shadow-violet-200/50 hover:shadow-violet-300/60',
+    teal: 'from-teal-500 to-teal-600 shadow-teal-200/50 hover:shadow-teal-300/60',
   };
 
   return (
     <Link
       to={to}
-      className={`block rounded-2xl border p-6 transition-all hover:-translate-y-0.5 hover:shadow-md ${bg[color] || bg.indigo}`}
+      className="group block bg-white rounded-2xl border border-gray-100 p-6 transition-all hover:-translate-y-1 hover:shadow-xl hover:border-gray-200"
     >
-      <div className="flex items-center gap-3 mb-3">
-        <span className="text-3xl">{icon}</span>
-        <h3 className="font-semibold text-gray-900">{title}</h3>
-        {badge && <span className="text-lg">{badge}</span>}
+      <div className="flex items-start gap-4">
+        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colorMap[color]} text-white flex items-center justify-center flex-shrink-0 shadow-lg group-hover:shadow-xl transition-shadow`}>
+          <Icon className="w-6 h-6" />
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{title}</h3>
+            {hasMic && (
+              <span className="flex items-center gap-0.5 text-[10px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-full uppercase">
+                <HiOutlineMicrophone className="w-3 h-3" /> Voice
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
+        </div>
       </div>
-      <p className="text-sm text-gray-600">{desc}</p>
     </Link>
   );
 }
@@ -260,43 +288,37 @@ function MediaCard({ campaign, t }) {
     ? Math.min(100, ((campaign.current_usd_total || campaign.raised_amount_usd) / campaign.goal_amount_usd) * 100)
     : 0;
 
-  const categoryEmoji = {
-    water: '💧', education: '📚', health: '🏥', infrastructure: '🏗️',
-    food: '🍲', environment: '🌿', shelter: '🏠', children: '👶',
-  };
+  const CategoryIcon = CATEGORY_ICONS[(campaign.category || '').toLowerCase()] || MdHandshake;
 
   return (
     <Link
       to={`/campaign/${campaign.id}`}
-      className="group block bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all hover:-translate-y-1 overflow-hidden border border-gray-100"
+      className="group block bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 overflow-hidden border border-gray-100"
     >
-      {/* Video/Image preview area */}
+      {/* Video/Image preview */}
       <div className="relative aspect-video bg-gradient-to-br from-indigo-500 to-purple-600 overflow-hidden">
         {campaign.has_video || campaign.video_cid ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-            <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-              <svg className="w-7 h-7 text-indigo-600 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <div className="w-16 h-16 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+              <HiOutlinePlayCircle className="w-9 h-9 text-indigo-600" />
             </div>
-            <span className="absolute bottom-3 left-3 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-              🎥 {t('campaign.watch_video')}
+            <span className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+              <HiOutlinePlayCircle className="w-3.5 h-3.5" />
+              {t('campaign.watch_video')}
             </span>
           </div>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-7xl opacity-60">
-              {categoryEmoji[(campaign.category || '').toLowerCase()] || '🤝'}
-            </span>
+            <CategoryIcon className="w-20 h-20 text-white/40" />
           </div>
         )}
         {campaign.category && (
-          <span className="absolute top-3 left-3 bg-white/90 text-xs font-semibold text-indigo-700 px-2 py-0.5 rounded-full capitalize">
+          <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-xs font-semibold text-indigo-700 px-2.5 py-1 rounded-lg capitalize">
             {campaign.category}
           </span>
         )}
         {campaign.ngo_name && (
-          <span className="absolute top-3 right-3 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full">
+          <span className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-lg">
             {campaign.ngo_name}
           </span>
         )}
@@ -307,27 +329,29 @@ function MediaCard({ campaign, t }) {
           {campaign.title}
         </h3>
         {campaign.description && (
-          <p className="text-sm text-gray-500 line-clamp-2 mb-3">{campaign.description}</p>
+          <p className="text-sm text-gray-500 line-clamp-2 mb-4">{campaign.description}</p>
         )}
 
-        <ProgressBar percentage={pct} className="mb-2" />
+        <ProgressBar percentage={pct} className="mb-3" />
 
         <div className="flex justify-between items-baseline text-sm">
-          <span className="font-bold text-indigo-600">
-            ${fmt(campaign.current_usd_total || campaign.raised_amount_usd)}
-          </span>
-          <span className="text-gray-400">
-            {t('campaign.raised_of')} ${fmt(campaign.goal_amount_usd)}
-          </span>
+          <span className="font-bold text-indigo-600">${fmt(campaign.current_usd_total || campaign.raised_amount_usd)}</span>
+          <span className="text-gray-400">{t('campaign.raised_of')} ${fmt(campaign.goal_amount_usd)}</span>
         </div>
 
         {(campaign.donation_count > 0 || campaign.location_gps) && (
-          <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+          <div className="flex items-center gap-3 mt-3 text-xs text-gray-400">
             {campaign.donation_count > 0 && (
-              <span>👥 {campaign.donation_count} {t('campaign.donors')}</span>
+              <span className="flex items-center gap-1">
+                <HiOutlineUserGroup className="w-3.5 h-3.5" />
+                {campaign.donation_count} {t('campaign.donors')}
+              </span>
             )}
             {campaign.location_gps && (
-              <span>📍 GPS Verified</span>
+              <span className="flex items-center gap-1 text-green-500">
+                <HiOutlineMapPin className="w-3.5 h-3.5" />
+                GPS Verified
+              </span>
             )}
           </div>
         )}

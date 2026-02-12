@@ -2,6 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { uploadPhoto, submitVerification, getPendingCampaigns, getVerificationHistory } from '../api/fieldAgent';
 import useAuthStore from '../stores/authStore';
+import {
+  HiOutlineCheckCircle, HiOutlineXMark, HiOutlineMapPin,
+  HiOutlineCamera, HiOutlineSparkles,
+} from 'react-icons/hi2';
 
 const STEPS = ['photos', 'location', 'details', 'review'];
 
@@ -107,7 +111,9 @@ export default function FieldAgent() {
   if (success) {
     return (
       <div className="max-w-lg mx-auto px-4 py-20 text-center">
-        <div className="text-6xl mb-4">✅</div>
+        <div className="w-20 h-20 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-4">
+          <HiOutlineCheckCircle className="w-10 h-10 text-green-600" />
+        </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('field_agent.success_title')}</h1>
         <p className="text-gray-500 mb-4">{t('field_agent.success_desc')}</p>
         <button onClick={() => { setSuccess(false); setStep(0); setPhotos([]); setForm({ campaign_id: '', observations: '', beneficiary_count: '', testimonials: '' }); }}
@@ -121,7 +127,10 @@ export default function FieldAgent() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">{t('field_agent.title')} 📸</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          {t('field_agent.title')}
+          <HiOutlineCamera className="w-6 h-6 text-teal-500" />
+        </h1>
         <p className="text-gray-500 text-sm mt-1">{t('field_agent.subtitle')}</p>
       </div>
 
@@ -150,14 +159,14 @@ export default function FieldAgent() {
                   <img src={p.preview} alt={`Photo ${i+1}`} className="w-full h-full object-cover" />
                   <button onClick={() => removePhoto(i)}
                     className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600">
-                    ✕
+                    <HiOutlineXMark className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ))}
               {photos.length < 5 && (
                 <button onClick={() => fileRef.current?.click()}
                   className="aspect-square rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-teal-400 hover:text-teal-500 transition">
-                  <span className="text-2xl">📷</span>
+                  <HiOutlineCamera className="w-7 h-7" />
                   <span className="text-xs mt-1">{t('field_agent.add_photo')}</span>
                 </button>
               )}
@@ -173,8 +182,8 @@ export default function FieldAgent() {
           <div className="space-y-4">
             <p className="text-sm text-gray-500">{t('field_agent.gps_desc')}</p>
             <button onClick={getLocation}
-              className="w-full py-4 rounded-xl border-2 border-dashed border-teal-300 bg-teal-50 text-teal-700 font-semibold hover:bg-teal-100 transition">
-              📍 {gps.lat ? t('field_agent.gps_refresh') : t('field_agent.gps_capture')}
+              className="w-full py-4 rounded-xl border-2 border-dashed border-teal-300 bg-teal-50 text-teal-700 font-semibold hover:bg-teal-100 transition flex items-center justify-center gap-2">
+              <HiOutlineMapPin className="w-5 h-5" /> {gps.lat ? t('field_agent.gps_refresh') : t('field_agent.gps_capture')}
             </button>
             {gps.lat && (
               <div className="bg-gray-50 rounded-lg p-4 text-sm">

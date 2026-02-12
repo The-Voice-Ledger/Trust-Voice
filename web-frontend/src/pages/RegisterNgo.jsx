@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { submitNgoRegistration } from '../api/ngoRegistrations';
 import VoiceButton from '../components/VoiceButton';
 import useAuthStore from '../stores/authStore';
+import { HiOutlineCheckCircle } from 'react-icons/hi2';
+import { HiOutlineMicrophone } from 'react-icons/hi';
 
 const STEPS = ['org_info', 'contact', 'mission', 'banking', 'review'];
 const ORG_TYPES = ['ngo', 'foundation', 'charity', 'cooperative', 'social_enterprise', 'community_group'];
@@ -82,7 +84,9 @@ export default function RegisterNgo() {
   if (success) {
     return (
       <div className="max-w-lg mx-auto px-4 py-20 text-center">
-        <div className="text-6xl mb-4">🎉</div>
+        <div className="w-20 h-20 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-4">
+          <HiOutlineCheckCircle className="w-10 h-10 text-green-600" />
+        </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('ngo_reg.success_title')}</h1>
         <p className="text-gray-500">{t('ngo_reg.success_desc')}</p>
       </div>
@@ -92,7 +96,10 @@ export default function RegisterNgo() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">{t('ngo_reg.title')} 🎤</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          {t('ngo_reg.title')}
+          <HiOutlineMicrophone className="w-6 h-6 text-indigo-500" />
+        </h1>
         <p className="text-gray-500 text-sm mt-1">{t('ngo_reg.subtitle')}</p>
       </div>
 

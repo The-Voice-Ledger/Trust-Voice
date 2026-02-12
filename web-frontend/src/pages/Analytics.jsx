@@ -3,6 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { getAnalyticsSummary, getConversationMetrics, getFunnel, getConversationEvents } from '../api/analytics';
 import VoiceButton from '../components/VoiceButton';
 import { voiceSearchCampaigns } from '../api/voice';
+import {
+  HiOutlineChatBubbleLeftRight, HiOutlineCheckBadge,
+  HiOutlineArrowRightOnRectangle, HiOutlineChartBarSquare,
+  HiOutlineArrowTrendingUp, HiOutlineArrowTrendingDown,
+} from 'react-icons/hi2';
+import { HiOutlineMicrophone, HiOutlineEye, HiOutlineCreditCard } from 'react-icons/hi';
+import { MdOutlineBookmarkAdded, MdOutlineAttachMoney, MdOutlinePushPin } from 'react-icons/md';
 
 const PERIODS = [
   { label: '7d', days: 7 },
@@ -80,24 +87,28 @@ export default function Analytics() {
             <SummaryCard
               title={t('analytics.conversations')}
               value={summary?.started ?? '—'}
-              icon="💬"
+              Icon={HiOutlineChatBubbleLeftRight}
+              color="indigo"
               change={summary?.previous_period ? calcChange(summary.started, summary.previous_period.started) : null}
             />
             <SummaryCard
               title={t('analytics.completed')}
               value={summary?.completed ?? '—'}
-              icon="✅"
+              Icon={HiOutlineCheckBadge}
+              color="emerald"
               change={summary?.previous_period ? calcChange(summary.completed, summary.previous_period.completed) : null}
             />
             <SummaryCard
               title={t('analytics.abandoned')}
               value={summary?.abandoned ?? '—'}
-              icon="🚪"
+              Icon={HiOutlineArrowRightOnRectangle}
+              color="amber"
             />
             <SummaryCard
               title={t('analytics.success_rate')}
               value={summary?.completion_rate != null ? `${Math.round(summary.completion_rate)}%` : '—'}
-              icon="📊"
+              Icon={HiOutlineChartBarSquare}
+              color="pink"
             />
           </div>
 
@@ -129,8 +140,10 @@ export default function Analytics() {
               {events.length > 0 ? (
                 <div className="space-y-2 max-h-80 overflow-y-auto">
                   {events.map((ev, i) => (
-                    <div key={i} className="flex items-start gap-3 text-sm py-2 border-b border-gray-50 last:border-0">
-                      <span className="text-lg">{eventIcon(ev.event_type)}</span>
+                    <div key={i} className="flex items-start gap-3 text-sm py-2.5 border-b border-gray-50 last:border-0">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                        <EventIcon type={ev.event_type} />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-gray-700 font-medium truncate">{ev.event_type}</p>
                         {ev.details && (
@@ -185,18 +198,22 @@ export default function Analytics() {
 
 /* ── Sub-components ──────────────────────── */
 
-function SummaryCard({ title, value, icon, change }) {
+function SummaryCard({ title, value, Icon, color = 'indigo', change }) {
+  const colors = { indigo: 'bg-indigo-50 text-indigo-600', emerald: 'bg-emerald-50 text-emerald-600', amber: 'bg-amber-50 text-amber-600', pink: 'bg-pink-50 text-pink-600' };
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-lg">{icon}</span>
-        <span className="text-sm text-gray-400">{title}</span>
+      <div className="flex items-center gap-2.5 mb-3">
+        <div className={`w-9 h-9 rounded-xl ${colors[color]} flex items-center justify-center`}>
+          <Icon className="w-5 h-5" />
+        </div>
+        <span className="text-sm text-gray-500 font-medium">{title}</span>
       </div>
       <div className="flex items-baseline gap-2">
         <span className="text-2xl font-bold text-gray-900">{value}</span>
         {change != null && (
-          <span className={`text-xs font-medium ${change >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-            {change >= 0 ? '↑' : '↓'} {Math.abs(change)}%
+          <span className={`flex items-center gap-0.5 text-xs font-medium ${change >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+            {change >= 0 ? <HiOutlineArrowTrendingUp className="w-3.5 h-3.5" /> : <HiOutlineArrowTrendingDown className="w-3.5 h-3.5" />}
+            {Math.abs(change)}%
           </span>
         )}
       </div>
@@ -232,14 +249,16 @@ function calcChange(current, previous) {
   return Math.round(((current - previous) / previous) * 100);
 }
 
-function eventIcon(type) {
-  const icons = {
-    conversation_started: '💬',
-    donation_completed: '💰',
-    donation_initiated: '💳',
-    voice_search: '🎙️',
-    campaign_viewed: '👁️',
-    registration: '📝',
-  };
-  return icons[type] || '📌';
+const EVENT_ICON_MAP = {
+  conversation_started: HiOutlineChatBubbleLeftRight,
+  donation_completed: MdOutlineAttachMoney,
+  donation_initiated: HiOutlineCreditCard,
+  voice_search: HiOutlineMicrophone,
+  campaign_viewed: HiOutlineEye,
+  registration: MdOutlineBookmarkAdded,
+};
+
+function EventIcon({ type }) {
+  const Comp = EVENT_ICON_MAP[type] || MdOutlinePushPin;
+  return <Comp className="w-5 h-5 text-indigo-500" />;
 }

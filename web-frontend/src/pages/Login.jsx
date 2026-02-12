@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
+import { HiOutlineLockClosed } from 'react-icons/hi2';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -29,7 +30,9 @@ export default function Login() {
   return (
     <div className="max-w-sm mx-auto px-4 py-16">
       <div className="text-center mb-8">
-        <div className="text-5xl mb-3">🔐</div>
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-200/50 mb-4">
+          <HiOutlineLockClosed className="w-8 h-8 text-white" />
+        </div>
         <h1 className="text-2xl font-bold text-gray-900">{t('auth.sign_in')}</h1>
       </div>
 

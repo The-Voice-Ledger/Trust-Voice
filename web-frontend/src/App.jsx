@@ -14,9 +14,9 @@ import DonateCheckout from './pages/DonateCheckout'
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <main>
+      <main className="flex-1">
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/campaigns" element={<Home />} />
@@ -32,8 +32,11 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </main>
-      <footer className="text-center text-xs text-gray-400 py-8">
-        TrustVoice · Voice-First Donation Platform · {new Date().getFullYear()}
+      <footer className="border-t border-gray-100 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-gray-400">© {new Date().getFullYear()} TrustVoice · Voice-First Donation Platform</p>
+          <p className="text-xs text-gray-300">Built for Georgetown University STIA Program</p>
+        </div>
       </footer>
     </div>
   )

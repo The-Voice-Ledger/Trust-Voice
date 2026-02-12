@@ -1,3 +1,5 @@
+import { HiOutlineCheckCircle } from 'react-icons/hi2';
+
 /**
  * VideoPlayer — plays campaign transparency videos.
  * Supports IPFS CID-based videos, direct URLs, and alternative gateways.
@@ -43,7 +45,9 @@ export default function VideoPlayer({ videoData, className = '' }) {
           </span>
           <div className="flex items-center gap-3">
             {videoData.location_verified && (
-              <span className="text-green-400 font-medium">✓ Location Verified</span>
+              <span className="text-green-400 font-medium flex items-center gap-1">
+                <HiOutlineCheckCircle className="w-3.5 h-3.5" /> Location Verified
+              </span>
             )}
             {videoData.file_size_mb && <span>{videoData.file_size_mb.toFixed(1)} MB</span>}
             {videoData.ipfs_cid && (

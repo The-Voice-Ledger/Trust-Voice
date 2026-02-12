@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Navigate, Link } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
 import { getDonorDonations, getReceipt, verifyReceipt, getTaxSummary } from '../api/donations';
+import { HiOutlineXMark, HiOutlineCheckCircle, HiOutlineXCircle } from 'react-icons/hi2';
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -89,7 +90,9 @@ export default function Dashboard() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-md p-6 mb-6">
           <div className="flex justify-between items-start mb-4">
             <h2 className="font-semibold text-gray-900">{t('dashboard.receipt_details')}</h2>
-            <button onClick={() => setActiveReceipt(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+            <button onClick={() => setActiveReceipt(null)} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition">
+              <HiOutlineXMark className="w-5 h-5" />
+            </button>
           </div>
           {activeReceipt.error ? (
             <p className="text-red-500 text-sm">{t('dashboard.receipt_unavailable')}</p>
@@ -111,9 +114,13 @@ export default function Dashboard() {
                 } />
               )}
               {activeReceipt.verification && (
-                <div className={`mt-3 p-3 rounded-lg ${activeReceipt.verification.is_valid ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                <div className={`mt-3 p-3 rounded-lg flex items-center gap-2 ${activeReceipt.verification.is_valid ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                  {activeReceipt.verification.is_valid
+                    ? <HiOutlineCheckCircle className="w-5 h-5 flex-shrink-0" />
+                    : <HiOutlineXCircle className="w-5 h-5 flex-shrink-0" />
+                  }
                   <p className="font-medium text-sm">
-                    {activeReceipt.verification.is_valid ? '✅ Receipt Verified' : '❌ Verification Failed'}
+                    {activeReceipt.verification.is_valid ? 'Receipt Verified' : 'Verification Failed'}
                   </p>
                 </div>
               )}

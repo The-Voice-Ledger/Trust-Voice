@@ -1,6 +1,17 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ProgressBar from './ProgressBar';
+import {
+  MdOutlineWaterDrop, MdOutlineSchool, MdOutlineLocalHospital,
+  MdOutlineConstruction, MdOutlineRestaurant, MdOutlineForest,
+  MdOutlineHouse, MdOutlineChildCare, MdHandshake,
+} from 'react-icons/md';
+
+const CATEGORY_ICONS = {
+  water: MdOutlineWaterDrop, education: MdOutlineSchool, health: MdOutlineLocalHospital,
+  infrastructure: MdOutlineConstruction, food: MdOutlineRestaurant, environment: MdOutlineForest,
+  shelter: MdOutlineHouse, children: MdOutlineChildCare,
+};
 
 /**
  * CampaignCard — displays a single campaign in the grid.
@@ -18,9 +29,7 @@ export default function CampaignCard({ campaign }) {
     >
       {/* Category badge */}
       <div className="relative h-36 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-        <span className="text-5xl opacity-80">
-          {categoryEmoji(campaign.category)}
-        </span>
+        {(() => { const Icon = CATEGORY_ICONS[(campaign.category || '').toLowerCase()] || MdHandshake; return <Icon className="w-14 h-14 text-white/50" />; })()}
         {campaign.category && (
           <span className="absolute top-3 left-3 bg-white/90 text-xs font-semibold text-indigo-700 px-2 py-0.5 rounded-full capitalize">
             {campaign.category}
@@ -64,10 +73,3 @@ function fmt(n) {
   return Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
 
-function categoryEmoji(cat) {
-  const map = {
-    water: '💧', education: '📚', health: '🏥', infrastructure: '🏗️',
-    food: '🍲', environment: '🌿', shelter: '🏠', children: '👶',
-  };
-  return map[(cat || '').toLowerCase()] || '🤝';
-}

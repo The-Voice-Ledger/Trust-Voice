@@ -7,6 +7,14 @@ import VoiceButton from '../components/VoiceButton';
 import { voiceDonate } from '../api/voice';
 import useAuthStore from '../stores/authStore';
 import ProgressBar from '../components/ProgressBar';
+import {
+  HiOutlineHeart, HiOutlineCheckCircle, HiOutlineArrowLeft,
+} from 'react-icons/hi2';
+import {
+  MdOutlineWaterDrop, MdOutlineSchool, MdOutlineLocalHospital,
+  MdOutlineConstruction, MdOutlineRestaurant, MdOutlineForest,
+  MdOutlineHouse, MdOutlineChildCare, MdHandshake,
+} from 'react-icons/md';
 
 export default function DonateCheckout() {
   const { t } = useTranslation();
@@ -41,12 +49,14 @@ export default function DonateCheckout() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-8">
-      <Link to="/campaigns" className="text-sm text-indigo-600 hover:underline mb-4 inline-block">
-        ← {t('common.back')}
+      <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline mb-4">
+        <HiOutlineArrowLeft className="w-4 h-4" /> {t('common.back')}
       </Link>
 
       <div className="text-center mb-8">
-        <div className="text-4xl mb-2">💝</div>
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg shadow-pink-200/50 mb-4">
+          <HiOutlineHeart className="w-8 h-8 text-white" />
+        </div>
         <h1 className="text-2xl font-bold text-gray-900">{t('donate.title')}</h1>
         <p className="text-sm text-gray-500 mt-1">{t('donate.checkout_subtitle')}</p>
       </div>
@@ -72,7 +82,9 @@ export default function DonateCheckout() {
       {campaign && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
           <div className="flex items-start gap-3">
-            <span className="text-3xl">{categoryEmoji(campaign.category)}</span>
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+              <CategoryIcon cat={campaign.category} />
+            </div>
             <div className="flex-1">
               <h2 className="font-semibold text-gray-900">{campaign.title}</h2>
               {campaign.ngo_name && <p className="text-xs text-gray-400">{campaign.ngo_name}</p>}
@@ -94,7 +106,9 @@ export default function DonateCheckout() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
           {donated ? (
             <div className="text-center py-8">
-              <div className="text-5xl mb-3">🎉</div>
+              <div className="w-16 h-16 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-3">
+                <HiOutlineCheckCircle className="w-8 h-8 text-green-600" />
+              </div>
               <p className="text-lg font-semibold text-green-600">{t('donate.success')}</p>
               <Link to="/dashboard" className="text-sm text-indigo-600 hover:underline mt-3 inline-block">
                 {t('donate.view_history')} →
@@ -131,7 +145,13 @@ function fmt(n) {
   return Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
 
-function categoryEmoji(cat) {
-  const map = { water: '💧', education: '📚', health: '🏥', infrastructure: '🏗️', food: '🍲', environment: '🌿', shelter: '🏠', children: '👶' };
-  return map[(cat || '').toLowerCase()] || '🤝';
+const DONATE_CATEGORY_ICONS = {
+  water: MdOutlineWaterDrop, education: MdOutlineSchool, health: MdOutlineLocalHospital,
+  infrastructure: MdOutlineConstruction, food: MdOutlineRestaurant, environment: MdOutlineForest,
+  shelter: MdOutlineHouse, children: MdOutlineChildCare,
+};
+
+function CategoryIcon({ cat }) {
+  const Comp = DONATE_CATEGORY_ICONS[(cat || '').toLowerCase()] || MdHandshake;
+  return <Comp className="w-5 h-5 text-indigo-600" />;
 }

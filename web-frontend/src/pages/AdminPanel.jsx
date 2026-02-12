@@ -6,6 +6,10 @@ import {
   listPayouts, approvePayout, rejectPayout,
   listNgos,
 } from '../api/admin';
+import {
+  HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineCheck, HiOutlineXMark,
+  HiOutlineBuildingOffice2, HiOutlineBanknotes, HiOutlineChartBarSquare,
+} from 'react-icons/hi2';
 
 const TABS = ['pending_ngos', 'pending_users', 'ngos', 'payouts', 'stats'];
 
@@ -98,15 +102,15 @@ function PendingNgos({ t }) {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleApprove(reg.id)}
-                  className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition"
                 >
-                  ✓ {t('admin.approve')}
+                  <HiOutlineCheck className="w-4 h-4" /> {t('admin.approve')}
                 </button>
                 <button
                   onClick={() => handleReject(reg.id)}
-                  className="px-4 py-2 rounded-lg bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition"
                 >
-                  ✕ {t('admin.reject')}
+                  <HiOutlineXMark className="w-4 h-4" /> {t('admin.reject')}
                 </button>
               </div>
             </div>
@@ -167,15 +171,15 @@ function PendingUsers({ t }) {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleApprove(reg.id)}
-                  className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition"
                 >
-                  ✓ {t('admin.approve')}
+                  <HiOutlineCheck className="w-4 h-4" /> {t('admin.approve')}
                 </button>
                 <button
                   onClick={() => handleReject(reg.id)}
-                  className="px-4 py-2 rounded-lg bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition"
                 >
-                  ✕ {t('admin.reject')}
+                  <HiOutlineXMark className="w-4 h-4" /> {t('admin.reject')}
                 </button>
               </div>
             </div>
@@ -278,15 +282,15 @@ function PayoutList({ t }) {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleApprove(p.id)}
-                  className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition"
                 >
-                  ✓ {t('admin.approve')}
+                  <HiOutlineCheck className="w-4 h-4" /> {t('admin.approve')}
                 </button>
                 <button
                   onClick={() => handleReject(p.id)}
-                  className="px-4 py-2 rounded-lg bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-red-50 text-red-600 text-sm font-medium hover:bg-red-100 transition"
                 >
-                  ✕ {t('admin.reject')}
+                  <HiOutlineXMark className="w-4 h-4" /> {t('admin.reject')}
                 </button>
               </div>
             </div>
@@ -332,11 +336,21 @@ function Loading({ t }) {
   return <div className="text-center py-16 text-gray-400">{t('common.loading')}</div>;
 }
 
+const EMPTY_ICONS = {
+  '✅': HiOutlineCheckCircle,
+  '🏛️': HiOutlineBuildingOffice2,
+  '💸': HiOutlineBanknotes,
+  '📊': HiOutlineChartBarSquare,
+};
+
 function EmptyState({ icon, message }) {
+  const IconComp = EMPTY_ICONS[icon] || HiOutlineCheckCircle;
   return (
     <div className="text-center py-16">
-      <span className="text-4xl">{icon}</span>
-      <p className="text-gray-400 mt-3">{message}</p>
+      <div className="w-14 h-14 mx-auto rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
+        <IconComp className="w-7 h-7 text-gray-400" />
+      </div>
+      <p className="text-gray-400">{message}</p>
     </div>
   );
 }

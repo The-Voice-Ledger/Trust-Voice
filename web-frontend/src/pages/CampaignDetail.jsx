@@ -8,6 +8,7 @@ import VideoPlayer from '../components/VideoPlayer';
 import VoiceButton from '../components/VoiceButton';
 import DonationForm from '../components/DonationForm';
 import useAuthStore from '../stores/authStore';
+import { HiOutlineArrowLeft, HiOutlineMapPin, HiOutlineCheckCircle, HiOutlineFilm } from 'react-icons/hi2';
 
 export default function CampaignDetail() {
   const { id } = useParams();
@@ -44,8 +45,8 @@ export default function CampaignDetail() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
-      <Link to="/campaigns" className="text-sm text-indigo-600 hover:underline mb-4 inline-block">
-        ← {t('common.back')}
+      <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline mb-4">
+        <HiOutlineArrowLeft className="w-4 h-4" /> {t('common.back')}
       </Link>
 
       {/* Header */}
@@ -65,8 +66,9 @@ export default function CampaignDetail() {
       {video ? (
         <VideoPlayer videoData={video} className="mb-6" />
       ) : (
-        <div className="bg-gray-50 border border-dashed border-gray-200 rounded-xl p-8 text-center text-gray-400 text-sm mb-6">
-          🎥 {t('campaign.no_video')}
+        <div className="bg-gray-50 border border-dashed border-gray-200 rounded-xl p-8 text-center text-gray-400 text-sm mb-6 flex flex-col items-center gap-2">
+          <HiOutlineFilm className="w-8 h-8 text-gray-300" />
+          {t('campaign.no_video')}
         </div>
       )}
 
@@ -88,9 +90,11 @@ export default function CampaignDetail() {
         </div>
         {campaign.location_gps && (
           <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
-            📍 GPS: {campaign.location_gps}
+            <HiOutlineMapPin className="w-3.5 h-3.5" /> GPS: {campaign.location_gps}
             {video?.location_verified && (
-              <span className="text-green-600 font-medium ml-1">✓ {t('campaign.location_verified')}</span>
+              <span className="text-green-600 font-medium ml-1 flex items-center gap-0.5">
+                <HiOutlineCheckCircle className="w-3.5 h-3.5" /> {t('campaign.location_verified')}
+              </span>
             )}
           </p>
         )}

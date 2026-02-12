@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
 import VoiceButton from '../components/VoiceButton';
 import useAuthStore from '../stores/authStore';
+import { HiOutlineMapPin, HiOutlineFilm, HiOutlineVideoCameraSlash } from 'react-icons/hi2';
+import { HiOutlineMicrophone } from 'react-icons/hi';
 
 const STEPS = ['basics', 'details', 'funding', 'media', 'review'];
 const CATEGORIES = ['water', 'education', 'health', 'infrastructure', 'food', 'environment', 'shelter', 'children'];
@@ -86,7 +88,10 @@ export default function CreateCampaign() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">{t('create_campaign.title')} 🎤</h1>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          {t('create_campaign.title')}
+          <HiOutlineMicrophone className="w-6 h-6 text-indigo-500" />
+        </h1>
         <p className="text-gray-500 text-sm mt-1">{t('create_campaign.subtitle')}</p>
       </div>
 
@@ -188,8 +193,8 @@ export default function CreateCampaign() {
                 <input value={form.location_gps} onChange={(e) => set('location_gps', e.target.value)}
                   placeholder="lat,lng" className="flex-1 rounded-lg border border-gray-200 px-3 py-2.5 text-sm" />
                 <button type="button" onClick={getLocation}
-                  className="px-3 py-2 rounded-lg bg-gray-100 text-sm hover:bg-gray-200 transition">
-                  📍 {t('create_campaign.auto_gps')}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-100 text-sm hover:bg-gray-200 transition">
+                  <HiOutlineMapPin className="w-4 h-4" /> {t('create_campaign.auto_gps')}
                 </button>
               </div>
             </div>
@@ -215,14 +220,14 @@ export default function CreateCampaign() {
               />
               <label htmlFor="video-upload" className="cursor-pointer">
                 {form.video_file ? (
-                  <div>
-                    <span className="text-3xl">🎬</span>
+                  <div className="flex flex-col items-center">
+                    <HiOutlineFilm className="w-10 h-10 text-indigo-500" />
                     <p className="text-sm font-medium text-gray-700 mt-2">{form.video_file.name}</p>
                     <p className="text-xs text-gray-400">{(form.video_file.size / 1024 / 1024).toFixed(1)} MB</p>
                   </div>
                 ) : (
-                  <div>
-                    <span className="text-4xl text-gray-300">🎥</span>
+                  <div className="flex flex-col items-center">
+                    <HiOutlineVideoCameraSlash className="w-12 h-12 text-gray-300" />
                     <p className="text-sm text-gray-500 mt-2">{t('create_campaign.upload_video')}</p>
                     <p className="text-xs text-gray-400 mt-1">{t('create_campaign.video_note')}</p>
                   </div>

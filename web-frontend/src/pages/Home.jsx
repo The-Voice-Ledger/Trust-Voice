@@ -4,6 +4,8 @@ import { listCampaigns } from '../api/campaigns';
 import { voiceSearchCampaigns } from '../api/voice';
 import CampaignCard from '../components/CampaignCard';
 import VoiceButton from '../components/VoiceButton';
+import { HiOutlineMagnifyingGlass } from 'react-icons/hi2';
+import { HiOutlineMicrophone } from 'react-icons/hi';
 
 const CATEGORIES = ['all', 'water', 'education', 'health', 'infrastructure', 'food', 'environment', 'shelter'];
 const SORT_OPTIONS = ['newest', 'oldest', 'most_funded', 'goal_high', 'goal_low'];
@@ -73,8 +75,9 @@ export default function Home() {
     <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Hero */}
       <section className="text-center mb-8">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-2">
-          {t('home.hero_title')} 🎙️
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-2 flex items-center justify-center gap-3">
+          {t('home.hero_title')}
+          <HiOutlineMicrophone className="w-8 h-8 text-indigo-500" />
         </h1>
         <p className="text-gray-500 max-w-lg mx-auto">{t('home.hero_subtitle')}</p>
       </section>
@@ -89,10 +92,7 @@ export default function Home() {
             placeholder={t('home.search_placeholder')}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
-          <svg className="absolute left-3 top-3 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg"
-            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-          </svg>
+          <HiOutlineMagnifyingGlass className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
         </div>
         <VoiceButton
           apiCall={voiceSearchCampaigns}
@@ -104,8 +104,9 @@ export default function Home() {
       {/* Voice result banner */}
       {voiceResults && (
         <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 mb-4 flex justify-between items-center">
-          <p className="text-sm text-indigo-700">
-            🎤 <em>"{voiceResults.transcription}"</em> — {voiceResults.response_text}
+          <p className="text-sm text-indigo-700 flex items-center gap-1.5">
+            <HiOutlineMicrophone className="w-4 h-4 flex-shrink-0" />
+            <em>"{voiceResults.transcription}"</em> — {voiceResults.response_text}
           </p>
           <button onClick={clearVoice} className="text-indigo-500 text-xs hover:underline">{t('common.close')}</button>
         </div>
