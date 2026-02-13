@@ -49,7 +49,7 @@ export default function DonateCheckout() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-8">
-      <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline mb-4">
+      <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline mb-4 py-2">
         <HiOutlineArrowLeft className="w-4 h-4" /> {t('common.back')}
       </Link>
 
@@ -68,7 +68,7 @@ export default function DonateCheckout() {
           <select
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
             <option value="">{t('donate.choose_campaign')}</option>
             {campaigns.map((c) => (
@@ -80,7 +80,7 @@ export default function DonateCheckout() {
 
       {/* Campaign info card */}
       {campaign && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 mb-6">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
               <CategoryIcon cat={campaign.category} />
@@ -103,7 +103,7 @@ export default function DonateCheckout() {
 
       {/* Donation form */}
       {campaign ? (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
           {donated ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-3">

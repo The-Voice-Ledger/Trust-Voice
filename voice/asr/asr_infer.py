@@ -108,6 +108,7 @@ def transcribe_with_whisper_api(
     Returns:
         Dictionary with transcription results
     """
+    converted_path = None
     try:
         if not OPENAI_API_KEY:
             raise ASRError("OPENAI_API_KEY not set in environment")
@@ -120,7 +121,23 @@ def transcribe_with_whisper_api(
         
         logger.info(f"Transcribing with Whisper API (language: {language})")
         
-        with open(audio_file_path, "rb") as audio_file:
+        # Ensure audio is in a format Whisper accepts.
+        # Browser MediaRecorder may produce mp4/aac on Safari but the temp
+        # file could be saved with a .webm extension, causing Whisper to
+        # reject it with "Invalid file format".  Converting to WAV via
+        # ffmpeg guarantees compatibility regardless of source format.
+        whisper_file = audio_file_path
+        try:
+            from voice.audio_utils import convert_to_whisper_format
+            converted_path = convert_to_whisper_format(audio_file_path)
+            whisper_file = converted_path
+            logger.info(f"Audio converted for Whisper: {whisper_file}")
+        except Exception as conv_err:
+            # If conversion fails (e.g. ffmpeg not installed), try the
+            # original file — it may already be a valid format.
+            logger.warning(f"Audio conversion skipped ({conv_err}), using original file")
+        
+        with open(whisper_file, "rb") as audio_file:
             response = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
@@ -156,6 +173,13 @@ def transcribe_with_whisper_api(
     except Exception as e:
         logger.error(f"Whisper API transcription error: {str(e)}")
         raise ASRError(f"Whisper API failed: {str(e)}")
+    finally:
+        # Clean up converted temp file
+        if converted_path and converted_path != audio_file_path:
+            try:
+                os.remove(converted_path)
+            except OSError:
+                pass
 
 
 def transcribe_with_amharic_model(audio_file_path: str) -> Dict[str, any]:

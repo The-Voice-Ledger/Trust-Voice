@@ -1,14 +1,21 @@
 /**
- * ProgressBar — animated fundraising progress bar.
+ * ProgressBar — animated fundraising progress bar with optional label.
  */
-export default function ProgressBar({ percentage = 0, className = '' }) {
+export default function ProgressBar({ percentage = 0, showLabel = false, className = '' }) {
   const clamped = Math.min(100, Math.max(0, percentage));
   return (
-    <div className={`w-full bg-gray-100 rounded-full h-2 overflow-hidden ${className}`}>
-      <div
-        className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-700 ease-out"
-        style={{ width: `${clamped}%` }}
-      />
+    <div className={className}>
+      {showLabel && (
+        <div className="flex justify-end mb-1">
+          <span className="text-xs font-bold text-indigo-600">{Math.round(clamped)}%</span>
+        </div>
+      )}
+      <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-700 ease-out"
+          style={{ width: `${clamped}%` }}
+        />
+      </div>
     </div>
   );
 }

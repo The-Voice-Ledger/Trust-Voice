@@ -13,6 +13,18 @@ const CATEGORY_ICONS = {
   shelter: MdOutlineHouse, children: MdOutlineChildCare,
 };
 
+const CATEGORY_GRADIENTS = {
+  water: 'from-cyan-500 to-blue-600',
+  education: 'from-amber-500 to-orange-600',
+  health: 'from-rose-500 to-red-600',
+  infrastructure: 'from-slate-500 to-gray-700',
+  food: 'from-lime-500 to-green-600',
+  environment: 'from-emerald-500 to-teal-600',
+  shelter: 'from-orange-500 to-amber-700',
+  children: 'from-pink-500 to-rose-600',
+};
+const DEFAULT_GRADIENT = 'from-indigo-500 to-purple-600';
+
 /**
  * CampaignCard — displays a single campaign in the grid.
  */
@@ -21,15 +33,17 @@ export default function CampaignCard({ campaign }) {
   const pct = campaign.goal_amount_usd > 0
     ? Math.min(100, ((campaign.current_usd_total || campaign.raised_amount_usd) / campaign.goal_amount_usd) * 100)
     : 0;
+  const catKey = (campaign.category || '').toLowerCase();
+  const gradient = CATEGORY_GRADIENTS[catKey] || DEFAULT_GRADIENT;
 
   return (
     <Link
       to={`/campaign/${campaign.id}`}
-      className="group block bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden border border-gray-100"
+      className="group block bg-white rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden border border-gray-100"
     >
       {/* Category badge */}
-      <div className="relative h-36 bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-        {(() => { const Icon = CATEGORY_ICONS[(campaign.category || '').toLowerCase()] || MdHandshake; return <Icon className="w-14 h-14 text-white/50" />; })()}
+      <div className={`relative h-36 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+        {(() => { const Icon = CATEGORY_ICONS[catKey] || MdHandshake; return <Icon className="w-14 h-14 text-white/50" />; })()}
         {campaign.category && (
           <span className="absolute top-3 left-3 bg-white/90 text-xs font-semibold text-indigo-700 px-2 py-0.5 rounded-full capitalize">
             {campaign.category}
@@ -45,7 +59,7 @@ export default function CampaignCard({ campaign }) {
       <div className="p-4">
         <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2">
           {campaign.title}
-        </h3>
+        </h3>showLabel 
 
         <ProgressBar percentage={pct} className="mt-3" />
 

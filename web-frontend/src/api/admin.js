@@ -46,34 +46,34 @@ export function rejectNgoRegistration(id, reason) {
 
 /** POST /api/ngo-registrations/:id/request-info */
 export function requestNgoInfo(id, message) {
-  return api.post(`/ngo-registrations/${id}/request-info`, {}, { message });
+  return api.post(`/ngo-registrations/${id}/request-info`, { message });
 }
 
 /* ── User Registrations (admin) ───────────── */
 
-/** GET /api/registrations/?status=&role=&skip=&limit= */
+/** GET /api/admin/registrations/?status=&role=&skip=&limit= */
 export function listUserRegistrations({ status = 'pending', role, skip = 0, limit = 50 } = {}) {
-  return api.get('/registrations/', { status, role, skip, limit });
+  return api.get('/admin/registrations/', { status, role, skip, limit });
 }
 
-/** GET /api/registrations/stats */
+/** GET /api/admin/registrations/stats */
 export function getRegistrationStats() {
-  return api.get('/registrations/stats');
+  return api.get('/admin/registrations/stats');
 }
 
-/** GET /api/registrations/:id */
+/** GET /api/admin/registrations/:id */
 export function getUserRegistration(id) {
-  return api.get(`/registrations/${id}`);
+  return api.get(`/admin/registrations/${id}`);
 }
 
-/** POST /api/registrations/:id/approve */
+/** POST /api/admin/registrations/:id/approve */
 export function approveUserRegistration(id, adminNotes) {
-  return api.post(`/registrations/${id}/approve`, { admin_notes: adminNotes });
+  return api.post(`/admin/registrations/${id}/approve`, { admin_notes: adminNotes });
 }
 
-/** POST /api/registrations/:id/reject */
+/** POST /api/admin/registrations/:id/reject */
 export function rejectUserRegistration(id, reason) {
-  return api.post(`/registrations/${id}/reject`, { reason });
+  return api.post(`/admin/registrations/${id}/reject`, { reason });
 }
 
 /* ── Payouts (admin) ──────────────────────── */

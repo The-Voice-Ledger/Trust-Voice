@@ -109,7 +109,7 @@ export default function CreateCampaign() {
 
       {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-600">{error}</div>}
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-6">
         {step === 0 && (
           <div className="space-y-4">
             <Field label={t('create_campaign.campaign_title')} required value={form.title}
@@ -119,10 +119,9 @@ export default function CreateCampaign() {
               <VoiceButton
                 apiCall={async (blob) => {
                   const fd = new FormData();
-                  fd.append('audio', blob, 'recording.webm');
+                  fd.append('audio', blob, `recording.${blob.ext || 'webm'}`);
                   fd.append('user_id', user?.telegram_user_id || 'web_anonymous');
-                  const res = await fetch('/api/voice/dictate-text', { method: 'POST', body: fd });
-                  return res.json();
+                  return api.upload('/voice/dictate-text', fd);
                 }}
                 onResult={(r) => { if (r?.transcription) set('title', r.transcription); }}
                 className="!text-xs !py-1.5"
@@ -137,14 +136,13 @@ export default function CreateCampaign() {
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('create_campaign.description')} *</label>
               <textarea value={form.description} onChange={(e) => set('description', e.target.value)}
                 rows={5} placeholder={t('create_campaign.desc_placeholder')}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
               <VoiceButton
                 apiCall={async (blob) => {
                   const fd = new FormData();
-                  fd.append('audio', blob, 'recording.webm');
+                  fd.append('audio', blob, `recording.${blob.ext || 'webm'}`);
                   fd.append('user_id', user?.telegram_user_id || 'web_anonymous');
-                  const res = await fetch('/api/voice/dictate-text', { method: 'POST', body: fd });
-                  return res.json();
+                  return api.upload('/voice/dictate-text', fd);
                 }}
                 onResult={(r) => {
                   if (r?.transcription) set('description', (form.description ? form.description + ' ' : '') + r.transcription);
@@ -157,7 +155,7 @@ export default function CreateCampaign() {
               <div className="flex flex-wrap gap-2">
                 {CATEGORIES.map((c) => (
                   <button key={c} type="button" onClick={() => set('category', c)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition capitalize ${
+                    className={`px-4 py-2 rounded-full text-xs font-medium border transition capitalize ${
                       form.category === c
                         ? 'bg-indigo-600 text-white border-indigo-600'
                         : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
@@ -180,7 +178,7 @@ export default function CreateCampaign() {
               <div className="w-24">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
                 <select value={form.currency} onChange={(e) => set('currency', e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm">
+                  className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm">
                   {['USD', 'EUR', 'GBP', 'KES', 'ETB'].map((c) => <option key={c}>{c}</option>)}
                 </select>
               </div>
@@ -189,11 +187,11 @@ export default function CreateCampaign() {
               onChange={(v) => set('location_name', v)} placeholder="e.g. Addis Ababa, Ethiopia" />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('create_campaign.gps')}</label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <input value={form.location_gps} onChange={(e) => set('location_gps', e.target.value)}
-                  placeholder="lat,lng" className="flex-1 rounded-lg border border-gray-200 px-3 py-2.5 text-sm" />
+                  placeholder="lat,lng" className="flex-1 rounded-lg border border-gray-200 px-3 py-3 text-sm" />
                 <button type="button" onClick={getLocation}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-100 text-sm hover:bg-gray-200 transition">
+                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-gray-100 text-sm hover:bg-gray-200 transition">
                   <HiOutlineMapPin className="w-4 h-4" /> {t('create_campaign.auto_gps')}
                 </button>
               </div>
@@ -256,17 +254,17 @@ export default function CreateCampaign() {
       {/* Navigation */}
       <div className="flex justify-between">
         <button onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}
-          className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 disabled:opacity-30 transition">
+          className="px-5 py-3 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 disabled:opacity-30 transition">
           ← {t('common.back')}
         </button>
         {step < STEPS.length - 1 ? (
           <button onClick={() => setStep((s) => s + 1)} disabled={!canNext()}
-            className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition">
+            className="px-5 py-3 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition">
             {t('create_campaign.next')} →
           </button>
         ) : (
           <button onClick={handleSubmit} disabled={loading}
-            className="px-6 py-2.5 rounded-xl text-sm font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition">
+            className="px-6 py-3 rounded-xl text-sm font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition">
             {loading ? t('common.loading') : t('create_campaign.publish')}
           </button>
         )}
@@ -281,16 +279,16 @@ function Field({ label, required, value, onChange, placeholder, type = 'text' })
       <label className="block text-sm font-medium text-gray-700 mb-1">{label} {required && '*'}</label>
       <input type={type} required={required} value={value} onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+        className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
     </div>
   );
 }
 
 function ReviewRow({ label, value }) {
   return (
-    <div className="flex justify-between py-2 border-b border-gray-50 last:border-0">
+    <div className="flex flex-col sm:flex-row sm:justify-between py-2 border-b border-gray-50 last:border-0 gap-0.5">
       <span className="text-sm text-gray-500">{label}</span>
-      <span className="text-sm font-medium text-gray-900 text-right max-w-[60%] line-clamp-2">{value || '—'}</span>
+      <span className="text-sm font-medium text-gray-900 sm:text-right sm:max-w-[60%] line-clamp-2">{value || '—'}</span>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createDonation } from '../api/donations';
+import { HiOutlineCheckCircle } from 'react-icons/hi2';
 
 const PRESETS_USD = [5, 10, 25, 50, 100];
 const CURRENCIES = ['USD', 'KES', 'EUR', 'GBP', 'ETB'];
@@ -47,8 +48,10 @@ export default function DonationForm({ campaignId, donorId, onSuccess }) {
 
   if (success) {
     return (
-      <div className="text-center py-8">
-        <div className="text-5xl mb-3">🎉</div>
+      <div className="text-center py-8 animate-fadeInUp">
+        <div className="w-16 h-16 mx-auto rounded-full bg-green-50 flex items-center justify-center mb-3">
+          <HiOutlineCheckCircle className="w-10 h-10 text-green-500" />
+        </div>
         <p className="text-lg font-semibold text-green-600">{t('donate.success')}</p>
         {method === 'mpesa' && (
           <p className="text-sm text-gray-500 mt-2">{t('donate.mpesa_prompt')}</p>

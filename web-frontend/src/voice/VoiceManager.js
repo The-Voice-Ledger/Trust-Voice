@@ -52,12 +52,25 @@ class VoiceManager {
         return;
       }
       this.mediaRecorder.onstop = () => {
-        const blob = new Blob(this.chunks, { type: this.mediaRecorder.mimeType || 'audio/webm' });
+        const mime = this.mediaRecorder.mimeType || 'audio/webm';
+        const blob = new Blob(this.chunks, { type: mime });
+        // Attach extension so callers can set the correct filename
+        blob.ext = VoiceManager.extForMime(mime);
         this.chunks = [];
         resolve(blob);
       };
       this.mediaRecorder.stop();
     });
+  }
+
+  /** Map MIME type to file extension Whisper accepts */
+  static extForMime(mime) {
+    if (mime.includes('mp4') || mime.includes('aac'))  return 'mp4';
+    if (mime.includes('ogg'))                          return 'ogg';
+    if (mime.includes('wav'))                          return 'wav';
+    if (mime.includes('mpeg') || mime.includes('mp3')) return 'mp3';
+    if (mime.includes('flac'))                         return 'flac';
+    return 'webm'; // default
   }
 
   /** Play a TTS audio URL */

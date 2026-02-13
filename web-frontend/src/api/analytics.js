@@ -10,9 +10,9 @@ export function getConversationEvents({ limit = 20, eventType } = {}) {
   return api.get('/analytics/events', { limit, event_type: eventType });
 }
 
-/** GET /api/analytics/funnel?goal=&days= */
-export function getFunnel({ goal = 'donating', days = 30 } = {}) {
-  return api.get('/analytics/funnel', { goal, days });
+/** GET /api/analytics/funnel?conversation_type=&days= */
+export function getFunnel({ conversation_type = 'donating', days = 30 } = {}) {
+  return api.get('/analytics/funnel', { conversation_type, days });
 }
 
 /** GET /api/analytics/summary?days= */

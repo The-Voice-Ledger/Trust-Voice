@@ -1,5 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
+import MobileBottomNav from './components/MobileBottomNav'
+import Footer from './components/Footer'
 import Landing from './pages/Landing'
 import Home from './pages/Home'
 import CampaignDetail from './pages/CampaignDetail'
@@ -16,7 +18,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <main className="flex-1">
+      <main className="flex-1 pb-20 sm:pb-0">
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/campaigns" element={<Home />} />
@@ -32,12 +34,8 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </main>
-      <footer className="border-t border-gray-100 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-gray-400">© {new Date().getFullYear()} TrustVoice · Voice-First Donation Platform</p>
-          <p className="text-xs text-gray-300">Built for Georgetown University STIA Program</p>
-        </div>
-      </footer>
+      <Footer />
+      <MobileBottomNav />
     </div>
   )
 }

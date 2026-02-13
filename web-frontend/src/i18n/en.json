@@ -11,12 +11,13 @@
     "admin": "Admin",
     "dashboard": "My Donations",
     "login": "Sign In",
-    "logout": "Sign Out"
+    "logout": "Sign Out",
+    "more": "More"
   },
   "landing": {
     "badge": "Voice-First · Transparent · Verified",
-    "hero_title": "Fund Verified Projects with Your Voice",
-    "hero_subtitle": "Browse campaigns, watch transparency videos, donate by voice — with blockchain-verified receipts and field agent verification.",
+    "hero_title": "Transparent Funding, One Voice at a Time",
+    "hero_subtitle": "Browse campaigns, watch transparency videos, donate by voice, with blockchain-verified receipts and field agent verification.",
     "explore_btn": "Explore Campaigns",
     "stat_conversations": "Conversations",
     "stat_completed": "Completed",
@@ -57,7 +58,7 @@
   },
   "home": {
     "hero_title": "Donate with your voice",
-    "hero_subtitle": "Browse campaigns, watch transparency videos, and give — all powered by voice.",
+    "hero_subtitle": "Browse campaigns, watch project videos, and contribute, powered by voice.",
     "search_placeholder": "Search campaigns…",
     "voice_search": "Search by voice",
     "filter_all": "All",

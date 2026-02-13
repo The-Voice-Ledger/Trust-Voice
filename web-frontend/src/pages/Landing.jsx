@@ -69,7 +69,7 @@ export default function Landing() {
             <HiOutlineMicrophone className="w-4 h-4 text-indigo-300" />
             <span className="text-indigo-200">{t('landing.badge')}</span>
           </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1]">
+          <h1 className="text-3xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1]">
             <span className="bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent">
               {t('landing.hero_title')}
             </span>
@@ -78,10 +78,10 @@ export default function Landing() {
             {t('landing.hero_subtitle')}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full sm:w-auto">
             <Link
               to="/campaigns"
-              className="group px-8 py-4 rounded-2xl bg-white text-indigo-700 font-bold text-lg shadow-xl shadow-indigo-500/25 hover:shadow-2xl hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all flex items-center gap-2"
+              className="group w-full sm:w-auto text-center px-8 py-4 rounded-2xl bg-white text-indigo-700 font-bold text-lg shadow-xl shadow-indigo-500/25 hover:shadow-2xl hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
             >
               {t('landing.explore_btn')}
               <HiOutlineArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -97,7 +97,7 @@ export default function Landing() {
 
       {/* ════════ LIVE STATS BAR ════════ */}
       <section className="relative -mt-8 z-10 max-w-5xl mx-auto px-4 sm:px-6">
-        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 px-6 py-6 grid grid-cols-2 sm:grid-cols-4 gap-6">
+        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 px-4 sm:px-6 py-4 sm:py-6 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
           <StatCard value={stats?.started ?? '—'} label={t('landing.stat_conversations')} Icon={HiOutlineChatBubbleLeftRight} color="indigo" />
           <StatCard value={stats?.completed ?? '—'} label={t('landing.stat_completed')} Icon={HiOutlineCheckBadge} color="emerald" />
           <StatCard
@@ -162,11 +162,15 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
           <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider text-center mb-2">Process</p>
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-14">{t('landing.how_title')}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <StepCard step="1" Icon={HiOutlineMicrophone} title={t('landing.step1_title')} desc={t('landing.step1_desc')} />
-            <StepCard step="2" Icon={HiOutlineEye} title={t('landing.step2_title')} desc={t('landing.step2_desc')} />
-            <StepCard step="3" Icon={HiOutlineCreditCard} title={t('landing.step3_title')} desc={t('landing.step3_desc')} />
-            <StepCard step="4" Icon={HiOutlineCamera} title={t('landing.step4_title')} desc={t('landing.step4_desc')} />
+          <div className="relative">
+            {/* Connector line — desktop only */}
+            <div className="hidden lg:block absolute top-8 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-indigo-200 via-purple-200 to-indigo-200 rounded-full" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              <StepCard step="1" Icon={HiOutlineMicrophone} title={t('landing.step1_title')} desc={t('landing.step1_desc')} />
+              <StepCard step="2" Icon={HiOutlineEye} title={t('landing.step2_title')} desc={t('landing.step2_desc')} />
+              <StepCard step="3" Icon={HiOutlineCreditCard} title={t('landing.step3_title')} desc={t('landing.step3_desc')} />
+              <StepCard step="4" Icon={HiOutlineCamera} title={t('landing.step4_title')} desc={t('landing.step4_desc')} />
+            </div>
           </div>
         </div>
       </section>
@@ -194,16 +198,16 @@ export default function Landing() {
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 py-20 text-center">
           <h2 className="text-2xl sm:text-4xl font-bold mb-4">{t('landing.tester_title')}</h2>
           <p className="text-white/70 max-w-xl mx-auto mb-10 text-lg">{t('landing.tester_desc')}</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto px-4 sm:px-0">
             <Link
               to="/register-ngo"
-              className="px-8 py-4 rounded-2xl bg-white text-indigo-700 font-bold hover:bg-indigo-50 transition shadow-lg shadow-indigo-900/20"
+              className="w-full sm:w-auto text-center px-8 py-4 rounded-2xl bg-white text-indigo-700 font-bold hover:bg-indigo-50 transition shadow-lg shadow-indigo-900/20"
             >
               {t('landing.tester_register')}
             </Link>
             <Link
               to="/login"
-              className="px-8 py-4 rounded-2xl bg-white/10 backdrop-blur text-white font-bold border border-white/20 hover:bg-white/20 transition"
+              className="w-full sm:w-auto text-center px-8 py-4 rounded-2xl bg-white/10 backdrop-blur text-white font-bold border border-white/20 hover:bg-white/20 transition"
             >
               {t('landing.tester_login')}
             </Link>
@@ -228,7 +232,7 @@ function StatCard({ value, label, Icon, color = 'indigo' }) {
       <div className={`w-10 h-10 rounded-xl ${colors[color]} flex items-center justify-center mb-2`}>
         <Icon className="w-5 h-5" />
       </div>
-      <div className="text-2xl font-bold text-gray-900">{value}</div>
+      <div className="text-xl sm:text-2xl font-bold text-gray-900">{value}</div>
       <p className="text-xs text-gray-500 mt-0.5">{label}</p>
     </div>
   );
@@ -237,7 +241,7 @@ function StatCard({ value, label, Icon, color = 'indigo' }) {
 function StepCard({ step, Icon, title, desc }) {
   return (
     <div className="relative text-center group">
-      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center mx-auto mb-5 shadow-lg shadow-indigo-200/50 group-hover:shadow-xl group-hover:shadow-indigo-300/50 transition-shadow">
+      <div className="relative z-10 w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center mx-auto mb-5 shadow-lg shadow-indigo-200/50 group-hover:shadow-xl group-hover:shadow-indigo-300/50 group-hover:scale-105 transition-all ring-4 ring-white">
         <Icon className="w-7 h-7" />
       </div>
       <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 text-xs font-bold mb-2">{step}</div>
@@ -324,7 +328,7 @@ function MediaCard({ campaign, t }) {
         )}
       </div>
 
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         <h3 className="font-bold text-gray-900 text-lg group-hover:text-indigo-600 transition-colors line-clamp-2 mb-2">
           {campaign.title}
         </h3>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { submitNgoRegistration } from '../api/ngoRegistrations';
+import { api } from '../api/client';
 import VoiceButton from '../components/VoiceButton';
 import useAuthStore from '../stores/authStore';
 import { HiOutlineCheckCircle } from 'react-icons/hi2';
@@ -126,7 +127,7 @@ export default function RegisterNgo() {
       )}
 
       {/* Step content */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-6">
         {step === 0 && (
           <div className="space-y-4">
             <Field label={t('ngo_reg.org_name')} required value={form.organization_name}
@@ -136,7 +137,7 @@ export default function RegisterNgo() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('ngo_reg.org_type')}</label>
               <select value={form.organization_type} onChange={(e) => set('organization_type', e.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm">
+                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm">
                 {ORG_TYPES.map((o) => <option key={o} value={o}>{o.replace(/_/g, ' ')}</option>)}
               </select>
             </div>
@@ -167,16 +168,15 @@ export default function RegisterNgo() {
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('ngo_reg.mission')} *</label>
               <textarea value={form.mission_statement} onChange={(e) => set('mission_statement', e.target.value)}
                 rows={4} placeholder={t('ngo_reg.mission_placeholder')}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
               <div className="mt-2">
                 <VoiceButton
                   apiCall={async (blob) => {
                     // Use dictate-text voice endpoint
                     const fd = new FormData();
-                    fd.append('audio', blob, 'recording.webm');
+                    fd.append('audio', blob, `recording.${blob.ext || 'webm'}`);
                     fd.append('user_id', user?.telegram_user_id || 'web_anonymous');
-                    const res = await fetch('/api/voice/dictate-text', { method: 'POST', body: fd });
-                    return res.json();
+                    return api.upload('/voice/dictate-text', fd);
                   }}
                   onResult={(r) => {
                     if (r?.transcription) set('mission_statement', (form.mission_statement ? form.mission_statement + ' ' : '') + r.transcription);
@@ -190,7 +190,7 @@ export default function RegisterNgo() {
               <div className="flex flex-wrap gap-2">
                 {FOCUS_AREAS.map((a) => (
                   <button key={a} type="button" onClick={() => toggleFocus(a)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition capitalize ${
+                    className={`px-4 py-2 rounded-full text-xs font-medium border transition capitalize ${
                       form.focus_areas.includes(a)
                         ? 'bg-indigo-600 text-white border-indigo-600'
                         : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
@@ -239,7 +239,7 @@ export default function RegisterNgo() {
         <button
           onClick={() => setStep((s) => Math.max(0, s - 1))}
           disabled={step === 0}
-          className="px-5 py-2.5 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 disabled:opacity-30 transition"
+          className="px-5 py-3 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 disabled:opacity-30 transition"
         >
           ← {t('common.back')}
         </button>
@@ -248,7 +248,7 @@ export default function RegisterNgo() {
           <button
             onClick={() => setStep((s) => s + 1)}
             disabled={!canNext()}
-            className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition"
+            className="px-5 py-3 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition"
           >
             {t('ngo_reg.next')} →
           </button>
@@ -256,7 +256,7 @@ export default function RegisterNgo() {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-6 py-2.5 rounded-xl text-sm font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition"
+            className="px-6 py-3 rounded-xl text-sm font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition"
           >
             {loading ? t('common.loading') : t('ngo_reg.submit')}
           </button>
@@ -279,7 +279,7 @@ function Field({ label, required, value, onChange, placeholder, type = 'text' })
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+        className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
       />
     </div>
   );
@@ -287,9 +287,9 @@ function Field({ label, required, value, onChange, placeholder, type = 'text' })
 
 function ReviewRow({ label, value }) {
   return (
-    <div className="flex justify-between py-2 border-b border-gray-50 last:border-0">
+    <div className="flex flex-col sm:flex-row sm:justify-between py-2 border-b border-gray-50 last:border-0 gap-0.5">
       <span className="text-sm text-gray-500">{label}</span>
-      <span className="text-sm font-medium text-gray-900 text-right max-w-[60%]">{value || '—'}</span>
+      <span className="text-sm font-medium text-gray-900 sm:text-right sm:max-w-[60%]">{value || '—'}</span>
     </div>
   );
 }

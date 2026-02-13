@@ -231,6 +231,10 @@ class ConversationAnalytics:
             
         except Exception as e:
             print(f"❌ Error getting funnel metrics: {e}")
+            try:
+                db.rollback()
+            except Exception:
+                pass
             return {}
     
     @staticmethod
@@ -304,6 +308,10 @@ class ConversationAnalytics:
             
         except Exception as e:
             print(f"❌ Error getting summary metrics: {e}")
+            try:
+                db.rollback()
+            except Exception:
+                pass
             return {
                 "started": 0,
                 "completed": 0,
@@ -351,6 +359,10 @@ class ConversationAnalytics:
             
         except Exception as e:
             print(f"❌ Error getting daily metrics: {e}")
+            try:
+                db.rollback()
+            except Exception:
+                pass
             return []
     
     @staticmethod
@@ -386,4 +398,8 @@ class ConversationAnalytics:
             
         except Exception as e:
             print(f"❌ Error getting recent events: {e}")
+            try:
+                db.rollback()
+            except Exception:
+                pass
             return []

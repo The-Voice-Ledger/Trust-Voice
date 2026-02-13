@@ -25,12 +25,12 @@ export default function AdminPanel() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex flex-wrap gap-1 bg-gray-100 rounded-xl p-1 mb-8">
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-8 overflow-x-auto scrollbar-hide">
         {TABS.map((tb) => (
           <button
             key={tb}
             onClick={() => setTab(tb)}
-            className={`flex-1 min-w-[120px] px-3 py-2 rounded-lg text-sm font-medium transition ${
+            className={`flex-shrink-0 px-4 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap ${
               tab === tb ? 'bg-white shadow text-indigo-600' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -85,7 +85,7 @@ function PendingNgos({ t }) {
         <EmptyState icon="✅" message={t('admin.no_pending_ngos')} />
       ) : (
         items.map((reg) => (
-          <div key={reg.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div key={reg.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <h3 className="font-semibold text-gray-900">{reg.organization_name || reg.org_name}</h3>
@@ -157,7 +157,7 @@ function PendingUsers({ t }) {
         <EmptyState icon="✅" message={t('admin.no_pending_users')} />
       ) : (
         items.map((reg) => (
-          <div key={reg.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div key={reg.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <h3 className="font-semibold text-gray-900">{reg.full_name || reg.telegram_username || `User #${reg.id}`}</h3>
@@ -210,8 +210,8 @@ function NgoList({ t }) {
         <EmptyState icon="🏛️" message={t('admin.no_ngos')} />
       ) : (
         items.map((ngo) => (
-          <div key={ngo.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <div className="flex items-center justify-between">
+          <div key={ngo.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <h3 className="font-semibold text-gray-900">{ngo.name}</h3>
                 <p className="text-sm text-gray-500">{ngo.description || '—'}</p>
@@ -266,7 +266,7 @@ function PayoutList({ t }) {
         <EmptyState icon="💸" message={t('admin.no_pending_payouts')} />
       ) : (
         items.map((p) => (
-          <div key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <div key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <h3 className="font-semibold text-gray-900">
@@ -320,9 +320,9 @@ function DashboardStats({ t }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
       {Object.entries(stats).map(([key, value]) => (
-        <div key={key} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
+        <div key={key} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 text-center">
           <p className="text-sm text-gray-400 capitalize">{key.replace(/_/g, ' ')}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">
+          <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">
             {typeof value === 'object' ? JSON.stringify(value) : String(value)}
           </p>
         </div>

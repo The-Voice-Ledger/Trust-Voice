@@ -21,7 +21,7 @@ export default function Dashboard() {
       getDonorDonations(user.donor_id).catch(() => []),
       getTaxSummary(currentYear, user.donor_id).catch(() => null),
     ]).then(([d, tax]) => {
-      setDonations(Array.isArray(d) ? d : []);
+      setDonations(Array.isArray(d) ? d : d?.items || d?.donations || []);
       setTaxSummary(tax);
     }).finally(() => setLoading(false));
   }, [user, currentYear]);
@@ -54,9 +54,9 @@ export default function Dashboard() {
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 text-center">
           <p className="text-sm text-gray-400 mb-1">{t('dashboard.total_donated')}</p>
-          <p className="text-2xl font-bold text-indigo-600">
+          <p className="text-xl sm:text-2xl font-bold text-indigo-600">
             {Object.entries(totalsByFx).map(([cur, amt]) => (
               <span key={cur} className="block">
                 {Number(amt).toLocaleString('en-US', { maximumFractionDigits: 2 })} {cur}
@@ -65,21 +65,21 @@ export default function Dashboard() {
             {Object.keys(totalsByFx).length === 0 && <span>$0</span>}
           </p>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 text-center">
           <p className="text-sm text-gray-400 mb-1">{t('dashboard.donations_count')}</p>
-          <p className="text-2xl font-bold text-gray-900">{donations.length}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{donations.length}</p>
         </div>
         {taxSummary && (
           <>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 text-center">
               <p className="text-sm text-gray-400 mb-1">{t('dashboard.tax_year')} {currentYear}</p>
-              <p className="text-2xl font-bold text-emerald-600">
+              <p className="text-xl sm:text-2xl font-bold text-emerald-600">
                 ${Number(taxSummary.total_deductible || taxSummary.total_amount || 0).toLocaleString()}
               </p>
             </div>
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 text-center">
               <p className="text-sm text-gray-400 mb-1">{t('dashboard.receipts_count')}</p>
-              <p className="text-2xl font-bold text-gray-900">{taxSummary.receipt_count || taxSummary.donation_count || 0}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{taxSummary.receipt_count || taxSummary.donation_count || 0}</p>
             </div>
           </>
         )}
@@ -142,7 +142,7 @@ export default function Dashboard() {
       ) : (
         <div className="space-y-3">
           {donations.map((d) => (
-            <div key={d.id} className="bg-white rounded-xl border border-gray-100 p-4 flex justify-between items-center">
+            <div key={d.id} className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
               <div>
                 <p className="font-medium text-gray-900">
                   {d.amount} {d.currency}
@@ -157,7 +157,7 @@ export default function Dashboard() {
                 <button
                   onClick={() => viewReceipt(d.id)}
                   disabled={receiptLoading}
-                  className="text-xs text-indigo-600 hover:underline"
+                  className="text-xs text-indigo-600 hover:underline py-1 px-2"
                 >
                   {t('dashboard.receipt')}
                 </button>
@@ -172,9 +172,9 @@ export default function Dashboard() {
 
 function ReceiptRow({ label, value }) {
   return (
-    <div className="flex justify-between py-1.5 border-b border-gray-50 last:border-0">
+    <div className="flex flex-col sm:flex-row sm:justify-between py-1.5 border-b border-gray-50 last:border-0 gap-0.5">
       <span className="text-gray-500">{label}</span>
-      <span className="font-medium text-gray-900 text-right">{value}</span>
+      <span className="font-medium text-gray-900 sm:text-right">{value}</span>
     </div>
   );
 }

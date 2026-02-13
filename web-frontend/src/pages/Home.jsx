@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { listCampaigns } from '../api/campaigns';
 import { voiceSearchCampaigns } from '../api/voice';
 import CampaignCard from '../components/CampaignCard';
+import SkeletonCard from '../components/SkeletonCard';
 import VoiceButton from '../components/VoiceButton';
 import { HiOutlineMagnifyingGlass } from 'react-icons/hi2';
 import { HiOutlineMicrophone } from 'react-icons/hi';
@@ -75,9 +76,9 @@ export default function Home() {
     <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Hero */}
       <section className="text-center mb-8">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-2 flex items-center justify-center gap-3">
+        <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-900 mb-2 flex items-center justify-center gap-2 sm:gap-3">
           {t('home.hero_title')}
-          <HiOutlineMicrophone className="w-8 h-8 text-indigo-500" />
+          <HiOutlineMicrophone className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-500" />
         </h1>
         <p className="text-gray-500 max-w-lg mx-auto">{t('home.hero_subtitle')}</p>
       </section>
@@ -90,9 +91,9 @@ export default function Home() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('home.search_placeholder')}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
-          <HiOutlineMagnifyingGlass className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <HiOutlineMagnifyingGlass className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
         </div>
         <VoiceButton
           apiCall={voiceSearchCampaigns}
@@ -118,7 +119,7 @@ export default function Home() {
           <button
             key={cat}
             onClick={() => setCategory(cat)}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition capitalize
+            className={`px-4 py-2 rounded-full text-xs font-medium border transition capitalize
               ${cat === category
                 ? 'bg-indigo-600 text-white border-indigo-600'
                 : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'}`}
@@ -129,7 +130,7 @@ export default function Home() {
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value)}
-          className="ml-auto text-xs border border-gray-200 rounded-lg px-2 py-1"
+          className="ml-auto text-sm border border-gray-200 rounded-lg px-3 py-2"
         >
           {SORT_OPTIONS.map((s) => (
             <option key={s} value={s}>{t(`home.sort_${s}`)}</option>
@@ -139,7 +140,9 @@ export default function Home() {
 
       {/* Campaign grid */}
       {loading && campaigns.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">{t('common.loading')}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
+        </div>
       ) : campaigns.length === 0 ? (
         <div className="text-center py-20 text-gray-400">{t('home.no_campaigns')}</div>
       ) : (
@@ -154,7 +157,7 @@ export default function Home() {
               <button
                 onClick={loadMore}
                 disabled={loading}
-                className="px-6 py-2 rounded-xl bg-gray-100 text-sm font-medium text-gray-700 hover:bg-gray-200 transition"
+                className="px-6 py-2.5 rounded-xl bg-gray-100 text-sm font-medium text-gray-700 hover:bg-gray-200 transition"
               >
                 {loading ? t('common.loading') : t('home.load_more')}
               </button>

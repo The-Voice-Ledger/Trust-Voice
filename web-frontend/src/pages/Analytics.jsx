@@ -62,7 +62,7 @@ export default function Analytics() {
               <button
                 key={p.days}
                 onClick={() => setDays(p.days)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition ${
+                className={`px-3 py-2 rounded-md text-xs font-medium transition ${
                   days === p.days ? 'bg-white shadow text-indigo-600' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -115,16 +115,16 @@ export default function Analytics() {
           {/* Two-column: Funnel + Recent events */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Funnel */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
               <h2 className="font-semibold text-gray-900 mb-4">{t('analytics.donation_funnel')}</h2>
               {funnel ? (
                 <div className="space-y-3">
-                  {funnel.funnel?.map((step, i) => (
-                    <FunnelRow key={i} step={step} maxValue={funnel.funnel?.[0]?.count || 1} />
+                  {funnel.funnel && Object.entries(funnel.funnel).map(([stepName, data], i, arr) => (
+                    <FunnelRow key={stepName} step={{ stage: stepName, count: data.count, drop_off: data.drop_off }} maxValue={arr[0]?.[1]?.count || 1} />
                   ))}
-                  {funnel.conversion_rate != null && (
+                  {funnel.overall_conversion != null && (
                     <div className="pt-3 border-t border-gray-100 text-center">
-                      <span className="text-2xl font-bold text-indigo-600">{Math.round(funnel.conversion_rate)}%</span>
+                      <span className="text-2xl font-bold text-indigo-600">{Math.round(funnel.overall_conversion)}%</span>
                       <p className="text-xs text-gray-400 mt-1">{t('analytics.conversion_rate')}</p>
                     </div>
                   )}
@@ -135,7 +135,7 @@ export default function Analytics() {
             </div>
 
             {/* Recent events */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
               <h2 className="font-semibold text-gray-900 mb-4">{t('analytics.recent_events')}</h2>
               {events.length > 0 ? (
                 <div className="space-y-2 max-h-80 overflow-y-auto">
@@ -164,7 +164,7 @@ export default function Analytics() {
 
           {/* Daily metrics (simple text grid if metrics available) */}
           {metrics?.daily_metrics && (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
               <h2 className="font-semibold text-gray-900 mb-4">{t('analytics.daily_breakdown')}</h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -173,16 +173,16 @@ export default function Analytics() {
                       <th className="pb-2 font-medium">{t('analytics.date')}</th>
                       <th className="pb-2 font-medium text-right">{t('analytics.conversations')}</th>
                       <th className="pb-2 font-medium text-right">{t('analytics.completed')}</th>
-                      <th className="pb-2 font-medium text-right">{t('analytics.donations')}</th>
+                      <th className="pb-2 font-medium text-right">{t('analytics.abandoned')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {metrics.daily_metrics.map((row, i) => (
                       <tr key={i} className="border-b border-gray-50 last:border-0">
                         <td className="py-2 text-gray-700">{row.date}</td>
-                        <td className="py-2 text-right text-gray-600">{row.conversations || 0}</td>
+                        <td className="py-2 text-right text-gray-600">{row.started || 0}</td>
                         <td className="py-2 text-right text-gray-600">{row.completed || 0}</td>
-                        <td className="py-2 text-right font-medium text-indigo-600">{row.donations || 0}</td>
+                        <td className="py-2 text-right font-medium text-amber-600">{row.abandoned || 0}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -201,15 +201,15 @@ export default function Analytics() {
 function SummaryCard({ title, value, Icon, color = 'indigo', change }) {
   const colors = { indigo: 'bg-indigo-50 text-indigo-600', emerald: 'bg-emerald-50 text-emerald-600', amber: 'bg-amber-50 text-amber-600', pink: 'bg-pink-50 text-pink-600' };
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-      <div className="flex items-center gap-2.5 mb-3">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5">
+      <div className="flex items-center gap-2 sm:gap-2.5 mb-3">
         <div className={`w-9 h-9 rounded-xl ${colors[color]} flex items-center justify-center`}>
           <Icon className="w-5 h-5" />
         </div>
         <span className="text-sm text-gray-500 font-medium">{title}</span>
       </div>
       <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-bold text-gray-900">{value}</span>
+        <span className="text-xl sm:text-2xl font-bold text-gray-900">{value}</span>
         {change != null && (
           <span className={`flex items-center gap-0.5 text-xs font-medium ${change >= 0 ? 'text-green-600' : 'text-red-500'}`}>
             {change >= 0 ? <HiOutlineArrowTrendingUp className="w-3.5 h-3.5" /> : <HiOutlineArrowTrendingDown className="w-3.5 h-3.5" />}

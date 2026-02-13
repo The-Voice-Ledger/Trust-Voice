@@ -42,6 +42,27 @@ router = APIRouter(prefix="/voice", tags=["miniapp-voice"])
 tts_provider = TTSProvider()
 
 
+def _audio_suffix(upload: UploadFile) -> str:
+    """Derive file extension from upload content-type or filename."""
+    ct = (upload.content_type or "").lower()
+    if "mp4" in ct or "aac" in ct:
+        return ".mp4"
+    if "ogg" in ct:
+        return ".ogg"
+    if "wav" in ct:
+        return ".wav"
+    if "mp3" in ct or "mpeg" in ct:
+        return ".mp3"
+    if "flac" in ct:
+        return ".flac"
+    # Check filename extension as fallback
+    if upload.filename:
+        ext = Path(upload.filename).suffix.lower()
+        if ext in (".mp4", ".m4a", ".ogg", ".wav", ".mp3", ".flac", ".webm", ".oga", ".mpga"):
+            return ext
+    return ".webm"
+
+
 @router.post("/search-campaigns")
 async def voice_search_campaigns(
     audio: UploadFile = File(...),
@@ -87,7 +108,7 @@ async def voice_search_campaigns(
         logger.info(f"Voice search request from user {user_id}")
         
         # Step 1: Save uploaded audio to temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=_audio_suffix(audio)) as temp_file:
             content = await audio.read()
             temp_file.write(content)
             temp_audio_path = temp_file.name
@@ -441,7 +462,7 @@ async def voice_analytics_query(
         logger.info(f"Analytics voice query from user {user_id}")
         
         # Save audio
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=_audio_suffix(audio)) as temp_file:
             content = await audio.read()
             temp_file.write(content)
             temp_audio_path = temp_file.name
@@ -620,7 +641,7 @@ async def voice_donate(
         logger.info(f"Voice donation request from user {user_id}, lang: {user_language}")
         
         # Save audio
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=_audio_suffix(audio)) as temp_file:
             content = await audio.read()
             temp_file.write(content)
             temp_audio_path = temp_file.name
@@ -801,7 +822,7 @@ async def voice_admin_query(
             raise HTTPException(status_code=403, detail="Admin access required")
         
         # Save audio
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=_audio_suffix(audio)) as temp_file:
             content = await audio.read()
             temp_file.write(content)
             temp_audio_path = temp_file.name
@@ -954,7 +975,7 @@ async def voice_admin_command(
         logger.info(f"Admin voice command from user {user_id}")
         
         # Save audio
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=_audio_suffix(audio)) as temp_file:
             content = await audio.read()
             temp_file.write(content)
             temp_audio_path = temp_file.name
@@ -1074,7 +1095,7 @@ async def voice_dictate_text(
         logger.info(f"Voice dictation from user {user_id} for field: {field_name}")
         
         # Save audio
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=_audio_suffix(audio)) as temp_file:
             content = await audio.read()
             temp_file.write(content)
             temp_audio_path = temp_file.name
@@ -1164,7 +1185,7 @@ async def voice_wizard_step(
         logger.info(f"Voice wizard step for field: {field_name}, step: {step_number}, lang: {user_language}")
         
         # Save audio
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as temp_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=_audio_suffix(audio)) as temp_file:
             content = await audio.read()
             temp_file.write(content)
             temp_audio_path = temp_file.name

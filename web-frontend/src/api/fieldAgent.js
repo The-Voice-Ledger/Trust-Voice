@@ -28,13 +28,13 @@ export function getSession(telegramUserId) {
   return api.get('/field-agent/session', { telegram_user_id: telegramUserId });
 }
 
-/** POST /api/field-agent/session */
+/** POST /api/field-agent/session/update */
 export function saveSession(data) {
-  return api.upload('/field-agent/session', (() => {
-    const fd = new FormData();
-    Object.entries(data).forEach(([k, v]) => fd.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v)));
-    return fd;
-  })());
+  const fd = new FormData();
+  Object.entries(data).forEach(([k, v]) => {
+    if (v !== undefined && v !== null) fd.append(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
+  });
+  return api.upload('/field-agent/session/update', fd);
 }
 
 /** DELETE /api/field-agent/session?telegram_user_id= */

@@ -45,7 +45,7 @@ export default function CampaignDetail() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6">
-      <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline mb-4">
+      <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline mb-4 py-2">
         <HiOutlineArrowLeft className="w-4 h-4" /> {t('common.back')}
       </Link>
 
@@ -73,11 +73,11 @@ export default function CampaignDetail() {
       )}
 
       {/* Progress */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 mb-6">
         <ProgressBar percentage={pct} className="mb-3" />
-        <div className="flex justify-between items-baseline">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-1">
           <div>
-            <span className="text-2xl font-bold text-indigo-600">
+            <span className="text-xl sm:text-2xl font-bold text-indigo-600">
               ${fmt(campaign.current_usd_total || campaign.raised_amount_usd)}
             </span>
             <span className="text-gray-400 text-sm ml-2">
@@ -106,7 +106,7 @@ export default function CampaignDetail() {
       </div>
 
       {/* Donate section */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5">
         {!showDonate ? (
           <div className="flex flex-col sm:flex-row gap-3 items-center">
             <button
