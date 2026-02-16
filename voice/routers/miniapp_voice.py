@@ -42,6 +42,65 @@ router = APIRouter(prefix="/voice", tags=["miniapp-voice"])
 tts_provider = TTSProvider()
 
 
+async def _try_agent(
+    transcribed_text: str,
+    user_id: str,
+    db,
+    language: str = "en",
+    context: dict = None,
+):
+    """
+    Try handling a voice command via the AI Agent.
+
+    Returns a dict with response_text, audio_url, data, tools_used
+    if the agent succeeds, or None to fall back to the legacy handler.
+    """
+    try:
+        from voice.agent.executor import AgentExecutor
+
+        _agent = AgentExecutor()
+        user_record = db.query(User).filter(
+            User.telegram_user_id == str(user_id)
+        ).first()
+        uid = str(user_record.id) if user_record else str(user_id)
+
+        result = await _agent.run(
+            user_message=transcribed_text,
+            user_id=uid,
+            db=db,
+            language=language,
+            context=context,
+        )
+
+        response_text = result.get("response_text", "")
+        if not response_text:
+            return None
+
+        # Generate TTS for the agent's response
+        audio_url = None
+        try:
+            clean = clean_text_for_tts(response_text)
+            ok, apath, _ = await tts_provider.text_to_speech(
+                clean, language=language
+            )
+            if ok and apath:
+                audio_url = f"/api/voice/audio/{Path(apath).name}"
+        except Exception:
+            pass
+
+        return {
+            "response_text": response_text,
+            "audio_url": audio_url,
+            "data": result.get("data", {}),
+            "tools_used": result.get("tools_used", []),
+            "conversation_id": result.get("conversation_id", ""),
+            "response_source": "agent",
+        }
+    except Exception as e:
+        logger.error(f"Agent unavailable, falling back to legacy: {e}", exc_info=True)
+        return None
+
+
 def _audio_suffix(upload: UploadFile) -> str:
     """Derive file extension from upload content-type or filename."""
     ct = (upload.content_type or "").lower()
@@ -149,6 +208,34 @@ async def voice_search_campaigns(
             logger.error(f"Unexpected ASR error: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"Audio processing failed: {str(e)}")
         
+        # ── AI Agent (try first, fall back to legacy NLU) ──
+        _agent_resp = await _try_agent(
+            transcribed_text, user_id, db, detected_language, context_data
+        )
+        if _agent_resp:
+            _ac = _agent_resp["data"].get("campaigns", [])
+            return JSONResponse(content={
+                "success": True,
+                "transcription": transcribed_text,
+                "language": detected_language,
+                "response_text": _agent_resp["response_text"],
+                "campaigns": [
+                    {
+                        "id": c.get("id"),
+                        "title": c.get("title", ""),
+                        "description": c.get("description_preview", c.get("description", "")),
+                        "goal_amount": float(c.get("goal_usd", c.get("goal_amount", 0))),
+                        "current_amount": float(c.get("raised_usd", c.get("current_amount", 0))),
+                        "ngo_id": c.get("ngo_id"),
+                    }
+                    for c in _ac
+                ],
+                "has_audio": _agent_resp["audio_url"] is not None,
+                "audio_url": _agent_resp["audio_url"],
+                "response_source": "agent",
+            })
+
+        # ── Fallback: Legacy NLU pipeline ──
         # Step 4: Use NLU to extract intent and entities
         try:
             nlu_result = extract_intent_and_entities(
@@ -325,7 +412,8 @@ async def voice_search_campaigns(
                 for c in campaigns
             ],
             "has_audio": tts_success,
-            "audio_url": audio_url if tts_success else None
+            "audio_url": audio_url if tts_success else None,
+            "response_source": "fallback_nlu",
         }
         
         # LAB 9 Part 4: Track voice search event
@@ -481,6 +569,20 @@ async def voice_analytics_query(
         transcribed_text = transcription_result.get("text", "")
         logger.info(f"Analytics query: '{transcribed_text}'")
         
+        # ── AI Agent (try first, fall back to legacy keyword pipeline) ──
+        _agent_resp = await _try_agent(transcribed_text, user_id, db, user_language)
+        if _agent_resp:
+            return JSONResponse(content={
+                "success": True,
+                "transcription": transcribed_text,
+                "query_type": "agent",
+                "data": _agent_resp["data"],
+                "response_text": _agent_resp["response_text"],
+                "audio_url": _agent_resp["audio_url"],
+                "response_source": "agent",
+            })
+
+        # ── Fallback: Legacy keyword pipeline ──
         # Classify query type
         query_type = _classify_analytics_query(transcribed_text)
         
@@ -678,6 +780,22 @@ async def voice_donate(
         transcribed_text = transcription_result.get("text", "")
         logger.info(f"Donation transcription: '{transcribed_text}'")
         
+        # ── AI Agent (try first, fall back to legacy regex) ──
+        _agent_resp = await _try_agent(transcribed_text, user_id, db, user_language)
+        if _agent_resp:
+            return JSONResponse(content={
+                "success": True,
+                "transcription": transcribed_text,
+                "response_text": _agent_resp["response_text"],
+                "audio_url": _agent_resp["audio_url"],
+                "data": _agent_resp["data"],
+                "amount": _agent_resp["data"].get("amount"),
+                "campaign_id": campaign_id,
+                "requires_confirmation": True,
+                "response_source": "agent",
+            })
+
+        # ── Fallback: Legacy regex pipeline ──
         # Parse donation amount (simple regex - can be enhanced)
         import re
         amount_match = re.search(r'(\d+)', transcribed_text)
@@ -840,6 +958,20 @@ async def voice_admin_query(
         transcribed_text = transcription_result.get("text", "")
         logger.info(f"Admin query transcription: '{transcribed_text}'")
         
+        # ── AI Agent (try first, fall back to legacy keyword pipeline) ──
+        _agent_resp = await _try_agent(transcribed_text, str(user_id), db, user_language)
+        if _agent_resp:
+            return JSONResponse(content={
+                "success": True,
+                "transcription": transcribed_text,
+                "query_type": "agent",
+                "data": _agent_resp["data"],
+                "response_text": _agent_resp["response_text"],
+                "audio_url": _agent_resp["audio_url"],
+                "response_source": "agent",
+            })
+
+        # ── Fallback: Legacy keyword pipeline ──
         # Classify query type
         query_type = _classify_admin_query(transcribed_text)
         
@@ -994,6 +1126,20 @@ async def voice_admin_command(
         transcribed_text = transcription_result.get("text", "")
         logger.info(f"Admin command transcription: '{transcribed_text}'")
         
+        # ── AI Agent (try first, fall back to legacy regex) ──
+        _agent_resp = await _try_agent(transcribed_text, str(user_id), db, user_language)
+        if _agent_resp:
+            return JSONResponse(content={
+                "success": True,
+                "transcription": transcribed_text,
+                "response_text": _agent_resp["response_text"],
+                "audio_url": _agent_resp["audio_url"],
+                "data": _agent_resp["data"],
+                "requires_confirmation": True,
+                "response_source": "agent",
+            })
+
+        # ── Fallback: Legacy regex pipeline ──
         # Parse command
         import re
         text_lower = transcribed_text.lower()

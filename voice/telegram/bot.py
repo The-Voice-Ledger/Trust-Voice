@@ -717,11 +717,45 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
         await processing_msg.delete()
         
         if result["success"]:
-            # Get intent and entities from NLU
-            intent = result.get("intent")
-            entities = result.get("entities", {})
             transcript = result["stages"]["asr"]["transcript"]
             
+            # ── AI Agent (replaces NLU + clarification + route_command) ──
+            try:
+                from voice.agent.executor import AgentExecutor
+                _agent_exec = AgentExecutor()
+                _agent_db = SessionLocal()
+                try:
+                    _agent_user = _agent_db.query(User).filter(
+                        User.telegram_user_id == telegram_user_id
+                    ).first()
+                    _agent_uid = str(_agent_user.id) if _agent_user else telegram_user_id
+                    agent_result = await _agent_exec.run(
+                        user_message=transcript,
+                        user_id=_agent_uid,
+                        db=_agent_db,
+                        language=language,
+                    )
+                    _agent_text = agent_result.get("response_text", "")
+                    if _agent_text:
+                        full_response = f"💬 You said: \"{transcript}\"\n\n{_agent_text}"
+                        await send_voice_reply(
+                            update=update,
+                            text=full_response,
+                            language=language,
+                            parse_mode="HTML",
+                        )
+                        logger.info("✅ Voice processed via AI agent")
+                        return
+                finally:
+                    _agent_db.close()
+            except Exception as _agent_err:
+                logger.error(f"Agent failed, using NLU fallback: {_agent_err}", exc_info=True)
+
+            # ── Fallback: Old NLU pipeline ──
+            logger.warning(f"⚠️ FALLBACK ACTIVE for voice from {telegram_user_id}: {type(_agent_err).__name__ if '_agent_err' in dir() else 'unknown'}")
+            intent = result.get("intent")
+            entities = result.get("entities", {})
+
             # Use response from worker only for clarification questions
             # (intent_ready is a placeholder — actual execution happens via route_command below)
             if "response" in result and result["response"].get("type") == "clarification":
@@ -872,7 +906,8 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
             # ==================================================================
             
             # Add transcript for transparency
-            full_response = f"💬 You said: \"{transcript}\"\n\n{response}"
+            _fallback_banner = "⚠️ <i>[Fallback mode — AI agent unavailable]</i>\n\n"
+            full_response = f"💬 You said: \"{transcript}\"\n\n{_fallback_banner}{response}"
             
             # Send with dual delivery (text + voice)
             await send_voice_reply(
@@ -928,6 +963,39 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     logger.info(f"Text message from {user.first_name}: {text}")
     
+    # ── AI Agent (replaces NLU + multi-turn + clarification + route_command) ──
+    try:
+        from voice.agent.executor import AgentExecutor
+        _agent_exec = AgentExecutor()
+        _agent_db = SessionLocal()
+        try:
+            _agent_user = _agent_db.query(User).filter(
+                User.telegram_user_id == telegram_user_id
+            ).first()
+            _agent_uid = str(_agent_user.id) if _agent_user else telegram_user_id
+            agent_result = await _agent_exec.run(
+                user_message=update.message.text,
+                user_id=_agent_uid,
+                db=_agent_db,
+                language=language,
+            )
+            _agent_text = agent_result.get("response_text", "")
+            if _agent_text:
+                await send_voice_reply(
+                    update=update,
+                    text=_agent_text,
+                    language=language,
+                    parse_mode="HTML",
+                )
+                logger.info("✅ Text processed via AI agent")
+                return
+        finally:
+            _agent_db.close()
+    except Exception as _agent_err:
+        logger.error(f"Agent failed, using NLU fallback: {_agent_err}", exc_info=True)
+    
+    # ── Fallback: Old NLU pipeline ──
+    logger.warning(f"⚠️ FALLBACK ACTIVE for text from {telegram_user_id}: {type(_agent_err).__name__ if '_agent_err' in dir() else 'unknown'}")
     # ====================================================================
     # LAB 8: Multi-turn conversation check
     # ====================================================================
@@ -1114,9 +1182,10 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         db.close()
     
     # Send with dual delivery (text + voice) - same as voice messages
+    _fallback_banner = "⚠️ <i>[Fallback mode — AI agent unavailable]</i>\n\n"
     await send_voice_reply(
         update=update,
-        text=response,
+        text=f"{_fallback_banner}{response}",
         language=language,
         parse_mode="HTML"
     )
