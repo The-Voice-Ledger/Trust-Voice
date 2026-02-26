@@ -5,19 +5,27 @@ Redis-backed session storage for multi-step registration flows
 
 import json
 import logging
+import os
+import redis
 from typing import Optional, Dict, Any
 from datetime import timedelta
+from dotenv import load_dotenv
 
 from redis import Redis
 
 logger = logging.getLogger(__name__)
+
+load_dotenv()
 
 # Redis connection (reuse from voice pipeline)
 try:
     from voice.pipeline import redis_client
 except ImportError:
     # Fallback for testing
-    redis_client = Redis(host='localhost', port=6379, db=0, decode_responses=True)
+    redis_client = redis.Redis.from_url(
+        os.getenv('REDIS_URL', 'redis://localhost:6379/0'),
+        decode_responses=True
+    )
 
 # Session TTL
 SESSION_TTL = timedelta(hours=1)
