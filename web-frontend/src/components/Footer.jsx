@@ -61,7 +61,7 @@ export default function Footer() {
             <span className="text-sm font-bold text-gray-800 tracking-tight">TrustVoice</span>
           </div>
           <p className="text-xs text-gray-400">
-            © {new Date().getFullYear()} TrustVoice · Built for Georgetown University STIA Program
+            © {new Date().getFullYear()} TrustVoice
           </p>
         </div>
       </div>
