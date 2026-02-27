@@ -45,7 +45,6 @@ export default function Footer() {
           <div>
             <h4 className="text-sm font-semibold text-gray-900 mb-3">About</h4>
             <div className="space-y-2.5">
-              <p className="text-sm text-gray-500">Georgetown STIA Program</p>
               <p className="text-sm text-gray-500">Voice-First Platform</p>
               <p className="text-sm text-gray-500">Open Source</p>
             </div>
