@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { textAgent, voiceAgent } from '../api/voice';
 import useAuthStore from '../stores/authStore';
@@ -11,7 +11,9 @@ import {
   HiOutlineCheckBadge, HiOutlineMapPin,
   HiOutlineChartBarSquare, HiOutlineUserGroup,
   HiOutlineArrowRight, HiOutlineClock,
-  HiOutlineXMark,
+  HiOutlineXMark, HiOutlineMagnifyingGlass,
+  HiOutlineGlobeAlt, HiOutlineQuestionMarkCircle,
+  HiOutlineSpeakerWave, HiOutlineSpeakerXMark,
 } from 'react-icons/hi2';
 import {
   HiOutlineMicrophone,
@@ -49,6 +51,7 @@ export default function Assistant() {
   const audioRef = useRef(null);
 
   const userId = user?.id || user?.telegram_user_id || 'web_anonymous';
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -56,6 +59,22 @@ export default function Assistant() {
       scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
     }
   }, [messages, loading]);
+
+  // Deep-link: ?campaign=<id> auto-asks about the campaign
+  const deepLinkHandled = useRef(false);
+  useEffect(() => {
+    const campaignId = searchParams.get('campaign');
+    if (campaignId && !deepLinkHandled.current) {
+      deepLinkHandled.current = true;
+      // Clear the param so refreshing doesn't re-trigger
+      setSearchParams({}, { replace: true });
+      // Use a small delay to let the component mount fully
+      const timeout = setTimeout(() => {
+        sendText(`Tell me about campaign #${campaignId}`);
+      }, 300);
+      return () => clearTimeout(timeout);
+    }
+  }, [searchParams, setSearchParams, sendText]);
 
   // ── Play TTS audio ───────────────────────────────────────────
   const playAudio = useCallback(async (url) => {
@@ -180,16 +199,19 @@ export default function Assistant() {
 
   // ── Render ───────────────────────────────────────────────────
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 flex flex-col" style={{ height: 'calc(100vh - 8rem)' }}>
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 flex flex-col" style={{ height: 'calc(100dvh - 8rem)' }}>
       {/* Header */}
-      <div className="flex items-center justify-between py-4 flex-shrink-0">
+      <div className="flex items-center justify-between py-4 flex-shrink-0 border-b border-gray-100/80">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-200/50">
-            <HiOutlineSparkles className="w-5 h-5 text-white" />
+          <div className="relative">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-200/50">
+              <HiOutlineSparkles className="w-5 h-5 text-white" />
+            </div>
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2 border-white" />
           </div>
           <div>
             <h1 className="text-lg font-bold text-gray-900">{t('assistant.title', 'TrustVoice Assistant')}</h1>
-            <p className="text-xs text-gray-400">{t('assistant.subtitle', 'Search, donate, and manage — by voice or text')}</p>
+            <p className="text-xs text-gray-400">{t('assistant.subtitle', 'Search, donate, and manage by voice or text')}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -203,10 +225,10 @@ export default function Assistant() {
             }`}
             title={autoSpeak ? 'Voice responses ON' : 'Voice responses OFF'}
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
-              {!autoSpeak && <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" />}
-            </svg>
+            {autoSpeak
+              ? <HiOutlineSpeakerWave className="w-3.5 h-3.5" />
+              : <HiOutlineSpeakerXMark className="w-3.5 h-3.5" />
+            }
             {autoSpeak ? t('assistant.auto_speak', 'Auto-speak') : t('assistant.muted', 'Muted')}
           </button>
           {messages.length > 0 && (
@@ -222,7 +244,7 @@ export default function Assistant() {
       </div>
 
       {/* Messages area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 pb-4 scrollbar-thin">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 py-4 scrollbar-thin">
         {messages.length === 0 && !loading && (
           <WelcomeScreen onSuggestion={sendText} t={t} />
         )}
@@ -248,35 +270,35 @@ export default function Assistant() {
       </div>
 
       {/* Input bar */}
-      <div className="flex-shrink-0 pb-4 pt-2">
+      <div className="flex-shrink-0 pb-4 pt-2 border-t border-gray-100/80">
         {/* Voice recording overlay */}
         {voiceStatus === 'recording' && (
-          <div className="mb-2 flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl px-4 py-3 animate-pulse">
-            <div className="w-3 h-3 bg-red-500 rounded-full" />
-            <span className="text-sm font-medium text-red-700 flex-1">{t('voice.listening', 'Listening…')}</span>
-            <button onClick={cancelVoice} className="text-xs text-red-500 hover:underline">{t('common.cancel', 'Cancel')}</button>
+          <div className="mb-3 mt-2 flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl px-4 py-3">
+            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+            <span className="text-sm font-medium text-red-700 flex-1">{t('voice.listening', 'Listening...')}</span>
+            <button onClick={cancelVoice} className="text-xs text-red-500 font-medium hover:underline">{t('common.cancel', 'Cancel')}</button>
           </div>
         )}
         {voiceStatus === 'processing' && (
-          <div className="mb-2 flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-2xl px-4 py-3">
-            <div className="w-4 h-4 border-2 border-yellow-400 border-t-yellow-600 rounded-full animate-spin" />
-            <span className="text-sm font-medium text-yellow-700">{t('voice.processing', 'Processing…')}</span>
+          <div className="mb-3 mt-2 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
+            <div className="w-4 h-4 border-2 border-amber-300 border-t-amber-600 rounded-full animate-spin" />
+            <span className="text-sm font-medium text-amber-700">{t('voice.processing', 'Processing...')}</span>
           </div>
         )}
 
-        <div className="flex items-end gap-2">
+        <div className="flex items-end gap-2 mt-2">
           {/* Voice button */}
           <button
             onPointerDown={(e) => { e.preventDefault(); if (voiceStatus === 'idle' && !loading) startVoice(); }}
             onPointerUp={(e) => { e.preventDefault(); if (voiceStatus === 'recording') stopVoice(); }}
             onPointerLeave={(e) => { e.preventDefault(); if (voiceStatus === 'recording') stopVoice(); }}
             disabled={loading || voiceStatus === 'processing'}
-            className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-md ${
+            className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 ${
               voiceStatus === 'recording'
-                ? 'bg-red-500 text-white shadow-red-200/60 scale-110'
+                ? 'bg-red-500 text-white shadow-lg shadow-red-200/60 scale-110 ring-4 ring-red-100'
                 : voiceStatus === 'processing'
-                  ? 'bg-yellow-500 text-white cursor-wait'
-                  : 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-indigo-200/50 hover:shadow-lg hover:scale-105 active:scale-95'
+                  ? 'bg-amber-500 text-white cursor-wait shadow-md'
+                  : 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-200/50 hover:shadow-lg hover:scale-105 active:scale-95'
             }`}
             aria-label={voiceStatus === 'recording' ? 'Release to send' : 'Hold to speak'}
           >
@@ -290,24 +312,24 @@ export default function Assistant() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={t('assistant.placeholder', 'Type a message or hold the mic to speak…')}
+              placeholder={t('assistant.placeholder', 'Type a message or hold the mic...')}
               rows={1}
-              className="w-full resize-none rounded-2xl border border-gray-200 bg-white px-4 py-3 pr-12 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 shadow-sm transition-all"
+              className="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50/50 px-4 py-3 pr-12 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 focus:bg-white shadow-sm transition-all"
               style={{ maxHeight: '120px' }}
               disabled={loading}
             />
             <button
               onClick={() => sendText(input)}
               disabled={!input.trim() || loading}
-              className="absolute right-2 bottom-2 p-2 rounded-xl bg-indigo-600 text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-indigo-700 transition-all shadow-sm"
+              className="absolute right-2 bottom-2 p-2 rounded-xl bg-indigo-600 text-white disabled:opacity-20 disabled:cursor-not-allowed hover:bg-indigo-700 active:scale-95 transition-all shadow-sm"
               aria-label="Send"
             >
               <HiOutlinePaperAirplane className="w-4 h-4" />
             </button>
           </div>
         </div>
-        <p className="text-[10px] text-gray-300 text-center mt-2">
-          {t('assistant.disclaimer', 'AI assistant — verify important information independently')}
+        <p className="text-[10px] text-gray-300 text-center mt-2 select-none">
+          {t('assistant.disclaimer', 'AI assistant. Verify important information independently')}
         </p>
       </div>
     </div>
@@ -318,30 +340,40 @@ export default function Assistant() {
 // ── Welcome Screen ─────────────────────────────────────────────
 function WelcomeScreen({ onSuggestion, t }) {
   const suggestions = [
-    { text: 'Find education campaigns in Kenya', icon: '🔍' },
-    { text: 'How much has been raised this month?', icon: '📊' },
-    { text: 'Show me water projects', icon: '💧' },
-    { text: "What can you do?", icon: '❓' },
+    { text: 'Find education campaigns in Kenya', Icon: HiOutlineMagnifyingGlass, color: 'indigo' },
+    { text: 'How much has been raised this month?', Icon: HiOutlineChartBarSquare, color: 'emerald' },
+    { text: 'Show me water projects', Icon: HiOutlineGlobeAlt, color: 'sky' },
+    { text: "What can you do?", Icon: HiOutlineQuestionMarkCircle, color: 'amber' },
   ];
+
+  const colorMap = {
+    indigo: 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100',
+    emerald: 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100',
+    sky: 'bg-sky-50 text-sky-600 group-hover:bg-sky-100',
+    amber: 'bg-amber-50 text-amber-600 group-hover:bg-amber-100',
+  };
 
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-200/50 mb-6">
-        <HiOutlineSparkles className="w-8 h-8 text-white" />
+      <div className="relative mb-6">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-200/50">
+          <HiOutlineSparkles className="w-8 h-8 text-white" />
+        </div>
+        <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-green-400 border-2 border-white animate-pulse" />
       </div>
       <h2 className="text-xl font-bold text-gray-900 mb-2">{t('assistant.welcome', 'How can I help?')}</h2>
-      <p className="text-sm text-gray-400 max-w-sm mb-8">
-        {t('assistant.welcome_desc', 'Search campaigns, make donations, check analytics, or ask anything about TrustVoice.')}
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md">
-        {suggestions.map((s) => (
+      <p className="text-sm text-gray-400 max-w-sm mb-8">{t('assistant.welcome_desc', 'Search campaigns, make donations, check analytics, or ask anything about TrustVoice.')}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-md">
+        {suggestions.map(({ text, Icon, color }) => (
           <button
-            key={s.text}
-            onClick={() => onSuggestion(s.text)}
-            className="flex items-center gap-2.5 px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm text-gray-600 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 transition-all text-left shadow-sm"
+            key={text}
+            onClick={() => onSuggestion(text)}
+            className="group flex items-center gap-3 px-4 py-3.5 rounded-xl border border-gray-100 bg-white text-sm text-gray-600 hover:border-indigo-200 hover:text-gray-900 transition-all text-left shadow-sm hover:shadow-md"
           >
-            <span className="text-lg flex-shrink-0">{s.icon}</span>
-            <span>{s.text}</span>
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${colorMap[color]}`}>
+              <Icon className="w-4 h-4" />
+            </div>
+            <span className="leading-snug">{text}</span>
           </button>
         ))}
       </div>
@@ -385,9 +417,7 @@ function ChatMessage({ msg, onPlayAudio }) {
                 onClick={() => onPlayAudio(msg.audioUrl)}
                 className="mt-2 flex items-center gap-1.5 text-[11px] text-indigo-500 hover:text-indigo-700 transition"
               >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
-                </svg>
+                <HiOutlineSpeakerWave className="w-3.5 h-3.5" />
                 Play response
               </button>
             )}

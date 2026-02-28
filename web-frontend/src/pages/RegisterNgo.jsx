@@ -229,7 +229,7 @@ export default function RegisterNgo() {
             <ReviewRow label={t('ngo_reg.country')} value={`${form.country} ${form.city}`} />
             <ReviewRow label={t('ngo_reg.mission')} value={form.mission_statement} />
             <ReviewRow label={t('ngo_reg.focus_areas')} value={form.focus_areas.join(', ')} />
-            <ReviewRow label={t('ngo_reg.bank_name')} value={form.bank_name || '—'} />
+            <ReviewRow label={t('ngo_reg.bank_name')} value={form.bank_name || '-'} />
           </div>
         )}
       </div>
@@ -289,7 +289,7 @@ function ReviewRow({ label, value }) {
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between py-2 border-b border-gray-50 last:border-0 gap-0.5">
       <span className="text-sm text-gray-500">{label}</span>
-      <span className="text-sm font-medium text-gray-900 sm:text-right sm:max-w-[60%]">{value || '—'}</span>
+      <span className="text-sm font-medium text-gray-900 sm:text-right sm:max-w-[60%]">{value || '-'}</span>
     </div>
   );
 }

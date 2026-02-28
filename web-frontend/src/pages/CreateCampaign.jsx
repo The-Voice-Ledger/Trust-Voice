@@ -242,10 +242,10 @@ export default function CreateCampaign() {
             <ReviewRow label={t('create_campaign.category')} value={form.category} />
             <ReviewRow label={t('create_campaign.description')} value={form.description} />
             <ReviewRow label={t('create_campaign.goal_amount')} value={`${form.goal_amount_usd} ${form.currency}`} />
-            <ReviewRow label={t('create_campaign.location')} value={form.location_name || '—'} />
-            <ReviewRow label={t('create_campaign.gps')} value={form.location_gps || '—'} />
-            <ReviewRow label={t('create_campaign.start_date')} value={form.start_date || '—'} />
-            <ReviewRow label={t('create_campaign.end_date')} value={form.end_date || '—'} />
+            <ReviewRow label={t('create_campaign.location')} value={form.location_name || '-'} />
+            <ReviewRow label={t('create_campaign.gps')} value={form.location_gps || '-'} />
+            <ReviewRow label={t('create_campaign.start_date')} value={form.start_date || '-'} />
+            <ReviewRow label={t('create_campaign.end_date')} value={form.end_date || '-'} />
             <ReviewRow label="Video" value={form.video_file?.name || 'No video'} />
           </div>
         )}
@@ -288,7 +288,7 @@ function ReviewRow({ label, value }) {
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between py-2 border-b border-gray-50 last:border-0 gap-0.5">
       <span className="text-sm text-gray-500">{label}</span>
-      <span className="text-sm font-medium text-gray-900 sm:text-right sm:max-w-[60%] line-clamp-2">{value || '—'}</span>
+      <span className="text-sm font-medium text-gray-900 sm:text-right sm:max-w-[60%] line-clamp-2">{value || '-'}</span>
     </div>
   );
 }

@@ -80,27 +80,27 @@ export default function Analytics() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <SummaryCard
               title={t('analytics.conversations')}
-              value={summary?.started ?? '—'}
+              value={summary?.started ?? '-'}
               Icon={HiOutlineChatBubbleLeftRight}
               color="indigo"
               change={summary?.previous_period ? calcChange(summary.started, summary.previous_period.started) : null}
             />
             <SummaryCard
               title={t('analytics.completed')}
-              value={summary?.completed ?? '—'}
+              value={summary?.completed ?? '-'}
               Icon={HiOutlineCheckBadge}
               color="emerald"
               change={summary?.previous_period ? calcChange(summary.completed, summary.previous_period.completed) : null}
             />
             <SummaryCard
               title={t('analytics.abandoned')}
-              value={summary?.abandoned ?? '—'}
+              value={summary?.abandoned ?? '-'}
               Icon={HiOutlineArrowRightOnRectangle}
               color="amber"
             />
             <SummaryCard
               title={t('analytics.success_rate')}
-              value={summary?.completion_rate != null ? `${Math.round(summary.completion_rate)}%` : '—'}
+              value={summary?.completion_rate != null ? `${Math.round(summary.completion_rate)}%` : '-'}
               Icon={HiOutlineChartBarSquare}
               color="pink"
             />

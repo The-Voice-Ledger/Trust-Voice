@@ -264,7 +264,7 @@ export default function FieldAgent() {
             <ReviewRow label={t('field_agent.select_campaign')}
               value={campaigns.find((c) => String(c.id) === form.campaign_id)?.title || form.campaign_id} />
             <ReviewRow label={t('field_agent.observations')} value={form.observations} />
-            <ReviewRow label={t('field_agent.beneficiary_count')} value={form.beneficiary_count || '—'} />
+            <ReviewRow label={t('field_agent.beneficiary_count')} value={form.beneficiary_count || '-'} />
 
             <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 mt-4">
               <p className="text-sm text-teal-700 font-medium">{t('field_agent.earn_note')}</p>
@@ -321,7 +321,7 @@ function ReviewRow({ label, value }) {
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between py-2 border-b border-gray-50 last:border-0 gap-0.5">
       <span className="text-sm text-gray-500">{label}</span>
-      <span className="text-sm font-medium text-gray-900 sm:text-right sm:max-w-[60%] line-clamp-2">{value || '—'}</span>
+      <span className="text-sm font-medium text-gray-900 sm:text-right sm:max-w-[60%] line-clamp-2">{value || '-'}</span>
     </div>
   );
 }

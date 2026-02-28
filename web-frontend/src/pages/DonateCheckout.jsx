@@ -70,7 +70,7 @@ export default function DonateCheckout() {
           >
             <option value="">{t('donate.choose_campaign')}</option>
             {campaigns.map((c) => (
-              <option key={c.id} value={c.id}>{c.title} — ${fmt(c.goal_amount_usd)} goal</option>
+              <option key={c.id} value={c.id}>{c.title} · ${fmt(c.goal_amount_usd)} goal</option>
             ))}
           </select>
         </div>

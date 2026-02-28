@@ -99,15 +99,15 @@ export default function Landing() {
       {/* ════════ LIVE STATS BAR ════════ */}
       <section className="relative -mt-8 z-10 max-w-5xl mx-auto px-4 sm:px-6">
         <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 px-4 sm:px-6 py-4 sm:py-6 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-          <StatCard value={stats?.started ?? '—'} label={t('landing.stat_conversations')} Icon={HiOutlineChatBubbleLeftRight} color="indigo" />
-          <StatCard value={stats?.completed ?? '—'} label={t('landing.stat_completed')} Icon={HiOutlineCheckBadge} color="emerald" />
+          <StatCard value={stats?.started ?? '-'} label={t('landing.stat_conversations')} Icon={HiOutlineChatBubbleLeftRight} color="indigo" />
+          <StatCard value={stats?.completed ?? '-'} label={t('landing.stat_completed')} Icon={HiOutlineCheckBadge} color="emerald" />
           <StatCard
-            value={stats?.completion_rate != null ? `${Math.round(stats.completion_rate)}%` : '—'}
+            value={stats?.completion_rate != null ? `${Math.round(stats.completion_rate)}%` : '-'}
             label={t('landing.stat_success_rate')}
             Icon={HiOutlineChartBarSquare}
             color="amber"
           />
-          <StatCard value={featured.length > 0 ? `${featured.length}+` : '—'} label={t('landing.stat_active_campaigns')} Icon={HiOutlineRocketLaunch} color="pink" />
+          <StatCard value={featured.length > 0 ? `${featured.length}+` : '-'} label={t('landing.stat_active_campaigns')} Icon={HiOutlineRocketLaunch} color="pink" />
         </div>
       </section>
 

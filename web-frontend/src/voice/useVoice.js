@@ -37,7 +37,7 @@ export default function useVoice(apiCall, apiArgs = [], onResult) {
       // Check for silence
       const hasAudio = await voiceManager.hasSound(blob);
       if (!hasAudio) {
-        setError('No speech detected — please try again');
+        setError('No speech detected. Please try again');
         return;
       }
 

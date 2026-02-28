@@ -90,10 +90,10 @@ function PendingNgos({ t }) {
               <div>
                 <h3 className="font-semibold text-gray-900">{reg.organization_name || reg.org_name}</h3>
                 <p className="text-sm text-gray-500 mt-0.5">
-                  {reg.contact_email} · {reg.phone_number || '—'}
+                  {reg.contact_email} · {reg.phone_number || '-'}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  Reg #{reg.registration_number || '—'} · Type: {reg.organization_type || '—'}
+                  Reg #{reg.registration_number || '-'} · Type: {reg.organization_type || '-'}
                 </p>
                 {reg.mission_statement && (
                   <p className="text-sm text-gray-600 mt-2 line-clamp-2">{reg.mission_statement}</p>
@@ -214,7 +214,7 @@ function NgoList({ t }) {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <h3 className="font-semibold text-gray-900">{ngo.name}</h3>
-                <p className="text-sm text-gray-500">{ngo.description || '—'}</p>
+                <p className="text-sm text-gray-500">{ngo.description || '-'}</p>
                 {ngo.website_url && (
                   <a href={ngo.website_url} target="_blank" rel="noreferrer" className="text-xs text-indigo-600 hover:underline">
                     {ngo.website_url}
@@ -273,7 +273,7 @@ function PayoutList({ t }) {
                   {p.amount} {p.currency} → {p.recipient_name}
                 </h3>
                 <p className="text-sm text-gray-500">
-                  {p.payment_method} · Campaign #{p.campaign_id || '—'}
+                  {p.payment_method} · Campaign #{p.campaign_id || '-'}
                 </p>
                 <p className="text-xs text-gray-400">
                   {p.created_at ? new Date(p.created_at).toLocaleDateString() : ''}

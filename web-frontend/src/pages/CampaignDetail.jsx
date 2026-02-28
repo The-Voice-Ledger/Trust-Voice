@@ -6,7 +6,7 @@ import ProgressBar from '../components/ProgressBar';
 import VideoPlayer from '../components/VideoPlayer';
 import DonationForm from '../components/DonationForm';
 import useAuthStore from '../stores/authStore';
-import { HiOutlineArrowLeft, HiOutlineMapPin, HiOutlineCheckCircle, HiOutlineFilm } from 'react-icons/hi2';
+import { HiOutlineArrowLeft, HiOutlineMapPin, HiOutlineCheckCircle, HiOutlineFilm, HiOutlineSparkles } from 'react-icons/hi2';
 
 export default function CampaignDetail() {
   const { id } = useParams();
@@ -118,6 +118,15 @@ export default function CampaignDetail() {
             <DonationForm campaignId={campaign.id} donorId={user?.donor_id} />
           </>
         )}
+
+        {/* Assistant CTA */}
+        <Link
+          to={`/assistant?campaign=${campaign.id}`}
+          className="mt-4 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-indigo-50 text-indigo-700 text-sm font-medium hover:bg-indigo-100 transition-all border border-indigo-100"
+        >
+          <HiOutlineSparkles className="w-4 h-4" />
+          Ask Assistant about this campaign
+        </Link>
       </div>
     </div>
   );

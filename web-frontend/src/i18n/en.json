@@ -37,7 +37,7 @@
     "step4_title": "Track Impact",
     "step4_desc": "Field agents submit photo + GPS verification. See your donation's real impact.",
     "features_title": "Platform Features",
-    "features_subtitle": "Everything you need — whether you're a donor, NGO, campaign creator, field agent, or admin.",
+    "features_subtitle": "Everything you need, whether you're a donor, NGO, campaign creator, field agent, or admin.",
     "feat_campaigns": "Campaign Browser",
     "feat_campaigns_desc": "Search and browse active campaigns with voice search support.",
     "feat_analytics": "Analytics Dashboard",
@@ -45,7 +45,7 @@
     "feat_admin": "Admin Panel",
     "feat_admin_desc": "Approve NGOs, manage users, review payouts, and platform stats.",
     "feat_donate": "Donation Checkout",
-    "feat_donate_desc": "Donate securely with Stripe, M-Pesa, or crypto — by voice or form.",
+    "feat_donate_desc": "Donate securely with Stripe, M-Pesa, or crypto. By voice or form.",
     "feat_ngo": "Register NGO",
     "feat_ngo_desc": "Voice-guided organization registration with step-by-step wizard.",
     "feat_create": "Create Campaign",
@@ -53,7 +53,7 @@
     "feat_field": "Field Agent",
     "feat_field_desc": "Submit photo + GPS verification reports. Earn $30 per approved verification.",
     "tester_title": "Ready to Test?",
-    "tester_desc": "Explore all platform features — register an NGO, create a campaign, make a donation, or submit a field verification.",
+    "tester_desc": "Explore all platform features: register an NGO, create a campaign, make a donation, or submit a field verification.",
     "tester_register": "Register an NGO",
     "tester_login": "Sign In"
   },
@@ -86,7 +86,7 @@
     "title": "Make a Donation",
     "checkout_subtitle": "Support a verified campaign securely.",
     "select_campaign": "Select Campaign",
-    "choose_campaign": "— Choose a campaign —",
+    "choose_campaign": "Choose a campaign",
     "select_campaign_first": "Select a campaign above to donate.",
     "view_history": "View my donation history",
     "amount": "Amount",
@@ -161,7 +161,7 @@
   },
   "ngo_reg": {
     "title": "Register Your Organization",
-    "subtitle": "Voice-guided wizard — speak or type to fill in your details.",
+    "subtitle": "Voice-guided wizard. Speak or type to fill in your details.",
     "step_org_info": "Organization Info",
     "step_contact": "Contact Details",
     "step_mission": "Mission & Focus",
@@ -194,7 +194,7 @@
   },
   "create_campaign": {
     "title": "Create a Campaign",
-    "subtitle": "Voice-guided wizard — dictate your campaign details.",
+    "subtitle": "Voice-guided wizard. Dictate your campaign details.",
     "step_basics": "Campaign Title",
     "step_details": "Description & Category",
     "step_funding": "Funding & Location",
@@ -214,7 +214,7 @@
     "end_date": "End Date",
     "media_desc": "Upload a transparency video to build trust with donors.",
     "upload_video": "Click to upload video",
-    "video_note": "MP4, MOV — max 100MB recommended",
+    "video_note": "MP4, MOV, max 100MB recommended",
     "review_title": "Review Your Campaign",
     "next": "Next",
     "publish": "Publish Campaign"
@@ -235,7 +235,7 @@
     "gps_error": "Could not get GPS location. Please try again.",
     "gps_manual_note": "Or enter coordinates manually:",
     "select_campaign": "Campaign",
-    "choose_campaign": "— Select campaign —",
+    "choose_campaign": "Select campaign",
     "observations": "Observations",
     "observations_placeholder": "Describe what you observed at the project site…",
     "beneficiary_count": "Beneficiary Count",
@@ -257,7 +257,7 @@
     "tap_to_speak": "Tap to speak",
     "hold_to_speak": "Hold to speak",
     "error_mic": "Microphone access denied.",
-    "error_silence": "No speech detected — try again."
+    "error_silence": "No speech detected. Try again."
   },
   "common": {
     "loading": "Loading…",
