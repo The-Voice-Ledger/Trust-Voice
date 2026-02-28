@@ -9,6 +9,7 @@ import {
   HiOutlineCog6Tooth, HiOutlineUser, HiOutlineArrowRightOnRectangle,
   HiOutlineArrowLeftOnRectangle, HiOutlineBars3, HiOutlineXMark,
   HiOutlineWallet, HiOutlineChevronDown, HiOutlineEllipsisHorizontal,
+  HiOutlineSparkles,
 } from 'react-icons/hi2';
 import { HiOutlineMicrophone } from 'react-icons/hi';
 
@@ -16,6 +17,7 @@ import { HiOutlineMicrophone } from 'react-icons/hi';
 const PRIMARY_ITEMS = [
   { to: '/campaigns', key: 'nav.campaigns', Icon: HiOutlineGlobeAlt },
   { to: '/donate', key: 'nav.donate', Icon: HiOutlineHeart },
+  { to: '/assistant', key: 'nav.assistant', Icon: HiOutlineSparkles },
   { to: '/analytics', key: 'nav.analytics', Icon: HiOutlineChartBar },
 ];
 

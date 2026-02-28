@@ -13,6 +13,7 @@ import RegisterNgo from './pages/RegisterNgo'
 import CreateCampaign from './pages/CreateCampaign'
 import FieldAgent from './pages/FieldAgent'
 import DonateCheckout from './pages/DonateCheckout'
+import Assistant from './pages/Assistant'
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/register-ngo" element={<RegisterNgo />} />
           <Route path="/create-campaign" element={<CreateCampaign />} />
           <Route path="/field-agent" element={<FieldAgent />} />
+          <Route path="/assistant" element={<Assistant />} />
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
         </Routes>

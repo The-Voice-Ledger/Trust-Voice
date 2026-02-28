@@ -12,7 +12,8 @@
     "dashboard": "My Donations",
     "login": "Sign In",
     "logout": "Sign Out",
-    "more": "More"
+    "more": "More",
+    "assistant": "Assistant"
   },
   "landing": {
     "badge": "Voice-First · Transparent · Verified",

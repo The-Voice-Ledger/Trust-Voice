@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getCampaign, getCampaignVideo } from '../api/campaigns';
-import { voiceDonate } from '../api/voice';
 import ProgressBar from '../components/ProgressBar';
 import VideoPlayer from '../components/VideoPlayer';
-import VoiceButton from '../components/VoiceButton';
 import DonationForm from '../components/DonationForm';
 import useAuthStore from '../stores/authStore';
 import { HiOutlineArrowLeft, HiOutlineMapPin, HiOutlineCheckCircle, HiOutlineFilm } from 'react-icons/hi2';
@@ -108,32 +106,16 @@ export default function CampaignDetail() {
       {/* Donate section */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5">
         {!showDonate ? (
-          <div className="flex flex-col sm:flex-row gap-3 items-center">
-            <button
-              onClick={() => setShowDonate(true)}
-              className="flex-1 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition text-center w-full"
-            >
-              {t('campaign.donate_now')}
-            </button>
-            <VoiceButton
-              apiCall={voiceDonate}
-              apiArgs={[user?.id || 'web_anonymous', campaign.id]}
-              onResult={(r) => {
-                if (r.success) setShowDonate(true);
-              }}
-            />
-          </div>
+          <button
+            onClick={() => setShowDonate(true)}
+            className="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition text-center"
+          >
+            {t('campaign.donate_now')}
+          </button>
         ) : (
           <>
             <h2 className="text-lg font-semibold mb-4">{t('donate.title')}</h2>
             <DonationForm campaignId={campaign.id} donorId={user?.donor_id} />
-            <div className="mt-4 text-center">
-              <p className="text-xs text-gray-400 mb-2">{t('donate.or_use_voice')}</p>
-              <VoiceButton
-                apiCall={voiceDonate}
-                apiArgs={[user?.id || 'web_anonymous', campaign.id]}
-              />
-            </div>
           </>
         )}
       </div>

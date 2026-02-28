@@ -292,9 +292,27 @@ class AgentExecutor:
         # Save history (everything except system prompt)
         _save_history(user_id, conv_id, messages[1:])
 
+        # Derive response_type from collected data for frontend rendering
+        response_type = "text"
+        if "campaigns" in collected_data and collected_data["campaigns"]:
+            response_type = "campaign_list"
+        elif "campaign" in collected_data:
+            response_type = "campaign_detail"
+        elif "donation" in collected_data or (
+            collected_data.get("success") and any(
+                t in tools_used for t in ("make_donation",)
+            )
+        ):
+            response_type = "donation_confirmation"
+        elif "donations" in collected_data:
+            response_type = "donation_history"
+        elif "stats" in collected_data:
+            response_type = "analytics_summary"
+
         return {
             "conversation_id": conv_id,
             "response_text": final_text,
+            "response_type": response_type,
             "data": collected_data,
             "tools_used": tools_used,
         }

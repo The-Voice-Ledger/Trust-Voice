@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getAnalyticsSummary, getConversationMetrics, getFunnel, getConversationEvents } from '../api/analytics';
-import VoiceButton from '../components/VoiceButton';
-import { voiceSearchCampaigns } from '../api/voice';
+
 import {
   HiOutlineChatBubbleLeftRight, HiOutlineCheckBadge,
   HiOutlineArrowRightOnRectangle, HiOutlineChartBarSquare,
@@ -70,11 +69,6 @@ export default function Analytics() {
               </button>
             ))}
           </div>
-          <VoiceButton
-            apiCall={voiceSearchCampaigns}
-            onResult={() => {}}
-            className="!py-2 !px-3 !text-xs"
-          />
         </div>
       </div>
 

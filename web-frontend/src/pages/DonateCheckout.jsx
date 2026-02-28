@@ -3,8 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getCampaign, listCampaigns } from '../api/campaigns';
 import DonationForm from '../components/DonationForm';
-import VoiceButton from '../components/VoiceButton';
-import { voiceDonate } from '../api/voice';
 import useAuthStore from '../stores/authStore';
 import ProgressBar from '../components/ProgressBar';
 import {
@@ -121,13 +119,6 @@ export default function DonateCheckout() {
                 donorId={user?.donor_id}
                 onSuccess={() => setDonated(true)}
               />
-              <div className="mt-4 text-center border-t border-gray-100 pt-4">
-                <p className="text-xs text-gray-400 mb-2">{t('donate.or_use_voice')}</p>
-                <VoiceButton
-                  apiCall={voiceDonate}
-                  apiArgs={[user?.id || 'web_anonymous', campaign.id]}
-                />
-              </div>
             </>
           )}
         </div>

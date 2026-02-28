@@ -6,8 +6,6 @@ import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { listCampaigns } from '../api/campaigns';
 import { getAnalyticsSummary } from '../api/analytics';
 import ProgressBar from '../components/ProgressBar';
-import VoiceButton from '../components/VoiceButton';
-import { voiceSearchCampaigns } from '../api/voice';
 import {
   HiOutlineChatBubbleLeftRight, HiOutlineCheckBadge,
   HiOutlineChartBarSquare, HiOutlineRocketLaunch,
@@ -15,7 +13,7 @@ import {
   HiOutlineHeart, HiOutlineBuildingOffice2, HiOutlinePlusCircle,
   HiOutlineCamera, HiOutlinePlayCircle, HiOutlineMapPin,
   HiOutlineUserGroup, HiOutlineArrowRight, HiOutlineVideoCameraSlash,
-  HiOutlineSpeakerWave, HiOutlineSpeakerXMark,
+  HiOutlineSpeakerWave, HiOutlineSpeakerXMark, HiOutlineSparkles,
 } from 'react-icons/hi2';
 import { HiOutlineMicrophone, HiOutlineEye, HiOutlineCreditCard } from 'react-icons/hi';
 import {
@@ -87,11 +85,13 @@ export default function Landing() {
               {t('landing.explore_btn')}
               <HiOutlineArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <VoiceButton
-              apiCall={voiceSearchCampaigns}
-              onResult={() => {}}
-              className="!bg-white/10 !backdrop-blur-md !border-white/20 !text-white hover:!bg-white/20 !rounded-2xl !px-8 !py-4"
-            />
+            <Link
+              to="/assistant"
+              className="w-full sm:w-auto text-center px-8 py-4 rounded-2xl bg-white/10 backdrop-blur-md text-white font-bold text-lg border border-white/20 hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+            >
+              <HiOutlineSparkles className="w-5 h-5" />
+              {t('landing.ask_assistant', 'Ask Assistant')}
+            </Link>
           </div>
         </div>
       </section>

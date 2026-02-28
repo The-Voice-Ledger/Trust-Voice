@@ -2,14 +2,14 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   HiOutlineGlobeAlt, HiOutlineHeart, HiOutlineCamera, HiOutlineUser,
+  HiOutlineSparkles,
 } from 'react-icons/hi2';
-import { HiOutlineMicrophone } from 'react-icons/hi';
 import useAuthStore from '../stores/authStore';
 
 const NAV_ITEMS = [
   { to: '/campaigns', key: 'nav.campaigns', Icon: HiOutlineGlobeAlt },
   { to: '/donate', key: 'nav.donate', Icon: HiOutlineHeart },
-  { to: '/', key: 'nav.home', Icon: HiOutlineMicrophone, isHome: true },
+  { to: '/assistant', key: 'nav.assistant', Icon: HiOutlineSparkles, isHome: true },
   { to: '/field-agent', key: 'nav.field_agent', Icon: HiOutlineCamera },
   { to: '/dashboard', key: 'nav.dashboard', Icon: HiOutlineUser, authOnly: true },
 ];
@@ -20,7 +20,7 @@ export default function MobileBottomNav() {
   const user = useAuthStore((s) => s.user);
 
   const isActive = (path, isHome) => {
-    if (isHome) return location.pathname === '/';
+    if (isHome) return location.pathname === path;
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
