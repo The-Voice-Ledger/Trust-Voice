@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -15,6 +15,7 @@ import {
   HiOutlineHeart, HiOutlineBuildingOffice2, HiOutlinePlusCircle,
   HiOutlineCamera, HiOutlinePlayCircle, HiOutlineMapPin,
   HiOutlineUserGroup, HiOutlineArrowRight, HiOutlineVideoCameraSlash,
+  HiOutlineSpeakerWave, HiOutlineSpeakerXMark,
 } from 'react-icons/hi2';
 import { HiOutlineMicrophone, HiOutlineEye, HiOutlineCreditCard } from 'react-icons/hi';
 import {
@@ -109,6 +110,9 @@ export default function Landing() {
           <StatCard value={featured.length > 0 ? `${featured.length}+` : '—'} label={t('landing.stat_active_campaigns')} Icon={HiOutlineRocketLaunch} color="pink" />
         </div>
       </section>
+
+      {/* ════════ VIDEO SHOWCASE ════════ */}
+      <HeroVideo />
 
       {/* ════════ MEDIA SHOWCASE — Swiper Carousel ════════ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
@@ -248,6 +252,111 @@ function StepCard({ step, Icon, title, desc }) {
       <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
       <p className="text-sm text-gray-500">{desc}</p>
     </div>
+  );
+}
+
+/* ─── Hero Video Showcase ─── */
+const HERO_VIDEO_URL = 'https://violet-rainy-toad-577.mypinata.cloud/ipfs/bafybeicgwgrqh62sqefihbeixhsqwfovi6slyl7e6payyp2agns6xiz2su';
+
+function HeroVideo() {
+  const { t } = useTranslation();
+  const videoRef = useRef(null);
+  const [muted, setMuted] = useState(true);
+  const [playing, setPlaying] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+    videoRef.current.muted = !muted;
+    setMuted(!muted);
+  };
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play();
+      setPlaying(true);
+    } else {
+      videoRef.current.pause();
+      setPlaying(false);
+    }
+  };
+
+  return (
+    <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-16 pb-8">
+      <div className="text-center mb-8">
+        <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-2">
+          {t('landing.video_label', 'See It In Action')}
+        </p>
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          {t('landing.video_title', 'Transparency You Can Watch')}
+        </h2>
+      </div>
+
+      <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-indigo-200/40 border border-gray-100 bg-black group">
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          onCanPlay={() => { setLoaded(true); setPlaying(true); }}
+          className="w-full aspect-video object-cover"
+          src={HERO_VIDEO_URL}
+        />
+
+        {/* Loading spinner */}
+        {!loaded && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+            <div className="w-10 h-10 border-4 border-indigo-300 border-t-indigo-600 rounded-full animate-spin" />
+          </div>
+        )}
+
+        {/* Controls overlay — visible on hover / tap */}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
+          {/* Center play/pause */}
+          <button
+            onClick={togglePlay}
+            className="opacity-0 group-hover:opacity-100 transition-opacity w-16 h-16 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-xl hover:scale-110 active:scale-95"
+            aria-label={playing ? 'Pause' : 'Play'}
+          >
+            {playing ? (
+              <svg className="w-7 h-7 text-indigo-700" fill="currentColor" viewBox="0 0 24 24">
+                <rect x="6" y="4" width="4" height="16" rx="1" />
+                <rect x="14" y="4" width="4" height="16" rx="1" />
+              </svg>
+            ) : (
+              <HiOutlinePlayCircle className="w-9 h-9 text-indigo-700" />
+            )}
+          </button>
+        </div>
+
+        {/* Mute/Unmute button — always visible in corner */}
+        <button
+          onClick={toggleMute}
+          className="absolute bottom-4 right-4 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/90 backdrop-blur-md shadow-lg text-sm font-medium text-gray-700 hover:bg-white transition-all hover:scale-105 active:scale-95 border border-gray-200/50"
+          aria-label={muted ? 'Unmute' : 'Mute'}
+        >
+          {muted ? (
+            <>
+              <HiOutlineSpeakerXMark className="w-5 h-5 text-gray-500" />
+              <span className="hidden sm:inline">{t('landing.video_unmute', 'Tap to unmute')}</span>
+            </>
+          ) : (
+            <>
+              <HiOutlineSpeakerWave className="w-5 h-5 text-indigo-600" />
+              <span className="hidden sm:inline">{t('landing.video_mute', 'Mute')}</span>
+            </>
+          )}
+        </button>
+
+        {/* IPFS badge */}
+        <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white/80 text-xs font-medium">
+          <HiOutlineCheckBadge className="w-4 h-4 text-green-400" />
+          IPFS Verified
+        </div>
+      </div>
+    </section>
   );
 }
 
