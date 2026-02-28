@@ -60,22 +60,6 @@ export default function Assistant() {
     }
   }, [messages, loading]);
 
-  // Deep-link: ?campaign=<id> auto-asks about the campaign
-  const deepLinkHandled = useRef(false);
-  useEffect(() => {
-    const campaignId = searchParams.get('campaign');
-    if (campaignId && !deepLinkHandled.current) {
-      deepLinkHandled.current = true;
-      // Clear the param so refreshing doesn't re-trigger
-      setSearchParams({}, { replace: true });
-      // Use a small delay to let the component mount fully
-      const timeout = setTimeout(() => {
-        sendText(`Tell me about campaign #${campaignId}`);
-      }, 300);
-      return () => clearTimeout(timeout);
-    }
-  }, [searchParams, setSearchParams, sendText]);
-
   // ── Play TTS audio ───────────────────────────────────────────
   const playAudio = useCallback(async (url) => {
     if (!url || !autoSpeak) return;
@@ -133,6 +117,20 @@ export default function Assistant() {
       setLoading(false);
     }
   }, [loading, userId, language, conversationId, addMessage, setConversationId, setLoading, playAudio]);
+
+  // Deep-link: ?campaign=<id> auto-asks about the campaign
+  const deepLinkHandled = useRef(false);
+  useEffect(() => {
+    const campaignId = searchParams.get('campaign');
+    if (campaignId && !deepLinkHandled.current) {
+      deepLinkHandled.current = true;
+      setSearchParams({}, { replace: true });
+      const timeout = setTimeout(() => {
+        sendText(`Tell me about campaign #${campaignId}`);
+      }, 300);
+      return () => clearTimeout(timeout);
+    }
+  }, [searchParams, setSearchParams, sendText]);
 
   // ── Submit on Enter ──────────────────────────────────────────
   const handleKeyDown = (e) => {
