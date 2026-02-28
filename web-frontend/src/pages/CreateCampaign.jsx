@@ -90,7 +90,7 @@ export default function CreateCampaign() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           {t('create_campaign.title')}
-          <HiOutlineMicrophone className="w-6 h-6 text-indigo-500" />
+          <HiOutlineMicrophone className="w-6 h-6 text-blue-500" />
         </h1>
         <p className="text-gray-500 text-sm mt-1">{t('create_campaign.subtitle')}</p>
       </div>
@@ -98,7 +98,7 @@ export default function CreateCampaign() {
       {/* Progress */}
       <div className="flex gap-1 mb-8">
         {STEPS.map((_, i) => (
-          <div key={i} className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-indigo-600' : 'bg-gray-200'}`} />
+          <div key={i} className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-blue-600' : 'bg-gray-200'}`} />
         ))}
       </div>
 
@@ -136,7 +136,7 @@ export default function CreateCampaign() {
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('create_campaign.description')} *</label>
               <textarea value={form.description} onChange={(e) => set('description', e.target.value)}
                 rows={5} placeholder={t('create_campaign.desc_placeholder')}
-                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               <VoiceButton
                 apiCall={async (blob) => {
                   const fd = new FormData();
@@ -157,8 +157,8 @@ export default function CreateCampaign() {
                   <button key={c} type="button" onClick={() => set('category', c)}
                     className={`px-4 py-2 rounded-full text-xs font-medium border transition capitalize ${
                       form.category === c
-                        ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
                     }`}>
                     {c}
                   </button>
@@ -219,7 +219,7 @@ export default function CreateCampaign() {
               <label htmlFor="video-upload" className="cursor-pointer">
                 {form.video_file ? (
                   <div className="flex flex-col items-center">
-                    <HiOutlineFilm className="w-10 h-10 text-indigo-500" />
+                    <HiOutlineFilm className="w-10 h-10 text-blue-500" />
                     <p className="text-sm font-medium text-gray-700 mt-2">{form.video_file.name}</p>
                     <p className="text-xs text-gray-400">{(form.video_file.size / 1024 / 1024).toFixed(1)} MB</p>
                   </div>
@@ -259,7 +259,7 @@ export default function CreateCampaign() {
         </button>
         {step < STEPS.length - 1 ? (
           <button onClick={() => setStep((s) => s + 1)} disabled={!canNext()}
-            className="px-5 py-3 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition">
+            className="px-5 py-3 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition">
             {t('create_campaign.next')} →
           </button>
         ) : (
@@ -279,7 +279,7 @@ function Field({ label, required, value, onChange, placeholder, type = 'text' })
       <label className="block text-sm font-medium text-gray-700 mb-1">{label} {required && '*'}</label>
       <input type={type} required={required} value={value} onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+        className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
     </div>
   );
 }

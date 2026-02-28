@@ -202,7 +202,7 @@ export default function Assistant() {
       <div className="flex items-center justify-between py-4 flex-shrink-0 border-b border-gray-100/80">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-200/50">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center shadow-md shadow-blue-200/50">
               <HiOutlineSparkles className="w-5 h-5 text-white" />
             </div>
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2 border-white" />
@@ -218,7 +218,7 @@ export default function Assistant() {
             onClick={() => { setAutoSpeak((v) => !v); stopAudio(); }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
               autoSpeak
-                ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                ? 'bg-blue-50 text-blue-700 border-blue-200'
                 : 'bg-gray-50 text-gray-400 border-gray-200'
             }`}
             title={autoSpeak ? 'Voice responses ON' : 'Voice responses OFF'}
@@ -253,14 +253,14 @@ export default function Assistant() {
 
         {loading && (
           <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center flex-shrink-0">
               <HiOutlineSparkles className="w-4 h-4 text-white" />
             </div>
             <div className="bg-white rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-gray-100">
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
@@ -296,7 +296,7 @@ export default function Assistant() {
                 ? 'bg-red-500 text-white shadow-lg shadow-red-200/60 scale-110 ring-4 ring-red-100'
                 : voiceStatus === 'processing'
                   ? 'bg-amber-500 text-white cursor-wait shadow-md'
-                  : 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-200/50 hover:shadow-lg hover:scale-105 active:scale-95'
+                  : 'bg-gradient-to-br from-blue-500 to-teal-600 text-white shadow-md shadow-blue-200/50 hover:shadow-lg hover:scale-105 active:scale-95'
             }`}
             aria-label={voiceStatus === 'recording' ? 'Release to send' : 'Hold to speak'}
           >
@@ -312,14 +312,14 @@ export default function Assistant() {
               onKeyDown={handleKeyDown}
               placeholder={t('assistant.placeholder', 'Type a message or hold the mic...')}
               rows={1}
-              className="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50/50 px-4 py-3 pr-12 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 focus:bg-white shadow-sm transition-all"
+              className="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50/50 px-4 py-3 pr-12 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 focus:bg-white shadow-sm transition-all"
               style={{ maxHeight: '120px' }}
               disabled={loading}
             />
             <button
               onClick={() => sendText(input)}
               disabled={!input.trim() || loading}
-              className="absolute right-2 bottom-2 p-2 rounded-xl bg-indigo-600 text-white disabled:opacity-20 disabled:cursor-not-allowed hover:bg-indigo-700 active:scale-95 transition-all shadow-sm"
+              className="absolute right-2 bottom-2 p-2 rounded-xl bg-blue-600 text-white disabled:opacity-20 disabled:cursor-not-allowed hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
               aria-label="Send"
             >
               <HiOutlinePaperAirplane className="w-4 h-4" />
@@ -338,14 +338,14 @@ export default function Assistant() {
 // ── Welcome Screen ─────────────────────────────────────────────
 function WelcomeScreen({ onSuggestion, t }) {
   const suggestions = [
-    { text: 'Find education campaigns in Kenya', Icon: HiOutlineMagnifyingGlass, color: 'indigo' },
+    { text: 'Find education campaigns in Kenya', Icon: HiOutlineMagnifyingGlass, color: 'blue' },
     { text: 'How much has been raised this month?', Icon: HiOutlineChartBarSquare, color: 'emerald' },
     { text: 'Show me water projects', Icon: HiOutlineGlobeAlt, color: 'sky' },
     { text: "What can you do?", Icon: HiOutlineQuestionMarkCircle, color: 'amber' },
   ];
 
   const colorMap = {
-    indigo: 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100',
+    blue: 'bg-blue-50 text-blue-600 group-hover:bg-blue-100',
     emerald: 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100',
     sky: 'bg-sky-50 text-sky-600 group-hover:bg-sky-100',
     amber: 'bg-amber-50 text-amber-600 group-hover:bg-amber-100',
@@ -354,7 +354,7 @@ function WelcomeScreen({ onSuggestion, t }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="relative mb-6">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-xl shadow-indigo-200/50">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center shadow-xl shadow-blue-200/50">
           <HiOutlineSparkles className="w-8 h-8 text-white" />
         </div>
         <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-green-400 border-2 border-white animate-pulse" />
@@ -366,7 +366,7 @@ function WelcomeScreen({ onSuggestion, t }) {
           <button
             key={text}
             onClick={() => onSuggestion(text)}
-            className="group flex items-center gap-3 px-4 py-3.5 rounded-xl border border-gray-100 bg-white text-sm text-gray-600 hover:border-indigo-200 hover:text-gray-900 transition-all text-left shadow-sm hover:shadow-md"
+            className="group flex items-center gap-3 px-4 py-3.5 rounded-xl border border-gray-100 bg-white text-sm text-gray-600 hover:border-blue-200 hover:text-gray-900 transition-all text-left shadow-sm hover:shadow-md"
           >
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${colorMap[color]}`}>
               <Icon className="w-4 h-4" />
@@ -385,10 +385,10 @@ function ChatMessage({ msg, onPlayAudio }) {
   if (msg.role === 'user') {
     return (
       <div className="flex justify-end gap-3">
-        <div className="max-w-[85%] bg-indigo-600 text-white rounded-2xl rounded-tr-md px-4 py-3 shadow-sm">
+        <div className="max-w-[85%] bg-blue-600 text-white rounded-2xl rounded-tr-md px-4 py-3 shadow-sm">
           <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
           {msg.isVoice && (
-            <div className="flex items-center gap-1 mt-1 text-indigo-200 text-[10px]">
+            <div className="flex items-center gap-1 mt-1 text-blue-200 text-[10px]">
               <HiOutlineMicrophone className="w-3 h-3" />
               voice
             </div>
@@ -401,7 +401,7 @@ function ChatMessage({ msg, onPlayAudio }) {
   // Assistant message
   return (
     <div className="flex gap-3">
-      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center flex-shrink-0 mt-0.5">
         <HiOutlineSparkles className="w-4 h-4 text-white" />
       </div>
       <div className="max-w-[85%] space-y-2">
@@ -413,7 +413,7 @@ function ChatMessage({ msg, onPlayAudio }) {
             {msg.audioUrl && (
               <button
                 onClick={() => onPlayAudio(msg.audioUrl)}
-                className="mt-2 flex items-center gap-1.5 text-[11px] text-indigo-500 hover:text-indigo-700 transition"
+                className="mt-2 flex items-center gap-1.5 text-[11px] text-blue-500 hover:text-blue-700 transition"
               >
                 <HiOutlineSpeakerWave className="w-3.5 h-3.5" />
                 Play response
@@ -454,18 +454,18 @@ function CampaignListCard({ campaigns }) {
         <Link
           key={c.id}
           to={`/campaign/${c.id}`}
-          className="flex items-center gap-3 bg-white rounded-xl border border-gray-100 p-3 hover:border-indigo-200 hover:shadow-sm transition-all group"
+          className="flex items-center gap-3 bg-white rounded-xl border border-gray-100 p-3 hover:border-blue-200 hover:shadow-sm transition-all group"
         >
-          <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0 text-indigo-600 font-bold text-sm">
+          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 text-blue-600 font-bold text-sm">
             #{c.id}
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+            <h4 className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
               {c.title}
             </h4>
             <div className="flex items-center gap-2 mt-0.5">
               <ProgressBar percentage={c.progress_pct} className="flex-1" />
-              <span className="text-[10px] font-medium text-indigo-600 flex-shrink-0">{c.progress_pct}%</span>
+              <span className="text-[10px] font-medium text-blue-600 flex-shrink-0">{c.progress_pct}%</span>
             </div>
             <div className="flex items-center gap-3 mt-1 text-[10px] text-gray-400">
               {c.category && <span className="capitalize">{c.category}</span>}
@@ -475,7 +475,7 @@ function CampaignListCard({ campaigns }) {
               <span>${fmt(c.raised_usd)} / ${fmt(c.goal_usd)}</span>
             </div>
           </div>
-          <HiOutlineArrowRight className="w-4 h-4 text-gray-300 group-hover:text-indigo-500 transition-colors flex-shrink-0" />
+          <HiOutlineArrowRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition-colors flex-shrink-0" />
         </Link>
       ))}
       {campaigns.length > 5 && (
@@ -490,11 +490,11 @@ function CampaignDetailCard({ campaign }) {
   return (
     <Link
       to={`/campaign/${c.id}`}
-      className="block bg-white rounded-xl border border-gray-100 p-4 hover:border-indigo-200 hover:shadow-sm transition-all group"
+      className="block bg-white rounded-xl border border-gray-100 p-4 hover:border-blue-200 hover:shadow-sm transition-all group"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{c.title}</h4>
+          <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{c.title}</h4>
           <p className="text-xs text-gray-500 mt-1 line-clamp-2">{c.description}</p>
         </div>
         <span className={`text-[10px] font-bold px-2 py-1 rounded-lg flex-shrink-0 ${
@@ -506,7 +506,7 @@ function CampaignDetailCard({ campaign }) {
       <div className="mt-3">
         <ProgressBar percentage={c.progress_pct} className="mb-2" />
         <div className="flex items-center justify-between text-xs">
-          <span className="font-bold text-indigo-600">${fmt(c.raised_usd)}</span>
+          <span className="font-bold text-blue-600">${fmt(c.raised_usd)}</span>
           <span className="text-gray-400">of ${fmt(c.goal_usd)}</span>
         </div>
       </div>
@@ -566,7 +566,7 @@ function DonationHistoryCard({ donations }) {
               <p className="text-[10px] text-gray-400">{d.date ? new Date(d.date).toLocaleDateString() : ''}</p>
             </div>
             <div className="text-right flex-shrink-0">
-              <p className="text-xs font-bold text-indigo-600">{d.amount} {d.currency}</p>
+              <p className="text-xs font-bold text-blue-600">{d.amount} {d.currency}</p>
               <span className={`text-[10px] font-medium ${
                 d.status === 'completed' ? 'text-green-600' : d.status === 'pending' ? 'text-yellow-600' : 'text-gray-400'
               }`}>
@@ -582,17 +582,17 @@ function DonationHistoryCard({ donations }) {
 
 function AnalyticsSummaryCard({ stats }) {
   const items = [
-    { label: 'Active Campaigns', value: stats.active_campaigns, icon: HiOutlineChartBarSquare, color: 'indigo' },
+    { label: 'Active Campaigns', value: stats.active_campaigns, icon: HiOutlineChartBarSquare, color: 'blue' },
     { label: 'Total Donated', value: `$${fmt(stats.total_raised_usd)}`, icon: HiOutlineCheckBadge, color: 'green' },
-    { label: 'Total Donations', value: stats.total_donations, icon: HiOutlineArrowRight, color: 'purple' },
-    { label: 'Total Donors', value: stats.total_donors, icon: HiOutlineUserGroup, color: 'pink' },
+    { label: 'Total Donations', value: stats.total_donations, icon: HiOutlineArrowRight, color: 'teal' },
+    { label: 'Total Donors', value: stats.total_donors, icon: HiOutlineUserGroup, color: 'amber' },
   ];
 
   const colorMap = {
-    indigo: 'bg-indigo-50 text-indigo-600',
+    blue: 'bg-blue-50 text-blue-600',
     green: 'bg-green-50 text-green-600',
-    purple: 'bg-purple-50 text-purple-600',
-    pink: 'bg-pink-50 text-pink-600',
+    teal: 'bg-teal-50 text-teal-600',
+    amber: 'bg-amber-50 text-amber-600',
   };
 
   return (

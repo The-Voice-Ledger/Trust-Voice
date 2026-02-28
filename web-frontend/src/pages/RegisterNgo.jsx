@@ -99,7 +99,7 @@ export default function RegisterNgo() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           {t('ngo_reg.title')}
-          <HiOutlineMicrophone className="w-6 h-6 text-indigo-500" />
+          <HiOutlineMicrophone className="w-6 h-6 text-blue-500" />
         </h1>
         <p className="text-gray-500 text-sm mt-1">{t('ngo_reg.subtitle')}</p>
       </div>
@@ -109,7 +109,7 @@ export default function RegisterNgo() {
         {STEPS.map((s, i) => (
           <div
             key={s}
-            className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-indigo-600' : 'bg-gray-200'}`}
+            className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-blue-600' : 'bg-gray-200'}`}
           />
         ))}
       </div>
@@ -168,7 +168,7 @@ export default function RegisterNgo() {
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('ngo_reg.mission')} *</label>
               <textarea value={form.mission_statement} onChange={(e) => set('mission_statement', e.target.value)}
                 rows={4} placeholder={t('ngo_reg.mission_placeholder')}
-                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               <div className="mt-2">
                 <VoiceButton
                   apiCall={async (blob) => {
@@ -192,8 +192,8 @@ export default function RegisterNgo() {
                   <button key={a} type="button" onClick={() => toggleFocus(a)}
                     className={`px-4 py-2 rounded-full text-xs font-medium border transition capitalize ${
                       form.focus_areas.includes(a)
-                        ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
                     }`}>
                     {a}
                   </button>
@@ -248,7 +248,7 @@ export default function RegisterNgo() {
           <button
             onClick={() => setStep((s) => s + 1)}
             disabled={!canNext()}
-            className="px-5 py-3 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition"
+            className="px-5 py-3 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition"
           >
             {t('ngo_reg.next')} →
           </button>
@@ -279,7 +279,7 @@ function Field({ label, required, value, onChange, placeholder, type = 'text' })
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+        className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       />
     </div>
   );

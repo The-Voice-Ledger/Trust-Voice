@@ -47,12 +47,12 @@ export default function DonateCheckout() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-8">
-      <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline mb-4 py-2">
+      <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mb-4 py-2">
         <HiOutlineArrowLeft className="w-4 h-4" /> {t('common.back')}
       </Link>
 
       <div className="text-center mb-8">
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg shadow-pink-200/50 mb-4">
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center shadow-lg shadow-rose-200/50 mb-4">
           <HiOutlineHeart className="w-8 h-8 text-white" />
         </div>
         <h1 className="text-2xl font-bold text-gray-900">{t('donate.title')}</h1>
@@ -66,7 +66,7 @@ export default function DonateCheckout() {
           <select
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">{t('donate.choose_campaign')}</option>
             {campaigns.map((c) => (
@@ -80,7 +80,7 @@ export default function DonateCheckout() {
       {campaign && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 mb-6">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
               <CategoryIcon cat={campaign.category} />
             </div>
             <div className="flex-1">
@@ -93,7 +93,7 @@ export default function DonateCheckout() {
             className="mt-3"
           />
           <div className="flex justify-between text-sm mt-2">
-            <span className="font-bold text-indigo-600">${fmt(campaign.current_usd_total || campaign.raised_amount_usd)}</span>
+            <span className="font-bold text-blue-600">${fmt(campaign.current_usd_total || campaign.raised_amount_usd)}</span>
             <span className="text-gray-400">{t('campaign.raised_of')} ${fmt(campaign.goal_amount_usd)}</span>
           </div>
         </div>
@@ -108,7 +108,7 @@ export default function DonateCheckout() {
                 <HiOutlineCheckCircle className="w-8 h-8 text-green-600" />
               </div>
               <p className="text-lg font-semibold text-green-600">{t('donate.success')}</p>
-              <Link to="/dashboard" className="text-sm text-indigo-600 hover:underline mt-3 inline-block">
+              <Link to="/dashboard" className="text-sm text-blue-600 hover:underline mt-3 inline-block">
                 {t('donate.view_history')} →
               </Link>
             </div>
@@ -144,5 +144,5 @@ const DONATE_CATEGORY_ICONS = {
 
 function CategoryIcon({ cat }) {
   const Comp = DONATE_CATEGORY_ICONS[(cat || '').toLowerCase()] || MdHandshake;
-  return <Comp className="w-5 h-5 text-indigo-600" />;
+  return <Comp className="w-5 h-5 text-blue-600" />;
 }

@@ -121,7 +121,7 @@ export default function FieldAgent() {
         <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('field_agent.success_title')}</h1>
         <p className="text-gray-500 mb-4">{t('field_agent.success_desc')}</p>
         <button onClick={() => { setSuccess(false); setStep(0); setPhotos([]); setForm({ campaign_id: '', observations: '', beneficiary_count: '', testimonials: '' }); }}
-          className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition">
+          className="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">
           {t('field_agent.new_verification')}
         </button>
       </div>

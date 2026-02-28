@@ -43,15 +43,15 @@ export default function MobileBottomNav() {
               to={to}
               className={`flex flex-col items-center justify-center gap-0.5 min-w-[56px] py-1 px-2 rounded-xl transition-all ${
                 active
-                  ? 'text-indigo-600'
+                  ? 'text-blue-600'
                   : 'text-gray-400 hover:text-gray-600 active:text-gray-700'
               }`}
             >
               {isHome ? (
                 <div className={`w-10 h-10 -mt-4 rounded-full flex items-center justify-center shadow-lg ${
                   active
-                    ? 'bg-indigo-600 text-white shadow-indigo-200/60'
-                    : 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-indigo-200/40'
+                    ? 'bg-blue-600 text-white shadow-blue-200/60'
+                    : 'bg-gradient-to-br from-blue-500 to-teal-600 text-white shadow-blue-200/40'
                 }`}>
                   <Icon className="w-5 h-5" />
                 </div>

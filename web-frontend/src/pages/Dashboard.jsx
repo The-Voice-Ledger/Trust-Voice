@@ -56,7 +56,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 text-center">
           <p className="text-sm text-gray-400 mb-1">{t('dashboard.total_donated')}</p>
-          <p className="text-xl sm:text-2xl font-bold text-indigo-600">
+          <p className="text-xl sm:text-2xl font-bold text-blue-600">
             {Object.entries(totalsByFx).map(([cur, amt]) => (
               <span key={cur} className="block">
                 {Number(amt).toLocaleString('en-US', { maximumFractionDigits: 2 })} {cur}
@@ -108,7 +108,7 @@ export default function Dashboard() {
               )}
               {activeReceipt.blockchain_tx && (
                 <ReceiptRow label="Blockchain TX" value={
-                  <a href={activeReceipt.blockchain_tx} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline font-mono text-xs">
+                  <a href={activeReceipt.blockchain_tx} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline font-mono text-xs">
                     {activeReceipt.blockchain_tx.slice(0, 20)}…
                   </a>
                 } />
@@ -135,7 +135,7 @@ export default function Dashboard() {
       ) : donations.length === 0 ? (
         <div className="text-center py-10">
           <p className="text-gray-400 mb-4">{t('dashboard.no_donations')}</p>
-          <Link to="/campaigns" className="text-indigo-600 hover:underline text-sm font-medium">
+          <Link to="/campaigns" className="text-blue-600 hover:underline text-sm font-medium">
             {t('landing.explore_btn')} →
           </Link>
         </div>
@@ -157,7 +157,7 @@ export default function Dashboard() {
                 <button
                   onClick={() => viewReceipt(d.id)}
                   disabled={receiptLoading}
-                  className="text-xs text-indigo-600 hover:underline py-1 px-2"
+                  className="text-xs text-blue-600 hover:underline py-1 px-2"
                 >
                   {t('dashboard.receipt')}
                 </button>

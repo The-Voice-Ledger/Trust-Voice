@@ -16,7 +16,7 @@ export default function VoiceButton({ apiCall, apiArgs = [], onResult, className
   const error = useVoiceStore((s) => s.error);
 
   const stateStyles = {
-    idle: 'bg-indigo-600 hover:bg-indigo-700 text-white',
+    idle: 'bg-blue-600 hover:bg-blue-700 text-white',
     recording: 'bg-red-500 animate-pulse text-white',
     processing: 'bg-yellow-500 text-white cursor-wait',
     playing: 'bg-green-500 text-white',

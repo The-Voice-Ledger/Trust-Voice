@@ -57,30 +57,30 @@ export default function Landing() {
   return (
     <div className="relative">
       {/* ════════ HERO ════════ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-teal-950 text-white">
         {/* Decorative elements */}
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-60" />
-        <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-[120px]" />
-        <div className="absolute -bottom-32 -left-32 w-[400px] h-[400px] bg-purple-500/20 rounded-full blur-[120px]" />
+        <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[120px]" />
+        <div className="absolute -bottom-32 -left-32 w-[400px] h-[400px] bg-teal-500/20 rounded-full blur-[120px]" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-24 sm:py-32 text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-5 py-2 text-sm font-medium mb-8 border border-white/10">
-            <HiOutlineMicrophone className="w-4 h-4 text-indigo-300" />
-            <span className="text-indigo-200">{t('landing.badge')}</span>
+            <HiOutlineMicrophone className="w-4 h-4 text-blue-300" />
+            <span className="text-blue-200">{t('landing.badge')}</span>
           </div>
           <h1 className="text-3xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1]">
-            <span className="bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-white via-blue-200 to-teal-200 bg-clip-text text-transparent">
               {t('landing.hero_title')}
             </span>
           </h1>
-          <p className="text-lg sm:text-xl text-indigo-200/70 max-w-2xl mx-auto mb-12">
+          <p className="text-lg sm:text-xl text-blue-200/70 max-w-2xl mx-auto mb-12">
             {t('landing.hero_subtitle')}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full sm:w-auto">
             <Link
               to="/campaigns"
-              className="group w-full sm:w-auto text-center px-8 py-4 rounded-2xl bg-white text-indigo-700 font-bold text-lg shadow-xl shadow-indigo-500/25 hover:shadow-2xl hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+              className="group w-full sm:w-auto text-center px-8 py-4 rounded-2xl bg-white text-blue-700 font-bold text-lg shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
             >
               {t('landing.explore_btn')}
               <HiOutlineArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -99,7 +99,7 @@ export default function Landing() {
       {/* ════════ LIVE STATS BAR ════════ */}
       <section className="relative -mt-8 z-10 max-w-5xl mx-auto px-4 sm:px-6">
         <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 px-4 sm:px-6 py-4 sm:py-6 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-          <StatCard value={stats?.started ?? '-'} label={t('landing.stat_conversations')} Icon={HiOutlineChatBubbleLeftRight} color="indigo" />
+          <StatCard value={stats?.started ?? '-'} label={t('landing.stat_conversations')} Icon={HiOutlineChatBubbleLeftRight} color="blue" />
           <StatCard value={stats?.completed ?? '-'} label={t('landing.stat_completed')} Icon={HiOutlineCheckBadge} color="emerald" />
           <StatCard
             value={stats?.completion_rate != null ? `${Math.round(stats.completion_rate)}%` : '-'}
@@ -107,7 +107,7 @@ export default function Landing() {
             Icon={HiOutlineChartBarSquare}
             color="amber"
           />
-          <StatCard value={featured.length > 0 ? `${featured.length}+` : '-'} label={t('landing.stat_active_campaigns')} Icon={HiOutlineRocketLaunch} color="pink" />
+          <StatCard value={featured.length > 0 ? `${featured.length}+` : '-'} label={t('landing.stat_active_campaigns')} Icon={HiOutlineRocketLaunch} color="teal" />
         </div>
       </section>
 
@@ -117,14 +117,14 @@ export default function Landing() {
       {/* ════════ MEDIA SHOWCASE — Swiper Carousel ════════ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
         <div className="text-center mb-12">
-          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-2">Featured</p>
+          <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-2">Featured</p>
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">{t('landing.showcase_title')}</h2>
           <p className="text-gray-500 max-w-lg mx-auto">{t('landing.showcase_subtitle')}</p>
         </div>
 
         {loadingFeatured ? (
           <div className="flex justify-center py-16">
-            <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
           </div>
         ) : featured.length === 0 ? (
           <div className="text-center py-16 text-gray-400">{t('home.no_campaigns')}</div>
@@ -153,7 +153,7 @@ export default function Landing() {
         <div className="text-center mt-8">
           <Link
             to="/campaigns"
-            className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-50 text-indigo-700 font-semibold hover:bg-indigo-100 transition-all"
+            className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 transition-all"
           >
             {t('landing.view_all_campaigns')}
             <HiOutlineArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -164,11 +164,11 @@ export default function Landing() {
       {/* ════════ HOW IT WORKS ════════ */}
       <section className="bg-gray-50/80 border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
-          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider text-center mb-2">Process</p>
+          <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider text-center mb-2">Process</p>
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-14">{t('landing.how_title')}</h2>
           <div className="relative">
             {/* Connector line — desktop only */}
-            <div className="hidden lg:block absolute top-8 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-indigo-200 via-purple-200 to-indigo-200 rounded-full" />
+            <div className="hidden lg:block absolute top-8 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-blue-200 via-teal-200 to-blue-200 rounded-full" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               <StepCard step="1" Icon={HiOutlineMicrophone} title={t('landing.step1_title')} desc={t('landing.step1_desc')} />
               <StepCard step="2" Icon={HiOutlineEye} title={t('landing.step2_title')} desc={t('landing.step2_desc')} />
@@ -181,23 +181,37 @@ export default function Landing() {
 
       {/* ════════ PLATFORM FEATURES ════════ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
-        <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider text-center mb-2">Platform</p>
+        <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider text-center mb-2">Platform</p>
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-4">{t('landing.features_title')}</h2>
         <p className="text-gray-500 text-center max-w-lg mx-auto mb-14">{t('landing.features_subtitle')}</p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          <FeatureCard to="/campaigns" Icon={HiOutlineGlobeAlt} title={t('landing.feat_campaigns')} desc={t('landing.feat_campaigns_desc')} color="indigo" />
-          <FeatureCard to="/analytics" Icon={HiOutlineChartBar} title={t('landing.feat_analytics')} desc={t('landing.feat_analytics_desc')} color="emerald" />
-          <FeatureCard to="/admin" Icon={HiOutlineCog6Tooth} title={t('landing.feat_admin')} desc={t('landing.feat_admin_desc')} color="amber" />
-          <FeatureCard to="/donate" Icon={HiOutlineHeart} title={t('landing.feat_donate')} desc={t('landing.feat_donate_desc')} color="pink" />
-          <FeatureCard to="/register-ngo" Icon={HiOutlineBuildingOffice2} title={t('landing.feat_ngo')} desc={t('landing.feat_ngo_desc')} color="blue" hasMic />
-          <FeatureCard to="/create-campaign" Icon={HiOutlinePlusCircle} title={t('landing.feat_create')} desc={t('landing.feat_create_desc')} color="violet" hasMic />
-          <FeatureCard to="/field-agent" Icon={HiOutlineCamera} title={t('landing.feat_field')} desc={t('landing.feat_field_desc')} color="teal" />
+        <div className="flex flex-wrap justify-center gap-6">
+          <div className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]">
+            <FeatureCard to="/campaigns" Icon={HiOutlineGlobeAlt} title={t('landing.feat_campaigns')} desc={t('landing.feat_campaigns_desc')} color="blue" />
+          </div>
+          <div className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]">
+            <FeatureCard to="/analytics" Icon={HiOutlineChartBar} title={t('landing.feat_analytics')} desc={t('landing.feat_analytics_desc')} color="emerald" />
+          </div>
+          <div className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]">
+            <FeatureCard to="/admin" Icon={HiOutlineCog6Tooth} title={t('landing.feat_admin')} desc={t('landing.feat_admin_desc')} color="amber" />
+          </div>
+          <div className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]">
+            <FeatureCard to="/donate" Icon={HiOutlineHeart} title={t('landing.feat_donate')} desc={t('landing.feat_donate_desc')} color="rose" />
+          </div>
+          <div className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]">
+            <FeatureCard to="/register-ngo" Icon={HiOutlineBuildingOffice2} title={t('landing.feat_ngo')} desc={t('landing.feat_ngo_desc')} color="blue" hasMic />
+          </div>
+          <div className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]">
+            <FeatureCard to="/create-campaign" Icon={HiOutlinePlusCircle} title={t('landing.feat_create')} desc={t('landing.feat_create_desc')} color="violet" hasMic />
+          </div>
+          <div className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]">
+            <FeatureCard to="/field-agent" Icon={HiOutlineCamera} title={t('landing.feat_field')} desc={t('landing.feat_field_desc')} color="teal" />
+          </div>
         </div>
       </section>
 
       {/* ════════ FOR TESTERS — CTA ════════ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-teal-500 text-white">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-60" />
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 py-20 text-center">
           <h2 className="text-2xl sm:text-4xl font-bold mb-4">{t('landing.tester_title')}</h2>
@@ -205,7 +219,7 @@ export default function Landing() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto px-4 sm:px-0">
             <Link
               to="/register-ngo"
-              className="w-full sm:w-auto text-center px-8 py-4 rounded-2xl bg-white text-indigo-700 font-bold hover:bg-indigo-50 transition shadow-lg shadow-indigo-900/20"
+              className="w-full sm:w-auto text-center px-8 py-4 rounded-2xl bg-white text-blue-700 font-bold hover:bg-blue-50 transition shadow-lg shadow-blue-900/20"
             >
               {t('landing.tester_register')}
             </Link>
@@ -224,12 +238,12 @@ export default function Landing() {
 
 /* ── Sub-components ──────────────────────── */
 
-function StatCard({ value, label, Icon, color = 'indigo' }) {
+function StatCard({ value, label, Icon, color = 'blue' }) {
   const colors = {
-    indigo: 'bg-indigo-50 text-indigo-600',
+    blue: 'bg-blue-50 text-blue-600',
     emerald: 'bg-emerald-50 text-emerald-600',
     amber: 'bg-amber-50 text-amber-600',
-    pink: 'bg-pink-50 text-pink-600',
+    teal: 'bg-teal-50 text-teal-600',
   };
   return (
     <div className="flex flex-col items-center text-center">
@@ -245,10 +259,10 @@ function StatCard({ value, label, Icon, color = 'indigo' }) {
 function StepCard({ step, Icon, title, desc }) {
   return (
     <div className="relative text-center group">
-      <div className="relative z-10 w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center mx-auto mb-5 shadow-lg shadow-indigo-200/50 group-hover:shadow-xl group-hover:shadow-indigo-300/50 group-hover:scale-105 transition-all ring-4 ring-white">
+      <div className="relative z-10 w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-teal-600 text-white flex items-center justify-center mx-auto mb-5 shadow-lg shadow-blue-200/50 group-hover:shadow-xl group-hover:shadow-blue-300/50 group-hover:scale-105 transition-all ring-4 ring-white">
         <Icon className="w-7 h-7" />
       </div>
-      <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 text-xs font-bold mb-2">{step}</div>
+      <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs font-bold mb-2">{step}</div>
       <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
       <p className="text-sm text-gray-500">{desc}</p>
     </div>
@@ -285,7 +299,7 @@ function HeroVideo() {
   return (
     <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-16 pb-8">
       <div className="text-center mb-8">
-        <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-2">
+        <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-2">
           {t('landing.video_label', 'See It In Action')}
         </p>
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
@@ -293,7 +307,7 @@ function HeroVideo() {
         </h2>
       </div>
 
-      <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-indigo-200/40 border border-gray-100 bg-black group">
+      <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-blue-200/40 border border-gray-100 bg-black group">
         <video
           ref={videoRef}
           autoPlay
@@ -308,7 +322,7 @@ function HeroVideo() {
         {/* Loading spinner */}
         {!loaded && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-            <div className="w-10 h-10 border-4 border-indigo-300 border-t-indigo-600 rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
           </div>
         )}
 
@@ -321,12 +335,12 @@ function HeroVideo() {
             aria-label={playing ? 'Pause' : 'Play'}
           >
             {playing ? (
-              <svg className="w-7 h-7 text-indigo-700" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-7 h-7 text-blue-700" fill="currentColor" viewBox="0 0 24 24">
                 <rect x="6" y="4" width="4" height="16" rx="1" />
                 <rect x="14" y="4" width="4" height="16" rx="1" />
               </svg>
             ) : (
-              <HiOutlinePlayCircle className="w-9 h-9 text-indigo-700" />
+              <HiOutlinePlayCircle className="w-9 h-9 text-blue-700" />
             )}
           </button>
         </div>
@@ -344,7 +358,7 @@ function HeroVideo() {
             </>
           ) : (
             <>
-              <HiOutlineSpeakerWave className="w-5 h-5 text-indigo-600" />
+              <HiOutlineSpeakerWave className="w-5 h-5 text-blue-600" />
               <span className="hidden sm:inline">{t('landing.video_mute', 'Mute')}</span>
             </>
           )}
@@ -360,13 +374,12 @@ function HeroVideo() {
   );
 }
 
-function FeatureCard({ to, Icon, title, desc, hasMic, color = 'indigo' }) {
+function FeatureCard({ to, Icon, title, desc, hasMic, color = 'blue' }) {
   const colorMap = {
-    indigo: 'from-indigo-500 to-indigo-600 shadow-indigo-200/50 hover:shadow-indigo-300/60',
+    blue: 'from-blue-500 to-blue-600 shadow-blue-200/50 hover:shadow-blue-300/60',
     emerald: 'from-emerald-500 to-emerald-600 shadow-emerald-200/50 hover:shadow-emerald-300/60',
     amber: 'from-amber-500 to-amber-600 shadow-amber-200/50 hover:shadow-amber-300/60',
-    pink: 'from-pink-500 to-pink-600 shadow-pink-200/50 hover:shadow-pink-300/60',
-    blue: 'from-blue-500 to-blue-600 shadow-blue-200/50 hover:shadow-blue-300/60',
+    rose: 'from-rose-500 to-rose-600 shadow-rose-200/50 hover:shadow-rose-300/60',
     violet: 'from-violet-500 to-violet-600 shadow-violet-200/50 hover:shadow-violet-300/60',
     teal: 'from-teal-500 to-teal-600 shadow-teal-200/50 hover:shadow-teal-300/60',
   };
@@ -382,9 +395,9 @@ function FeatureCard({ to, Icon, title, desc, hasMic, color = 'indigo' }) {
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{title}</h3>
+            <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{title}</h3>
             {hasMic && (
-              <span className="flex items-center gap-0.5 text-[10px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-full uppercase">
+              <span className="flex items-center gap-0.5 text-[10px] font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded-full uppercase">
                 <HiOutlineMicrophone className="w-3 h-3" /> Voice
               </span>
             )}
@@ -409,11 +422,11 @@ function MediaCard({ campaign, t }) {
       className="group block bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 overflow-hidden border border-gray-100"
     >
       {/* Video/Image preview */}
-      <div className="relative aspect-video bg-gradient-to-br from-indigo-500 to-purple-600 overflow-hidden">
+      <div className="relative aspect-video bg-gradient-to-br from-blue-500 to-teal-600 overflow-hidden">
         {campaign.has_video || campaign.video_cid ? (
           <div className="absolute inset-0 flex items-center justify-center bg-black/30">
             <div className="w-16 h-16 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
-              <HiOutlinePlayCircle className="w-9 h-9 text-indigo-600" />
+              <HiOutlinePlayCircle className="w-9 h-9 text-blue-600" />
             </div>
             <span className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5">
               <HiOutlinePlayCircle className="w-3.5 h-3.5" />
@@ -426,7 +439,7 @@ function MediaCard({ campaign, t }) {
           </div>
         )}
         {campaign.category && (
-          <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-xs font-semibold text-indigo-700 px-2.5 py-1 rounded-lg capitalize">
+          <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-xs font-semibold text-blue-700 px-2.5 py-1 rounded-lg capitalize">
             {campaign.category}
           </span>
         )}
@@ -438,7 +451,7 @@ function MediaCard({ campaign, t }) {
       </div>
 
       <div className="p-4 sm:p-5">
-        <h3 className="font-bold text-gray-900 text-lg group-hover:text-indigo-600 transition-colors line-clamp-2 mb-2">
+        <h3 className="font-bold text-gray-900 text-lg group-hover:text-blue-600 transition-colors line-clamp-2 mb-2">
           {campaign.title}
         </h3>
         {campaign.description && (
@@ -448,7 +461,7 @@ function MediaCard({ campaign, t }) {
         <ProgressBar percentage={pct} className="mb-3" />
 
         <div className="flex justify-between items-baseline text-sm">
-          <span className="font-bold text-indigo-600">${fmt(campaign.current_usd_total || campaign.raised_amount_usd)}</span>
+          <span className="font-bold text-blue-600">${fmt(campaign.current_usd_total || campaign.raised_amount_usd)}</span>
           <span className="text-gray-400">{t('campaign.raised_of')} ${fmt(campaign.goal_amount_usd)}</span>
         </div>
 

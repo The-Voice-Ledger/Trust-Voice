@@ -62,7 +62,7 @@ export default function Analytics() {
                 key={p.days}
                 onClick={() => setDays(p.days)}
                 className={`px-3 py-2 rounded-md text-xs font-medium transition ${
-                  days === p.days ? 'bg-white shadow text-indigo-600' : 'text-gray-500 hover:text-gray-700'
+                  days === p.days ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 {p.label}
@@ -82,7 +82,7 @@ export default function Analytics() {
               title={t('analytics.conversations')}
               value={summary?.started ?? '-'}
               Icon={HiOutlineChatBubbleLeftRight}
-              color="indigo"
+              color="blue"
               change={summary?.previous_period ? calcChange(summary.started, summary.previous_period.started) : null}
             />
             <SummaryCard
@@ -102,7 +102,7 @@ export default function Analytics() {
               title={t('analytics.success_rate')}
               value={summary?.completion_rate != null ? `${Math.round(summary.completion_rate)}%` : '-'}
               Icon={HiOutlineChartBarSquare}
-              color="pink"
+              color="teal"
             />
           </div>
 
@@ -118,7 +118,7 @@ export default function Analytics() {
                   ))}
                   {funnel.overall_conversion != null && (
                     <div className="pt-3 border-t border-gray-100 text-center">
-                      <span className="text-2xl font-bold text-indigo-600">{Math.round(funnel.overall_conversion)}%</span>
+                      <span className="text-2xl font-bold text-blue-600">{Math.round(funnel.overall_conversion)}%</span>
                       <p className="text-xs text-gray-400 mt-1">{t('analytics.conversion_rate')}</p>
                     </div>
                   )}
@@ -135,7 +135,7 @@ export default function Analytics() {
                 <div className="space-y-2 max-h-80 overflow-y-auto">
                   {events.map((ev, i) => (
                     <div key={i} className="flex items-start gap-3 text-sm py-2.5 border-b border-gray-50 last:border-0">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
                         <EventIcon type={ev.event_type} />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -192,8 +192,8 @@ export default function Analytics() {
 
 /* ── Sub-components ──────────────────────── */
 
-function SummaryCard({ title, value, Icon, color = 'indigo', change }) {
-  const colors = { indigo: 'bg-indigo-50 text-indigo-600', emerald: 'bg-emerald-50 text-emerald-600', amber: 'bg-amber-50 text-amber-600', pink: 'bg-pink-50 text-pink-600' };
+function SummaryCard({ title, value, Icon, color = 'blue', change }) {
+  const colors = { blue: 'bg-blue-50 text-blue-600', emerald: 'bg-emerald-50 text-emerald-600', amber: 'bg-amber-50 text-amber-600', teal: 'bg-teal-50 text-teal-600' };
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5">
       <div className="flex items-center gap-2 sm:gap-2.5 mb-3">
@@ -230,7 +230,7 @@ function FunnelRow({ step, maxValue }) {
       </div>
       <div className="w-full bg-gray-100 rounded-full h-2">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500"
+          className="h-full rounded-full bg-gradient-to-r from-blue-500 to-teal-500 transition-all duration-500"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -254,5 +254,5 @@ const EVENT_ICON_MAP = {
 
 function EventIcon({ type }) {
   const Comp = EVENT_ICON_MAP[type] || MdOutlinePushPin;
-  return <Comp className="w-5 h-5 text-indigo-500" />;
+  return <Comp className="w-5 h-5 text-blue-500" />;
 }

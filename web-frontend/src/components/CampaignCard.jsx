@@ -21,9 +21,9 @@ const CATEGORY_GRADIENTS = {
   food: 'from-lime-500 to-green-600',
   environment: 'from-emerald-500 to-teal-600',
   shelter: 'from-orange-500 to-amber-700',
-  children: 'from-pink-500 to-rose-600',
+  children: 'from-rose-500 to-rose-600',
 };
-const DEFAULT_GRADIENT = 'from-indigo-500 to-purple-600';
+const DEFAULT_GRADIENT = 'from-blue-500 to-teal-600';
 
 /**
  * CampaignCard — displays a single campaign in the grid.
@@ -45,7 +45,7 @@ export default function CampaignCard({ campaign }) {
       <div className={`relative h-36 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
         {(() => { const Icon = CATEGORY_ICONS[catKey] || MdHandshake; return <Icon className="w-14 h-14 text-white/50" />; })()}
         {campaign.category && (
-          <span className="absolute top-3 left-3 bg-white/90 text-xs font-semibold text-indigo-700 px-2 py-0.5 rounded-full capitalize">
+          <span className="absolute top-3 left-3 bg-white/90 text-xs font-semibold text-blue-700 px-2 py-0.5 rounded-full capitalize">
             {campaign.category}
           </span>
         )}
@@ -57,14 +57,14 @@ export default function CampaignCard({ campaign }) {
       </div>
 
       <div className="p-4">
-        <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2">
+        <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
           {campaign.title}
         </h3>showLabel 
 
         <ProgressBar percentage={pct} className="mt-3" />
 
         <div className="flex justify-between items-baseline mt-2 text-sm">
-          <span className="font-bold text-indigo-600">
+          <span className="font-bold text-blue-600">
             ${fmt(campaign.current_usd_total || campaign.raised_amount_usd)}
           </span>
           <span className="text-gray-400">

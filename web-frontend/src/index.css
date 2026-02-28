@@ -12,13 +12,13 @@ html {
 /* ── Custom scrollbar ─────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
 
 /* ── Swiper overrides ─────────────────────── */
 .swiper-button-prev,
 .swiper-button-next {
-  color: #6366f1 !important;
+  color: #2563EB !important;
   background: rgba(255,255,255,0.9);
   width: 40px !important;
   height: 40px !important;
@@ -32,7 +32,7 @@ html {
   font-weight: 700;
 }
 .swiper-pagination-bullet-active {
-  background: #6366f1 !important;
+  background: #2563EB !important;
 }
 
 /* ── Glass card utility ───────────────────── */
@@ -45,7 +45,7 @@ html {
 
 /* ── Gradient text ────────────────────────── */
 .gradient-text {
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #0D9488 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -79,7 +79,7 @@ html {
 .animate-fadeInUp-d3 { animation: fadeInUp 0.5s 0.3s ease-out both; }
 .animate-fadeInUp-d4 { animation: fadeInUp 0.5s 0.4s ease-out both; }
 .animate-shimmer {
-  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }

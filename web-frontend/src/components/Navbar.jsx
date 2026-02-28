@@ -59,7 +59,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 h-16">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 font-bold text-lg text-gray-900 flex-shrink-0 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-200/50 group-hover:shadow-lg group-hover:shadow-indigo-300/50 group-hover:scale-105 transition-all">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center shadow-md shadow-blue-200/50 group-hover:shadow-lg group-hover:shadow-blue-300/50 group-hover:scale-105 transition-all">
             <HiOutlineMicrophone className="w-5 h-5 text-white" />
           </div>
           <span className="hidden sm:inline tracking-tight">{t('app_name')}</span>
@@ -73,7 +73,7 @@ export default function Navbar() {
               to={to}
               className={`relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                 isActive(to)
-                  ? 'bg-indigo-50 text-indigo-700'
+                  ? 'bg-blue-50 text-blue-700'
                   : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
@@ -88,7 +88,7 @@ export default function Navbar() {
               onClick={() => setMoreOpen((v) => !v)}
               className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                 SECONDARY_ITEMS.some((i) => isActive(i.to))
-                  ? 'bg-indigo-50 text-indigo-700'
+                  ? 'bg-blue-50 text-blue-700'
                   : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
@@ -106,7 +106,7 @@ export default function Navbar() {
                     onClick={() => setMoreOpen(false)}
                     className={`flex items-center gap-2.5 px-4 py-2.5 text-sm transition-all ${
                       isActive(to)
-                        ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                        ? 'bg-blue-50 text-blue-700 font-semibold'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   >
@@ -129,7 +129,7 @@ export default function Navbar() {
                 to="/dashboard"
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                   isActive('/dashboard')
-                    ? 'bg-indigo-50 text-indigo-700'
+                    ? 'bg-blue-50 text-blue-700'
                     : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
@@ -147,7 +147,7 @@ export default function Navbar() {
               </div>
             </div>
           ) : (
-            <Link to="/login" className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-all shadow-sm shadow-indigo-200/50 hover:shadow-md hover:shadow-indigo-300/50 hover:-translate-y-px">
+            <Link to="/login" className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-all shadow-sm shadow-blue-200/50 hover:shadow-md hover:shadow-blue-300/50 hover:-translate-y-px">
               <HiOutlineArrowLeftOnRectangle className="w-4 h-4" />
               {t('nav.login')}
             </Link>
@@ -177,7 +177,7 @@ export default function Navbar() {
                 key={to}
                 to={to}
                 className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all ${
-                  isActive(to) ? 'bg-indigo-50 text-indigo-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'
+                  isActive(to) ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -200,7 +200,7 @@ export default function Navbar() {
               </>
             ) : (
               <Link to="/login"
-                className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-indigo-600 font-semibold hover:bg-indigo-50">
+                className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-blue-600 font-semibold hover:bg-blue-50">
                 <HiOutlineArrowLeftOnRectangle className="w-5 h-5" />
                 {t('nav.login')}
               </Link>

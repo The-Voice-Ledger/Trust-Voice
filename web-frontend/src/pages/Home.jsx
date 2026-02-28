@@ -62,7 +62,7 @@ export default function Home() {
       <section className="text-center mb-8">
         <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-900 mb-2 flex items-center justify-center gap-2 sm:gap-3">
           {t('home.hero_title')}
-          <HiOutlineSparkles className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-500" />
+          <HiOutlineSparkles className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
         </h1>
         <p className="text-gray-500 max-w-lg mx-auto">{t('home.hero_subtitle')}</p>
       </section>
@@ -75,13 +75,13 @@ export default function Home() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('home.search_placeholder')}
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <HiOutlineMagnifyingGlass className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
         </div>
         <Link
           to="/assistant"
-          className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-indigo-50 text-indigo-700 text-sm font-medium hover:bg-indigo-100 transition-all border border-indigo-100"
+          className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-all border border-blue-100"
         >
           <HiOutlineSparkles className="w-4 h-4" />
           {t('home.ask_assistant', 'Ask Assistant')}
@@ -96,8 +96,8 @@ export default function Home() {
             onClick={() => setCategory(cat)}
             className={`px-4 py-2 rounded-full text-xs font-medium border transition capitalize
               ${cat === category
-                ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'}`}
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'}`}
           >
             {cat === 'all' ? t('home.filter_all') : cat}
           </button>
