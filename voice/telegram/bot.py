@@ -102,7 +102,7 @@ AUDIO_TEMP_DIR = Path(__file__).parent.parent.parent / "uploads" / "audio"
 AUDIO_TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
 # Conversation states
-SELECTING_LANGUAGE = 1
+LANGUAGE_CHANGE = 100
 
 # In-memory user store (TODO: Replace with database)
 users_db = {}
@@ -410,7 +410,7 @@ async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
     
-    return SELECTING_LANGUAGE
+    return LANGUAGE_CHANGE
 
 
 async def campaigns_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1249,7 +1249,7 @@ async def initialize_bot_for_webhooks():
     language_change_handler = ConversationHandler(
         entry_points=[CommandHandler("language", language_command)],
         states={
-            SELECTING_LANGUAGE: [CallbackQueryHandler(language_selection, pattern="^lang:")]
+            LANGUAGE_CHANGE: [CallbackQueryHandler(language_selection, pattern="^lang:")]
         },
         fallbacks=[CommandHandler("language", language_command)]
     )
@@ -1360,7 +1360,7 @@ def main():
     language_change_handler = ConversationHandler(
         entry_points=[CommandHandler("language", language_command)],
         states={
-            SELECTING_LANGUAGE: [CallbackQueryHandler(language_selection, pattern="^lang:")]
+            LANGUAGE_CHANGE: [CallbackQueryHandler(language_selection, pattern="^lang:")]
         },
         fallbacks=[CommandHandler("language", language_command)]
     )
