@@ -159,7 +159,7 @@ async def handle_language_selection(update: Update, context: ContextTypes.DEFAUL
                 telegram_username=user.username,
                 telegram_first_name=user.first_name,
                 telegram_last_name=user.last_name,
-                role=UserRole.DONOR,
+                role=UserRole.DONOR.value,
                 preferred_language=language_code,
                 is_approved=True,
                 approved_at=datetime.utcnow()
