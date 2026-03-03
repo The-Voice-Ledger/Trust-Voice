@@ -129,6 +129,9 @@ class PendingRegistration(Base):
     
     # Role request
     requested_role = Column(String(50), nullable=False)  # 'CAMPAIGN_CREATOR' or 'FIELD_AGENT'
+
+    # Language preference
+    preferred_language = Column(String(2), default="en")
     
     # Registration form data
     full_name = Column(String(200))
