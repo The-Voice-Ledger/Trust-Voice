@@ -78,6 +78,8 @@ async def admin_requests_command(update: Update, context: ContextTypes.DEFAULT_T
                 message += f"   Org: {pending.organization_name}\n"
             
             message += f"   Location: {pending.location}\n"
+
+            message += f"   Language: {pending.preferred_language or 'en'}\n"
             
             if pending.phone_number:
                 message += f"   Phone: {pending.phone_number}\n"
@@ -189,6 +191,7 @@ async def admin_approve_command(update: Update, context: ContextTypes.DEFAULT_TY
             existing_user.is_approved = True
             existing_user.approved_at = datetime.utcnow()
             existing_user.approved_by_admin_id = admin_user.id
+            existing_user.preferred_language = pending.preferred_language or "en"
             if pending.phone_number:
                 existing_user.phone_number = pending.phone_number
             if pending.pin_hash:
@@ -204,6 +207,7 @@ async def admin_approve_command(update: Update, context: ContextTypes.DEFAULT_TY
                 telegram_first_name=pending.telegram_first_name,
                 telegram_last_name=pending.telegram_last_name,
                 role=UserRole[pending.requested_role],
+                preferred_language=pending.preferred_language or "en",
                 is_approved=True,
                 approved_at=datetime.utcnow(),
                 approved_by_admin_id=admin_user.id,
