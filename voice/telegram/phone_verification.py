@@ -14,7 +14,7 @@ from datetime import datetime
 from telegram import Update, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import ContextTypes
 
-from database.db import get_db
+from database.db import get_db_session
 from database.models import User
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ async def verify_phone_command(update: Update, context: ContextTypes.DEFAULT_TYP
     """
     user_id = update.effective_user.id
     
-    with get_db() as db:
+    with get_db_session() as db:
         user = db.query(User).filter_by(telegram_user_id=str(user_id)).first()
         
         if not user:
@@ -108,7 +108,7 @@ async def handle_contact_share(update: Update, context: ContextTypes.DEFAULT_TYP
     if not phone_number.startswith('+'):
         phone_number = '+' + phone_number
     
-    with get_db() as db:
+    with get_db_session() as db:
         user = db.query(User).filter_by(telegram_user_id=str(user_id)).first()
         
         if not user:
@@ -143,7 +143,7 @@ async def handle_contact_share(update: Update, context: ContextTypes.DEFAULT_TYP
         
         # Success message with access summary
         role_access = ""
-        if user.role.value == "CAMPAIGN_CREATOR":
+        if user.role == "CAMPAIGN_CREATOR":
             role_access = (
                 "\n**Your Access:**\n"
                 "• Create campaigns via web\n"
@@ -152,7 +152,7 @@ async def handle_contact_share(update: Update, context: ContextTypes.DEFAULT_TYP
                 "• Voice donations via Telegram\n"
                 "• IVR donations (coming soon)"
             )
-        elif user.role.value == "FIELD_AGENT":
+        elif user.role == "FIELD_AGENT":
             role_access = (
                 "\n**Your Access:**\n"
                 "• Verify campaigns via web\n"
@@ -190,7 +190,7 @@ async def unverify_phone_command(update: Update, context: ContextTypes.DEFAULT_T
     """
     user_id = update.effective_user.id
     
-    with get_db() as db:
+    with get_db_session() as db:
         user = db.query(User).filter_by(telegram_user_id=str(user_id)).first()
         
         if not user:
