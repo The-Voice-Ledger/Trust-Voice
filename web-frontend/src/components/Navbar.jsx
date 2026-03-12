@@ -212,7 +212,7 @@ export default function Navbar() {
               </>
             ) : (
               <Link to="/login"
-                className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-blue-600 font-semibold hover:bg-blue-50 font-display">
+                className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-indigo-600 font-semibold hover:bg-indigo-50 font-display">
                 <HiOutlineArrowLeftOnRectangle className="w-5 h-5" />
                 {t('nav.login')}
               </Link>

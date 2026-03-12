@@ -76,7 +76,7 @@ export default function Home() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('home.search_placeholder')}
-            className="w-full pl-10 pr-4 py-3 rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className="w-full pl-10 pr-4 py-3 rounded-2xl border border-gray-200/80 bg-white/80 backdrop-blur-sm text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
           />
           <HiOutlineMagnifyingGlass className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400" />
         </div>
@@ -134,7 +134,7 @@ export default function Home() {
               <button
                 onClick={loadMore}
                 disabled={loading}
-                className="group inline-flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-200/80 text-sm font-medium text-gray-700 hover:bg-blue-50/60 hover:border-blue-200 transition-all"
+                className="group inline-flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-200/80 text-sm font-medium text-gray-700 hover:bg-indigo-50/60 hover:border-indigo-200 transition-all"
               >
                 {loading ? t('common.loading') : t('home.load_more')}
                 <HiOutlineArrowRight className="w-3.5 h-3.5 opacity-60 group-hover:translate-x-0.5 transition-transform" />

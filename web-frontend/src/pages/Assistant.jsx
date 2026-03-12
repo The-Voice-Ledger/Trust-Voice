@@ -227,7 +227,7 @@ export default function Assistant() {
             onClick={() => { setAutoSpeak((v) => !v); stopAudio(); }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
               autoSpeak
-                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
                 : 'bg-gray-50 text-gray-400 border-gray-200'
             }`}
             title={autoSpeak ? 'Voice responses ON' : 'Voice responses OFF'}
@@ -268,9 +268,9 @@ export default function Assistant() {
             <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-gray-100/80 overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-indigo-500/30 via-violet-500/30 to-transparent" />
               <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-teal-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
@@ -328,7 +328,7 @@ export default function Assistant() {
 
           {/* Text input with decoration */}
           <div className="flex-1 relative">
-            <div className="absolute top-0 left-4 right-12 h-px bg-gradient-to-r from-blue-500/10 via-transparent to-teal-500/10 pointer-events-none rounded-full" />
+            <div className="absolute top-0 left-4 right-12 h-px bg-gradient-to-r from-indigo-500/10 via-transparent to-violet-500/10 pointer-events-none rounded-full" />
             <textarea
               ref={inputRef}
               value={input}
@@ -336,7 +336,7 @@ export default function Assistant() {
               onKeyDown={handleKeyDown}
               placeholder={t('assistant.placeholder', 'Type a message or hold the mic...')}
               rows={1}
-              className="w-full resize-none rounded-2xl border border-gray-200/80 bg-white/70 backdrop-blur-sm px-4 py-3 pr-12 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-blue-300 focus:bg-white shadow-sm transition-all"
+              className="w-full resize-none rounded-2xl border border-gray-200/80 bg-white/70 backdrop-blur-sm px-4 py-3 pr-12 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 focus:bg-white shadow-sm transition-all"
               style={{ maxHeight: '120px' }}
               disabled={loading}
             />
@@ -416,7 +416,7 @@ function WelcomeScreen({ onSuggestion, t }) {
   ];
 
   const colorMap = {
-    blue: 'bg-blue-50 text-blue-600 group-hover:bg-blue-100',
+    blue: 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100',
     emerald: 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100',
     sky: 'bg-sky-50 text-sky-600 group-hover:bg-sky-100',
     amber: 'bg-amber-50 text-amber-600 group-hover:bg-amber-100',
@@ -444,9 +444,9 @@ function WelcomeScreen({ onSuggestion, t }) {
 
       {/* Decorative divider */}
       <div className="flex items-center gap-3 max-w-[180px] mx-auto mb-8">
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent" />
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-indigo-300/50 to-transparent" />
         <svg width="6" height="6" viewBox="0 0 6 6" fill="none"><path d="M3 0L6 3L3 6L0 3Z" fill="#6366F1" opacity="0.3" /></svg>
-        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-teal-300/50 to-transparent" />
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-violet-300/50 to-transparent" />
       </div>
 
       {/* Suggestion cards */}
@@ -486,12 +486,12 @@ function ChatMessage({ msg, onPlayAudio }) {
   if (msg.role === 'user') {
     return (
       <div className="flex justify-end gap-3">
-        <div className="relative max-w-[85%] bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl rounded-tr-md px-4 py-3 shadow-sm overflow-hidden">
+        <div className="relative max-w-[85%] bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-2xl rounded-tr-md px-4 py-3 shadow-sm overflow-hidden">
           {/* Subtle inner glow */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
           <p className="relative text-sm whitespace-pre-wrap">{msg.text}</p>
           {msg.isVoice && (
-            <div className="relative flex items-center gap-1 mt-1.5 text-blue-200 text-[10px]">
+            <div className="relative flex items-center gap-1 mt-1.5 text-indigo-200 text-[10px]">
               <HiOutlineMicrophone className="w-3 h-3" />
               voice
             </div>
@@ -518,7 +518,7 @@ function ChatMessage({ msg, onPlayAudio }) {
             {msg.audioUrl && (
               <button
                 onClick={() => onPlayAudio(msg.audioUrl)}
-                className="relative mt-2 flex items-center gap-1.5 text-[11px] text-blue-500 hover:text-blue-700 transition"
+                className="relative mt-2 flex items-center gap-1.5 text-[11px] text-indigo-500 hover:text-indigo-700 transition"
               >
                 <HiOutlineSpeakerWave className="w-3.5 h-3.5" />
                 Play response
@@ -568,16 +568,16 @@ function CampaignListCard({ campaigns }) {
             <circle cx="36" cy="12" r="8" stroke="#6366F1" strokeWidth="0.4" opacity="0.05" />
             <circle cx="36" cy="12" r="3" stroke="#6366F1" strokeWidth="0.3" strokeDasharray="1 2" opacity="0.04" />
           </svg>
-          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-violet-50 flex items-center justify-center flex-shrink-0 text-blue-600 font-bold text-sm border border-indigo-100/50">
+          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-violet-50 flex items-center justify-center flex-shrink-0 text-indigo-600 font-bold text-sm border border-indigo-100/50">
             #{c.id}
           </div>
           <div className="relative flex-1 min-w-0">
-            <h4 className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+            <h4 className="text-sm font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
               {c.title}
             </h4>
             <div className="flex items-center gap-2 mt-0.5">
               <ProgressBar percentage={c.progress_pct} className="flex-1" />
-              <span className="text-[10px] font-medium text-blue-600 flex-shrink-0">{c.progress_pct}%</span>
+              <span className="text-[10px] font-medium text-indigo-600 flex-shrink-0">{c.progress_pct}%</span>
             </div>
             <div className="flex items-center gap-3 mt-1 text-[10px] text-gray-400">
               {c.category && <span className="capitalize">{c.category}</span>}
@@ -587,7 +587,7 @@ function CampaignListCard({ campaigns }) {
               <span>${fmt(c.raised_usd)} / ${fmt(c.goal_usd)}</span>
             </div>
           </div>
-          <HiOutlineArrowRight className="relative w-4 h-4 text-gray-300 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+          <HiOutlineArrowRight className="relative w-4 h-4 text-gray-300 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
         </Link>
       ))}
       {campaigns.length > 5 && (
@@ -606,7 +606,7 @@ function CampaignDetailCard({ campaign }) {
     >
       {/* Gradient banner */}
       <div className="relative h-10 bg-gradient-to-r from-indigo-500/8 via-violet-500/5 to-transparent">
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-blue-500/30 via-teal-500/20 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-indigo-500/30 via-violet-500/20 to-transparent" />
         <svg className="absolute right-2 top-0 w-16 h-10 pointer-events-none" viewBox="0 0 64 40" fill="none">
           <circle cx="48" cy="20" r="12" stroke="#6366F1" strokeWidth="0.4" opacity="0.06" />
           <path d="M42 20 L48 14 L54 20 L48 26 Z" stroke="#A855F7" strokeWidth="0.3" opacity="0.05" />
@@ -615,7 +615,7 @@ function CampaignDetailCard({ campaign }) {
       <div className="p-4 -mt-2">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{c.title}</h4>
+            <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{c.title}</h4>
             <p className="text-xs text-gray-500 mt-1 line-clamp-2">{c.description}</p>
           </div>
           <span className={`text-[10px] font-bold px-2 py-1 rounded-lg flex-shrink-0 ${
@@ -723,9 +723,9 @@ function AnalyticsSummaryCard({ stats }) {
   ];
 
   const colorMap = {
-    blue:  { bg: 'bg-blue-50', text: 'text-blue-600', stroke: '#6366F1' },
+    blue:  { bg: 'bg-indigo-50', text: 'text-indigo-600', stroke: '#6366F1' },
     green: { bg: 'bg-green-50', text: 'text-green-600', stroke: '#16A34A' },
-    teal:  { bg: 'bg-teal-50', text: 'text-teal-600', stroke: '#A855F7' },
+    teal:  { bg: 'bg-violet-50', text: 'text-violet-600', stroke: '#A855F7' },
     amber: { bg: 'bg-amber-50', text: 'text-amber-600', stroke: '#D97706' },
   };
 

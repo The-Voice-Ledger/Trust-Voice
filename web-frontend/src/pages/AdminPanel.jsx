@@ -31,7 +31,7 @@ export default function AdminPanel() {
             key={tb}
             onClick={() => setTab(tb)}
             className={`flex-shrink-0 px-4 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap ${
-              tab === tb ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'
+              tab === tb ? 'bg-white shadow text-indigo-600' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             {t(`admin.tab_${tb}`)}
@@ -237,7 +237,7 @@ function NgoList({ t }) {
                 <h3 className="font-semibold text-gray-900">{ngo.name}</h3>
                 <p className="text-sm text-gray-500">{ngo.description || '-'}</p>
                 {ngo.website_url && (
-                  <a href={ngo.website_url} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline">
+                  <a href={ngo.website_url} target="_blank" rel="noreferrer" className="text-xs text-indigo-600 hover:underline">
                     {ngo.website_url}
                   </a>
                 )}

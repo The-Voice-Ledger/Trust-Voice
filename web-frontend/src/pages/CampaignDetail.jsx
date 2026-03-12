@@ -45,14 +45,14 @@ export default function CampaignDetail() {
   return (
     <PageBg pattern="topography" colorA="#6366F1" colorB="#A855F7">
     <div className="max-w-3xl mx-auto px-4 py-6">
-      <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mb-4 py-2">
+      <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline mb-4 py-2">
         <HiOutlineArrowLeft className="w-4 h-4" /> {t('common.back')}
       </Link>
 
       {/* Header */}
       <div className="mb-6">
         {campaign.category && (
-          <span className="inline-block bg-blue-50 text-blue-600 text-xs font-semibold px-2.5 py-0.5 rounded-full capitalize mb-2">
+          <span className="inline-block bg-indigo-50 text-indigo-600 text-xs font-semibold px-2.5 py-0.5 rounded-full capitalize mb-2">
             {campaign.category}
           </span>
         )}
@@ -121,7 +121,7 @@ export default function CampaignDetail() {
         {!showDonate ? (
           <button
             onClick={() => setShowDonate(true)}
-            className="w-full py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-center"
+            className="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition text-center"
           >
             {t('campaign.donate_now')}
           </button>
@@ -135,7 +135,7 @@ export default function CampaignDetail() {
         {/* Assistant CTA */}
         <Link
           to={`/assistant?campaign=${campaign.id}`}
-          className="mt-4 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-all border border-indigo-100"
+          className="mt-4 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-indigo-50 text-indigo-700 text-sm font-medium hover:bg-indigo-100 transition-all border border-indigo-100"
         >
           <HiOutlineSparkles className="w-4 h-4" />
           Ask the Assistant about this campaign

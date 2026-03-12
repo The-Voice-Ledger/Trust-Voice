@@ -105,7 +105,7 @@ export default function RegisterNgo() {
         {STEPS.map((s, i) => (
           <div
             key={s}
-            className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-blue-600' : 'bg-gray-200'}`}
+            className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-indigo-600' : 'bg-gray-200'}`}
           />
         ))}
       </div>
@@ -257,7 +257,7 @@ export default function RegisterNgo() {
           <button
             onClick={() => setStep((s) => s + 1)}
             disabled={!canNext()}
-            className="px-5 py-3 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition"
+            className="px-5 py-3 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition"
           >
             {t('ngo_reg.next')} →
           </button>

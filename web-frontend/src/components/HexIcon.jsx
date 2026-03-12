@@ -229,7 +229,7 @@ const SIZES = {
 /**
  * @param {Object}   props
  * @param {Function} props.Icon       - icon component (from icons.jsx)
- * @param {string}   props.accent     - hex color, e.g. '#2563EB'
+ * @param {string}   props.accent     - hex color, e.g. '#6366F1'
  * @param {string}   [props.bespoke]  - key into BESPOKE_SVGS (optional)
  * @param {'xs'|'sm'|'md'|'lg'} [props.size='lg'] - size preset
  * @param {boolean}  [props.spin]     - show spinning orbit (default: true)

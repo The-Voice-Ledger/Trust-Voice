@@ -14,7 +14,7 @@ const CATEGORY_ICONS = {
 };
 
 const CATEGORY_ACCENT_COLORS = {
-  water: { from: '#0891B2', to: '#6366F1' },
+  water: { from: '#C084FC', to: '#6366F1' },
   education: { from: '#D97706', to: '#EA580C' },
   health: { from: '#E11D48', to: '#DC2626' },
   infrastructure: { from: '#475569', to: '#374151' },

@@ -62,7 +62,7 @@ export default function Analytics() {
                 key={p.days}
                 onClick={() => setDays(p.days)}
                 className={`px-3 py-2 rounded-md text-xs font-medium transition font-display ${
-                  days === p.days ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                  days === p.days ? 'bg-white shadow text-indigo-600' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 {p.label}
@@ -173,7 +173,7 @@ export default function Analytics() {
           {/* Daily metrics (simple text grid if metrics available) */}
           {metrics?.daily_metrics && (
             <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-6 overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-500 via-emerald-500 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-emerald-500 to-transparent" />
               <svg className="absolute top-2 right-2 w-24 h-24 pointer-events-none" viewBox="0 0 96 96" fill="none">
                 <rect x="54" y="28" width="6" height="16" rx="1" stroke="#A855F7" strokeWidth="0.4" opacity="0.06" />
                 <rect x="64" y="18" width="6" height="26" rx="1" stroke="#A855F7" strokeWidth="0.4" opacity="0.06" />
@@ -251,7 +251,7 @@ const SUMMARY_SVGS = {
 const SUMMARY_ACCENTS = { blue: '#6366F1', emerald: '#059669', amber: '#D97706', teal: '#A855F7' };
 
 function SummaryCard({ title, value, Icon, color = 'blue', change }) {
-  const colors = { blue: 'bg-blue-50 text-blue-600', emerald: 'bg-emerald-50 text-emerald-600', amber: 'bg-amber-50 text-amber-600', teal: 'bg-teal-50 text-teal-600' };
+  const colors = { blue: 'bg-indigo-50 text-indigo-600', emerald: 'bg-emerald-50 text-emerald-600', amber: 'bg-amber-50 text-amber-600', teal: 'bg-violet-50 text-violet-600' };
   const accent = SUMMARY_ACCENTS[color] || '#6366F1';
   return (
     <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 overflow-hidden group transition-all hover:shadow-md hover:border-transparent">
@@ -321,5 +321,5 @@ const EVENT_ICON_MAP = {
 
 function EventIcon({ type }) {
   const Comp = EVENT_ICON_MAP[type] || MdOutlinePushPin;
-  return <Comp className="w-5 h-5 text-blue-500" />;
+  return <Comp className="w-5 h-5 text-indigo-500" />;
 }

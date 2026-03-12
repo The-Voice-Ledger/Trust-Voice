@@ -49,7 +49,7 @@ export default function DonateCheckout() {
   return (
     <PageBg pattern="topography" colorA="#F43F5E" colorB="#A855F7">
     <div className="max-w-lg mx-auto px-4 py-8">
-      <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mb-6 py-2">
+      <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline mb-6 py-2">
         <HiOutlineArrowLeft className="w-4 h-4" /> {t('common.back')}
       </Link>
 
@@ -276,7 +276,7 @@ function DonationSuccess({ t }) {
       </div>
       <p className="relative text-lg font-semibold text-green-600">{t('donate.success')}</p>
       <p className="relative text-sm text-gray-400 mt-1">Your donation is being processed on the blockchain</p>
-      <Link to="/dashboard" className="relative inline-flex items-center gap-1.5 text-sm text-blue-600 hover:underline mt-4 font-medium">
+      <Link to="/dashboard" className="relative inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:underline mt-4 font-medium">
         {t('donate.view_history')} <span>→</span>
       </Link>
     </div>

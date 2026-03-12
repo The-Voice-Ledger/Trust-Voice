@@ -155,7 +155,7 @@ export default function DonationForm({ campaignId, donorId, onSuccess }) {
           type="checkbox"
           checked={anonymous}
           onChange={(e) => setAnonymous(e.target.checked)}
-          className="rounded border-gray-300 text-blue-600 focus:ring-indigo-500"
+          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
         />
         {t('donate.anonymous')}
       </label>
@@ -165,7 +165,7 @@ export default function DonationForm({ campaignId, donorId, onSuccess }) {
       <button
         type="submit"
         disabled={loading || !amount}
-        className="w-full py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 transition"
+        className="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 disabled:opacity-50 transition"
       >
         {loading ? t('donate.processing') : t('donate.submit')}
       </button>

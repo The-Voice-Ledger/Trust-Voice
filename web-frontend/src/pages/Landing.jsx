@@ -274,7 +274,7 @@ export default function Landing() {
 
         {loadingFeatured ? (
           <div className="flex justify-center py-16">
-            <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
           </div>
         ) : featured.length === 0 ? (
           <div className="text-center py-16 text-gray-400">{t('home.no_campaigns')}</div>
@@ -303,7 +303,7 @@ export default function Landing() {
         <div className="text-center mt-8">
           <Link
             to="/campaigns"
-            className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 transition-all"
+            className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-50 text-indigo-700 font-semibold hover:bg-indigo-100 transition-all"
           >
             {t('landing.view_all_campaigns')}
             <HiOutlineArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -503,7 +503,7 @@ function HeroVideo() {
         {/* Loading spinner */}
         {!loaded && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-            <div className="w-10 h-10 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-indigo-300 border-t-indigo-600 rounded-full animate-spin" />
           </div>
         )}
 
@@ -516,12 +516,12 @@ function HeroVideo() {
             aria-label={playing ? 'Pause' : 'Play'}
           >
             {playing ? (
-              <svg className="w-7 h-7 text-blue-700" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-7 h-7 text-indigo-700" fill="currentColor" viewBox="0 0 24 24">
                 <rect x="6" y="4" width="4" height="16" rx="1" />
                 <rect x="14" y="4" width="4" height="16" rx="1" />
               </svg>
             ) : (
-              <HiOutlinePlayCircle className="w-9 h-9 text-blue-700" />
+              <HiOutlinePlayCircle className="w-9 h-9 text-indigo-700" />
             )}
           </button>
         </div>
@@ -539,7 +539,7 @@ function HeroVideo() {
             </>
           ) : (
             <>
-              <HiOutlineSpeakerWave className="w-5 h-5 text-blue-600" />
+              <HiOutlineSpeakerWave className="w-5 h-5 text-indigo-600" />
               <span className="hidden sm:inline">{t('landing.video_mute', 'Mute')}</span>
             </>
           )}
@@ -802,7 +802,7 @@ function MediaCard({ campaign, t }) {
 }
 
 const MEDIA_CARD_ACCENTS = {
-  water: { from: '#0891B2', to: '#6366F1' },
+  water: { from: '#C084FC', to: '#6366F1' },
   education: { from: '#D97706', to: '#EA580C' },
   health: { from: '#E11D48', to: '#DC2626' },
   infrastructure: { from: '#475569', to: '#374151' },

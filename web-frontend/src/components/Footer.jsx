@@ -72,8 +72,8 @@ export default function Footer() {
 
 function FooterLink({ to, Icon, children }) {
   return (
-    <Link to={to} className="flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition group">
-      <Icon className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition" />
+    <Link to={to} className="flex items-center gap-2 text-sm text-gray-500 hover:text-indigo-600 transition group">
+      <Icon className="w-4 h-4 text-gray-400 group-hover:text-indigo-500 transition" />
       {children}
     </Link>
   );

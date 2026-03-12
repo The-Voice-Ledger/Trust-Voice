@@ -93,7 +93,7 @@ export default function CreateCampaign() {
       {/* Progress */}
       <div className="flex gap-1 mb-8">
         {STEPS.map((_, i) => (
-          <div key={i} className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-blue-600' : 'bg-gray-200'}`} />
+          <div key={i} className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-indigo-600' : 'bg-gray-200'}`} />
         ))}
       </div>
 
@@ -226,7 +226,7 @@ export default function CreateCampaign() {
               <label htmlFor="video-upload" className="cursor-pointer">
                 {form.video_file ? (
                   <div className="flex flex-col items-center">
-                    <HiOutlineFilm className="w-10 h-10 text-blue-500" />
+                    <HiOutlineFilm className="w-10 h-10 text-indigo-500" />
                     <p className="text-sm font-medium text-gray-700 mt-2">{form.video_file.name}</p>
                     <p className="text-xs text-gray-400">{(form.video_file.size / 1024 / 1024).toFixed(1)} MB</p>
                   </div>
@@ -266,7 +266,7 @@ export default function CreateCampaign() {
         </button>
         {step < STEPS.length - 1 ? (
           <button onClick={() => setStep((s) => s + 1)} disabled={!canNext()}
-            className="px-5 py-3 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition">
+            className="px-5 py-3 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition">
             {t('create_campaign.next')} →
           </button>
         ) : (

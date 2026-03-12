@@ -84,7 +84,7 @@ export default function Dashboard() {
       {/* Receipt modal */}
       {activeReceipt && (
         <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 shadow-md p-6 mb-6 overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-500 via-emerald-500 to-transparent" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-emerald-500 to-transparent" />
           <svg className="absolute top-2 right-12 w-20 h-20 pointer-events-none" viewBox="0 0 80 80" fill="none">
             <rect x="46" y="10" width="22" height="28" rx="3" stroke="#A855F7" strokeWidth="0.5" opacity="0.05" />
             <path d="M52 20 L62 20" stroke="#A855F7" strokeWidth="0.4" opacity="0.04" />
@@ -113,7 +113,7 @@ export default function Dashboard() {
               )}
               {activeReceipt.blockchain_tx && (
                 <ReceiptRow label="Blockchain TX" value={
-                  <a href={activeReceipt.blockchain_tx} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline font-mono text-xs">
+                  <a href={activeReceipt.blockchain_tx} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline font-mono text-xs">
                     {activeReceipt.blockchain_tx.slice(0, 20)}…
                   </a>
                 } />
@@ -140,7 +140,7 @@ export default function Dashboard() {
       ) : donations.length === 0 ? (
         <div className="text-center py-10">
           <p className="text-gray-400 mb-4">{t('dashboard.no_donations')}</p>
-          <Link to="/campaigns" className="text-blue-600 hover:underline text-sm font-medium">
+          <Link to="/campaigns" className="text-indigo-600 hover:underline text-sm font-medium">
             {t('landing.explore_btn')} →
           </Link>
         </div>
@@ -169,7 +169,7 @@ export default function Dashboard() {
                 <button
                   onClick={() => viewReceipt(d.id)}
                   disabled={receiptLoading}
-                  className="text-xs text-blue-600 hover:underline py-1 px-2"
+                  className="text-xs text-indigo-600 hover:underline py-1 px-2"
                 >
                   {t('dashboard.receipt')}
                 </button>
@@ -218,7 +218,7 @@ function StatusBadge({ status }) {
   const colors = {
     completed: 'bg-green-50 text-green-600',
     pending: 'bg-yellow-50 text-yellow-600',
-    processing: 'bg-blue-50 text-blue-600',
+    processing: 'bg-indigo-50 text-indigo-600',
     failed: 'bg-red-50 text-red-600',
     refunded: 'bg-gray-50 text-gray-600',
   };
