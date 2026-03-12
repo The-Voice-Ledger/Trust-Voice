@@ -14,30 +14,49 @@ import CreateCampaign from './pages/CreateCampaign'
 import FieldAgent from './pages/FieldAgent'
 import DonateCheckout from './pages/DonateCheckout'
 import Assistant from './pages/Assistant'
+import ProjectLanding from './projects/ProjectLanding'
 
-export default function App() {
+/* Standard layout wrapper (Navbar + Footer) */
+function StandardLayout({ children }) {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <main className="flex-1 pb-20 sm:pb-0">
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/campaigns" element={<Home />} />
-          <Route path="/campaign/:id" element={<CampaignDetail />} />
-          <Route path="/donate" element={<DonateCheckout />} />
-          <Route path="/donate/:campaignId" element={<DonateCheckout />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/register-ngo" element={<RegisterNgo />} />
-          <Route path="/create-campaign" element={<CreateCampaign />} />
-          <Route path="/field-agent" element={<FieldAgent />} />
-          <Route path="/assistant" element={<Assistant />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Routes>
-      </main>
+      <main className="flex-1 pb-20 sm:pb-0">{children}</main>
       <Footer />
       <MobileBottomNav />
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <Routes>
+      {/* Project pages — their own layout */}
+      <Route path="/project/:slug" element={<ProjectLanding />} />
+
+      {/* Standard app pages */}
+      <Route
+        path="*"
+        element={
+          <StandardLayout>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/campaigns" element={<Home />} />
+              <Route path="/campaign/:id" element={<CampaignDetail />} />
+              <Route path="/donate" element={<DonateCheckout />} />
+              <Route path="/donate/:campaignId" element={<DonateCheckout />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/register-ngo" element={<RegisterNgo />} />
+              <Route path="/create-campaign" element={<CreateCampaign />} />
+              <Route path="/field-agent" element={<FieldAgent />} />
+              <Route path="/assistant" element={<Assistant />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+            </Routes>
+          </StandardLayout>
+        }
+      />
+    </Routes>
   )
 }
