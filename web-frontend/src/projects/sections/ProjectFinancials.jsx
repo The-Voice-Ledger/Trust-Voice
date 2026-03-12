@@ -136,7 +136,16 @@ export default function ProjectFinancials({ config }) {
           <p className="text-xs font-medium tracking-[0.2em] uppercase mb-3 text-white/30">
             {financials.sectionLabel}
           </p>
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold text-white tracking-tight mb-4">
+          <h2
+            className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight mb-4"
+            style={{
+              background: `linear-gradient(90deg, ${p}, ${s || '#D97706'}, ${p})`,
+              backgroundSize: '200% 100%',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              animation: 'shimmer 6s ease-in-out infinite',
+            }}
+          >
             {financials.heading}
           </h2>
           {/* Total raise with animated appearance (optional) */}
