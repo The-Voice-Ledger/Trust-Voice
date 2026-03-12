@@ -85,7 +85,7 @@ const PROJECTS = {
           label: 'The Opportunity',
           icon: 'heart',
           bespoke: 'heart',
-          text: 'Help us raise $400,000 to build the farm, the processing facility, and the eco-lodge. In return, come be part of it. Stay, harvest, create, and grow with us.',
+          text: 'Help us build the farm, the processing facility, and the eco-lodge. In return, come be part of it. Stay, harvest, create, and grow with us.',
         },
       ],
     },
@@ -266,8 +266,6 @@ const PROJECTS = {
     financials: {
       sectionLabel: 'The Plan',
       heading: 'Building the Oasis',
-      totalRaise: '$400,000',
-      totalRaiseLabel: 'Fundraising Goal',
       capex: [
         { item: 'Agri-Infrastructure', amount: '$110K', detail: 'Solar drip irrigation, borehole, and high-yield Moringa seedlings' },
         { item: 'Processing Facility', amount: '$50K', detail: 'Industrial dehydrators, pulverizers, and cold-press oil expellers. This is where the value gets created' },

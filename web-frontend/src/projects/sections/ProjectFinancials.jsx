@@ -139,7 +139,8 @@ export default function ProjectFinancials({ config }) {
           <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold text-white tracking-tight mb-4">
             {financials.heading}
           </h2>
-          {/* Total raise with animated appearance */}
+          {/* Total raise with animated appearance (optional) */}
+          {financials.totalRaise && (
           <div
             className="inline-flex items-baseline gap-2"
             style={{
@@ -155,6 +156,7 @@ export default function ProjectFinancials({ config }) {
               {financials.totalRaiseLabel}
             </span>
           </div>
+          )}
         </div>
 
         {/* Two-column layout: Allocation rings + Growth staircase */}
