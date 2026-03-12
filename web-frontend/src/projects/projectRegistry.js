@@ -303,7 +303,7 @@ const PROJECTS = {
     },
 
     /* -- Sections to render (order matters) -- */
-    sections: ['hero', 'vision', 'narrative', 'market', 'pillars', 'advantages', 'experience', 'financials', 'cta'],
+    sections: ['hero', 'vision', 'narrative', 'market', 'pipeline', 'pillars', 'advantages', 'experience', 'financials', 'cta'],
   },
 };
 

@@ -16,12 +16,14 @@ import ProjectAdvantages from './sections/ProjectAdvantages';
 import ProjectExperience from './sections/ProjectExperience';
 import ProjectFinancials from './sections/ProjectFinancials';
 import ProjectCTA from './sections/ProjectCTA';
+import MoringaPipeline from './sections/MoringaPipeline';
 
 const SECTION_MAP = {
   hero: ProjectHero,
   vision: ProjectVision,
   narrative: ProjectNarrative,
   market: ProjectMarket,
+  pipeline: MoringaPipeline,
   pillars: ProjectPillars,
   advantages: ProjectAdvantages,
   experience: ProjectExperience,
