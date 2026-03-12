@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
-import VoiceButton from '../components/VoiceButton';
 import useAuthStore from '../stores/authStore';
-import { HiOutlineMapPin, HiOutlineFilm, HiOutlineVideoCameraSlash, HiOutlineMicrophone } from '../components/icons';
+import { HiOutlineMapPin, HiOutlineFilm, HiOutlineVideoCameraSlash, HiOutlineRocketLaunch } from '../components/icons';
 import { PageBg, PageHeader } from '../components/SvgDecorations';
 
 const STEPS = ['basics', 'details', 'funding', 'media', 'review'];
@@ -88,7 +87,7 @@ export default function CreateCampaign() {
   return (
     <PageBg pattern="isometric" colorA="#7C3AED" colorB="#6366F1">
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <PageHeader icon={HiOutlineMicrophone} title={t('create_campaign.title')} subtitle={t('create_campaign.subtitle')} accentColor="violet" bespoke="rocket" />
+      <PageHeader icon={HiOutlineRocketLaunch} title={t('create_campaign.title')} subtitle={t('create_campaign.subtitle')} accentColor="violet" bespoke="rocket" />
 
       {/* Progress */}
       <div className="flex gap-1 mb-8">
@@ -121,19 +120,6 @@ export default function CreateCampaign() {
           <div className="space-y-4">
             <Field label={t('create_campaign.campaign_title')} required value={form.title}
               onChange={(v) => set('title', v)} placeholder={t('create_campaign.title_placeholder')} />
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">{t('create_campaign.or_dictate')}</span>
-              <VoiceButton
-                apiCall={async (blob) => {
-                  const fd = new FormData();
-                  fd.append('audio', blob, `recording.${blob.ext || 'webm'}`);
-                  fd.append('user_id', user?.telegram_user_id || 'web_anonymous');
-                  return api.upload('/voice/dictate-text', fd);
-                }}
-                onResult={(r) => { if (r?.transcription) set('title', r.transcription); }}
-                className="!text-xs !py-1.5"
-              />
-            </div>
           </div>
         )}
 
@@ -144,18 +130,6 @@ export default function CreateCampaign() {
               <textarea value={form.description} onChange={(e) => set('description', e.target.value)}
                 rows={5} placeholder={t('create_campaign.desc_placeholder')}
                 className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
-              <VoiceButton
-                apiCall={async (blob) => {
-                  const fd = new FormData();
-                  fd.append('audio', blob, `recording.${blob.ext || 'webm'}`);
-                  fd.append('user_id', user?.telegram_user_id || 'web_anonymous');
-                  return api.upload('/voice/dictate-text', fd);
-                }}
-                onResult={(r) => {
-                  if (r?.transcription) set('description', (form.description ? form.description + ' ' : '') + r.transcription);
-                }}
-                className="mt-2 !text-xs !py-1.5"
-              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('create_campaign.category')}</label>

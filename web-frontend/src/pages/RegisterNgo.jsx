@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { submitNgoRegistration } from '../api/ngoRegistrations';
-import { api } from '../api/client';
-import VoiceButton from '../components/VoiceButton';
 import useAuthStore from '../stores/authStore';
-import { HiOutlineCheckCircle, HiOutlineMicrophone } from '../components/icons';
+import { HiOutlineCheckCircle, HiOutlineBuildingOffice2 } from '../components/icons';
 import HexIcon from '../components/HexIcon';
 import { PageBg, PageHeader } from '../components/SvgDecorations';
 
@@ -73,16 +71,6 @@ export default function RegisterNgo() {
     }
   };
 
-  // Voice dictation handler — fills the active field
-  const handleVoiceDictation = (result) => {
-    if (result?.transcription) {
-      // Auto-fill the first empty field in current step
-      const txt = result.transcription;
-      if (step === 0 && !form.organization_name) set('organization_name', txt);
-      else if (step === 2 && !form.mission_statement) set('mission_statement', txt);
-    }
-  };
-
   if (success) {
     return (
       <div className="max-w-lg mx-auto px-4 py-20 text-center">
@@ -98,7 +86,7 @@ export default function RegisterNgo() {
   return (
     <PageBg pattern="circuit" colorA="#6366F1" colorB="#A855F7">
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <PageHeader icon={HiOutlineMicrophone} title={t('ngo_reg.title')} subtitle={t('ngo_reg.subtitle')} accentColor="blue" bespoke="building" />
+      <PageHeader icon={HiOutlineBuildingOffice2} title={t('ngo_reg.title')} subtitle={t('ngo_reg.subtitle')} accentColor="violet" bespoke="building" />
 
       {/* Progress bar */}
       <div className="flex gap-1 mb-8">
@@ -178,21 +166,6 @@ export default function RegisterNgo() {
               <textarea value={form.mission_statement} onChange={(e) => set('mission_statement', e.target.value)}
                 rows={4} placeholder={t('ngo_reg.mission_placeholder')}
                 className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
-              <div className="mt-2">
-                <VoiceButton
-                  apiCall={async (blob) => {
-                    // Use dictate-text voice endpoint
-                    const fd = new FormData();
-                    fd.append('audio', blob, `recording.${blob.ext || 'webm'}`);
-                    fd.append('user_id', user?.telegram_user_id || 'web_anonymous');
-                    return api.upload('/voice/dictate-text', fd);
-                  }}
-                  onResult={(r) => {
-                    if (r?.transcription) set('mission_statement', (form.mission_statement ? form.mission_statement + ' ' : '') + r.transcription);
-                  }}
-                  className="!text-xs !py-1.5"
-                />
-              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('ngo_reg.focus_areas')}</label>
