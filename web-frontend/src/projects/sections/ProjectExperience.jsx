@@ -165,8 +165,8 @@ export default function ProjectExperience({ config }) {
         <div className="flex flex-col items-center">
 
           {/* Concentric rings with day labels */}
-          <div className="relative mb-12" style={{ width: 320, height: 320 }}>
-            <svg width="320" height="320" viewBox="0 0 320 320" className="absolute inset-0">
+          <div className="relative mb-12" style={{ width: 380, height: 380 }}>
+            <svg width="380" height="380" viewBox="0 0 380 380" className="absolute inset-0">
               <defs>
                 {colors.map((c, i) => (
                   <radialGradient key={i} id={`ring-glow-${i}`} cx="50%" cy="50%" r="50%">
@@ -179,8 +179,8 @@ export default function ProjectExperience({ config }) {
               {/* Radial pulse on active change */}
               {visible && (
                 <circle
-                  cx="160" cy="160"
-                  r={75 + active * 30}
+                  cx="190" cy="190"
+                  r={65 + active * 30}
                   fill="none"
                   stroke={colors[active]}
                   strokeWidth="1"
@@ -191,21 +191,19 @@ export default function ProjectExperience({ config }) {
               )}
 
               {/* Three concentric ring tracks */}
-              {[75, 105, 135].map((r, i) => {
+              {[65, 95, 125].map((r, i) => {
                 const isActive = i === active;
                 return (
                   <g key={i}>
-                    {/* Background ring */}
                     <circle
-                      cx="160" cy="160" r={r}
+                      cx="190" cy="190" r={r}
                       fill="none"
                       stroke="rgba(0,0,0,0.04)"
                       strokeWidth={isActive ? 2.5 : 1.5}
                       style={{ transition: 'stroke-width 0.4s ease' }}
                     />
-                    {/* Active colored ring */}
                     <circle
-                      cx="160" cy="160" r={r}
+                      cx="190" cy="190" r={r}
                       fill="none"
                       stroke={colors[i]}
                       strokeWidth={isActive ? 2.5 : 0}
@@ -215,17 +213,58 @@ export default function ProjectExperience({ config }) {
                       strokeLinecap="round"
                       style={{ transition: 'stroke-dashoffset 0.8s ease, opacity 0.4s ease, stroke-width 0.4s ease' }}
                     />
-                    {/* Soft glow behind active ring */}
                     {isActive && (
-                      <circle cx="160" cy="160" r={r} fill={`url(#ring-glow-${i})`} opacity="0.6" />
+                      <circle cx="190" cy="190" r={r} fill={`url(#ring-glow-${i})`} opacity="0.6" />
                     )}
+                  </g>
+                );
+              })}
+
+              {/* Dot markers on each ring + connector lines outward */}
+              {[
+                { angle: 210, r: 65 },
+                { angle: 90, r: 95 },
+                { angle: 330, r: 125 },
+              ].map(({ angle, r }, i) => {
+                const rad = (angle * Math.PI) / 180;
+                const dx = 190 + r * Math.cos(rad);
+                const dy = 190 - r * Math.sin(rad);
+                const lx = 190 + (r + 40) * Math.cos(rad);
+                const ly = 190 - (r + 40) * Math.sin(rad);
+                const isActive = i === active;
+                return (
+                  <g key={i} className="cursor-pointer" onClick={() => handleSelect(i)}>
+                    {isActive && (
+                      <circle cx={dx} cy={dy} r="18" fill={colors[i]} opacity="0.08" />
+                    )}
+                    <circle cx={dx} cy={dy}
+                      r={isActive ? 14 : 10}
+                      fill={isActive ? `${colors[i]}15` : 'white'}
+                      stroke={isActive ? colors[i] : 'rgba(0,0,0,0.08)'}
+                      strokeWidth="2"
+                      style={{ transition: 'all 0.3s ease' }}
+                    />
+                    <circle cx={dx} cy={dy}
+                      r={isActive ? 5 : 3.5}
+                      fill={colors[i]}
+                      opacity={isActive ? 1 : 0.3}
+                      style={{ transition: 'all 0.3s ease' }}
+                    />
+                    <line
+                      x1={dx} y1={dy} x2={lx} y2={ly}
+                      stroke={isActive ? colors[i] : 'rgba(0,0,0,0.06)'}
+                      strokeWidth="1"
+                      strokeDasharray="3 2"
+                      opacity={isActive ? 0.4 : 0.15}
+                      style={{ transition: 'all 0.3s ease' }}
+                    />
                   </g>
                 );
               })}
 
               {/* 3Cs center text */}
               <text
-                x="160" y="154"
+                x="190" y="184"
                 textAnchor="middle"
                 className="font-display"
                 style={{
@@ -239,7 +278,7 @@ export default function ProjectExperience({ config }) {
                 3Cs
               </text>
               <text
-                x="160" y="172"
+                x="190" y="202"
                 textAnchor="middle"
                 style={{
                   fontSize: 8.5,
@@ -255,77 +294,43 @@ export default function ProjectExperience({ config }) {
               </text>
             </svg>
 
-            {/* Day node buttons positioned on each ring */}
+            {/* Day labels — positioned OUTSIDE the rings */}
             {experience.days.map((day, i) => {
-              /* Spread nodes: upper-left, top-center, upper-right */
-              const angles = [220, 270, 320]; // degrees clockwise from 3-o'clock
-              const radii = [75, 105, 135];
-              const angleRad = (angles[i] * Math.PI) / 180;
-              const nx = 160 + radii[i] * Math.cos(angleRad);
-              const ny = 160 + radii[i] * Math.sin(angleRad);
+              const nodeAngles = [210, 90, 330];
+              const nodeRadii = [65, 95, 125];
+              const labelRadius = nodeRadii[i] + 52;
+              const rad = (nodeAngles[i] * Math.PI) / 180;
+              const lx = 190 + labelRadius * Math.cos(rad);
+              const ly = 190 - labelRadius * Math.sin(rad);
               const isActive = i === active;
-
-              /* Label placement: Day 1=left, Day 2=above, Day 3=right */
-              const layouts = [
-                { dir: 'row-reverse', align: 'right', offsetX: 0, offsetY: 0, flexDir: 'row-reverse' },
-                { dir: 'column-reverse', align: 'center', offsetX: 0, offsetY: 0, flexDir: 'column-reverse' },
-                { dir: 'row', align: 'left', offsetX: 0, offsetY: 0, flexDir: 'row' },
-              ];
-              const layout = layouts[i];
+              const textAlign = i === 0 ? 'right' : i === 2 ? 'left' : 'center';
 
               return (
                 <button
                   key={i}
                   onClick={() => handleSelect(i)}
-                  className="absolute flex items-center gap-2.5 cursor-pointer group"
+                  className="absolute cursor-pointer whitespace-nowrap"
                   style={{
-                    left: nx,
-                    top: ny,
-                    flexDirection: layout.flexDir,
+                    left: lx,
+                    top: ly,
                     transform: 'translate(-50%, -50%)',
+                    textAlign,
                     opacity: visible ? 1 : 0,
                     transition: `opacity 0.5s ease ${0.3 + i * 0.15}s`,
                   }}
                 >
-                  {/* Node dot */}
                   <span
-                    className="relative flex-shrink-0 rounded-full flex items-center justify-center transition-all duration-400"
-                    style={{
-                      width: isActive ? 36 : 28,
-                      height: isActive ? 36 : 28,
-                      border: `2px solid ${isActive ? colors[i] : 'rgba(0,0,0,0.08)'}`,
-                      backgroundColor: isActive ? `${colors[i]}15` : 'white',
-                      boxShadow: isActive ? `0 0 20px ${colors[i]}25` : '0 1px 3px rgba(0,0,0,0.06)',
-                    }}
+                    className="block text-xs font-display font-bold tracking-wide uppercase transition-colors duration-300"
+                    style={{ color: isActive ? colors[i] : '#9ca3af' }}
                   >
-                    <span
-                      className="rounded-full transition-all duration-300"
-                      style={{
-                        width: isActive ? 12 : 8,
-                        height: isActive ? 12 : 8,
-                        backgroundColor: colors[i],
-                        opacity: isActive ? 1 : 0.3,
-                      }}
-                    />
+                    {day.day}
                   </span>
-                  {/* Label */}
-                  <div
-                    className="whitespace-nowrap transition-all duration-300"
-                    style={{ opacity: isActive ? 1 : 0.45, textAlign: layout.align }}
+                  <span
+                    className="block text-[11px] font-medium mt-0.5 transition-colors duration-300"
+                    style={{ color: isActive ? '#374151' : '#d1d5db' }}
                   >
-                    <span
-                      className="block text-xs font-display font-bold tracking-wide uppercase"
-                      style={{ color: isActive ? colors[i] : '#9ca3af' }}
-                    >
-                      {day.day}
-                    </span>
-                    <span
-                      className="block text-[11px] font-medium mt-0.5"
-                      style={{ color: isActive ? '#374151' : '#d1d5db' }}
-                    >
-                      {day.title}
-                    </span>
-                  </div>
+                    {day.title}
+                  </span>
                 </button>
               );
             })}
