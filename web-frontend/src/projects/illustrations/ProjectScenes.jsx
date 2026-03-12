@@ -22,78 +22,161 @@ const dSoil= '#57534E'; // dark earth
 export function HeroPanorama({ className = '' }) {
   return (
     <svg
-      viewBox="0 0 1200 260"
+      viewBox="0 0 1200 340"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={`w-full ${className}`}
       preserveAspectRatio="xMidYMax slice"
       aria-hidden="true"
     >
-      {/* Sky gradient (transparent to allow hero bg to show through) */}
       <defs>
-        <linearGradient id="hp-sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="white" stopOpacity="0" />
-          <stop offset="100%" stopColor="white" stopOpacity="0.03" />
-        </linearGradient>
+        {/* Mountain fill */}
         <linearGradient id="hp-mtn" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#1a3a2e" />
           <stop offset="100%" stopColor="#0d1f17" />
         </linearGradient>
+        {/* Sun radial glow */}
+        <radialGradient id="hp-sun-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={a600} stopOpacity="0.35" />
+          <stop offset="40%" stopColor={a600} stopOpacity="0.12" />
+          <stop offset="100%" stopColor={a600} stopOpacity="0" />
+        </radialGradient>
+        {/* Wide warm sky wash triggered by sunrise */}
+        <radialGradient id="hp-sky-warm" cx="50%" cy="65%" r="60%">
+          <stop offset="0%" stopColor={a600} stopOpacity="0.14" />
+          <stop offset="50%" stopColor="#F59E0B" stopOpacity="0.06" />
+          <stop offset="100%" stopColor={a600} stopOpacity="0" />
+        </radialGradient>
+        {/* Rim light gradient for mountain edge */}
+        <linearGradient id="hp-rim" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor={a600} stopOpacity="0" />
+          <stop offset="30%" stopColor={a600} stopOpacity="0.6" />
+          <stop offset="50%" stopColor="#FDE68A" stopOpacity="0.8" />
+          <stop offset="70%" stopColor={a600} stopOpacity="0.6" />
+          <stop offset="100%" stopColor={a600} stopOpacity="0" />
+        </linearGradient>
       </defs>
 
-      {/* Distant mountains */}
-      <path d="M0 180 L150 80 L300 140 L450 60 L600 120 L750 50 L900 110 L1050 70 L1200 130 L1200 260 L0 260Z" fill="url(#hp-mtn)" opacity="0.5" />
-      <path d="M0 210 L200 120 L400 170 L550 100 L700 160 L900 90 L1100 150 L1200 130 L1200 260 L0 260Z" fill="url(#hp-mtn)" opacity="0.7" />
+      {/* ── Warm sky wash (fades in) ── */}
+      <rect x="0" y="0" width="1200" height="340" fill="url(#hp-sky-warm)" className="scene-sky-warm" />
 
-      {/* Ground plane */}
-      <rect x="0" y="220" width="1200" height="40" fill="#0d1f17" opacity="0.8" />
+      {/* ── Sun group (rises upward on load) ── */}
+      <g className="scene-sunrise">
+        {/* Outer halo */}
+        <circle cx="600" cy="120" r="140" fill="url(#hp-sun-glow)" className="scene-halo" />
+        {/* Mid glow ring */}
+        <circle cx="600" cy="120" r="70" fill={a600} opacity="0.08" className="scene-halo" />
+        {/* Sun disc */}
+        <circle cx="600" cy="120" r="30" fill={a600} opacity="0.2" />
+        <circle cx="600" cy="120" r="20" fill="#FDE68A" opacity="0.15" />
 
-      {/* --- Moringa trees (swaying) --- */}
-      {[120, 260, 380, 520, 680, 820, 950, 1080].map((x, i) => {
-        const h = 50 + (i % 3) * 15;
+        {/* Light rays (fan out, then slowly rotate) */}
+        <g className="scene-rays-rotate" style={{ transformOrigin: '600px 120px' }}>
+          {Array.from({ length: 24 }, (_, i) => {
+            const angle = i * 15;
+            const len = i % 3 === 0 ? 80 : i % 3 === 1 ? 55 : 40;
+            const w = i % 3 === 0 ? 1.2 : 0.7;
+            const op = i % 3 === 0 ? 0.1 : 0.05;
+            return (
+              <line
+                key={i}
+                x1="600" y1={120 - 35}
+                x2="600" y2={120 - 35 - len}
+                stroke={a600}
+                strokeWidth={w}
+                opacity={op}
+                transform={`rotate(${angle} 600 120)`}
+              />
+            );
+          })}
+        </g>
+      </g>
+
+      {/* ── Distant mountain range (back layer) ── */}
+      <path
+        d="M0 230 L100 150 L200 190 L350 110 L500 170 L600 100 L700 140 L850 80 L950 130 L1100 90 L1200 160 L1200 340 L0 340Z"
+        fill="url(#hp-mtn)" opacity="0.45"
+      />
+
+      {/* ── Closer mountain range ── */}
+      <path
+        d="M0 260 L150 170 L300 220 L420 150 L550 200 L650 140 L780 190 L900 130 L1020 180 L1150 150 L1200 175 L1200 340 L0 340Z"
+        fill="url(#hp-mtn)" opacity="0.7"
+      />
+
+      {/* ── Mountain rim light (golden edge tracing the closer peaks) ── */}
+      <path
+        d="M0 260 L150 170 L300 220 L420 150 L550 200 L650 140 L780 190 L900 130 L1020 180 L1150 150 L1200 175"
+        fill="none"
+        stroke="url(#hp-rim)"
+        strokeWidth="2"
+        className="scene-rim-light"
+        strokeDasharray="2000"
+      />
+
+      {/* Second rim for back peaks (subtler) */}
+      <path
+        d="M200 190 L350 110 L500 170 L600 100 L700 140 L850 80 L950 130 L1100 90"
+        fill="none"
+        stroke={a600}
+        strokeWidth="1"
+        opacity="0.15"
+        className="scene-rim-light"
+        strokeDasharray="2000"
+      />
+
+      {/* ── Ground plane ── */}
+      <rect x="0" y="290" width="1200" height="50" fill="#0d1f17" opacity="0.8" />
+
+      {/* ── Moringa trees (swaying) ── */}
+      {[100, 220, 360, 500, 660, 800, 940, 1080].map((x, i) => {
+        const h = 55 + (i % 3) * 18;
         const cls = i % 3 === 0 ? 'scene-sway' : i % 3 === 1 ? 'scene-sway-slow' : 'scene-sway-delay';
         return (
           <g key={i} className={cls}>
-            {/* Trunk */}
-            <rect x={x - 1.5} y={220 - h} width="3" height={h} rx="1.5" fill={e600} opacity="0.5" />
-            {/* Canopy (feathery moringa) */}
-            <ellipse cx={x} cy={220 - h - 6} rx={10 + (i % 2) * 4} ry={8 + (i % 2) * 3} fill={e600} opacity={0.25 + (i % 3) * 0.08} />
-            <ellipse cx={x - 5} cy={220 - h + 2} rx={7} ry={5} fill={e600} opacity={0.2} />
-            <ellipse cx={x + 5} cy={220 - h + 2} rx={7} ry={5} fill={e600} opacity={0.18} />
+            <rect x={x - 1.5} y={290 - h} width="3" height={h} rx="1.5" fill={e600} opacity="0.5" />
+            <ellipse cx={x} cy={290 - h - 7} rx={12 + (i % 2) * 5} ry={9 + (i % 2) * 3} fill={e600} opacity={0.25 + (i % 3) * 0.08} />
+            <ellipse cx={x - 6} cy={290 - h + 2} rx={8} ry={5} fill={e600} opacity={0.2} />
+            <ellipse cx={x + 6} cy={290 - h + 2} rx={8} ry={5} fill={e600} opacity={0.18} />
           </g>
         );
       })}
 
-      {/* --- Eco-cottages (warm glow windows) --- */}
-      {[{ x: 180, w: 36, h: 28 }, { x: 440, w: 32, h: 24 }, { x: 760, w: 38, h: 26 }, { x: 1000, w: 34, h: 25 }].map((c, i) => (
+      {/* ── Eco-cottages with warm glow ── */}
+      {[
+        { x: 160, w: 38, h: 30 },
+        { x: 420, w: 34, h: 26 },
+        { x: 740, w: 40, h: 28 },
+        { x: 980, w: 36, h: 27 },
+      ].map((c, i) => (
         <g key={`c${i}`}>
-          {/* Wall */}
-          <rect x={c.x} y={220 - c.h} width={c.w} height={c.h} rx="2" fill="#1a2e24" opacity="0.8" />
-          {/* Roof */}
+          <rect x={c.x} y={290 - c.h} width={c.w} height={c.h} rx="2" fill="#1a2e24" opacity="0.85" />
           <polygon
-            points={`${c.x - 4},${220 - c.h} ${c.x + c.w / 2},${220 - c.h - 14} ${c.x + c.w + 4},${220 - c.h}`}
+            points={`${c.x - 4},${290 - c.h} ${c.x + c.w / 2},${290 - c.h - 15} ${c.x + c.w + 4},${290 - c.h}`}
             fill="#2d1f0e" opacity="0.9"
           />
-          {/* Warm window glow */}
-          <rect
-            x={c.x + c.w / 2 - 4} y={220 - c.h + 8} width="8" height="7" rx="1"
-            fill={a600}
-            className="scene-glow"
-            opacity="0.7"
-          />
-          {/* Smaller window */}
-          <rect
-            x={c.x + 5} y={220 - c.h + 10} width="5" height="5" rx="1"
-            fill={a600}
-            className="scene-glow-slow"
-            opacity="0.5"
-          />
+          <rect x={c.x + c.w / 2 - 5} y={290 - c.h + 8} width="10" height="8" rx="1" fill={a600} className="scene-glow" opacity="0.7" />
+          <rect x={c.x + 5} y={290 - c.h + 10} width="6" height="5" rx="1" fill={a600} className="scene-glow-slow" opacity="0.5" />
+          {/* Chimney */}
+          <rect x={c.x + c.w - 10} y={290 - c.h - 15 - 8} width="5" height="12" rx="1" fill="#2d1f0e" opacity="0.6" />
+          <circle cx={c.x + c.w - 7.5} cy={290 - c.h - 15 - 10} r="3" fill="white" opacity="0.06" className="scene-steam" />
         </g>
       ))}
 
+      {/* ── Birds silhouettes (appear late) ── */}
+      <g className="scene-birds">
+        <path d="M480 90 Q484 85 488 90 Q492 85 496 90" stroke="white" strokeWidth="1" fill="none" opacity="0.3" />
+        <path d="M500 82 Q503 78 506 82 Q509 78 512 82" stroke="white" strokeWidth="0.8" fill="none" opacity="0.2" />
+      </g>
+      <g className="scene-birds-delay">
+        <path d="M680 75 Q684 70 688 75 Q692 70 696 75" stroke="white" strokeWidth="1" fill="none" opacity="0.25" />
+        <path d="M660 85 Q663 81 666 85 Q669 81 672 85" stroke="white" strokeWidth="0.8" fill="none" opacity="0.15" />
+      </g>
+
       {/* Falling leaves */}
-      <circle cx="350" cy="130" r="2" fill={e600} opacity="0.4" className="scene-leaf-fall" />
-      <circle cx="700" cy="110" r="1.5" fill={e600} opacity="0.3" className="scene-leaf-fall-delay" />
+      <circle cx="350" cy="200" r="2" fill={e600} opacity="0.4" className="scene-leaf-fall" />
+      <circle cx="700" cy="180" r="1.5" fill={e600} opacity="0.3" className="scene-leaf-fall-delay" />
+      <circle cx="1000" cy="190" r="1.5" fill={e600} opacity="0.25" className="scene-leaf-fall" />
     </svg>
   );
 }
