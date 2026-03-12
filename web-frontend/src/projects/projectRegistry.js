@@ -34,8 +34,6 @@ const PROJECTS = {
         { label: 'Vision', href: '#vision' },
         { label: 'Our Story', href: '#narrative' },
         { label: 'Market', href: '#market' },
-        { label: 'Revenue', href: '#pillars' },
-        { label: 'Advantages', href: '#advantages' },
         { label: 'Experience', href: '#experience' },
         { label: 'Financials', href: '#financials' },
       ],

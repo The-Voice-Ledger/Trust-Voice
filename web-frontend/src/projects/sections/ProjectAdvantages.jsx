@@ -1,9 +1,6 @@
-import HexIcon from '../../components/HexIcon';
-import { HiOutlineSparkles } from '../../components/icons';
-
 /**
- * ProjectAdvantages -- strategic advantages with bold metrics.
- * Each card shows a large metric number alongside narrative text.
+ * ProjectAdvantages -- strategic advantages.
+ * Clean horizontal cards with inline metric, no heavy decorations.
  */
 export default function ProjectAdvantages({ config }) {
   const { advantages, theme } = config;
@@ -12,58 +9,37 @@ export default function ProjectAdvantages({ config }) {
   const colors = [p, s, theme.accent, p];
 
   return (
-    <section id="advantages" className="relative py-24 sm:py-32 px-6 bg-gray-50 overflow-hidden">
-      <div className="max-w-6xl mx-auto">
+    <section id="advantages" className="relative py-24 sm:py-32 px-6">
+      <div className="max-w-5xl mx-auto">
         {/* Section header */}
         <div className="text-center mb-16">
-          <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ color: s }}>
-            {advantages.sectionLabel}
-          </p>
-          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 tracking-tight">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold text-gray-900 tracking-tight">
             {advantages.heading}
           </h2>
         </div>
 
-        {/* Cards grid */}
-        <div className="grid sm:grid-cols-2 gap-6">
+        {/* Cards */}
+        <div className="grid sm:grid-cols-2 gap-5">
           {advantages.items.map((item, i) => {
             const c = colors[i % colors.length];
             return (
               <div
                 key={i}
-                className="group relative bg-white rounded-2xl border border-gray-100 p-8 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
+                className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300"
               >
-                {/* Left accent border */}
-                <div
-                  className="absolute top-0 left-0 w-[3px] h-full rounded-r-md"
-                  style={{ background: `linear-gradient(to bottom, ${c}, transparent)` }}
-                />
-
-                <div className="flex items-start gap-6">
-                  {/* Metric + icon */}
-                  <div className="flex-shrink-0 flex flex-col items-center gap-2">
-                    <HexIcon
-                      Icon={HiOutlineSparkles}
-                      accent={c}
-                      size="md"
-                      bespoke={item.bespoke}
-                    />
-                    <div className="text-center">
-                      <p className="text-2xl sm:text-3xl font-display font-extrabold" style={{ color: c }}>
-                        {item.metric}
-                      </p>
-                      <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
-                        {item.metricLabel}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Text */}
-                  <div className="flex-1 pt-1">
-                    <h3 className="font-display text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
-                    <p className="text-gray-500 leading-relaxed text-[15px]">{item.text}</p>
-                  </div>
+                {/* Metric row */}
+                <div className="flex items-baseline gap-2 mb-2">
+                  <span className="text-2xl font-display font-semibold" style={{ color: c }}>
+                    {item.metric}
+                  </span>
+                  <span className="text-[11px] text-gray-400 font-medium uppercase tracking-wide">
+                    {item.metricLabel}
+                  </span>
                 </div>
+
+                {/* Title + text */}
+                <h3 className="font-display text-base font-semibold text-gray-900 mb-1.5">{item.title}</h3>
+                <p className="text-gray-500 leading-relaxed text-[14px]">{item.text}</p>
               </div>
             );
           })}

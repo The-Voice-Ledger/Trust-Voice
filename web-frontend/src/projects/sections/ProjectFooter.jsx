@@ -1,14 +1,11 @@
 import { Link } from 'react-router-dom';
-import HexIcon from '../../components/HexIcon';
-import { HiOutlineSparkles } from '../../components/icons';
 
 /**
- * ProjectFooter -- rich multi-column footer for project landing pages.
+ * ProjectFooter -- warm, clean footer for project micro-sites.
  */
 export default function ProjectFooter({ config }) {
   const { footer, theme, name, tagline } = config;
   const p = theme.primary;
-  const s = theme.secondary;
 
   const handleAnchor = (href) => {
     if (href.startsWith('#')) {
@@ -18,21 +15,15 @@ export default function ProjectFooter({ config }) {
   };
 
   return (
-    <footer className="relative bg-gray-950 border-t border-white/5 overflow-hidden">
-      {/* Decorative gradient line at top */}
-      <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${p}, ${s}, transparent)` }} />
-
-      <div className="max-w-6xl mx-auto px-6 pt-16 pb-10">
+    <footer className="relative bg-gray-950 border-t border-white/[0.06]">
+      <div className="max-w-5xl mx-auto px-6 pt-14 pb-10">
         {/* Top row: brand + columns */}
-        <div className="grid md:grid-cols-5 gap-12 mb-12">
+        <div className="grid md:grid-cols-5 gap-10 mb-10">
           {/* Brand column */}
           <div className="md:col-span-2">
-            <div className="flex items-center gap-3 mb-4">
-              <HexIcon Icon={HiOutlineSparkles} accent={p} size="sm" bespoke="leaf" />
-              <div>
-                <span className="font-display font-bold text-white text-xl">{name}</span>
-                <span className="block text-xs text-gray-500 mt-0.5">{tagline}</span>
-              </div>
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p }} />
+              <span className="font-display font-semibold text-white text-lg">{name}</span>
             </div>
             <p className="text-sm text-gray-500 leading-relaxed max-w-xs">
               {footer.description}
@@ -42,8 +33,8 @@ export default function ProjectFooter({ config }) {
           {/* Link columns */}
           {footer.columns.map((col, i) => (
             <div key={i}>
-              <h4 className="text-xs font-bold uppercase tracking-[0.15em] text-gray-400 mb-4">{col.title}</h4>
-              <ul className="space-y-2.5">
+              <h4 className="text-xs font-medium uppercase tracking-[0.15em] text-gray-500 mb-4">{col.title}</h4>
+              <ul className="space-y-2">
                 {col.links.map((link, j) => (
                   <li key={j}>
                     {link.href.startsWith('#') ? (
@@ -69,10 +60,10 @@ export default function ProjectFooter({ config }) {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4 text-xs text-gray-600">
+        <div className="border-t border-white/[0.04] pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 text-xs text-gray-600">
             <span>&copy; {new Date().getFullYear()} {name}</span>
-            <span className="w-1 h-1 rounded-full bg-gray-700" />
+            <span className="text-gray-700">&middot;</span>
             <span>
               Powered by{' '}
               <Link to="/" className="text-indigo-400 hover:text-indigo-300 transition">TrustVoice</Link>
