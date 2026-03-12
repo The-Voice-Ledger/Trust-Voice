@@ -70,6 +70,29 @@ def _audio_suffix(upload: UploadFile) -> str:
     return ".webm"
 
 
+def _detect_format_from_bytes(data: bytes) -> Optional[str]:
+    """
+    Detect actual audio format from magic bytes.
+    Returns a Whisper-compatible extension or None if unrecognised.
+    Only used by the web upload path — keeps the shared ASR module untouched.
+    """
+    if len(data) < 12:
+        return None
+    if data[:4] == b"\x1a\x45\xdf\xa3":
+        return "webm"
+    if data[:4] == b"OggS":
+        return "ogg"
+    if data[:4] == b"RIFF" and data[8:12] == b"WAVE":
+        return "wav"
+    if data[:4] == b"fLaC":
+        return "flac"
+    if data[:3] == b"ID3" or (data[0] == 0xFF and (data[1] & 0xE0) == 0xE0):
+        return "mp3"
+    if data[4:8] == b"ftyp":
+        return "mp4"
+    return None
+
+
 async def _generate_tts(text: str, language: str = "en"):
     """Generate TTS audio and return the URL (or None)."""
     try:
@@ -197,6 +220,18 @@ async def voice_agent(
             content = await audio.read()
             tmp.write(content)
             temp_path = tmp.name
+
+        # The browser content-type can be wrong or generic
+        # (e.g. Safari sends mp4 but content-type says webm).
+        # Read magic bytes to detect the real format and rename the
+        # temp file so Whisper receives the correct extension.
+        real_ext = _detect_format_from_bytes(content)
+        current_ext = Path(temp_path).suffix.lstrip(".")
+        if real_ext and real_ext != current_ext:
+            new_path = temp_path.rsplit(".", 1)[0] + "." + real_ext
+            os.rename(temp_path, new_path)
+            temp_path = new_path
+            logger.info(f"Renamed audio temp file: .{current_ext} → .{real_ext}")
 
         # Reject obviously too-small files (< 1 KB is likely an empty or
         # corrupted recording that Whisper will reject with "too short").
