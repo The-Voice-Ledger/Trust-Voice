@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { listCampaigns } from '../api/campaigns';
 import { getAnalyticsSummary } from '../api/analytics';
 import { getAllProjectSlugs, getProject } from '../projects/projectRegistry';
@@ -259,58 +257,8 @@ export default function Landing() {
       {/* ════════ VIDEO SHOWCASE ════════ */}
       <HeroVideo />
 
-      {/* ════════ MEDIA SHOWCASE — Swiper Carousel ════════ */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20">
-        {/* Subtle background treatment */}
-        <div className="absolute inset-0 -z-10 pointer-events-none" aria-hidden="true">
-          <div className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-[0.04]" style={{ background: 'radial-gradient(circle, #6366F1, transparent 70%)' }} />
-          <div className="absolute bottom-0 left-0 w-60 h-60 rounded-full opacity-[0.03]" style={{ background: 'radial-gradient(circle, #A855F7, transparent 70%)' }} />
-        </div>
-        <div className="text-center mb-12">
-          <span className="section-label mb-4">Featured</span>
-          <h2 className="section-heading text-3xl sm:text-4xl text-gray-900 mb-3 mt-4">{t('landing.showcase_title')}</h2>
-          <p className="text-gray-500 max-w-lg mx-auto">{t('landing.showcase_subtitle')}</p>
-          <SectionAccent className="mt-6 max-w-xs mx-auto" />
-        </div>
-
-        {loadingFeatured ? (
-          <div className="flex justify-center py-16">
-            <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-          </div>
-        ) : featured.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">{t('home.no_campaigns')}</div>
-        ) : (
-          <Swiper
-            modules={[Navigation, Pagination, Autoplay]}
-            spaceBetween={24}
-            slidesPerView={1}
-            navigation
-            pagination={{ clickable: true }}
-            autoplay={{ delay: 5000, disableOnInteraction: true }}
-            breakpoints={{
-              640: { slidesPerView: 2 },
-              1024: { slidesPerView: 3 },
-            }}
-            className="pb-14"
-          >
-            {featured.map((c) => (
-              <SwiperSlide key={c.id}>
-                <MediaCard campaign={c} t={t} />
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        )}
-
-        <div className="text-center mt-8">
-          <Link
-            to="/campaigns"
-            className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-50 text-indigo-700 font-semibold hover:bg-indigo-100 transition-all"
-          >
-            {t('landing.view_all_campaigns')}
-            <HiOutlineArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
-      </section>
+      {/* ════════ FEATURED PROJECT SHOWCASE ════════ */}
+      <FeaturedProjectBanner />
 
       {/* ════════ HOW IT WORKS ════════ */}
       <section className="relative bg-gradient-to-b from-gray-50/90 to-white border-y border-gray-100 overflow-hidden">
@@ -386,10 +334,7 @@ export default function Landing() {
       {/* ════════ TRUST PIPELINE ANIMATION ════════ */}
       <TrustPipeline />
 
-      {/* ════════ FEATURED PROJECT SHOWCASE ════════ */}
-      <FeaturedProjectBanner />
-
-      {/* ════════ FOR TESTERS — CTA ════════ */}}
+      {/* ════════ FOR TESTERS — CTA ════════ */}
       <section className="relative overflow-hidden bg-gradient-to-br from-indigo-700 via-violet-600 to-purple-500 text-white">
         <HexGrid className="absolute inset-0 text-white" />
         <CircuitTrace className="absolute inset-0 w-full h-full text-white" />
