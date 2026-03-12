@@ -18,11 +18,11 @@ const PRIMARY_ITEMS = [
   { to: '/projects', key: 'nav.projects', Icon: HiOutlineMapPin },
   { to: '/donate', key: 'nav.donate', Icon: HiOutlineHeart },
   { to: '/assistant', key: 'nav.assistant', Icon: HiOutlineSparkles },
-  { to: '/analytics', key: 'nav.analytics', Icon: HiOutlineChartBar },
 ];
 
 /* Secondary nav — hidden in "More" dropdown on desktop */
 const SECONDARY_ITEMS = [
+  { to: '/analytics', key: 'nav.analytics', Icon: HiOutlineChartBar },
   { to: '/register-ngo', key: 'nav.register_ngo', Icon: HiOutlineBuildingOffice2 },
   { to: '/create-campaign', key: 'nav.create_campaign', Icon: HiOutlinePlusCircle },
   { to: '/field-agent', key: 'nav.field_agent', Icon: HiOutlineCamera },
