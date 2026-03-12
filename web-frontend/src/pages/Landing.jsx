@@ -5,6 +5,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { listCampaigns } from '../api/campaigns';
 import { getAnalyticsSummary } from '../api/analytics';
+import { getAllProjectSlugs, getProject } from '../projects/projectRegistry';
 import ProgressBar from '../components/ProgressBar';
 import TrustPipeline from '../components/TrustPipeline';
 import HexIcon from '../components/HexIcon';
@@ -385,7 +386,10 @@ export default function Landing() {
       {/* ════════ TRUST PIPELINE ANIMATION ════════ */}
       <TrustPipeline />
 
-      {/* ════════ FOR TESTERS — CTA ════════ */}
+      {/* ════════ FEATURED PROJECT SHOWCASE ════════ */}
+      <FeaturedProjectBanner />
+
+      {/* ════════ FOR TESTERS — CTA ════════ */}}
       <section className="relative overflow-hidden bg-gradient-to-br from-indigo-700 via-violet-600 to-purple-500 text-white">
         <HexGrid className="absolute inset-0 text-white" />
         <CircuitTrace className="absolute inset-0 w-full h-full text-white" />
@@ -816,4 +820,78 @@ const MEDIA_CARD_ACCENTS = {
 function fmt(n) {
   if (n == null) return '0';
   return Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
+}
+
+/* ── Featured Project Banner ──────────────────────── */
+function FeaturedProjectBanner() {
+  const slugs = getAllProjectSlugs();
+  if (slugs.length === 0) return null;
+  const project = getProject(slugs[0]);
+  if (!project) return null;
+
+  return (
+    <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white py-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-10">
+          <span className="section-label mb-4">Showcase</span>
+          <h2 className="section-heading text-3xl sm:text-4xl text-gray-900 mt-4 mb-3">Featured Project</h2>
+          <SectionAccent className="mt-4 max-w-xs mx-auto" />
+        </div>
+
+        <Link
+          to={`/project/${project.slug}`}
+          className="group block relative rounded-2xl overflow-hidden shadow-xl ring-1 ring-gray-200/60 hover:shadow-2xl hover:ring-gray-300/80 transition-all duration-500"
+        >
+          <div className="relative h-[280px] sm:h-[360px] overflow-hidden">
+            {project.videoShowcase?.url ? (
+              <video
+                className="absolute inset-0 w-full h-full object-cover"
+                src={project.videoShowcase.url}
+                muted
+                autoPlay
+                loop
+                playsInline
+                preload="metadata"
+              />
+            ) : (
+              <div className={`absolute inset-0 bg-gradient-to-br ${project.theme.heroBg}`} />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+
+            <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-10">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: project.theme.primary }} />
+                <span className="text-[11px] font-semibold text-white/50 tracking-[0.15em] uppercase">
+                  {project.hero.badge}
+                </span>
+              </div>
+              <h3 className="font-display text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight">
+                {project.name}: {project.tagline}
+              </h3>
+              <p className="text-white/45 text-sm sm:text-base max-w-xl line-clamp-2 mb-5">
+                {project.hero.subtitle}
+              </p>
+              <span
+                className="inline-flex items-center gap-2 w-fit px-5 py-2.5 rounded-xl text-white text-sm font-semibold transition-all group-hover:-translate-y-0.5 group-hover:shadow-lg"
+                style={{ backgroundColor: project.theme.primary }}
+              >
+                Explore the Project
+                <HiOutlineArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </div>
+          </div>
+        </Link>
+
+        <div className="text-center mt-8">
+          <Link
+            to="/projects"
+            className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-50 text-indigo-700 font-semibold hover:bg-indigo-100 transition-all"
+          >
+            View All Projects
+            <HiOutlineArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
 }

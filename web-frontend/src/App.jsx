@@ -15,6 +15,7 @@ import FieldAgent from './pages/FieldAgent'
 import DonateCheckout from './pages/DonateCheckout'
 import Assistant from './pages/Assistant'
 import ProjectLanding from './projects/ProjectLanding'
+import ProjectsIndex from './pages/ProjectsIndex'
 
 /* Standard layout wrapper (Navbar + Footer) */
 function StandardLayout({ children }) {
@@ -51,6 +52,7 @@ export default function App() {
               <Route path="/create-campaign" element={<CreateCampaign />} />
               <Route path="/field-agent" element={<FieldAgent />} />
               <Route path="/assistant" element={<Assistant />} />
+              <Route path="/projects" element={<ProjectsIndex />} />
               <Route path="/login" element={<Login />} />
               <Route path="/dashboard" element={<Dashboard />} />
             </Routes>

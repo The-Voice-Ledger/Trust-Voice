@@ -13,7 +13,8 @@
     "login": "Sign In",
     "logout": "Sign Out",
     "more": "More",
-    "assistant": "Assistant"
+    "assistant": "Assistant",
+    "projects": "Projects"
   },
   "landing": {
     "badge": "Voice-First · Transparent · Verified",
