@@ -37,6 +37,148 @@ const CATEGORY_ICONS = {
   children: MdOutlineChildCare,
 };
 
+const CATEGORY_BESPOKE = {
+  water: 'globe', education: 'badge', health: 'heart',
+  infrastructure: 'gear', food: 'trending', environment: 'globe',
+  shelter: 'building', children: 'users',
+};
+
+/* ── Category-specific hero illustrations (wide viewBox 400×225) ── */
+const MEDIA_ILLUSTRATIONS = {
+  water: (c) => (
+    <>
+      {/* Wave forms */}
+      <path d="M0 140 Q50 110, 100 130 T200 120 T300 135 T400 115" stroke={c} strokeWidth="0.8" opacity="0.12" fill="none" />
+      <path d="M0 160 Q60 130, 120 150 T240 135 T360 155 T400 140" stroke={c} strokeWidth="0.5" opacity="0.08" fill="none" />
+      <path d="M0 180 Q80 155, 160 170 T320 160 T400 170" stroke={c} strokeWidth="0.3" strokeDasharray="4 6" opacity="0.06" fill="none" />
+      {/* Droplets */}
+      <path d="M80 50 Q80 35, 88 50 Q80 65, 72 50" stroke={c} strokeWidth="0.5" opacity="0.08" fill="none" />
+      <circle cx="340" cy="45" r="12" stroke={c} strokeWidth="0.4" opacity="0.07" fill="none" />
+      <circle cx="340" cy="45" r="5" stroke={c} strokeWidth="0.3" strokeDasharray="2 3" opacity="0.05" fill="none" />
+    </>
+  ),
+  education: (c) => (
+    <>
+      {/* Open book */}
+      <path d="M170 65 Q200 55, 230 65" stroke={c} strokeWidth="0.7" opacity="0.12" fill="none" />
+      <path d="M170 65 L170 110 Q200 100, 230 110 L230 65" stroke={c} strokeWidth="0.6" opacity="0.10" fill="none" />
+      <line x1="200" y1="58" x2="200" y2="107" stroke={c} strokeWidth="0.4" opacity="0.08" />
+      {/* Page lines */}
+      <line x1="178" y1="78" x2="195" y2="75" stroke={c} strokeWidth="0.3" opacity="0.06" />
+      <line x1="178" y1="86" x2="195" y2="83" stroke={c} strokeWidth="0.3" opacity="0.06" />
+      <line x1="205" y1="75" x2="222" y2="78" stroke={c} strokeWidth="0.3" opacity="0.06" />
+      {/* Graduation cap */}
+      <polygon points="345,40 365,30 385,40 365,50" stroke={c} strokeWidth="0.5" opacity="0.08" fill="none" />
+      <line x1="365" y1="50" x2="365" y2="65" stroke={c} strokeWidth="0.3" opacity="0.06" />
+    </>
+  ),
+  health: (c) => (
+    <>
+      {/* Heartbeat line */}
+      <path d="M20 110 L100 110 L120 75 L145 140 L165 90 L185 115 L210 110 L390 110" stroke={c} strokeWidth="0.8" opacity="0.12" fill="none" />
+      {/* Cross */}
+      <rect x="330" y="40" width="6" height="24" rx="1" stroke={c} strokeWidth="0.6" opacity="0.10" fill="none" />
+      <rect x="321" y="49" width="24" height="6" rx="1" stroke={c} strokeWidth="0.6" opacity="0.10" fill="none" />
+      {/* Pulse rings */}
+      <circle cx="155" cy="105" r="25" stroke={c} strokeWidth="0.3" strokeDasharray="3 5" opacity="0.06" fill="none" />
+      <circle cx="155" cy="105" r="40" stroke={c} strokeWidth="0.2" strokeDasharray="2 6" opacity="0.04" fill="none" />
+    </>
+  ),
+  infrastructure: (c) => (
+    <>
+      {/* Blueprint grid */}
+      <rect x="50" y="45" width="110" height="80" rx="2" stroke={c} strokeWidth="0.5" opacity="0.08" fill="none" />
+      <line x1="50" y1="75" x2="160" y2="75" stroke={c} strokeWidth="0.3" opacity="0.06" />
+      <line x1="50" y1="100" x2="160" y2="100" stroke={c} strokeWidth="0.3" opacity="0.06" />
+      <line x1="90" y1="45" x2="90" y2="125" stroke={c} strokeWidth="0.3" opacity="0.06" />
+      <line x1="130" y1="45" x2="130" y2="125" stroke={c} strokeWidth="0.3" opacity="0.06" />
+      {/* Crane */}
+      <line x1="320" y1="30" x2="320" y2="120" stroke={c} strokeWidth="0.6" opacity="0.10" />
+      <line x1="310" y1="120" x2="330" y2="120" stroke={c} strokeWidth="0.6" opacity="0.10" />
+      <line x1="320" y1="35" x2="360" y2="35" stroke={c} strokeWidth="0.5" opacity="0.08" />
+      <line x1="360" y1="35" x2="360" y2="65" stroke={c} strokeWidth="0.3" strokeDasharray="2 3" opacity="0.06" />
+    </>
+  ),
+  food: (c) => (
+    <>
+      {/* Wheat stalks */}
+      <path d="M190 140 Q190 90, 200 60" stroke={c} strokeWidth="0.6" opacity="0.10" fill="none" />
+      <path d="M190 110 Q178 95, 175 75" stroke={c} strokeWidth="0.5" opacity="0.08" fill="none" />
+      <path d="M190 110 Q202 95, 205 75" stroke={c} strokeWidth="0.5" opacity="0.08" fill="none" />
+      <path d="M192 82 Q182 70, 180 55" stroke={c} strokeWidth="0.4" opacity="0.07" fill="none" />
+      <path d="M192 82 Q202 70, 204 55" stroke={c} strokeWidth="0.4" opacity="0.07" fill="none" />
+      {/* Plate */}
+      <circle cx="330" cy="95" r="28" stroke={c} strokeWidth="0.5" opacity="0.08" fill="none" />
+      <circle cx="330" cy="95" r="20" stroke={c} strokeWidth="0.3" strokeDasharray="3 4" opacity="0.06" fill="none" />
+      {/* Grains */}
+      <circle cx="75" cy="70" r="2" fill={c} opacity="0.06" />
+      <circle cx="90" cy="60" r="1.5" fill={c} opacity="0.05" />
+    </>
+  ),
+  environment: (c) => (
+    <>
+      {/* Tree */}
+      <line x1="200" y1="90" x2="200" y2="142" stroke={c} strokeWidth="0.6" opacity="0.10" />
+      <circle cx="200" cy="72" r="24" stroke={c} strokeWidth="0.5" opacity="0.10" fill="none" />
+      <circle cx="186" cy="65" r="14" stroke={c} strokeWidth="0.3" opacity="0.07" fill="none" />
+      <circle cx="214" cy="65" r="14" stroke={c} strokeWidth="0.3" opacity="0.07" fill="none" />
+      {/* Sun */}
+      <circle cx="350" cy="45" r="14" stroke={c} strokeWidth="0.5" opacity="0.08" fill="none" />
+      {[0,45,90,135,180,225,270,315].map((a,i) => {
+        const r1=18, r2=24, cx=350, cy=45, rad=a*Math.PI/180;
+        return <line key={i} x1={cx+Math.cos(rad)*r1} y1={cy+Math.sin(rad)*r1} x2={cx+Math.cos(rad)*r2} y2={cy+Math.sin(rad)*r2} stroke={c} strokeWidth="0.3" opacity="0.06" />;
+      })}
+      {/* Ground */}
+      <path d="M40 145 Q130 135, 200 145 T360 138" stroke={c} strokeWidth="0.4" opacity="0.06" fill="none" />
+    </>
+  ),
+  shelter: (c) => (
+    <>
+      {/* House outline */}
+      <path d="M170 85 L200 55 L230 85" stroke={c} strokeWidth="0.7" opacity="0.12" fill="none" />
+      <rect x="175" y="85" width="50" height="45" stroke={c} strokeWidth="0.5" opacity="0.10" fill="none" />
+      <rect x="190" y="100" width="20" height="30" stroke={c} strokeWidth="0.4" opacity="0.08" fill="none" />
+      {/* Windows */}
+      <rect x="180" y="90" width="10" height="10" rx="1" stroke={c} strokeWidth="0.3" opacity="0.07" fill="none" />
+      <rect x="210" y="90" width="10" height="10" rx="1" stroke={c} strokeWidth="0.3" opacity="0.07" fill="none" />
+      {/* Neighbourhood */}
+      <path d="M320 75 L340 55 L360 75" stroke={c} strokeWidth="0.4" opacity="0.07" fill="none" />
+      <rect x="325" y="75" width="30" height="28" stroke={c} strokeWidth="0.3" opacity="0.06" fill="none" />
+    </>
+  ),
+  children: (c) => (
+    <>
+      {/* Stars */}
+      {[[75,50,9],[330,55,11],[270,38,7],[140,42,5]].map(([cx,cy,r],i) => {
+        const pts=[];
+        for(let j=0;j<10;j++){const a=(Math.PI/5)*j-Math.PI/2,rd=j%2===0?r:r*0.4;pts.push(`${cx+Math.cos(a)*rd},${cy+Math.sin(a)*rd}`);}
+        return <polygon key={i} points={pts.join(' ')} stroke={c} strokeWidth="0.5" opacity={0.06+i*0.02} fill="none" />;
+      })}
+      {/* Bubbles */}
+      <circle cx="200" cy="95" r="35" stroke={c} strokeWidth="0.5" opacity="0.08" fill="none" />
+      <circle cx="178" cy="105" r="18" stroke={c} strokeWidth="0.3" strokeDasharray="3 4" opacity="0.06" fill="none" />
+      <circle cx="228" cy="82" r="20" stroke={c} strokeWidth="0.3" opacity="0.06" fill="none" />
+      {/* Floating dots */}
+      <circle cx="150" cy="65" r="2" fill={c} opacity="0.06"><animate attributeName="cy" values="65;58;65" dur="3s" repeatCount="indefinite" /></circle>
+      <circle cx="260" cy="70" r="1.5" fill={c} opacity="0.05"><animate attributeName="cy" values="70;63;70" dur="2.5s" repeatCount="indefinite" /></circle>
+    </>
+  ),
+};
+
+const MEDIA_DEFAULT_ILLUSTRATION = (c) => (
+  <>
+    <circle cx="200" cy="90" r="30" stroke={c} strokeWidth="0.5" opacity="0.08" fill="none" />
+    <circle cx="200" cy="90" r="14" stroke={c} strokeWidth="0.3" strokeDasharray="2 4" opacity="0.06" fill="none" />
+    <line x1="230" y1="90" x2="310" y2="65" stroke={c} strokeWidth="0.4" opacity="0.06" />
+    <circle cx="310" cy="65" r="10" stroke={c} strokeWidth="0.4" opacity="0.07" fill="none" />
+    <line x1="170" y1="90" x2="90" y2="70" stroke={c} strokeWidth="0.4" opacity="0.06" />
+    <circle cx="90" cy="70" r="10" stroke={c} strokeWidth="0.4" opacity="0.07" fill="none" />
+    <circle cx="200" cy="90" r="3" fill={c} opacity="0.10" />
+    <circle cx="310" cy="65" r="2" fill={c} opacity="0.08" />
+    <circle cx="90" cy="70" r="2" fill={c} opacity="0.08" />
+  </>
+);
+
 /**
  * Landing — rich homepage with hero, Swiper video carousel,
  * feature cards, live stats and CTA.
@@ -573,39 +715,43 @@ function MediaCard({ campaign, t }) {
       {/* Gradient accent line */}
       <div className="h-[2px] w-full" style={{ background: `linear-gradient(to right, ${accent.from}, ${accent.to})` }} />
 
-      {/* Video/Image preview */}
-      <div className="relative aspect-video overflow-hidden" style={{ background: `linear-gradient(135deg, ${accent.from}, ${accent.to})` }}>
-        {/* Bespoke SVG overlay */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 225" fill="none" preserveAspectRatio="none">
-          <circle cx="350" cy="30" r="60" stroke="white" strokeWidth="0.5" opacity="0.15" />
-          <circle cx="350" cy="30" r="35" stroke="white" strokeWidth="0.3" opacity="0.10" />
-          <path d="M0 200 Q100 170 200 185 T400 160" stroke="white" strokeWidth="0.8" opacity="0.10" />
-          <path d="M0 215 Q150 190 300 200 T400 180" stroke="white" strokeWidth="0.5" opacity="0.08" />
-          <circle cx="50" cy="180" r="3" fill="white" opacity="0.15" />
-          <circle cx="200" cy="190" r="2" fill="white" opacity="0.12" />
-          <circle cx="350" cy="170" r="2.5" fill="white" opacity="0.12" />
+      {/* Video/Image preview — elegant light SVG illustration */}
+      <div className="relative aspect-video overflow-hidden" style={{ background: `linear-gradient(135deg, ${accent.from}06, ${accent.to}04)` }}>
+        {/* Category-specific illustration */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 225" fill="none" preserveAspectRatio="xMidYMid slice">
+          {(MEDIA_ILLUSTRATIONS[catKey] || MEDIA_DEFAULT_ILLUSTRATION)(accent.from)}
         </svg>
 
+        {/* Hex grid texture */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 225" fill="none" preserveAspectRatio="none">
+          <polygon points="370,12 390,24 390,48 370,60 350,48 350,24" stroke={accent.from} strokeWidth="0.4" opacity="0.06" />
+          <polygon points="30,165 48,177 48,197 30,209 12,197 12,177" stroke={accent.from} strokeWidth="0.4" opacity="0.06" />
+          <path d="M370 60 L310 100" stroke={accent.from} strokeWidth="0.2" strokeDasharray="3 5" opacity="0.04" />
+          <path d="M30 165 L90 130" stroke={accent.from} strokeWidth="0.2" strokeDasharray="3 5" opacity="0.04" />
+          <circle cx="370" cy="12" r="1.5" fill={accent.from} opacity="0.10" />
+          <circle cx="30" cy="209" r="1.5" fill={accent.from} opacity="0.10" />
+          <circle cx="310" cy="100" r="1" fill={accent.from} opacity="0.06" />
+          <circle cx="90" cy="130" r="1" fill={accent.from} opacity="0.06" />
+        </svg>
+
+        {/* Central hex-node icon */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <HexIcon Icon={campaign.has_video || campaign.video_cid ? HiOutlinePlayCircle : CategoryIcon} accent={accent.from} bespoke={CATEGORY_BESPOKE[catKey] || 'globe'} size="lg" />
+        </div>
+
         {campaign.has_video || campaign.video_cid ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-            <HexIcon Icon={HiOutlinePlayCircle} accent={accent.from} bespoke="play" size="lg" className="group-hover:scale-110 transition-transform" />
-            <span className="absolute bottom-3 left-3 bg-black/50 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5">
-              <HiOutlinePlayCircle className="w-3.5 h-3.5" />
-              {t('campaign.watch_video')}
-            </span>
-          </div>
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <CategoryIcon className="w-20 h-20 text-white/30" />
-          </div>
-        )}
+          <span className="absolute bottom-3 left-3 bg-white/80 backdrop-blur-sm text-xs font-medium px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm" style={{ color: accent.from }}>
+            <HiOutlinePlayCircle className="w-3.5 h-3.5" />
+            {t('campaign.watch_video')}
+          </span>
+        ) : null}
         {campaign.category && (
           <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-xs font-bold px-2.5 py-1 rounded-lg capitalize font-display" style={{ color: accent.from }}>
             {campaign.category}
           </span>
         )}
         {campaign.ngo_name && (
-          <span className="absolute top-3 right-3 bg-black/40 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-lg">
+          <span className="absolute top-3 right-3 bg-white/80 backdrop-blur-sm text-xs px-2.5 py-1 rounded-lg font-medium shadow-sm" style={{ color: accent.from }}>
             {campaign.ngo_name}
           </span>
         )}
