@@ -131,7 +131,7 @@ export default function FieldAgent() {
   }
 
   return (
-    <PageBg pattern="blueprint" colorA="#0D9488" colorB="#F59E0B">
+    <PageBg pattern="blueprint" colorA="#A855F7" colorB="#F59E0B">
     <div className="max-w-2xl mx-auto px-4 py-8">
       <PageHeader icon={HiOutlineCamera} title={t('field_agent.title')} subtitle={t('field_agent.subtitle')} accentColor="teal" bespoke="camera" />
 
@@ -152,11 +152,11 @@ export default function FieldAgent() {
       <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-6 mb-6 overflow-hidden">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-500 via-emerald-500 to-transparent" />
         <svg className="absolute top-2 right-2 w-24 h-24 pointer-events-none" viewBox="0 0 96 96" fill="none">
-          <circle cx="65" cy="28" r="16" stroke="#0D9488" strokeWidth="0.5" opacity="0.05" />
-          <path d="M57 28 L65 20 L73 28 L65 36 Z" stroke="#0D9488" strokeWidth="0.4" opacity="0.04" />
-          <circle cx="65" cy="28" r="6" stroke="#0D9488" strokeWidth="0.3" strokeDasharray="2 2" opacity="0.04" />
-          <circle cx="65" cy="12" r="1.5" fill="#0D9488" opacity="0.05" />
-          <path d="M65 12 L65 20" stroke="#0D9488" strokeWidth="0.3" opacity="0.04" />
+          <circle cx="65" cy="28" r="16" stroke="#A855F7" strokeWidth="0.5" opacity="0.05" />
+          <path d="M57 28 L65 20 L73 28 L65 36 Z" stroke="#A855F7" strokeWidth="0.4" opacity="0.04" />
+          <circle cx="65" cy="28" r="6" stroke="#A855F7" strokeWidth="0.3" strokeDasharray="2 2" opacity="0.04" />
+          <circle cx="65" cy="12" r="1.5" fill="#A855F7" opacity="0.05" />
+          <path d="M65 12 L65 20" stroke="#A855F7" strokeWidth="0.3" opacity="0.04" />
         </svg>
         <svg className="absolute bottom-1 left-1 w-10 h-10 pointer-events-none" viewBox="0 0 40 40" fill="none">
           <path d="M0 40V25" stroke="#F59E0B" strokeWidth="0.5" opacity="0.04" />
@@ -310,8 +310,8 @@ export default function FieldAgent() {
               <div key={i} className="group relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 overflow-hidden transition-all hover:shadow-sm">
                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-teal-500/20 via-emerald-500/20 to-transparent" />
                 <svg className="absolute bottom-0 right-0 w-12 h-12 pointer-events-none" viewBox="0 0 50 50" fill="none">
-                  <path d="M50 0v50H0" stroke="#0D9488" strokeWidth="0.5" opacity="0.04" />
-                  <circle cx="50" cy="50" r="1.5" fill="#0D9488" opacity="0.06" />
+                  <path d="M50 0v50H0" stroke="#A855F7" strokeWidth="0.5" opacity="0.04" />
+                  <circle cx="50" cy="50" r="1.5" fill="#A855F7" opacity="0.06" />
                 </svg>
                 <div>
                   <p className="font-medium text-gray-900">Campaign #{v.campaign_id}</p>

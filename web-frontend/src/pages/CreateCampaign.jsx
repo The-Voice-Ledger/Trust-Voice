@@ -86,7 +86,7 @@ export default function CreateCampaign() {
   };
 
   return (
-    <PageBg pattern="isometric" colorA="#7C3AED" colorB="#2563EB">
+    <PageBg pattern="isometric" colorA="#7C3AED" colorB="#6366F1">
     <div className="max-w-2xl mx-auto px-4 py-8">
       <PageHeader icon={HiOutlineMicrophone} title={t('create_campaign.title')} subtitle={t('create_campaign.subtitle')} accentColor="violet" bespoke="rocket" />
 
@@ -105,7 +105,7 @@ export default function CreateCampaign() {
       {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-600">{error}</div>}
 
       <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-6 mb-6 overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-blue-500 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-violet-500 to-transparent" />
         <svg className="absolute top-2 right-2 w-24 h-24 pointer-events-none" viewBox="0 0 96 96" fill="none">
           <circle cx="65" cy="28" r="20" stroke="#7C3AED" strokeWidth="0.5" opacity="0.05" />
           <path d="M55 28 L65 18 L75 28" stroke="#7C3AED" strokeWidth="0.4" opacity="0.04" />
@@ -113,9 +113,9 @@ export default function CreateCampaign() {
           <circle cx="65" cy="18" r="2" fill="#7C3AED" opacity="0.05" />
         </svg>
         <svg className="absolute bottom-1 left-1 w-10 h-10 pointer-events-none" viewBox="0 0 40 40" fill="none">
-          <path d="M0 40V25" stroke="#2563EB" strokeWidth="0.5" opacity="0.04" />
-          <path d="M0 40H15" stroke="#2563EB" strokeWidth="0.5" opacity="0.04" />
-          <circle cx="0" cy="40" r="1.5" fill="#2563EB" opacity="0.05" />
+          <path d="M0 40V25" stroke="#6366F1" strokeWidth="0.5" opacity="0.04" />
+          <path d="M0 40H15" stroke="#6366F1" strokeWidth="0.5" opacity="0.04" />
+          <circle cx="0" cy="40" r="1.5" fill="#6366F1" opacity="0.05" />
         </svg>
         {step === 0 && (
           <div className="space-y-4">
@@ -143,7 +143,7 @@ export default function CreateCampaign() {
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('create_campaign.description')} *</label>
               <textarea value={form.description} onChange={(e) => set('description', e.target.value)}
                 rows={5} placeholder={t('create_campaign.desc_placeholder')}
-                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
               <VoiceButton
                 apiCall={async (blob) => {
                   const fd = new FormData();
@@ -164,8 +164,8 @@ export default function CreateCampaign() {
                   <button key={c} type="button" onClick={() => set('category', c)}
                     className={`px-4 py-2 rounded-full text-xs font-medium border transition capitalize ${
                       form.category === c
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
                     }`}>
                     {c}
                   </button>
@@ -287,7 +287,7 @@ function Field({ label, required, value, onChange, placeholder, type = 'text' })
       <label className="block text-sm font-medium text-gray-700 mb-1">{label} {required && '*'}</label>
       <input type={type} required={required} value={value} onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+        className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
     </div>
   );
 }

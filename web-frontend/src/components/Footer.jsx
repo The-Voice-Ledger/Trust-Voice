@@ -56,7 +56,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-gray-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
               <HiOutlineMicrophone className="w-3.5 h-3.5 text-white" />
             </div>
             <span className="text-sm font-bold text-gray-800 tracking-tight font-display">TrustVoice</span>

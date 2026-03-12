@@ -43,7 +43,7 @@ export default function CampaignDetail() {
     : 0;
 
   return (
-    <PageBg pattern="topography" colorA="#2563EB" colorB="#0D9488">
+    <PageBg pattern="topography" colorA="#6366F1" colorB="#A855F7">
     <div className="max-w-3xl mx-auto px-4 py-6">
       <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mb-4 py-2">
         <HiOutlineArrowLeft className="w-4 h-4" /> {t('common.back')}
@@ -74,16 +74,16 @@ export default function CampaignDetail() {
 
       {/* Progress */}
         <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 mb-6 overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500 via-teal-500 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-violet-500 to-transparent" />
         <svg className="absolute -top-1 -right-1 w-20 h-20 pointer-events-none" viewBox="0 0 80 80" fill="none">
-          <path d="M45 35 L57 10 L69 35" stroke="#2563EB" strokeWidth="0.5" opacity="0.05" />
-          <path d="M45 35 L69 35" stroke="#2563EB" strokeWidth="0.4" opacity="0.04" />
-          <circle cx="57" cy="10" r="2" fill="#2563EB" opacity="0.06" />
+          <path d="M45 35 L57 10 L69 35" stroke="#6366F1" strokeWidth="0.5" opacity="0.05" />
+          <path d="M45 35 L69 35" stroke="#6366F1" strokeWidth="0.4" opacity="0.04" />
+          <circle cx="57" cy="10" r="2" fill="#6366F1" opacity="0.06" />
         </svg>
         <ProgressBar percentage={pct} className="mb-3" />
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-1">
           <div>
-            <span className="text-xl sm:text-2xl font-bold text-blue-600">
+            <span className="text-xl sm:text-2xl font-bold text-indigo-600">
               ${fmt(campaign.current_usd_total || campaign.raised_amount_usd)}
             </span>
             <span className="text-gray-400 text-sm ml-2">
@@ -135,7 +135,7 @@ export default function CampaignDetail() {
         {/* Assistant CTA */}
         <Link
           to={`/assistant?campaign=${campaign.id}`}
-          className="mt-4 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-all border border-blue-100"
+          className="mt-4 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-all border border-indigo-100"
         >
           <HiOutlineSparkles className="w-4 h-4" />
           Ask the Assistant about this campaign

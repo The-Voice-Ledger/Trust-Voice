@@ -197,34 +197,34 @@ export default function Landing() {
   return (
     <div className="relative">
       {/* ════════ HERO ════════ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-teal-950 text-white">
-        {/* SVG decorative layers — really subtle, a hint of tech texture */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-950 via-violet-950 to-purple-950 text-white">
+        {/* SVG decorative layers — subtle tech texture */}
         <HexGrid className="absolute inset-0 text-white opacity-20" />
-        <CircuitTrace className="absolute inset-0 w-full h-full text-blue-300 opacity-25" />
-        <DataParticles className="absolute inset-0 w-full h-full text-blue-400 opacity-30" />
-        <GlowOrb className="absolute -top-32 -right-32 w-[500px] h-[500px]" color="#2563EB" />
-        <GlowOrb className="absolute -bottom-32 -left-32 w-[400px] h-[400px]" color="#0D9488" />
-        <PulseRing className="absolute top-20 right-20 w-40 h-40 text-blue-400 hidden lg:block" />
-        <PulseRing className="absolute bottom-10 left-16 w-32 h-32 text-teal-400 hidden lg:block" />
+        <CircuitTrace className="absolute inset-0 w-full h-full text-violet-300 opacity-25" />
+        <DataParticles className="absolute inset-0 w-full h-full text-violet-400 opacity-30" />
+        <GlowOrb className="absolute -top-32 -right-32 w-[500px] h-[500px]" color="#6D28D9" />
+        <GlowOrb className="absolute -bottom-32 -left-32 w-[400px] h-[400px]" color="#7C3AED" />
+        <PulseRing className="absolute top-20 right-20 w-40 h-40 text-violet-400 hidden lg:block" />
+        <PulseRing className="absolute bottom-10 left-16 w-32 h-32 text-purple-400 hidden lg:block" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-24 sm:py-32 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/[0.07] backdrop-blur-xl rounded-full px-5 py-2 text-sm font-medium mb-8 border border-white/[0.08] shadow-lg shadow-blue-500/10">
-            <HiOutlineMicrophone className="w-4 h-4 text-blue-300" />
-            <span className="text-blue-200">{t('landing.badge')}</span>
+          <div className="inline-flex items-center gap-2 bg-white/[0.07] backdrop-blur-xl rounded-full px-5 py-2 text-sm font-medium mb-8 border border-white/[0.08] shadow-lg shadow-violet-500/10">
+            <HiOutlineMicrophone className="w-4 h-4 text-violet-300" />
+            <span className="text-violet-200">{t('landing.badge')}</span>
           </div>
           <h1 className="hero-heading text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
-            <span className="bg-gradient-to-r from-white via-blue-200 to-teal-200 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-white via-violet-200 to-pink-200 bg-clip-text text-transparent">
               {t('landing.hero_title')}
             </span>
           </h1>
-          <p className="text-base sm:text-lg text-blue-200/70 max-w-2xl mx-auto mb-10">
+          <p className="text-base sm:text-lg text-violet-200/70 max-w-2xl mx-auto mb-10">
             {t('landing.hero_subtitle')}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center w-full sm:w-auto">
             <Link
               to="/campaigns"
-              className="group w-full sm:w-auto text-center px-6 py-3 rounded-xl bg-gradient-to-r from-white to-blue-50 text-blue-700 font-semibold text-sm shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 border border-white/80"
+              className="group w-full sm:w-auto text-center px-6 py-3 rounded-xl bg-white text-indigo-700 font-semibold text-sm shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/40 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
             >
               {t('landing.explore_btn')}
               <HiOutlineArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -262,8 +262,8 @@ export default function Landing() {
       <section className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20">
         {/* Subtle background treatment */}
         <div className="absolute inset-0 -z-10 pointer-events-none" aria-hidden="true">
-          <div className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-[0.04]" style={{ background: 'radial-gradient(circle, #2563EB, transparent 70%)' }} />
-          <div className="absolute bottom-0 left-0 w-60 h-60 rounded-full opacity-[0.03]" style={{ background: 'radial-gradient(circle, #0D9488, transparent 70%)' }} />
+          <div className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-[0.04]" style={{ background: 'radial-gradient(circle, #6366F1, transparent 70%)' }} />
+          <div className="absolute bottom-0 left-0 w-60 h-60 rounded-full opacity-[0.03]" style={{ background: 'radial-gradient(circle, #A855F7, transparent 70%)' }} />
         </div>
         <div className="text-center mb-12">
           <span className="section-label mb-4">Featured</span>
@@ -313,7 +313,7 @@ export default function Landing() {
 
       {/* ════════ HOW IT WORKS ════════ */}
       <section className="relative bg-gradient-to-b from-gray-50/90 to-white border-y border-gray-100 overflow-hidden">
-        <TopographyBg className="absolute inset-0 text-blue-400 opacity-70" />
+        <TopographyBg className="absolute inset-0 text-indigo-400 opacity-70" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20">
           <div className="text-center mb-14">
             <span className="section-label mb-4">Process</span>
@@ -322,7 +322,7 @@ export default function Landing() {
           </div>
           <div className="relative">
             {/* Connector line — desktop only */}
-            <div className="hidden lg:block absolute top-8 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-blue-200 via-teal-200 to-blue-200 rounded-full" />
+            <div className="hidden lg:block absolute top-8 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-indigo-200 via-violet-200 to-indigo-200 rounded-full" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               <StepCard step="1" Icon={HiOutlineMicrophone} title={t('landing.step1_title')} desc={t('landing.step1_desc')} />
               <StepCard step="2" Icon={HiOutlineEye} title={t('landing.step2_title')} desc={t('landing.step2_desc')} />
@@ -351,7 +351,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <BespokeFeatureCard
               to="/campaigns" title={t('landing.feat_campaigns')} desc={t('landing.feat_campaigns_desc')}
-              accentFrom="#2563EB" accentTo="#3B82F6" svgType="globe" Icon={HiOutlineGlobeAlt}
+              accentFrom="#6366F1" accentTo="#818CF8" svgType="globe" Icon={HiOutlineGlobeAlt}
             />
             <BespokeFeatureCard
               to="/analytics" title={t('landing.feat_analytics')} desc={t('landing.feat_analytics_desc')}
@@ -371,7 +371,7 @@ export default function Landing() {
             />
             <BespokeFeatureCard
               to="/create-campaign" title={t('landing.feat_create')} desc={t('landing.feat_create_desc')}
-              accentFrom="#0D9488" accentTo="#14B8A6" svgType="rocket" Icon={HiOutlineRocketLaunch} hasMic
+              accentFrom="#A855F7" accentTo="#C084FC" svgType="rocket" Icon={HiOutlineRocketLaunch} hasMic
             />
             <BespokeFeatureCard
               to="/field-agent" title={t('landing.feat_field')} desc={t('landing.feat_field_desc')}
@@ -386,7 +386,7 @@ export default function Landing() {
       <TrustPipeline />
 
       {/* ════════ FOR TESTERS — CTA ════════ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-teal-500 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-700 via-violet-600 to-purple-500 text-white">
         <HexGrid className="absolute inset-0 text-white" />
         <CircuitTrace className="absolute inset-0 w-full h-full text-white" />
         <GlowOrb className="absolute top-0 right-1/4 w-[300px] h-[300px]" color="#ffffff" />
@@ -396,7 +396,7 @@ export default function Landing() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto px-4 sm:px-0">
             <Link
               to="/register-ngo"
-              className="w-full sm:w-auto text-center px-8 py-4 rounded-2xl bg-white text-blue-700 font-bold hover:bg-blue-50 transition shadow-lg shadow-blue-900/20"
+              className="w-full sm:w-auto text-center px-8 py-4 rounded-2xl bg-white text-indigo-700 font-bold hover:bg-indigo-50 transition shadow-lg shadow-violet-900/20"
             >
               {t('landing.tester_register')}
             </Link>
@@ -416,10 +416,10 @@ export default function Landing() {
 /* ── Sub-components ──────────────────────── */
 
 const STAT_ACCENTS = {
-  blue: { from: '#2563EB', bespoke: 'chat' },
+  blue: { from: '#6366F1', bespoke: 'chat' },
   emerald: { from: '#059669', bespoke: 'badge' },
   amber: { from: '#D97706', bespoke: 'chart' },
-  teal: { from: '#0D9488', bespoke: 'rocket' },
+  teal: { from: '#A855F7', bespoke: 'rocket' },
 };
 
 function StatCard({ value, label, Icon, color = 'blue' }) {
@@ -433,7 +433,7 @@ function StatCard({ value, label, Icon, color = 'blue' }) {
   );
 }
 
-const STEP_COLORS = ['#2563EB', '#0D9488', '#7C3AED', '#E11D48'];
+const STEP_COLORS = ['#6366F1', '#A855F7', '#7C3AED', '#E11D48'];
 const STEP_BESPS = ['microphone', 'eye', 'creditcard', 'camera'];
 
 function StepCard({ step, Icon, title, desc }) {
@@ -488,7 +488,7 @@ function HeroVideo() {
         <SectionAccent className="mt-4 max-w-xs mx-auto" />
       </div>
 
-      <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-blue-200/40 border border-gray-100 bg-black group">
+      <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-indigo-200/40 border border-gray-100 bg-black group">
         <video
           ref={videoRef}
           autoPlay
@@ -802,15 +802,15 @@ function MediaCard({ campaign, t }) {
 }
 
 const MEDIA_CARD_ACCENTS = {
-  water: { from: '#0891B2', to: '#2563EB' },
+  water: { from: '#0891B2', to: '#6366F1' },
   education: { from: '#D97706', to: '#EA580C' },
   health: { from: '#E11D48', to: '#DC2626' },
   infrastructure: { from: '#475569', to: '#374151' },
   food: { from: '#65A30D', to: '#16A34A' },
-  environment: { from: '#059669', to: '#0D9488' },
+  environment: { from: '#059669', to: '#A855F7' },
   shelter: { from: '#EA580C', to: '#B45309' },
   children: { from: '#E11D48', to: '#F43F5E' },
-  _default: { from: '#2563EB', to: '#0D9488' },
+  _default: { from: '#6366F1', to: '#A855F7' },
 };
 
 function fmt(n) {

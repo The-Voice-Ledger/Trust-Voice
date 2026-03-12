@@ -50,26 +50,26 @@ export default function Dashboard() {
   };
 
   return (
-    <PageBg pattern="isometric" colorA="#0D9488" colorB="#2563EB">
+    <PageBg pattern="isometric" colorA="#A855F7" colorB="#6366F1">
     <div className="max-w-3xl mx-auto px-4 py-6">
       <PageHeader icon={null} title={t('dashboard.title')} accentColor="teal" />
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <BespokeStatCard accent="#2563EB" label={t('dashboard.total_donated')}>
+        <BespokeStatCard accent="#6366F1" label={t('dashboard.total_donated')}>
           {Object.entries(totalsByFx).map(([cur, amt]) => (
-            <span key={cur} className="block text-xl sm:text-2xl font-bold" style={{ color: '#2563EB' }}>
+            <span key={cur} className="block text-xl sm:text-2xl font-bold" style={{ color: '#6366F1' }}>
               {Number(amt).toLocaleString('en-US', { maximumFractionDigits: 2 })} {cur}
             </span>
           ))}
-          {Object.keys(totalsByFx).length === 0 && <span className="text-xl font-bold text-blue-600">$0</span>}
+          {Object.keys(totalsByFx).length === 0 && <span className="text-xl font-bold text-indigo-600">$0</span>}
         </BespokeStatCard>
         <BespokeStatCard accent="#059669" label={t('dashboard.donations_count')}>
           <span className="text-xl sm:text-2xl font-bold text-gray-900">{donations.length}</span>
         </BespokeStatCard>
         {taxSummary && (
           <>
-            <BespokeStatCard accent="#0D9488" label={`${t('dashboard.tax_year')} ${currentYear}`}>
+            <BespokeStatCard accent="#A855F7" label={`${t('dashboard.tax_year')} ${currentYear}`}>
               <span className="text-xl sm:text-2xl font-bold text-emerald-600">
                 ${Number(taxSummary.total_deductible || taxSummary.total_amount || 0).toLocaleString()}
               </span>
@@ -86,12 +86,12 @@ export default function Dashboard() {
         <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 shadow-md p-6 mb-6 overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-500 via-emerald-500 to-transparent" />
           <svg className="absolute top-2 right-12 w-20 h-20 pointer-events-none" viewBox="0 0 80 80" fill="none">
-            <rect x="46" y="10" width="22" height="28" rx="3" stroke="#0D9488" strokeWidth="0.5" opacity="0.05" />
-            <path d="M52 20 L62 20" stroke="#0D9488" strokeWidth="0.4" opacity="0.04" />
-            <path d="M52 26 L58 26" stroke="#0D9488" strokeWidth="0.4" opacity="0.03" />
-            <circle cx="57" cy="42" r="4" stroke="#0D9488" strokeWidth="0.3" opacity="0.04" />
-            <path d="M55 42 L59 42" stroke="#0D9488" strokeWidth="0.3" opacity="0.04" />
-            <path d="M57 40 L57 44" stroke="#0D9488" strokeWidth="0.3" opacity="0.04" />
+            <rect x="46" y="10" width="22" height="28" rx="3" stroke="#A855F7" strokeWidth="0.5" opacity="0.05" />
+            <path d="M52 20 L62 20" stroke="#A855F7" strokeWidth="0.4" opacity="0.04" />
+            <path d="M52 26 L58 26" stroke="#A855F7" strokeWidth="0.4" opacity="0.03" />
+            <circle cx="57" cy="42" r="4" stroke="#A855F7" strokeWidth="0.3" opacity="0.04" />
+            <path d="M55 42 L59 42" stroke="#A855F7" strokeWidth="0.3" opacity="0.04" />
+            <path d="M57 40 L57 44" stroke="#A855F7" strokeWidth="0.3" opacity="0.04" />
           </svg>
           <div className="flex justify-between items-start mb-4">
             <h2 className="font-semibold text-gray-900">{t('dashboard.receipt_details')}</h2>
@@ -149,11 +149,11 @@ export default function Dashboard() {
           {donations.map((d) => (
             <div key={d.id} className="group relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 overflow-hidden transition-all hover:shadow-md hover:border-transparent">
               {/* Accent line */}
-              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-blue-500/20 via-teal-500/20 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-indigo-500/20 via-violet-500/20 to-transparent" />
               {/* Corner decoration */}
               <svg className="absolute bottom-0 right-0 w-12 h-12 pointer-events-none" viewBox="0 0 50 50" fill="none">
-                <path d="M50 0v50H0" stroke="#2563EB" strokeWidth="0.5" opacity="0.06" />
-                <circle cx="50" cy="50" r="1.5" fill="#2563EB" opacity="0.08" />
+                <path d="M50 0v50H0" stroke="#6366F1" strokeWidth="0.5" opacity="0.06" />
+                <circle cx="50" cy="50" r="1.5" fill="#6366F1" opacity="0.08" />
               </svg>
               <div>
                 <p className="font-medium text-gray-900">

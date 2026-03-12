@@ -14,15 +14,15 @@ const CATEGORY_ICONS = {
 };
 
 const CATEGORY_ACCENT_COLORS = {
-  water: { from: '#0891B2', to: '#2563EB' },
+  water: { from: '#0891B2', to: '#6366F1' },
   education: { from: '#D97706', to: '#EA580C' },
   health: { from: '#E11D48', to: '#DC2626' },
   infrastructure: { from: '#475569', to: '#374151' },
   food: { from: '#65A30D', to: '#16A34A' },
-  environment: { from: '#059669', to: '#0D9488' },
+  environment: { from: '#059669', to: '#A855F7' },
   shelter: { from: '#EA580C', to: '#B45309' },
   children: { from: '#E11D48', to: '#F43F5E' },
-  _default: { from: '#2563EB', to: '#0D9488' },
+  _default: { from: '#6366F1', to: '#A855F7' },
 };
 
 /* ── Category-specific bespoke SVG illustrations for the hero area ── */

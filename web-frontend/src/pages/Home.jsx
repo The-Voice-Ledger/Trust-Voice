@@ -82,7 +82,7 @@ export default function Home() {
         </div>
         <Link
           to="/assistant"
-          className="group flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-teal-600 text-white text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25 transition-all"
+          className="group flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-medium hover:shadow-lg hover:shadow-indigo-500/25 transition-all"
         >
           <HiOutlineSparkles className="w-4 h-4" />
           {t('home.ask_assistant', 'Ask the Assistant')}
@@ -98,8 +98,8 @@ export default function Home() {
             onClick={() => setCategory(cat)}
             className={`px-4 py-2 rounded-full text-xs font-medium border transition-all capitalize
               ${cat === category
-                ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
-                : 'bg-white/80 backdrop-blur-sm text-gray-600 border-gray-200/80 hover:border-blue-300 hover:bg-blue-50/60'}`}
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-500/20'
+                : 'bg-white/80 backdrop-blur-sm text-gray-600 border-gray-200/80 hover:border-indigo-300 hover:bg-indigo-50/60'}`}
           >
             {cat === 'all' ? t('home.filter_all') : cat}
           </button>
@@ -147,13 +147,13 @@ export default function Home() {
       {/* ════════ AGENT VERIFICATION PROCESS ════════ */}
       <section className="relative mt-16 mb-8 overflow-hidden">
         <div className="absolute inset-0 -z-10 pointer-events-none" aria-hidden="true">
-          <TopographyBg className="absolute inset-0 text-blue-400 opacity-40" />
-          <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-[0.04]" style={{ background: 'radial-gradient(circle, #2563EB, transparent 70%)' }} />
-          <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-[0.03]" style={{ background: 'radial-gradient(circle, #0D9488, transparent 70%)' }} />
+          <TopographyBg className="absolute inset-0 text-indigo-400 opacity-40" />
+          <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-[0.04]" style={{ background: 'radial-gradient(circle, #6366F1, transparent 70%)' }} />
+          <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-[0.03]" style={{ background: 'radial-gradient(circle, #A855F7, transparent 70%)' }} />
         </div>
 
         <div className="text-center mb-12">
-          <span className="inline-block text-[10px] font-bold tracking-[0.2em] uppercase text-blue-600 bg-blue-50/80 px-4 py-1.5 rounded-full border border-blue-100/60 mb-4">
+          <span className="inline-block text-[10px] font-bold tracking-[0.2em] uppercase text-indigo-600 bg-indigo-50/80 px-4 py-1.5 rounded-full border border-indigo-100/60 mb-4">
             Trust & Verification
           </span>
           <h2 className="font-display text-2xl sm:text-3xl font-bold text-gray-900">How We Verify Every Campaign</h2>
@@ -166,7 +166,7 @@ export default function Home() {
         {/* Verification Steps — hexagonal node design (like Landing StepCards) */}
         <div className="relative">
           {/* Connector line — desktop only */}
-          <div className="hidden lg:block absolute top-10 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-blue-200 via-teal-200 to-blue-200 rounded-full" />
+          <div className="hidden lg:block absolute top-10 left-[10%] right-[10%] h-0.5 bg-gradient-to-r from-indigo-200 via-violet-200 to-indigo-200 rounded-full" />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             <VerificationStep
@@ -174,7 +174,7 @@ export default function Home() {
               Icon={HiOutlineBuildingOffice2}
               title="NGO Registration"
               desc="Organizations submit verified credentials and mission details"
-              accent="#2563EB"
+              accent="#6366F1"
               svgType="building"
             />
             <VerificationStep
@@ -190,7 +190,7 @@ export default function Home() {
               Icon={HiOutlineEye}
               title="Campaign Review"
               desc="Each campaign is audited for legitimacy, goals, and feasibility"
-              accent="#0D9488"
+              accent="#A855F7"
               svgType="eye"
             />
             <VerificationStep
@@ -216,15 +216,15 @@ export default function Home() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12">
           <Link
             to="/register-ngo"
-            className="group inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-200/80 text-sm font-semibold text-gray-700 hover:bg-blue-50/60 hover:border-blue-200 transition-all"
+            className="group inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-200/80 text-sm font-semibold text-gray-700 hover:bg-indigo-50/60 hover:border-indigo-200 transition-all"
           >
-            <HiOutlineBuildingOffice2 className="w-4 h-4 text-blue-600" />
+            <HiOutlineBuildingOffice2 className="w-4 h-4 text-indigo-600" />
             Register Your NGO
             <HiOutlineArrowRight className="w-3.5 h-3.5 opacity-60 group-hover:translate-x-0.5 transition-transform" />
           </Link>
           <Link
             to="/assistant"
-            className="group inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-teal-600 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all"
+            className="group inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/30 transition-all"
           >
             <HiOutlineMicrophone className="w-4 h-4" />
             Ask the AI Agent

@@ -202,18 +202,18 @@ export default function Assistant() {
         <circle cx="80" cy="120" r="100" fill="url(#asst-orb1)" opacity="0.04" />
         <circle cx="520" cy="680" r="120" fill="url(#asst-orb2)" opacity="0.03" />
         <defs>
-          <radialGradient id="asst-orb1"><stop offset="0%" stopColor="#2563EB" /><stop offset="100%" stopColor="transparent" /></radialGradient>
-          <radialGradient id="asst-orb2"><stop offset="0%" stopColor="#0D9488" /><stop offset="100%" stopColor="transparent" /></radialGradient>
+          <radialGradient id="asst-orb1"><stop offset="0%" stopColor="#6366F1" /><stop offset="100%" stopColor="transparent" /></radialGradient>
+          <radialGradient id="asst-orb2"><stop offset="0%" stopColor="#A855F7" /><stop offset="100%" stopColor="transparent" /></radialGradient>
         </defs>
       </svg>
 
       {/* ── Header ───────────────────────────── */}
       <div className="relative flex items-center justify-between py-4 flex-shrink-0 border-b border-gray-100/80">
         {/* Subtle header accent line */}
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-blue-500/20 via-teal-500/20 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-indigo-500/20 via-violet-500/20 to-transparent" />
         <div className="flex items-center gap-3">
           <div className="relative">
-            <HexIcon Icon={HiOutlineSparkles} accent="#2563EB" size="sm" bespoke="sparkles" gradient gradientTo="#0D9488" spin />
+            <HexIcon Icon={HiOutlineSparkles} accent="#6366F1" size="sm" bespoke="sparkles" gradient gradientTo="#A855F7" spin />
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2 border-white" />
           </div>
           <div>
@@ -263,10 +263,10 @@ export default function Assistant() {
         {loading && (
           <div className="flex gap-3">
             <div className="relative w-8 h-8 flex-shrink-0">
-              <HexIcon Icon={HiOutlineSparkles} accent="#2563EB" size="xs" bespoke="sparkles" gradient gradientTo="#0D9488" spin />
+              <HexIcon Icon={HiOutlineSparkles} accent="#6366F1" size="xs" bespoke="sparkles" gradient gradientTo="#A855F7" spin />
             </div>
             <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-gray-100/80 overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-blue-500/30 via-teal-500/30 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-indigo-500/30 via-violet-500/30 to-transparent" />
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                 <div className="w-2 h-2 bg-teal-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -280,7 +280,7 @@ export default function Assistant() {
       {/* Input bar */}
       <div className="relative flex-shrink-0 pb-4 pt-2 border-t border-gray-100/80">
         {/* Subtle top gradient */}
-        <div className="absolute -top-px left-0 right-0 h-px bg-gradient-to-r from-blue-500/15 via-teal-500/15 to-transparent" />
+        <div className="absolute -top-px left-0 right-0 h-px bg-gradient-to-r from-indigo-500/15 via-violet-500/15 to-transparent" />
 
         {/* Voice recording overlay */}
         {voiceStatus === 'recording' && (
@@ -303,7 +303,7 @@ export default function Assistant() {
           {/* Voice button with ring decoration */}
           <div className="relative flex-shrink-0">
             <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 56 56" fill="none">
-              <circle cx="28" cy="28" r="26" stroke={voiceStatus === 'recording' ? '#EF4444' : '#2563EB'} strokeWidth="0.4" strokeDasharray="2 4"
+              <circle cx="28" cy="28" r="26" stroke={voiceStatus === 'recording' ? '#EF4444' : '#6366F1'} strokeWidth="0.4" strokeDasharray="2 4"
                 opacity={voiceStatus === 'recording' ? '0.4' : '0.15'}>
                 <animateTransform attributeName="transform" type="rotate" values="0 28 28;360 28 28" dur="12s" repeatCount="indefinite" />
               </circle>
@@ -318,7 +318,7 @@ export default function Assistant() {
                   ? 'bg-red-500 text-white shadow-lg shadow-red-200/60 scale-110 ring-4 ring-red-100'
                   : voiceStatus === 'processing'
                     ? 'bg-amber-500 text-white cursor-wait shadow-md'
-                    : 'bg-gradient-to-br from-blue-500 to-teal-600 text-white shadow-md shadow-blue-200/50 hover:shadow-lg hover:scale-105 active:scale-95'
+                    : 'bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-200/50 hover:shadow-lg hover:scale-105 active:scale-95'
               }`}
               aria-label={voiceStatus === 'recording' ? 'Release to send' : 'Hold to speak'}
             >
@@ -336,14 +336,14 @@ export default function Assistant() {
               onKeyDown={handleKeyDown}
               placeholder={t('assistant.placeholder', 'Type a message or hold the mic...')}
               rows={1}
-              className="w-full resize-none rounded-2xl border border-gray-200/80 bg-white/70 backdrop-blur-sm px-4 py-3 pr-12 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 focus:bg-white shadow-sm transition-all"
+              className="w-full resize-none rounded-2xl border border-gray-200/80 bg-white/70 backdrop-blur-sm px-4 py-3 pr-12 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-blue-300 focus:bg-white shadow-sm transition-all"
               style={{ maxHeight: '120px' }}
               disabled={loading}
             />
             <button
               onClick={() => sendText(input)}
               disabled={!input.trim() || loading}
-              className="absolute right-2 bottom-2 p-2 rounded-xl bg-gradient-to-br from-blue-600 to-teal-600 text-white disabled:opacity-20 disabled:cursor-not-allowed hover:shadow-md active:scale-95 transition-all shadow-sm"
+              className="absolute right-2 bottom-2 p-2 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white disabled:opacity-20 disabled:cursor-not-allowed hover:shadow-md active:scale-95 transition-all shadow-sm"
               aria-label="Send"
             >
               <HiOutlinePaperAirplane className="w-4 h-4" />
@@ -368,9 +368,9 @@ function WelcomeScreen({ onSuggestion, t }) {
       color: 'blue',
       svg: (
         <svg className="absolute top-2 right-2 w-16 h-16 pointer-events-none" viewBox="0 0 64 64" fill="none">
-          <circle cx="30" cy="28" r="12" stroke="#2563EB" strokeWidth="0.8" opacity="0.08" />
-          <path d="M38 36 L48 46" stroke="#2563EB" strokeWidth="0.8" opacity="0.08" />
-          <circle cx="30" cy="28" r="6" stroke="#2563EB" strokeWidth="0.4" strokeDasharray="2 2" opacity="0.05" />
+          <circle cx="30" cy="28" r="12" stroke="#6366F1" strokeWidth="0.8" opacity="0.08" />
+          <path d="M38 36 L48 46" stroke="#6366F1" strokeWidth="0.8" opacity="0.08" />
+          <circle cx="30" cy="28" r="6" stroke="#6366F1" strokeWidth="0.4" strokeDasharray="2 2" opacity="0.05" />
         </svg>
       ),
     },
@@ -423,20 +423,20 @@ function WelcomeScreen({ onSuggestion, t }) {
   };
 
   const borderColors = {
-    blue: 'hover:border-blue-200',
+    blue: 'hover:border-indigo-200',
     emerald: 'hover:border-emerald-200',
     sky: 'hover:border-sky-200',
     amber: 'hover:border-amber-200',
   };
 
-  const SUGGESTION_ACCENTS = { blue: '#2563EB', emerald: '#059669', sky: '#0284C7', amber: '#D97706' };
+  const SUGGESTION_ACCENTS = { blue: '#6366F1', emerald: '#059669', sky: '#0284C7', amber: '#D97706' };
   const SUGGESTION_BESPS = { blue: 'search', emerald: 'chart', sky: 'globe', amber: 'question' };
 
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       {/* Central icon with animated rings */}
       <div className="relative mb-6">
-        <HexIcon Icon={HiOutlineSparkles} accent="#2563EB" size="lg" bespoke="sparkles" gradient gradientTo="#0D9488" spin />
+        <HexIcon Icon={HiOutlineSparkles} accent="#6366F1" size="lg" bespoke="sparkles" gradient gradientTo="#A855F7" spin />
       </div>
 
       <h2 className="text-xl font-bold text-gray-900 mb-2 font-display">{t('assistant.welcome', 'How can I help?')}</h2>
@@ -445,7 +445,7 @@ function WelcomeScreen({ onSuggestion, t }) {
       {/* Decorative divider */}
       <div className="flex items-center gap-3 max-w-[180px] mx-auto mb-8">
         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent" />
-        <svg width="6" height="6" viewBox="0 0 6 6" fill="none"><path d="M3 0L6 3L3 6L0 3Z" fill="#2563EB" opacity="0.3" /></svg>
+        <svg width="6" height="6" viewBox="0 0 6 6" fill="none"><path d="M3 0L6 3L3 6L0 3Z" fill="#6366F1" opacity="0.3" /></svg>
         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-teal-300/50 to-transparent" />
       </div>
 
@@ -460,7 +460,7 @@ function WelcomeScreen({ onSuggestion, t }) {
             {/* Bespoke SVG per card */}
             {svg}
             {/* Top accent */}
-            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-blue-500/10 via-teal-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-indigo-500/10 via-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <HexIcon Icon={Icon} accent={SUGGESTION_ACCENTS[color]} bespoke={SUGGESTION_BESPS[color]} size="xs" />
             <span className="relative leading-snug">{text}</span>
           </button>
@@ -505,14 +505,14 @@ function ChatMessage({ msg, onPlayAudio }) {
   return (
     <div className="flex gap-3">
       <div className="relative w-8 h-8 flex-shrink-0 mt-0.5">
-        <HexIcon Icon={HiOutlineSparkles} accent="#2563EB" size="xs" bespoke="sparkles" gradient gradientTo="#0D9488" spin />
+        <HexIcon Icon={HiOutlineSparkles} accent="#6366F1" size="xs" bespoke="sparkles" gradient gradientTo="#A855F7" spin />
       </div>
       <div className="max-w-[85%] space-y-2">
         {/* Text response */}
         {msg.text && (
           <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-gray-100/80 overflow-hidden">
             {/* Top accent */}
-            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-blue-500/20 via-teal-500/20 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-indigo-500/20 via-violet-500/20 to-transparent" />
             <p className="relative text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{msg.text}</p>
             {/* Replay audio button */}
             {msg.audioUrl && (
@@ -559,16 +559,16 @@ function CampaignListCard({ campaigns }) {
         <Link
           key={c.id}
           to={`/campaign/${c.id}`}
-          className="group relative flex items-center gap-3 bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100/80 p-3 hover:border-blue-200 hover:shadow-md transition-all overflow-hidden"
+          className="group relative flex items-center gap-3 bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100/80 p-3 hover:border-indigo-200 hover:shadow-md transition-all overflow-hidden"
         >
           {/* Top line accent */}
-          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-blue-500/15 via-teal-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-indigo-500/15 via-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           {/* Corner decoration */}
           <svg className="absolute -top-1 -right-1 w-12 h-12 pointer-events-none" viewBox="0 0 48 48" fill="none">
-            <circle cx="36" cy="12" r="8" stroke="#2563EB" strokeWidth="0.4" opacity="0.05" />
-            <circle cx="36" cy="12" r="3" stroke="#2563EB" strokeWidth="0.3" strokeDasharray="1 2" opacity="0.04" />
+            <circle cx="36" cy="12" r="8" stroke="#6366F1" strokeWidth="0.4" opacity="0.05" />
+            <circle cx="36" cy="12" r="3" stroke="#6366F1" strokeWidth="0.3" strokeDasharray="1 2" opacity="0.04" />
           </svg>
-          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center flex-shrink-0 text-blue-600 font-bold text-sm border border-blue-100/50">
+          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-violet-50 flex items-center justify-center flex-shrink-0 text-blue-600 font-bold text-sm border border-indigo-100/50">
             #{c.id}
           </div>
           <div className="relative flex-1 min-w-0">
@@ -602,14 +602,14 @@ function CampaignDetailCard({ campaign }) {
   return (
     <Link
       to={`/campaign/${c.id}`}
-      className="group relative block bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100/80 overflow-hidden hover:border-blue-200 hover:shadow-md transition-all"
+      className="group relative block bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100/80 overflow-hidden hover:border-indigo-200 hover:shadow-md transition-all"
     >
       {/* Gradient banner */}
-      <div className="relative h-10 bg-gradient-to-r from-blue-500/8 via-teal-500/5 to-transparent">
+      <div className="relative h-10 bg-gradient-to-r from-indigo-500/8 via-violet-500/5 to-transparent">
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-blue-500/30 via-teal-500/20 to-transparent" />
         <svg className="absolute right-2 top-0 w-16 h-10 pointer-events-none" viewBox="0 0 64 40" fill="none">
-          <circle cx="48" cy="20" r="12" stroke="#2563EB" strokeWidth="0.4" opacity="0.06" />
-          <path d="M42 20 L48 14 L54 20 L48 26 Z" stroke="#0D9488" strokeWidth="0.3" opacity="0.05" />
+          <circle cx="48" cy="20" r="12" stroke="#6366F1" strokeWidth="0.4" opacity="0.06" />
+          <path d="M42 20 L48 14 L54 20 L48 26 Z" stroke="#A855F7" strokeWidth="0.3" opacity="0.05" />
         </svg>
       </div>
       <div className="p-4 -mt-2">
@@ -627,7 +627,7 @@ function CampaignDetailCard({ campaign }) {
         <div className="mt-3">
           <ProgressBar percentage={c.progress_pct} className="mb-2" />
           <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-blue-600">${fmt(c.raised_usd)}</span>
+            <span className="font-bold text-indigo-600">${fmt(c.raised_usd)}</span>
             <span className="text-gray-400">of ${fmt(c.goal_usd)}</span>
           </div>
         </div>
@@ -683,7 +683,7 @@ function DonationHistoryCard({ donations }) {
   return (
     <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100/80 overflow-hidden">
       <div className="relative px-4 py-2.5 bg-gradient-to-r from-gray-50 to-transparent border-b border-gray-100/80">
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-blue-500/15 via-teal-500/10 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-indigo-500/15 via-violet-500/10 to-transparent" />
         <span className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
           <HiOutlineClock className="w-3.5 h-3.5" />
           Donation History
@@ -693,14 +693,14 @@ function DonationHistoryCard({ donations }) {
         {donations.slice(0, 5).map((d) => (
           <div key={d.id} className="relative px-4 py-2.5 flex items-center justify-between gap-3 group hover:bg-gray-50/50 transition-colors">
             <svg className="absolute bottom-0 right-0 w-8 h-8 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" viewBox="0 0 32 32" fill="none">
-              <path d="M32 0v32H0" stroke="#2563EB" strokeWidth="0.3" opacity="0.05" />
+              <path d="M32 0v32H0" stroke="#6366F1" strokeWidth="0.3" opacity="0.05" />
             </svg>
             <div className="min-w-0">
               <p className="text-xs font-medium text-gray-700 truncate">{d.campaign_title}</p>
               <p className="text-[10px] text-gray-400">{d.date ? new Date(d.date).toLocaleDateString() : ''}</p>
             </div>
             <div className="text-right flex-shrink-0">
-              <p className="text-xs font-bold text-blue-600">{d.amount} {d.currency}</p>
+              <p className="text-xs font-bold text-indigo-600">{d.amount} {d.currency}</p>
               <span className={`text-[10px] font-medium ${
                 d.status === 'completed' ? 'text-green-600' : d.status === 'pending' ? 'text-yellow-600' : 'text-gray-400'
               }`}>
@@ -723,9 +723,9 @@ function AnalyticsSummaryCard({ stats }) {
   ];
 
   const colorMap = {
-    blue:  { bg: 'bg-blue-50', text: 'text-blue-600', stroke: '#2563EB' },
+    blue:  { bg: 'bg-blue-50', text: 'text-blue-600', stroke: '#6366F1' },
     green: { bg: 'bg-green-50', text: 'text-green-600', stroke: '#16A34A' },
-    teal:  { bg: 'bg-teal-50', text: 'text-teal-600', stroke: '#0D9488' },
+    teal:  { bg: 'bg-teal-50', text: 'text-teal-600', stroke: '#A855F7' },
     amber: { bg: 'bg-amber-50', text: 'text-amber-600', stroke: '#D97706' },
   };
 
@@ -736,7 +736,7 @@ function AnalyticsSummaryCard({ stats }) {
     amber: (s) => (<>{/* people */}<circle cx="11" cy="10" r="4" stroke={s} strokeWidth="0.6" fill="none" opacity="0.08"/><circle cx="21" cy="10" r="4" stroke={s} strokeWidth="0.6" fill="none" opacity="0.08"/><path d="M4 26c0-4 3.5-7 7-7s7 3 7 7M16 26c0-4 3.5-7 7-7s5 3 5 7" stroke={s} strokeWidth="0.5" fill="none" opacity="0.08"/></>),
   };
 
-  const ANALYTICS_ACCENTS = { blue: '#2563EB', green: '#16A34A', teal: '#0D9488', amber: '#D97706' };
+  const ANALYTICS_ACCENTS = { blue: '#6366F1', green: '#16A34A', teal: '#A855F7', amber: '#D97706' };
   const ANALYTICS_BESPS = { blue: 'chart', green: 'money', teal: 'trending', amber: 'users' };
 
   return (

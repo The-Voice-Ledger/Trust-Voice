@@ -48,7 +48,7 @@ export default function Analytics() {
   useEffect(() => { load(); }, [load]);
 
   return (
-    <PageBg pattern="nodes" colorA="#2563EB" colorB="#7C3AED">
+    <PageBg pattern="nodes" colorA="#6366F1" colorB="#7C3AED">
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
@@ -110,12 +110,12 @@ export default function Analytics() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Funnel */}
             <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-6 overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500 via-teal-500 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-violet-500 to-transparent" />
               <svg className="absolute top-2 right-2 w-28 h-28 pointer-events-none" viewBox="0 0 112 112" fill="none">
-                <path d="M30 20 L82 20 L72 50 L40 50 Z" stroke="#2563EB" strokeWidth="0.5" opacity="0.05" />
-                <path d="M40 55 L72 55 L65 80 L47 80 Z" stroke="#0D9488" strokeWidth="0.5" opacity="0.05" />
+                <path d="M30 20 L82 20 L72 50 L40 50 Z" stroke="#6366F1" strokeWidth="0.5" opacity="0.05" />
+                <path d="M40 55 L72 55 L65 80 L47 80 Z" stroke="#A855F7" strokeWidth="0.5" opacity="0.05" />
                 <path d="M47 85 L65 85 L60 100 L52 100 Z" stroke="#059669" strokeWidth="0.5" opacity="0.05" />
-                <circle cx="56" cy="18" r="1.5" fill="#2563EB" opacity="0.08" />
+                <circle cx="56" cy="18" r="1.5" fill="#6366F1" opacity="0.08" />
               </svg>
               <h2 className="relative font-semibold text-gray-900 mb-4 font-display">{t('analytics.donation_funnel')}</h2>
               {funnel ? (
@@ -125,7 +125,7 @@ export default function Analytics() {
                   ))}
                   {funnel.overall_conversion != null && (
                     <div className="pt-3 border-t border-gray-100 text-center">
-                      <span className="text-2xl font-bold text-blue-600">{Math.round(funnel.overall_conversion)}%</span>
+                      <span className="text-2xl font-bold text-indigo-600">{Math.round(funnel.overall_conversion)}%</span>
                       <p className="text-xs text-gray-400 mt-1">{t('analytics.conversion_rate')}</p>
                     </div>
                   )}
@@ -137,7 +137,7 @@ export default function Analytics() {
 
             {/* Recent events */}
             <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-6 overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-blue-500 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-violet-500 to-transparent" />
               <svg className="absolute top-2 right-2 w-24 h-24 pointer-events-none" viewBox="0 0 96 96" fill="none">
                 <circle cx="65" cy="30" r="8" stroke="#7C3AED" strokeWidth="0.5" opacity="0.06" />
                 <circle cx="65" cy="30" r="3" fill="#7C3AED" opacity="0.04" />
@@ -151,7 +151,7 @@ export default function Analytics() {
                 <div className="space-y-2 max-h-80 overflow-y-auto">
                   {events.map((ev, i) => (
                     <div key={i} className="flex items-start gap-3 text-sm py-2.5 border-b border-gray-50 last:border-0">
-                      <HexIcon Icon={EVENT_ICON_MAP[ev.event_type] || MdOutlinePushPin} accent="#2563EB" size="sm" spin={false} />
+                      <HexIcon Icon={EVENT_ICON_MAP[ev.event_type] || MdOutlinePushPin} accent="#6366F1" size="sm" spin={false} />
                       <div className="flex-1 min-w-0">
                         <p className="text-gray-700 font-medium truncate">{ev.event_type}</p>
                         {ev.details && (
@@ -175,10 +175,10 @@ export default function Analytics() {
             <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-6 overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-teal-500 via-emerald-500 to-transparent" />
               <svg className="absolute top-2 right-2 w-24 h-24 pointer-events-none" viewBox="0 0 96 96" fill="none">
-                <rect x="54" y="28" width="6" height="16" rx="1" stroke="#0D9488" strokeWidth="0.4" opacity="0.06" />
-                <rect x="64" y="18" width="6" height="26" rx="1" stroke="#0D9488" strokeWidth="0.4" opacity="0.06" />
-                <rect x="74" y="22" width="6" height="22" rx="1" stroke="#0D9488" strokeWidth="0.4" opacity="0.06" />
-                <path d="M52 46 L82 46" stroke="#0D9488" strokeWidth="0.5" opacity="0.06" />
+                <rect x="54" y="28" width="6" height="16" rx="1" stroke="#A855F7" strokeWidth="0.4" opacity="0.06" />
+                <rect x="64" y="18" width="6" height="26" rx="1" stroke="#A855F7" strokeWidth="0.4" opacity="0.06" />
+                <rect x="74" y="22" width="6" height="22" rx="1" stroke="#A855F7" strokeWidth="0.4" opacity="0.06" />
+                <path d="M52 46 L82 46" stroke="#A855F7" strokeWidth="0.5" opacity="0.06" />
               </svg>
               <h2 className="relative font-semibold text-gray-900 mb-4 font-display">{t('analytics.daily_breakdown')}</h2>
               <div className="overflow-x-auto">
@@ -215,10 +215,10 @@ export default function Analytics() {
 const SUMMARY_SVGS = {
   blue: (
     <svg className="absolute -top-1 -right-1 w-24 h-24 pointer-events-none" viewBox="0 0 96 96" fill="none">
-      <circle cx="70" cy="26" r="22" stroke="#2563EB" strokeWidth="0.5" opacity="0.07" />
-      <circle cx="70" cy="26" r="12" stroke="#2563EB" strokeWidth="0.4" strokeDasharray="2 3" opacity="0.05" />
-      <path d="M58 38 L70 26 L82 38" stroke="#2563EB" strokeWidth="0.5" opacity="0.06" />
-      <circle cx="70" cy="26" r="2" fill="#2563EB" opacity="0.08" />
+      <circle cx="70" cy="26" r="22" stroke="#6366F1" strokeWidth="0.5" opacity="0.07" />
+      <circle cx="70" cy="26" r="12" stroke="#6366F1" strokeWidth="0.4" strokeDasharray="2 3" opacity="0.05" />
+      <path d="M58 38 L70 26 L82 38" stroke="#6366F1" strokeWidth="0.5" opacity="0.06" />
+      <circle cx="70" cy="26" r="2" fill="#6366F1" opacity="0.08" />
     </svg>
   ),
   emerald: (
@@ -239,20 +239,20 @@ const SUMMARY_SVGS = {
   ),
   teal: (
     <svg className="absolute -top-1 -right-1 w-24 h-24 pointer-events-none" viewBox="0 0 96 96" fill="none">
-      <circle cx="70" cy="26" r="20" stroke="#0D9488" strokeWidth="0.5" opacity="0.07" />
-      <path d="M70 26 L70 10" stroke="#0D9488" strokeWidth="0.6" opacity="0.08" />
-      <path d="M70 26 L84 32" stroke="#0D9488" strokeWidth="0.6" opacity="0.08" />
-      <circle cx="70" cy="10" r="1.5" fill="#0D9488" opacity="0.10" />
-      <circle cx="84" cy="32" r="1.5" fill="#0D9488" opacity="0.10" />
+      <circle cx="70" cy="26" r="20" stroke="#A855F7" strokeWidth="0.5" opacity="0.07" />
+      <path d="M70 26 L70 10" stroke="#A855F7" strokeWidth="0.6" opacity="0.08" />
+      <path d="M70 26 L84 32" stroke="#A855F7" strokeWidth="0.6" opacity="0.08" />
+      <circle cx="70" cy="10" r="1.5" fill="#A855F7" opacity="0.10" />
+      <circle cx="84" cy="32" r="1.5" fill="#A855F7" opacity="0.10" />
     </svg>
   ),
 };
 
-const SUMMARY_ACCENTS = { blue: '#2563EB', emerald: '#059669', amber: '#D97706', teal: '#0D9488' };
+const SUMMARY_ACCENTS = { blue: '#6366F1', emerald: '#059669', amber: '#D97706', teal: '#A855F7' };
 
 function SummaryCard({ title, value, Icon, color = 'blue', change }) {
   const colors = { blue: 'bg-blue-50 text-blue-600', emerald: 'bg-emerald-50 text-emerald-600', amber: 'bg-amber-50 text-amber-600', teal: 'bg-teal-50 text-teal-600' };
-  const accent = SUMMARY_ACCENTS[color] || '#2563EB';
+  const accent = SUMMARY_ACCENTS[color] || '#6366F1';
   return (
     <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 overflow-hidden group transition-all hover:shadow-md hover:border-transparent">
       {/* Top accent line */}
@@ -297,7 +297,7 @@ function FunnelRow({ step, maxValue }) {
       </div>
       <div className="w-full bg-gray-100 rounded-full h-2">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-blue-500 to-teal-500 transition-all duration-500"
+          className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500"
           style={{ width: `${pct}%` }}
         />
       </div>

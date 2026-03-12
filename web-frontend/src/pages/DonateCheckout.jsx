@@ -47,7 +47,7 @@ export default function DonateCheckout() {
   if (loading) return <div className="text-center py-20 text-gray-400">{t('common.loading')}</div>;
 
   return (
-    <PageBg pattern="topography" colorA="#F43F5E" colorB="#0D9488">
+    <PageBg pattern="topography" colorA="#F43F5E" colorB="#A855F7">
     <div className="max-w-lg mx-auto px-4 py-8">
       <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mb-6 py-2">
         <HiOutlineArrowLeft className="w-4 h-4" /> {t('common.back')}
@@ -56,7 +56,7 @@ export default function DonateCheckout() {
       {/* ── Hero Section ──────────────────────── */}
       <div className="relative text-center mb-10">
         {/* Decorative rings behind icon */}
-        <HexIcon Icon={HiOutlineHeart} accent="#F43F5E" size="lg" bespoke="heart" gradient gradientTo="#0D9488" className="mx-auto mb-5" />
+        <HexIcon Icon={HiOutlineHeart} accent="#F43F5E" size="lg" bespoke="heart" gradient gradientTo="#A855F7" className="mx-auto mb-5" />
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 font-display">{t('donate.title')}</h1>
         <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto">{t('donate.checkout_subtitle')}</p>
         {/* Decorative line */}
@@ -95,13 +95,13 @@ export default function DonateCheckout() {
       {campaign && (
         <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 overflow-hidden mb-6 group">
           {/* Gradient banner with category SVG */}
-          <div className="relative h-16 bg-gradient-to-r from-blue-500/10 via-teal-500/10 to-transparent">
+          <div className="relative h-16 bg-gradient-to-r from-indigo-500/10 via-violet-500/10 to-transparent">
             <CampaignBannerSvg category={campaign.category} />
-            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-blue-500 via-teal-500 to-transparent" />
+            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-indigo-500 via-violet-500 to-transparent" />
           </div>
           <div className="px-5 pb-5 -mt-5">
             <div className="relative flex items-start gap-3">
-              <HexIcon Icon={() => <CategoryIcon cat={campaign.category} />} accent="#2563EB" size="sm" bespoke="globe" />
+              <HexIcon Icon={() => <CategoryIcon cat={campaign.category} />} accent="#6366F1" size="sm" bespoke="globe" />
               <div className="flex-1 pt-1">
                 <h2 className="font-semibold text-gray-900">{campaign.title}</h2>
                 {campaign.ngo_name && <p className="text-xs text-gray-400 mt-0.5">{campaign.ngo_name}</p>}
@@ -112,15 +112,15 @@ export default function DonateCheckout() {
               className="mt-4"
             />
             <div className="flex justify-between text-sm mt-2">
-              <span className="font-bold text-blue-600">${fmt(campaign.current_usd_total || campaign.raised_amount_usd)}</span>
+              <span className="font-bold text-indigo-600">${fmt(campaign.current_usd_total || campaign.raised_amount_usd)}</span>
               <span className="text-gray-400">{t('campaign.raised_of')} ${fmt(campaign.goal_amount_usd)}</span>
             </div>
           </div>
           {/* Corner node */}
           <svg className="absolute bottom-1 left-1 w-8 h-8 pointer-events-none" viewBox="0 0 32 32" fill="none">
-            <path d="M0 32V16" stroke="#2563EB" strokeWidth="0.5" opacity="0.05" />
-            <path d="M0 32H16" stroke="#2563EB" strokeWidth="0.5" opacity="0.05" />
-            <circle cx="0" cy="32" r="1.5" fill="#2563EB" opacity="0.07" />
+            <path d="M0 32V16" stroke="#6366F1" strokeWidth="0.5" opacity="0.05" />
+            <path d="M0 32H16" stroke="#6366F1" strokeWidth="0.5" opacity="0.05" />
+            <circle cx="0" cy="32" r="1.5" fill="#6366F1" opacity="0.07" />
           </svg>
         </div>
       )}
@@ -160,7 +160,7 @@ export default function DonateCheckout() {
         <div className="relative rounded-2xl bg-white/60 backdrop-blur-sm border border-dashed border-gray-200 p-12 text-center overflow-hidden">
           <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 200" fill="none" preserveAspectRatio="none">
             <circle cx="200" cy="100" r="60" stroke="#F43F5E" strokeWidth="0.3" strokeDasharray="4 8" opacity="0.06" />
-            <circle cx="200" cy="100" r="90" stroke="#0D9488" strokeWidth="0.2" strokeDasharray="2 10" opacity="0.04" />
+            <circle cx="200" cy="100" r="90" stroke="#A855F7" strokeWidth="0.2" strokeDasharray="2 10" opacity="0.04" />
           </svg>
           <HiOutlineHeart className="w-8 h-8 text-gray-300 mx-auto mb-2" />
           <p className="text-gray-400 text-sm">{t('donate.select_campaign_first')}</p>
@@ -170,7 +170,7 @@ export default function DonateCheckout() {
       {/* ── Trust Signals ─────────────────────── */}
       <div className="mt-8 grid grid-cols-3 gap-3">
         <TrustBadge Icon={HiOutlineShieldCheck} label={t('donate.trust_secure', 'Secure')} color="#059669" />
-        <TrustBadge Icon={HiOutlineLockClosed} label={t('donate.trust_encrypted', 'Encrypted')} color="#2563EB" />
+        <TrustBadge Icon={HiOutlineLockClosed} label={t('donate.trust_encrypted', 'Encrypted')} color="#6366F1" />
         <TrustBadge Icon={HiOutlineFingerPrint} label={t('donate.trust_verified', 'Verified')} color="#7C3AED" />
       </div>
 
@@ -179,7 +179,7 @@ export default function DonateCheckout() {
         <div className="flex items-center justify-between px-2">
           {['Donate', 'Verify', 'Track', 'Impact'].map((step, i) => {
             const stepIcons = [HiOutlineHeart, HiOutlineShieldCheck, HiOutlineFingerPrint, HiOutlineCheckCircle];
-            const stepColors = ['#E11D48', '#059669', '#7C3AED', '#2563EB'];
+            const stepColors = ['#E11D48', '#059669', '#7C3AED', '#6366F1'];
             const stepBesps = ['heart', 'shield', 'fingerprint', 'check'];
             return (
             <div key={step} className="flex flex-col items-center gap-1.5 relative z-10">
@@ -210,22 +210,22 @@ const DONATE_CATEGORY_ICONS = {
 
 function CategoryIcon({ cat }) {
   const Comp = DONATE_CATEGORY_ICONS[(cat || '').toLowerCase()] || MdHandshake;
-  return <Comp className="w-5 h-5 text-blue-600" />;
+  return <Comp className="w-5 h-5 text-indigo-600" />;
 }
 
 /* ── Category-specific banner SVGs ─────────── */
 const CATEGORY_BANNERS = {
   water: () => (
     <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 64" fill="none" preserveAspectRatio="none">
-      <path d="M0 40 Q50 20, 100 35 T200 30 T300 38 T400 25" stroke="#2563EB" strokeWidth="0.8" opacity="0.10" />
-      <path d="M0 50 Q60 30, 120 45 T240 35 T360 48 T400 35" stroke="#0D9488" strokeWidth="0.5" opacity="0.08" />
+      <path d="M0 40 Q50 20, 100 35 T200 30 T300 38 T400 25" stroke="#6366F1" strokeWidth="0.8" opacity="0.10" />
+      <path d="M0 50 Q60 30, 120 45 T240 35 T360 48 T400 35" stroke="#A855F7" strokeWidth="0.5" opacity="0.08" />
     </svg>
   ),
   education: () => (
     <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 64" fill="none" preserveAspectRatio="none">
-      <path d="M340 15 L370 10 L370 35 L340 40 Z" stroke="#2563EB" strokeWidth="0.6" opacity="0.08" />
-      <path d="M345 20 L365 16" stroke="#2563EB" strokeWidth="0.4" opacity="0.06" />
-      <path d="M345 26 L360 23" stroke="#2563EB" strokeWidth="0.4" opacity="0.06" />
+      <path d="M340 15 L370 10 L370 35 L340 40 Z" stroke="#6366F1" strokeWidth="0.6" opacity="0.08" />
+      <path d="M345 20 L365 16" stroke="#6366F1" strokeWidth="0.4" opacity="0.06" />
+      <path d="M345 26 L360 23" stroke="#6366F1" strokeWidth="0.4" opacity="0.06" />
     </svg>
   ),
   health: () => (
@@ -241,8 +241,8 @@ function CampaignBannerSvg({ category }) {
   const Banner = CATEGORY_BANNERS[(category || '').toLowerCase()];
   if (!Banner) return (
     <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 64" fill="none" preserveAspectRatio="none">
-      <circle cx="360" cy="32" r="18" stroke="#2563EB" strokeWidth="0.5" opacity="0.06" />
-      <circle cx="360" cy="32" r="8" stroke="#0D9488" strokeWidth="0.3" strokeDasharray="2 3" opacity="0.05" />
+      <circle cx="360" cy="32" r="18" stroke="#6366F1" strokeWidth="0.5" opacity="0.06" />
+      <circle cx="360" cy="32" r="8" stroke="#A855F7" strokeWidth="0.3" strokeDasharray="2 3" opacity="0.05" />
     </svg>
   );
   return <Banner />;
@@ -265,11 +265,11 @@ function DonationSuccess({ t }) {
       {/* Celebration SVG */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 300 200" fill="none">
         <circle cx="50" cy="40" r="3" fill="#10B981" opacity="0.15"><animate attributeName="cy" values="40;35;40" dur="2s" repeatCount="indefinite" /></circle>
-        <circle cx="250" cy="50" r="2" fill="#2563EB" opacity="0.12"><animate attributeName="cy" values="50;44;50" dur="2.5s" repeatCount="indefinite" /></circle>
+        <circle cx="250" cy="50" r="2" fill="#6366F1" opacity="0.12"><animate attributeName="cy" values="50;44;50" dur="2.5s" repeatCount="indefinite" /></circle>
         <circle cx="80" cy="160" r="2.5" fill="#F43F5E" opacity="0.10"><animate attributeName="cy" values="160;155;160" dur="1.8s" repeatCount="indefinite" /></circle>
         <circle cx="220" cy="150" r="2" fill="#7C3AED" opacity="0.12"><animate attributeName="cy" values="150;144;150" dur="2.2s" repeatCount="indefinite" /></circle>
         <path d="M140 20 L145 10 L150 20" stroke="#10B981" strokeWidth="0.5" opacity="0.10"><animate attributeName="opacity" values="0.10;0.20;0.10" dur="2s" repeatCount="indefinite" /></path>
-        <path d="M160 180 L155 190 L150 180" stroke="#2563EB" strokeWidth="0.5" opacity="0.10"><animate attributeName="opacity" values="0.10;0.18;0.10" dur="2.5s" repeatCount="indefinite" /></path>
+        <path d="M160 180 L155 190 L150 180" stroke="#6366F1" strokeWidth="0.5" opacity="0.10"><animate attributeName="opacity" values="0.10;0.18;0.10" dur="2.5s" repeatCount="indefinite" /></path>
       </svg>
       <div className="relative w-20 h-20 mx-auto mb-4">
         <HexIcon Icon={HiOutlineCheckCircle} accent="#059669" size="lg" bespoke="check" />
