@@ -1,4 +1,4 @@
-import { HiOutlineCheckCircle } from 'react-icons/hi2';
+import { HiOutlineCheckCircle } from './icons';
 
 /**
  * VideoPlayer — plays campaign transparency videos.

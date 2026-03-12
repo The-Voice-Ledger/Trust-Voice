@@ -4,8 +4,8 @@ import { submitNgoRegistration } from '../api/ngoRegistrations';
 import { api } from '../api/client';
 import VoiceButton from '../components/VoiceButton';
 import useAuthStore from '../stores/authStore';
-import { HiOutlineCheckCircle } from 'react-icons/hi2';
-import { HiOutlineMicrophone } from 'react-icons/hi';
+import { HiOutlineCheckCircle, HiOutlineMicrophone } from '../components/icons';
+import { PageBg, PageHeader } from '../components/SvgDecorations';
 
 const STEPS = ['org_info', 'contact', 'mission', 'banking', 'review'];
 const ORG_TYPES = ['ngo', 'foundation', 'charity', 'cooperative', 'social_enterprise', 'community_group'];
@@ -95,14 +95,9 @@ export default function RegisterNgo() {
   }
 
   return (
+    <PageBg pattern="circuit" colorA="#2563EB" colorB="#0D9488">
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          {t('ngo_reg.title')}
-          <HiOutlineMicrophone className="w-6 h-6 text-blue-500" />
-        </h1>
-        <p className="text-gray-500 text-sm mt-1">{t('ngo_reg.subtitle')}</p>
-      </div>
+      <PageHeader icon={HiOutlineMicrophone} title={t('ngo_reg.title')} subtitle={t('ngo_reg.subtitle')} accentColor="blue" />
 
       {/* Progress bar */}
       <div className="flex gap-1 mb-8">
@@ -127,7 +122,20 @@ export default function RegisterNgo() {
       )}
 
       {/* Step content */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-6">
+      <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-6 mb-6 overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500 via-teal-500 to-transparent" />
+        <svg className="absolute top-2 right-2 w-24 h-24 pointer-events-none" viewBox="0 0 96 96" fill="none">
+          <rect x="50" y="10" width="30" height="36" rx="3" stroke="#2563EB" strokeWidth="0.5" opacity="0.05" />
+          <path d="M56 22 L74 22" stroke="#2563EB" strokeWidth="0.4" opacity="0.04" />
+          <path d="M56 28 L70 28" stroke="#2563EB" strokeWidth="0.4" opacity="0.04" />
+          <path d="M56 34 L68 34" stroke="#2563EB" strokeWidth="0.4" opacity="0.03" />
+          <circle cx="65" cy="50" r="1.5" fill="#2563EB" opacity="0.05" />
+        </svg>
+        <svg className="absolute bottom-1 left-1 w-10 h-10 pointer-events-none" viewBox="0 0 40 40" fill="none">
+          <path d="M0 40V25" stroke="#0D9488" strokeWidth="0.5" opacity="0.04" />
+          <path d="M0 40H15" stroke="#0D9488" strokeWidth="0.5" opacity="0.04" />
+          <circle cx="0" cy="40" r="1.5" fill="#0D9488" opacity="0.05" />
+        </svg>
         {step === 0 && (
           <div className="space-y-4">
             <Field label={t('ngo_reg.org_name')} required value={form.organization_name}
@@ -263,6 +271,7 @@ export default function RegisterNgo() {
         )}
       </div>
     </div>
+    </PageBg>
   );
 }
 

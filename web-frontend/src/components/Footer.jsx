@@ -1,19 +1,21 @@
 import { Link } from 'react-router-dom';
-import { HiOutlineMicrophone } from 'react-icons/hi';
+import { HiOutlineMicrophone } from './icons';
 import {
   HiOutlineGlobeAlt, HiOutlineHeart, HiOutlineChartBar,
   HiOutlineBuildingOffice2, HiOutlinePlusCircle, HiOutlineCamera,
   HiOutlineShieldCheck, HiOutlineMapPin, HiOutlineDocumentText,
-} from 'react-icons/hi2';
+} from './icons';
+import { CircuitTrace } from './SvgDecorations';
 
 export default function Footer() {
   return (
-    <footer className="border-t border-gray-100 bg-white hidden sm:block">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+    <footer className="relative border-t border-gray-100 bg-white hidden sm:block overflow-hidden">
+      <CircuitTrace className="absolute inset-0 w-full h-full text-gray-400" />
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-8">
           {/* Platform */}
           <div>
-            <h4 className="text-sm font-semibold text-gray-900 mb-3">Platform</h4>
+            <h4 className="text-sm font-semibold text-gray-900 mb-3 font-display">Platform</h4>
             <nav className="space-y-2.5">
               <FooterLink to="/campaigns" Icon={HiOutlineGlobeAlt}>Campaigns</FooterLink>
               <FooterLink to="/donate" Icon={HiOutlineHeart}>Donate</FooterLink>
@@ -23,7 +25,7 @@ export default function Footer() {
 
           {/* Get Involved */}
           <div>
-            <h4 className="text-sm font-semibold text-gray-900 mb-3">Get Involved</h4>
+            <h4 className="text-sm font-semibold text-gray-900 mb-3 font-display">Get Involved</h4>
             <nav className="space-y-2.5">
               <FooterLink to="/register-ngo" Icon={HiOutlineBuildingOffice2}>Register NGO</FooterLink>
               <FooterLink to="/create-campaign" Icon={HiOutlinePlusCircle}>Create Campaign</FooterLink>
@@ -33,7 +35,7 @@ export default function Footer() {
 
           {/* Trust & Transparency */}
           <div>
-            <h4 className="text-sm font-semibold text-gray-900 mb-3">Trust</h4>
+            <h4 className="text-sm font-semibold text-gray-900 mb-3 font-display">Trust</h4>
             <div className="space-y-2.5">
               <TrustItem Icon={HiOutlineShieldCheck}>Blockchain Verified</TrustItem>
               <TrustItem Icon={HiOutlineMapPin}>GPS Field Reports</TrustItem>
@@ -43,7 +45,7 @@ export default function Footer() {
 
           {/* About */}
           <div>
-            <h4 className="text-sm font-semibold text-gray-900 mb-3">About</h4>
+            <h4 className="text-sm font-semibold text-gray-900 mb-3 font-display">About</h4>
             <div className="space-y-2.5">
               <p className="text-sm text-gray-500">Voice-First Platform</p>
               <p className="text-sm text-gray-500">Open Source</p>
@@ -57,7 +59,7 @@ export default function Footer() {
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center">
               <HiOutlineMicrophone className="w-3.5 h-3.5 text-white" />
             </div>
-            <span className="text-sm font-bold text-gray-800 tracking-tight">TrustVoice</span>
+            <span className="text-sm font-bold text-gray-800 tracking-tight font-display">TrustVoice</span>
           </div>
           <p className="text-xs text-gray-400">
             © {new Date().getFullYear()} TrustVoice

@@ -14,10 +14,8 @@ import {
   HiOutlineXMark, HiOutlineMagnifyingGlass,
   HiOutlineGlobeAlt, HiOutlineQuestionMarkCircle,
   HiOutlineSpeakerWave, HiOutlineSpeakerXMark,
-} from 'react-icons/hi2';
-import {
   HiOutlineMicrophone,
-} from 'react-icons/hi';
+} from '../components/icons';
 
 // ── Chat message store (local, per-session) ────────────────────
 function useChat() {
@@ -197,18 +195,42 @@ export default function Assistant() {
 
   // ── Render ───────────────────────────────────────────────────
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 flex flex-col" style={{ height: 'calc(100dvh - 8rem)' }}>
-      {/* Header */}
-      <div className="flex items-center justify-between py-4 flex-shrink-0 border-b border-gray-100/80">
+    <div className="relative max-w-3xl mx-auto px-4 sm:px-6 flex flex-col" style={{ height: 'calc(100dvh - 8rem)' }}>
+      {/* Background ambient SVG decoration */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none -z-10" viewBox="0 0 600 800" fill="none" preserveAspectRatio="none">
+        <circle cx="80" cy="120" r="100" fill="url(#asst-orb1)" opacity="0.04" />
+        <circle cx="520" cy="680" r="120" fill="url(#asst-orb2)" opacity="0.03" />
+        <defs>
+          <radialGradient id="asst-orb1"><stop offset="0%" stopColor="#2563EB" /><stop offset="100%" stopColor="transparent" /></radialGradient>
+          <radialGradient id="asst-orb2"><stop offset="0%" stopColor="#0D9488" /><stop offset="100%" stopColor="transparent" /></radialGradient>
+        </defs>
+      </svg>
+
+      {/* ── Header ───────────────────────────── */}
+      <div className="relative flex items-center justify-between py-4 flex-shrink-0 border-b border-gray-100/80">
+        {/* Subtle header accent line */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-blue-500/20 via-teal-500/20 to-transparent" />
         <div className="flex items-center gap-3">
           <div className="relative">
+            {/* Animated ring around icon */}
+            <svg className="absolute -inset-1.5 w-[calc(100%+12px)] h-[calc(100%+12px)] pointer-events-none" viewBox="0 0 52 52" fill="none">
+              <circle cx="26" cy="26" r="24" stroke="url(#asst-hdr-ring)" strokeWidth="0.5" strokeDasharray="3 5" opacity="0.3">
+                <animateTransform attributeName="transform" type="rotate" values="0 26 26;360 26 26" dur="20s" repeatCount="indefinite" />
+              </circle>
+              <defs>
+                <linearGradient id="asst-hdr-ring" x1="0" y1="0" x2="52" y2="52">
+                  <stop offset="0%" stopColor="#2563EB" />
+                  <stop offset="100%" stopColor="#0D9488" />
+                </linearGradient>
+              </defs>
+            </svg>
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center shadow-md shadow-blue-200/50">
               <HiOutlineSparkles className="w-5 h-5 text-white" />
             </div>
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2 border-white" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-gray-900">{t('assistant.title', 'TrustVoice Assistant')}</h1>
+            <h1 className="text-lg font-bold text-gray-900 font-display">{t('assistant.title', 'TrustVoice Assistant')}</h1>
             <p className="text-xs text-gray-400">{t('assistant.subtitle', 'Search, donate, and manage by voice or text')}</p>
           </div>
         </div>
@@ -253,13 +275,27 @@ export default function Assistant() {
 
         {loading && (
           <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center flex-shrink-0">
-              <HiOutlineSparkles className="w-4 h-4 text-white" />
+            <div className="relative w-8 h-8 flex-shrink-0">
+              <svg className="absolute -inset-0.5 w-[calc(100%+4px)] h-[calc(100%+4px)]" viewBox="0 0 36 36" fill="none">
+                <circle cx="18" cy="18" r="16" stroke="url(#think-ring)" strokeWidth="0.5" strokeDasharray="2 4" opacity="0.4">
+                  <animateTransform attributeName="transform" type="rotate" values="0 18 18;360 18 18" dur="3s" repeatCount="indefinite" />
+                </circle>
+                <defs>
+                  <linearGradient id="think-ring" x1="0" y1="0" x2="36" y2="36">
+                    <stop offset="0%" stopColor="#2563EB" />
+                    <stop offset="100%" stopColor="#0D9488" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center">
+                <HiOutlineSparkles className="w-4 h-4 text-white" />
+              </div>
             </div>
-            <div className="bg-white rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-gray-100">
+            <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-gray-100/80 overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-blue-500/30 via-teal-500/30 to-transparent" />
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-teal-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                 <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
@@ -268,43 +304,57 @@ export default function Assistant() {
       </div>
 
       {/* Input bar */}
-      <div className="flex-shrink-0 pb-4 pt-2 border-t border-gray-100/80">
+      <div className="relative flex-shrink-0 pb-4 pt-2 border-t border-gray-100/80">
+        {/* Subtle top gradient */}
+        <div className="absolute -top-px left-0 right-0 h-px bg-gradient-to-r from-blue-500/15 via-teal-500/15 to-transparent" />
+
         {/* Voice recording overlay */}
         {voiceStatus === 'recording' && (
-          <div className="mb-3 mt-2 flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl px-4 py-3">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-sm font-medium text-red-700 flex-1">{t('voice.listening', 'Listening...')}</span>
-            <button onClick={cancelVoice} className="text-xs text-red-500 font-medium hover:underline">{t('common.cancel', 'Cancel')}</button>
+          <div className="mb-3 mt-2 relative flex items-center gap-3 bg-red-50/80 backdrop-blur-sm border border-red-200 rounded-2xl px-4 py-3 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-transparent pointer-events-none" />
+            <div className="relative w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+            <span className="relative text-sm font-medium text-red-700 flex-1">{t('voice.listening', 'Listening...')}</span>
+            <button onClick={cancelVoice} className="relative text-xs text-red-500 font-medium hover:underline">{t('common.cancel', 'Cancel')}</button>
           </div>
         )}
         {voiceStatus === 'processing' && (
-          <div className="mb-3 mt-2 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
-            <div className="w-4 h-4 border-2 border-amber-300 border-t-amber-600 rounded-full animate-spin" />
-            <span className="text-sm font-medium text-amber-700">{t('voice.processing', 'Processing...')}</span>
+          <div className="mb-3 mt-2 relative flex items-center gap-3 bg-amber-50/80 backdrop-blur-sm border border-amber-200 rounded-2xl px-4 py-3 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent pointer-events-none" />
+            <div className="relative w-4 h-4 border-2 border-amber-300 border-t-amber-600 rounded-full animate-spin" />
+            <span className="relative text-sm font-medium text-amber-700">{t('voice.processing', 'Processing...')}</span>
           </div>
         )}
 
-        <div className="flex items-end gap-2 mt-2">
-          {/* Voice button */}
-          <button
-            onPointerDown={(e) => { e.preventDefault(); if (voiceStatus === 'idle' && !loading) startVoice(); }}
-            onPointerUp={(e) => { e.preventDefault(); if (voiceStatus === 'recording') stopVoice(); }}
-            onPointerLeave={(e) => { e.preventDefault(); if (voiceStatus === 'recording') stopVoice(); }}
-            disabled={loading || voiceStatus === 'processing'}
-            className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 ${
-              voiceStatus === 'recording'
-                ? 'bg-red-500 text-white shadow-lg shadow-red-200/60 scale-110 ring-4 ring-red-100'
-                : voiceStatus === 'processing'
-                  ? 'bg-amber-500 text-white cursor-wait shadow-md'
-                  : 'bg-gradient-to-br from-blue-500 to-teal-600 text-white shadow-md shadow-blue-200/50 hover:shadow-lg hover:scale-105 active:scale-95'
-            }`}
-            aria-label={voiceStatus === 'recording' ? 'Release to send' : 'Hold to speak'}
-          >
-            <HiOutlineMicrophone className="w-5 h-5" />
-          </button>
+        <div className="relative flex items-end gap-2 mt-2">
+          {/* Voice button with ring decoration */}
+          <div className="relative flex-shrink-0">
+            <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 56 56" fill="none">
+              <circle cx="28" cy="28" r="26" stroke={voiceStatus === 'recording' ? '#EF4444' : '#2563EB'} strokeWidth="0.4" strokeDasharray="2 4"
+                opacity={voiceStatus === 'recording' ? '0.4' : '0.15'}>
+                <animateTransform attributeName="transform" type="rotate" values="0 28 28;360 28 28" dur="12s" repeatCount="indefinite" />
+              </circle>
+            </svg>
+            <button
+              onPointerDown={(e) => { e.preventDefault(); if (voiceStatus === 'idle' && !loading) startVoice(); }}
+              onPointerUp={(e) => { e.preventDefault(); if (voiceStatus === 'recording') stopVoice(); }}
+              onPointerLeave={(e) => { e.preventDefault(); if (voiceStatus === 'recording') stopVoice(); }}
+              disabled={loading || voiceStatus === 'processing'}
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 ${
+                voiceStatus === 'recording'
+                  ? 'bg-red-500 text-white shadow-lg shadow-red-200/60 scale-110 ring-4 ring-red-100'
+                  : voiceStatus === 'processing'
+                    ? 'bg-amber-500 text-white cursor-wait shadow-md'
+                    : 'bg-gradient-to-br from-blue-500 to-teal-600 text-white shadow-md shadow-blue-200/50 hover:shadow-lg hover:scale-105 active:scale-95'
+              }`}
+              aria-label={voiceStatus === 'recording' ? 'Release to send' : 'Hold to speak'}
+            >
+              <HiOutlineMicrophone className="w-5 h-5" />
+            </button>
+          </div>
 
-          {/* Text input */}
+          {/* Text input with decoration */}
           <div className="flex-1 relative">
+            <div className="absolute top-0 left-4 right-12 h-px bg-gradient-to-r from-blue-500/10 via-transparent to-teal-500/10 pointer-events-none rounded-full" />
             <textarea
               ref={inputRef}
               value={input}
@@ -312,14 +362,14 @@ export default function Assistant() {
               onKeyDown={handleKeyDown}
               placeholder={t('assistant.placeholder', 'Type a message or hold the mic...')}
               rows={1}
-              className="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50/50 px-4 py-3 pr-12 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 focus:bg-white shadow-sm transition-all"
+              className="w-full resize-none rounded-2xl border border-gray-200/80 bg-white/70 backdrop-blur-sm px-4 py-3 pr-12 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-300 focus:bg-white shadow-sm transition-all"
               style={{ maxHeight: '120px' }}
               disabled={loading}
             />
             <button
               onClick={() => sendText(input)}
               disabled={!input.trim() || loading}
-              className="absolute right-2 bottom-2 p-2 rounded-xl bg-blue-600 text-white disabled:opacity-20 disabled:cursor-not-allowed hover:bg-blue-700 active:scale-95 transition-all shadow-sm"
+              className="absolute right-2 bottom-2 p-2 rounded-xl bg-gradient-to-br from-blue-600 to-teal-600 text-white disabled:opacity-20 disabled:cursor-not-allowed hover:shadow-md active:scale-95 transition-all shadow-sm"
               aria-label="Send"
             >
               <HiOutlinePaperAirplane className="w-4 h-4" />
@@ -338,10 +388,57 @@ export default function Assistant() {
 // ── Welcome Screen ─────────────────────────────────────────────
 function WelcomeScreen({ onSuggestion, t }) {
   const suggestions = [
-    { text: 'Find education campaigns in Kenya', Icon: HiOutlineMagnifyingGlass, color: 'blue' },
-    { text: 'How much has been raised this month?', Icon: HiOutlineChartBarSquare, color: 'emerald' },
-    { text: 'Show me water projects', Icon: HiOutlineGlobeAlt, color: 'sky' },
-    { text: "What can you do?", Icon: HiOutlineQuestionMarkCircle, color: 'amber' },
+    {
+      text: 'Find education campaigns in Kenya',
+      Icon: HiOutlineMagnifyingGlass,
+      color: 'blue',
+      svg: (
+        <svg className="absolute top-2 right-2 w-16 h-16 pointer-events-none" viewBox="0 0 64 64" fill="none">
+          <circle cx="30" cy="28" r="12" stroke="#2563EB" strokeWidth="0.8" opacity="0.08" />
+          <path d="M38 36 L48 46" stroke="#2563EB" strokeWidth="0.8" opacity="0.08" />
+          <circle cx="30" cy="28" r="6" stroke="#2563EB" strokeWidth="0.4" strokeDasharray="2 2" opacity="0.05" />
+        </svg>
+      ),
+    },
+    {
+      text: 'How much has been raised this month?',
+      Icon: HiOutlineChartBarSquare,
+      color: 'emerald',
+      svg: (
+        <svg className="absolute top-2 right-2 w-16 h-16 pointer-events-none" viewBox="0 0 64 64" fill="none">
+          <rect x="22" y="30" width="6" height="16" rx="1" stroke="#059669" strokeWidth="0.5" opacity="0.07" />
+          <rect x="32" y="22" width="6" height="24" rx="1" stroke="#059669" strokeWidth="0.5" opacity="0.07" />
+          <rect x="42" y="16" width="6" height="30" rx="1" stroke="#059669" strokeWidth="0.5" opacity="0.07" />
+          <path d="M20 48 L50 48" stroke="#059669" strokeWidth="0.4" opacity="0.05" />
+        </svg>
+      ),
+    },
+    {
+      text: 'Show me water projects',
+      Icon: HiOutlineGlobeAlt,
+      color: 'sky',
+      svg: (
+        <svg className="absolute top-2 right-2 w-16 h-16 pointer-events-none" viewBox="0 0 64 64" fill="none">
+          <circle cx="36" cy="30" r="14" stroke="#0284C7" strokeWidth="0.5" opacity="0.07" />
+          <ellipse cx="36" cy="30" rx="8" ry="14" stroke="#0284C7" strokeWidth="0.4" opacity="0.05" />
+          <path d="M22 30 L50 30" stroke="#0284C7" strokeWidth="0.3" opacity="0.05" />
+          <path d="M25 22 L47 22" stroke="#0284C7" strokeWidth="0.3" opacity="0.04" />
+          <path d="M25 38 L47 38" stroke="#0284C7" strokeWidth="0.3" opacity="0.04" />
+        </svg>
+      ),
+    },
+    {
+      text: "What can you do?",
+      Icon: HiOutlineQuestionMarkCircle,
+      color: 'amber',
+      svg: (
+        <svg className="absolute top-2 right-2 w-16 h-16 pointer-events-none" viewBox="0 0 64 64" fill="none">
+          <circle cx="36" cy="28" r="12" stroke="#D97706" strokeWidth="0.5" opacity="0.06" />
+          <path d="M32 24 Q32 20, 36 20 Q40 20, 40 24 Q40 27, 36 28 L36 32" stroke="#D97706" strokeWidth="0.6" opacity="0.07" />
+          <circle cx="36" cy="36" r="1" fill="#D97706" opacity="0.08" />
+        </svg>
+      ),
+    },
   ];
 
   const colorMap = {
@@ -351,29 +448,86 @@ function WelcomeScreen({ onSuggestion, t }) {
     amber: 'bg-amber-50 text-amber-600 group-hover:bg-amber-100',
   };
 
+  const borderColors = {
+    blue: 'hover:border-blue-200',
+    emerald: 'hover:border-emerald-200',
+    sky: 'hover:border-sky-200',
+    amber: 'hover:border-amber-200',
+  };
+
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
+      {/* Central icon with animated rings */}
       <div className="relative mb-6">
+        <svg className="absolute -inset-4 w-[calc(100%+32px)] h-[calc(100%+32px)]" viewBox="0 0 96 96" fill="none">
+          <circle cx="48" cy="48" r="44" stroke="url(#welcome-ring1)" strokeWidth="0.5" strokeDasharray="3 6" opacity="0.3">
+            <animateTransform attributeName="transform" type="rotate" values="0 48 48;360 48 48" dur="25s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="48" cy="48" r="36" stroke="url(#welcome-ring2)" strokeWidth="0.4" strokeDasharray="2 8" opacity="0.2">
+            <animateTransform attributeName="transform" type="rotate" values="360 48 48;0 48 48" dur="30s" repeatCount="indefinite" />
+          </circle>
+          {/* Orbital nodes */}
+          <circle cx="48" cy="4" r="2" fill="#2563EB" opacity="0.15">
+            <animateTransform attributeName="transform" type="rotate" values="0 48 48;360 48 48" dur="25s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="92" cy="48" r="1.5" fill="#0D9488" opacity="0.12">
+            <animateTransform attributeName="transform" type="rotate" values="360 48 48;0 48 48" dur="30s" repeatCount="indefinite" />
+          </circle>
+          <defs>
+            <linearGradient id="welcome-ring1" x1="0" y1="0" x2="96" y2="96">
+              <stop offset="0%" stopColor="#2563EB" />
+              <stop offset="100%" stopColor="#0D9488" />
+            </linearGradient>
+            <linearGradient id="welcome-ring2" x1="96" y1="0" x2="0" y2="96">
+              <stop offset="0%" stopColor="#7C3AED" />
+              <stop offset="100%" stopColor="#2563EB" />
+            </linearGradient>
+          </defs>
+        </svg>
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center shadow-xl shadow-blue-200/50">
           <HiOutlineSparkles className="w-8 h-8 text-white" />
         </div>
         <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-green-400 border-2 border-white animate-pulse" />
       </div>
-      <h2 className="text-xl font-bold text-gray-900 mb-2">{t('assistant.welcome', 'How can I help?')}</h2>
-      <p className="text-sm text-gray-400 max-w-sm mb-8">{t('assistant.welcome_desc', 'Search campaigns, make donations, check analytics, or ask anything about TrustVoice.')}</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-md">
-        {suggestions.map(({ text, Icon, color }) => (
+
+      <h2 className="text-xl font-bold text-gray-900 mb-2 font-display">{t('assistant.welcome', 'How can I help?')}</h2>
+      <p className="text-sm text-gray-400 max-w-sm mb-3">{t('assistant.welcome_desc', 'Search campaigns, make donations, check analytics, or ask anything about TrustVoice.')}</p>
+
+      {/* Decorative divider */}
+      <div className="flex items-center gap-3 max-w-[180px] mx-auto mb-8">
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-blue-300/50 to-transparent" />
+        <svg width="6" height="6" viewBox="0 0 6 6" fill="none"><path d="M3 0L6 3L3 6L0 3Z" fill="#2563EB" opacity="0.3" /></svg>
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-teal-300/50 to-transparent" />
+      </div>
+
+      {/* Suggestion cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md">
+        {suggestions.map(({ text, Icon, color, svg }) => (
           <button
             key={text}
             onClick={() => onSuggestion(text)}
-            className="group flex items-center gap-3 px-4 py-3.5 rounded-xl border border-gray-100 bg-white text-sm text-gray-600 hover:border-blue-200 hover:text-gray-900 transition-all text-left shadow-sm hover:shadow-md"
+            className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl border border-gray-100 bg-white/80 backdrop-blur-sm text-sm text-gray-600 ${borderColors[color]} hover:text-gray-900 transition-all text-left shadow-sm hover:shadow-md overflow-hidden`}
           >
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${colorMap[color]}`}>
-              <Icon className="w-4 h-4" />
+            {/* Bespoke SVG per card */}
+            {svg}
+            {/* Top accent */}
+            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-blue-500/10 via-teal-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className={`relative w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${colorMap[color]}`}>
+              <Icon className="w-4.5 h-4.5" />
             </div>
-            <span className="leading-snug">{text}</span>
+            <span className="relative leading-snug">{text}</span>
           </button>
         ))}
+      </div>
+
+      {/* Voice hint */}
+      <div className="mt-8 flex items-center gap-2 text-[11px] text-gray-300">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="6" y="2" width="4" height="8" rx="2" stroke="currentColor" strokeWidth="1" />
+          <path d="M4 8a4 4 0 008 0" stroke="currentColor" strokeWidth="1" fill="none" />
+          <path d="M8 12v2" stroke="currentColor" strokeWidth="1" />
+        </svg>
+        Hold the mic button to speak
       </div>
     </div>
   );
@@ -385,10 +539,12 @@ function ChatMessage({ msg, onPlayAudio }) {
   if (msg.role === 'user') {
     return (
       <div className="flex justify-end gap-3">
-        <div className="max-w-[85%] bg-blue-600 text-white rounded-2xl rounded-tr-md px-4 py-3 shadow-sm">
-          <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+        <div className="relative max-w-[85%] bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-2xl rounded-tr-md px-4 py-3 shadow-sm overflow-hidden">
+          {/* Subtle inner glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+          <p className="relative text-sm whitespace-pre-wrap">{msg.text}</p>
           {msg.isVoice && (
-            <div className="flex items-center gap-1 mt-1 text-blue-200 text-[10px]">
+            <div className="relative flex items-center gap-1 mt-1.5 text-blue-200 text-[10px]">
               <HiOutlineMicrophone className="w-3 h-3" />
               voice
             </div>
@@ -401,19 +557,29 @@ function ChatMessage({ msg, onPlayAudio }) {
   // Assistant message
   return (
     <div className="flex gap-3">
-      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <HiOutlineSparkles className="w-4 h-4 text-white" />
+      <div className="relative w-8 h-8 flex-shrink-0 mt-0.5">
+        <svg className="absolute -inset-0.5 w-[calc(100%+4px)] h-[calc(100%+4px)] pointer-events-none" viewBox="0 0 36 36" fill="none">
+          <circle cx="18" cy="18" r="16" stroke="url(#msg-ring)" strokeWidth="0.4" strokeDasharray="2 4" opacity="0.2">
+            <animateTransform attributeName="transform" type="rotate" values="0 18 18;360 18 18" dur="15s" repeatCount="indefinite" />
+          </circle>
+          <defs><linearGradient id="msg-ring" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stopColor="#2563EB" /><stop offset="100%" stopColor="#0D9488" /></linearGradient></defs>
+        </svg>
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center">
+          <HiOutlineSparkles className="w-4 h-4 text-white" />
+        </div>
       </div>
       <div className="max-w-[85%] space-y-2">
         {/* Text response */}
         {msg.text && (
-          <div className="bg-white rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-gray-100">
-            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+          <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-gray-100/80 overflow-hidden">
+            {/* Top accent */}
+            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-blue-500/20 via-teal-500/20 to-transparent" />
+            <p className="relative text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{msg.text}</p>
             {/* Replay audio button */}
             {msg.audioUrl && (
               <button
                 onClick={() => onPlayAudio(msg.audioUrl)}
-                className="mt-2 flex items-center gap-1.5 text-[11px] text-blue-500 hover:text-blue-700 transition"
+                className="relative mt-2 flex items-center gap-1.5 text-[11px] text-blue-500 hover:text-blue-700 transition"
               >
                 <HiOutlineSpeakerWave className="w-3.5 h-3.5" />
                 Play response
@@ -454,12 +620,19 @@ function CampaignListCard({ campaigns }) {
         <Link
           key={c.id}
           to={`/campaign/${c.id}`}
-          className="flex items-center gap-3 bg-white rounded-xl border border-gray-100 p-3 hover:border-blue-200 hover:shadow-sm transition-all group"
+          className="group relative flex items-center gap-3 bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100/80 p-3 hover:border-blue-200 hover:shadow-md transition-all overflow-hidden"
         >
-          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0 text-blue-600 font-bold text-sm">
+          {/* Top line accent */}
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-blue-500/15 via-teal-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          {/* Corner decoration */}
+          <svg className="absolute -top-1 -right-1 w-12 h-12 pointer-events-none" viewBox="0 0 48 48" fill="none">
+            <circle cx="36" cy="12" r="8" stroke="#2563EB" strokeWidth="0.4" opacity="0.05" />
+            <circle cx="36" cy="12" r="3" stroke="#2563EB" strokeWidth="0.3" strokeDasharray="1 2" opacity="0.04" />
+          </svg>
+          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center flex-shrink-0 text-blue-600 font-bold text-sm border border-blue-100/50">
             #{c.id}
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="relative flex-1 min-w-0">
             <h4 className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
               {c.title}
             </h4>
@@ -475,7 +648,7 @@ function CampaignListCard({ campaigns }) {
               <span>${fmt(c.raised_usd)} / ${fmt(c.goal_usd)}</span>
             </div>
           </div>
-          <HiOutlineArrowRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition-colors flex-shrink-0" />
+          <HiOutlineArrowRight className="relative w-4 h-4 text-gray-300 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
         </Link>
       ))}
       {campaigns.length > 5 && (
@@ -490,31 +663,41 @@ function CampaignDetailCard({ campaign }) {
   return (
     <Link
       to={`/campaign/${c.id}`}
-      className="block bg-white rounded-xl border border-gray-100 p-4 hover:border-blue-200 hover:shadow-sm transition-all group"
+      className="group relative block bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100/80 overflow-hidden hover:border-blue-200 hover:shadow-md transition-all"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{c.title}</h4>
-          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{c.description}</p>
-        </div>
-        <span className={`text-[10px] font-bold px-2 py-1 rounded-lg flex-shrink-0 ${
-          c.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'
-        }`}>
-          {c.status}
-        </span>
+      {/* Gradient banner */}
+      <div className="relative h-10 bg-gradient-to-r from-blue-500/8 via-teal-500/5 to-transparent">
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-blue-500/30 via-teal-500/20 to-transparent" />
+        <svg className="absolute right-2 top-0 w-16 h-10 pointer-events-none" viewBox="0 0 64 40" fill="none">
+          <circle cx="48" cy="20" r="12" stroke="#2563EB" strokeWidth="0.4" opacity="0.06" />
+          <path d="M42 20 L48 14 L54 20 L48 26 Z" stroke="#0D9488" strokeWidth="0.3" opacity="0.05" />
+        </svg>
       </div>
-      <div className="mt-3">
-        <ProgressBar percentage={c.progress_pct} className="mb-2" />
-        <div className="flex items-center justify-between text-xs">
-          <span className="font-bold text-blue-600">${fmt(c.raised_usd)}</span>
-          <span className="text-gray-400">of ${fmt(c.goal_usd)}</span>
+      <div className="p-4 -mt-2">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{c.title}</h4>
+            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{c.description}</p>
+          </div>
+          <span className={`text-[10px] font-bold px-2 py-1 rounded-lg flex-shrink-0 ${
+            c.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'
+          }`}>
+            {c.status}
+          </span>
         </div>
-      </div>
-      <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-400">
-        {c.category && <span className="capitalize bg-gray-50 px-2 py-0.5 rounded">{c.category}</span>}
-        {c.location && c.location !== 'N/A' && (
-          <span className="flex items-center gap-0.5"><HiOutlineMapPin className="w-3 h-3" />{c.location}</span>
-        )}
+        <div className="mt-3">
+          <ProgressBar percentage={c.progress_pct} className="mb-2" />
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-blue-600">${fmt(c.raised_usd)}</span>
+            <span className="text-gray-400">of ${fmt(c.goal_usd)}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-400">
+          {c.category && <span className="capitalize bg-gray-50 px-2 py-0.5 rounded">{c.category}</span>}
+          {c.location && c.location !== 'N/A' && (
+            <span className="flex items-center gap-0.5"><HiOutlineMapPin className="w-3 h-3" />{c.location}</span>
+          )}
+        </div>
       </div>
     </Link>
   );
@@ -522,27 +705,37 @@ function CampaignDetailCard({ campaign }) {
 
 function DonationConfirmationCard({ data }) {
   return (
-    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200 p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <HiOutlineCheckBadge className="w-5 h-5 text-green-600" />
+    <div className="relative rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200/80 p-4 overflow-hidden">
+      {/* Celebration SVG */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 300 120" fill="none">
+        <circle cx="260" cy="20" r="20" stroke="#10B981" strokeWidth="0.4" opacity="0.08" />
+        <circle cx="260" cy="20" r="8" stroke="#10B981" strokeWidth="0.3" strokeDasharray="2 3" opacity="0.06" />
+        <path d="M30 100 L35 90 L40 100" stroke="#10B981" strokeWidth="0.5" opacity="0.06" />
+        <circle cx="20" cy="30" r="2" fill="#10B981" opacity="0.08"><animate attributeName="opacity" values="0.08;0.15;0.08" dur="2s" repeatCount="indefinite" /></circle>
+        <circle cx="280" cy="90" r="1.5" fill="#059669" opacity="0.08"><animate attributeName="opacity" values="0.08;0.14;0.08" dur="2.5s" repeatCount="indefinite" /></circle>
+      </svg>
+      <div className="relative flex items-center gap-2 mb-3">
+        <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+          <HiOutlineCheckBadge className="w-5 h-5 text-green-600" />
+        </div>
         <span className="font-semibold text-green-800 text-sm">Donation Initiated</span>
       </div>
       {data.donation_id && (
-        <p className="text-xs text-gray-500 mb-2">ID: {String(data.donation_id).slice(0, 8)}…</p>
+        <p className="relative text-xs text-gray-500 mb-3 font-mono bg-green-100/50 px-2 py-1 rounded inline-block">ID: {String(data.donation_id).slice(0, 8)}…</p>
       )}
-      <div className="grid grid-cols-2 gap-2 text-xs">
+      <div className="relative grid grid-cols-2 gap-3 text-xs">
         {data.campaign_title && (
-          <div><span className="text-gray-400">Campaign</span><p className="font-medium text-gray-700">{data.campaign_title}</p></div>
+          <div className="bg-white/60 rounded-lg p-2"><span className="text-gray-400 text-[10px]">Campaign</span><p className="font-medium text-gray-700 mt-0.5">{data.campaign_title}</p></div>
         )}
         {data.amount && (
-          <div><span className="text-gray-400">Amount</span><p className="font-medium text-gray-700">{data.amount} {data.currency || 'USD'}</p></div>
+          <div className="bg-white/60 rounded-lg p-2"><span className="text-gray-400 text-[10px]">Amount</span><p className="font-medium text-gray-700 mt-0.5">{data.amount} {data.currency || 'USD'}</p></div>
         )}
         {data.payment_method && (
-          <div><span className="text-gray-400">Method</span><p className="font-medium text-gray-700 uppercase">{data.payment_method}</p></div>
+          <div className="bg-white/60 rounded-lg p-2"><span className="text-gray-400 text-[10px]">Method</span><p className="font-medium text-gray-700 mt-0.5 uppercase">{data.payment_method}</p></div>
         )}
       </div>
       {data.instructions && (
-        <p className="text-xs text-green-700 mt-2 bg-green-100/50 px-3 py-2 rounded-lg">{data.instructions}</p>
+        <p className="relative text-xs text-green-700 mt-3 bg-green-100/50 px-3 py-2 rounded-lg">{data.instructions}</p>
       )}
     </div>
   );
@@ -551,8 +744,9 @@ function DonationConfirmationCard({ data }) {
 function DonationHistoryCard({ donations }) {
   if (!donations.length) return null;
   return (
-    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-      <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
+    <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100/80 overflow-hidden">
+      <div className="relative px-4 py-2.5 bg-gradient-to-r from-gray-50 to-transparent border-b border-gray-100/80">
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-blue-500/15 via-teal-500/10 to-transparent" />
         <span className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
           <HiOutlineClock className="w-3.5 h-3.5" />
           Donation History
@@ -560,7 +754,10 @@ function DonationHistoryCard({ donations }) {
       </div>
       <div className="divide-y divide-gray-50">
         {donations.slice(0, 5).map((d) => (
-          <div key={d.id} className="px-4 py-2.5 flex items-center justify-between gap-3">
+          <div key={d.id} className="relative px-4 py-2.5 flex items-center justify-between gap-3 group hover:bg-gray-50/50 transition-colors">
+            <svg className="absolute bottom-0 right-0 w-8 h-8 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" viewBox="0 0 32 32" fill="none">
+              <path d="M32 0v32H0" stroke="#2563EB" strokeWidth="0.3" opacity="0.05" />
+            </svg>
             <div className="min-w-0">
               <p className="text-xs font-medium text-gray-700 truncate">{d.campaign_title}</p>
               <p className="text-[10px] text-gray-400">{d.date ? new Date(d.date).toLocaleDateString() : ''}</p>
@@ -589,23 +786,37 @@ function AnalyticsSummaryCard({ stats }) {
   ];
 
   const colorMap = {
-    blue: 'bg-blue-50 text-blue-600',
-    green: 'bg-green-50 text-green-600',
-    teal: 'bg-teal-50 text-teal-600',
-    amber: 'bg-amber-50 text-amber-600',
+    blue:  { bg: 'bg-blue-50', text: 'text-blue-600', stroke: '#2563EB' },
+    green: { bg: 'bg-green-50', text: 'text-green-600', stroke: '#16A34A' },
+    teal:  { bg: 'bg-teal-50', text: 'text-teal-600', stroke: '#0D9488' },
+    amber: { bg: 'bg-amber-50', text: 'text-amber-600', stroke: '#D97706' },
+  };
+
+  const svgByColor = {
+    blue: (s) => (<>{/* bar chart */}<rect x="4" y="16" width="5" height="14" rx="1" stroke={s} strokeWidth="0.6" fill="none" opacity="0.08"/><rect x="13" y="10" width="5" height="20" rx="1" stroke={s} strokeWidth="0.6" fill="none" opacity="0.08"/><rect x="22" y="4" width="5" height="26" rx="1" stroke={s} strokeWidth="0.6" fill="none" opacity="0.08"/></>),
+    green: (s) => (<>{/* dollar */}<circle cx="16" cy="16" r="12" stroke={s} strokeWidth="0.6" fill="none" opacity="0.08"/><path d="M16 6v20M12 10.5h5.5a3 3 0 010 6H12h6a3 3 0 010 6H12" stroke={s} strokeWidth="0.5" fill="none" opacity="0.08"/></>),
+    teal: (s) => (<>{/* stack/layers */}<ellipse cx="16" cy="22" rx="11" ry="4" stroke={s} strokeWidth="0.6" fill="none" opacity="0.08"/><ellipse cx="16" cy="16" rx="11" ry="4" stroke={s} strokeWidth="0.6" fill="none" opacity="0.08"/><ellipse cx="16" cy="10" rx="11" ry="4" stroke={s} strokeWidth="0.6" fill="none" opacity="0.08"/></>),
+    amber: (s) => (<>{/* people */}<circle cx="11" cy="10" r="4" stroke={s} strokeWidth="0.6" fill="none" opacity="0.08"/><circle cx="21" cy="10" r="4" stroke={s} strokeWidth="0.6" fill="none" opacity="0.08"/><path d="M4 26c0-4 3.5-7 7-7s7 3 7 7M16 26c0-4 3.5-7 7-7s5 3 5 7" stroke={s} strokeWidth="0.5" fill="none" opacity="0.08"/></>),
   };
 
   return (
     <div className="grid grid-cols-2 gap-2">
-      {items.map(({ label, value, icon: Icon, color }) => (
-        <div key={label} className="bg-white rounded-xl border border-gray-100 p-3">
-          <div className={`w-7 h-7 rounded-lg ${colorMap[color]} flex items-center justify-center mb-2`}>
-            <Icon className="w-4 h-4" />
+      {items.map(({ label, value, icon: Icon, color }) => {
+        const cm = colorMap[color];
+        return (
+          <div key={label} className="relative bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-100/80 p-3 overflow-hidden group hover:border-gray-200/80 transition-colors">
+            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gray-200/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <svg className="absolute bottom-0 right-0 w-8 h-8 pointer-events-none" viewBox="0 0 32 32" fill="none">
+              {svgByColor[color]?.(cm.stroke)}
+            </svg>
+            <div className={`w-7 h-7 rounded-lg ${cm.bg} ${cm.text} flex items-center justify-center mb-2`}>
+              <Icon className="w-4 h-4" />
+            </div>
+            <p className="text-lg font-bold text-gray-900">{value}</p>
+            <p className="text-[10px] text-gray-400">{label}</p>
           </div>
-          <p className="text-lg font-bold text-gray-900">{value}</p>
-          <p className="text-[10px] text-gray-400">{label}</p>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

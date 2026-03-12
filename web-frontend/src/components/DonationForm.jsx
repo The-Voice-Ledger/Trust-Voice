@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createDonation } from '../api/donations';
-import { HiOutlineCheckCircle } from 'react-icons/hi2';
+import { HiOutlineCheckCircle } from './icons';
 
 const PRESETS_USD = [5, 10, 25, 50, 100];
 const CURRENCIES = ['USD', 'KES', 'EUR', 'GBP', 'ETB'];

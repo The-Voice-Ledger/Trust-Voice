@@ -7,12 +7,12 @@ import useAuthStore from '../stores/authStore';
 import ProgressBar from '../components/ProgressBar';
 import {
   HiOutlineHeart, HiOutlineCheckCircle, HiOutlineArrowLeft,
-} from 'react-icons/hi2';
-import {
+  HiOutlineShieldCheck, HiOutlineLockClosed, HiOutlineFingerPrint,
   MdOutlineWaterDrop, MdOutlineSchool, MdOutlineLocalHospital,
   MdOutlineConstruction, MdOutlineRestaurant, MdOutlineForest,
   MdOutlineHouse, MdOutlineChildCare, MdHandshake,
-} from 'react-icons/md';
+} from '../components/icons';
+import { PageBg } from '../components/SvgDecorations';
 
 export default function DonateCheckout() {
   const { t } = useTranslation();
@@ -46,27 +46,62 @@ export default function DonateCheckout() {
   if (loading) return <div className="text-center py-20 text-gray-400">{t('common.loading')}</div>;
 
   return (
+    <PageBg pattern="topography" colorA="#F43F5E" colorB="#0D9488">
     <div className="max-w-lg mx-auto px-4 py-8">
-      <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mb-4 py-2">
+      <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mb-6 py-2">
         <HiOutlineArrowLeft className="w-4 h-4" /> {t('common.back')}
       </Link>
 
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center shadow-lg shadow-rose-200/50 mb-4">
-          <HiOutlineHeart className="w-8 h-8 text-white" />
+      {/* ── Hero Section ──────────────────────── */}
+      <div className="relative text-center mb-10">
+        {/* Decorative rings behind icon */}
+        <div className="relative w-20 h-20 mx-auto mb-5">
+          <svg className="absolute inset-0 w-full h-full animate-spin-slow" viewBox="0 0 80 80" fill="none" style={{ animationDuration: '20s' }}>
+            <circle cx="40" cy="40" r="38" stroke="url(#donate-ring1)" strokeWidth="0.5" strokeDasharray="4 6" />
+            <defs>
+              <linearGradient id="donate-ring1" x1="0" y1="0" x2="80" y2="80">
+                <stop offset="0%" stopColor="#F43F5E" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#0D9488" stopOpacity="0.1" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <svg className="absolute inset-1 w-[calc(100%-8px)] h-[calc(100%-8px)]" viewBox="0 0 72 72" fill="none" style={{ animation: 'spin 30s linear reverse infinite' }}>
+            <circle cx="36" cy="36" r="34" stroke="#F43F5E" strokeWidth="0.3" strokeDasharray="2 8" opacity="0.2" />
+          </svg>
+          <div className="absolute inset-2 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center shadow-xl shadow-rose-200/60">
+            <HiOutlineHeart className="w-8 h-8 text-white" />
+          </div>
+          {/* Pulse dot */}
+          <div className="absolute -top-1 right-1 w-4 h-4">
+            <div className="absolute inset-0 rounded-full bg-rose-400 animate-ping opacity-30" />
+            <div className="absolute inset-0.5 rounded-full bg-rose-500 border-2 border-white" />
+          </div>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('donate.title')}</h1>
-        <p className="text-sm text-gray-500 mt-1">{t('donate.checkout_subtitle')}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 font-display">{t('donate.title')}</h1>
+        <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto">{t('donate.checkout_subtitle')}</p>
+        {/* Decorative line */}
+        <div className="mt-5 flex items-center gap-3 max-w-[200px] mx-auto">
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-rose-300 to-transparent" />
+          <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M4 0L8 4L4 8L0 4Z" fill="#F43F5E" opacity="0.3" /></svg>
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-rose-300 to-transparent" />
+        </div>
       </div>
 
-      {/* Campaign selector (if no ID in URL) */}
+      {/* ── Campaign Selector ─────────────────── */}
       {!campaignId && (
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('donate.select_campaign')}</label>
+        <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-5 mb-6 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-rose-400 via-pink-400 to-transparent" />
+          <svg className="absolute -top-2 -right-2 w-24 h-24 pointer-events-none" viewBox="0 0 96 96" fill="none">
+            <circle cx="68" cy="28" r="20" stroke="#F43F5E" strokeWidth="0.5" opacity="0.06" />
+            <circle cx="68" cy="28" r="10" stroke="#F43F5E" strokeWidth="0.3" strokeDasharray="2 3" opacity="0.04" />
+            <path d="M68 8 L68 48" stroke="#F43F5E" strokeWidth="0.2" opacity="0.03" />
+            <path d="M48 28 L88 28" stroke="#F43F5E" strokeWidth="0.2" opacity="0.03" />
+          </svg>
+          <label className="relative block text-sm font-medium text-gray-700 mb-2">{t('donate.select_campaign')}</label>
           <select
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="relative w-full rounded-xl border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-rose-500 focus:border-transparent bg-white/50"
           >
             <option value="">{t('donate.choose_campaign')}</option>
             {campaigns.map((c) => (
@@ -76,58 +111,111 @@ export default function DonateCheckout() {
         </div>
       )}
 
-      {/* Campaign info card */}
+      {/* ── Campaign Info Card ────────────────── */}
       {campaign && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 mb-6">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-              <CategoryIcon cat={campaign.category} />
+        <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 overflow-hidden mb-6 group">
+          {/* Gradient banner with category SVG */}
+          <div className="relative h-16 bg-gradient-to-r from-blue-500/10 via-teal-500/10 to-transparent">
+            <CampaignBannerSvg category={campaign.category} />
+            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-blue-500 via-teal-500 to-transparent" />
+          </div>
+          <div className="px-5 pb-5 -mt-5">
+            <div className="relative flex items-start gap-3">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-50 to-teal-50 border border-white shadow-sm flex items-center justify-center flex-shrink-0">
+                <CategoryIcon cat={campaign.category} />
+              </div>
+              <div className="flex-1 pt-1">
+                <h2 className="font-semibold text-gray-900">{campaign.title}</h2>
+                {campaign.ngo_name && <p className="text-xs text-gray-400 mt-0.5">{campaign.ngo_name}</p>}
+              </div>
             </div>
-            <div className="flex-1">
-              <h2 className="font-semibold text-gray-900">{campaign.title}</h2>
-              {campaign.ngo_name && <p className="text-xs text-gray-400">{campaign.ngo_name}</p>}
+            <ProgressBar
+              percentage={campaign.goal_amount_usd > 0 ? Math.min(100, ((campaign.current_usd_total || campaign.raised_amount_usd) / campaign.goal_amount_usd) * 100) : 0}
+              className="mt-4"
+            />
+            <div className="flex justify-between text-sm mt-2">
+              <span className="font-bold text-blue-600">${fmt(campaign.current_usd_total || campaign.raised_amount_usd)}</span>
+              <span className="text-gray-400">{t('campaign.raised_of')} ${fmt(campaign.goal_amount_usd)}</span>
             </div>
           </div>
-          <ProgressBar
-            percentage={campaign.goal_amount_usd > 0 ? Math.min(100, ((campaign.current_usd_total || campaign.raised_amount_usd) / campaign.goal_amount_usd) * 100) : 0}
-            className="mt-3"
-          />
-          <div className="flex justify-between text-sm mt-2">
-            <span className="font-bold text-blue-600">${fmt(campaign.current_usd_total || campaign.raised_amount_usd)}</span>
-            <span className="text-gray-400">{t('campaign.raised_of')} ${fmt(campaign.goal_amount_usd)}</span>
-          </div>
+          {/* Corner node */}
+          <svg className="absolute bottom-1 left-1 w-8 h-8 pointer-events-none" viewBox="0 0 32 32" fill="none">
+            <path d="M0 32V16" stroke="#2563EB" strokeWidth="0.5" opacity="0.05" />
+            <path d="M0 32H16" stroke="#2563EB" strokeWidth="0.5" opacity="0.05" />
+            <circle cx="0" cy="32" r="1.5" fill="#2563EB" opacity="0.07" />
+          </svg>
         </div>
       )}
 
-      {/* Donation form */}
+      {/* ── Donation Form Card ────────────────── */}
       {campaign ? (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
-          {donated ? (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-3">
-                <HiOutlineCheckCircle className="w-8 h-8 text-green-600" />
-              </div>
-              <p className="text-lg font-semibold text-green-600">{t('donate.success')}</p>
-              <Link to="/dashboard" className="text-sm text-blue-600 hover:underline mt-3 inline-block">
-                {t('donate.view_history')} →
-              </Link>
-            </div>
-          ) : (
-            <>
+        <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 overflow-hidden">
+          {/* Top accent */}
+          <div className="h-[2px] bg-gradient-to-r from-rose-500 via-pink-500 to-transparent" />
+          {/* Heart SVG decoration */}
+          <svg className="absolute top-4 right-4 w-24 h-24 pointer-events-none" viewBox="0 0 96 96" fill="none">
+            <path d="M48 30 C48 20, 62 14, 62 26 C62 38, 48 48, 48 48 C48 48, 34 38, 34 26 C34 14, 48 20, 48 30" stroke="#F43F5E" strokeWidth="0.5" opacity="0.05" />
+            <path d="M48 36 C48 30, 56 26, 56 32 C56 38, 48 42, 48 42 C48 42, 40 38, 40 32 C40 26, 48 30, 48 36" stroke="#F43F5E" strokeWidth="0.3" strokeDasharray="2 2" opacity="0.04" />
+          </svg>
+          {/* Connection lines */}
+          <svg className="absolute bottom-0 left-0 w-16 h-16 pointer-events-none" viewBox="0 0 64 64" fill="none">
+            <path d="M0 64V32" stroke="#F43F5E" strokeWidth="0.4" opacity="0.04" />
+            <path d="M0 64H32" stroke="#F43F5E" strokeWidth="0.4" opacity="0.04" />
+            <circle cx="0" cy="64" r="1.5" fill="#F43F5E" opacity="0.06" />
+            <circle cx="0" cy="32" r="1" fill="#F43F5E" opacity="0.04" />
+            <circle cx="32" cy="64" r="1" fill="#F43F5E" opacity="0.04" />
+          </svg>
+
+          <div className="relative p-5 sm:p-6">
+            {donated ? (
+              <DonationSuccess t={t} method={null} />
+            ) : (
               <DonationForm
                 campaignId={campaign.id}
                 donorId={user?.donor_id}
                 onSuccess={() => setDonated(true)}
               />
-            </>
-          )}
+            )}
+          </div>
         </div>
       ) : (
-        <div className="text-center py-10 text-gray-400">
-          {t('donate.select_campaign_first')}
+        <div className="relative rounded-2xl bg-white/60 backdrop-blur-sm border border-dashed border-gray-200 p-12 text-center overflow-hidden">
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 200" fill="none" preserveAspectRatio="none">
+            <circle cx="200" cy="100" r="60" stroke="#F43F5E" strokeWidth="0.3" strokeDasharray="4 8" opacity="0.06" />
+            <circle cx="200" cy="100" r="90" stroke="#0D9488" strokeWidth="0.2" strokeDasharray="2 10" opacity="0.04" />
+          </svg>
+          <HiOutlineHeart className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+          <p className="text-gray-400 text-sm">{t('donate.select_campaign_first')}</p>
         </div>
       )}
+
+      {/* ── Trust Signals ─────────────────────── */}
+      <div className="mt-8 grid grid-cols-3 gap-3">
+        <TrustBadge Icon={HiOutlineShieldCheck} label={t('donate.trust_secure', 'Secure')} color="#059669" />
+        <TrustBadge Icon={HiOutlineLockClosed} label={t('donate.trust_encrypted', 'Encrypted')} color="#2563EB" />
+        <TrustBadge Icon={HiOutlineFingerPrint} label={t('donate.trust_verified', 'Verified')} color="#7C3AED" />
+      </div>
+
+      {/* ── Transparency pipeline ─────────────── */}
+      <div className="mt-6 relative">
+        <div className="flex items-center justify-between px-2">
+          {['Donate', 'Verify', 'Track', 'Impact'].map((step, i) => (
+            <div key={step} className="flex flex-col items-center gap-1.5 relative z-10">
+              <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-[10px] font-bold ${
+                i === 0 ? 'border-rose-400 text-rose-600 bg-rose-50' :
+                'border-gray-200 text-gray-400 bg-white'
+              }`}>
+                {i + 1}
+              </div>
+              <span className="text-[10px] text-gray-400 font-medium">{step}</span>
+            </div>
+          ))}
+        </div>
+        {/* Connection line */}
+        <div className="absolute top-4 left-6 right-6 h-px bg-gradient-to-r from-rose-300 via-gray-200 to-gray-200 -z-0" />
+      </div>
     </div>
+    </PageBg>
   );
 }
 
@@ -145,4 +233,80 @@ const DONATE_CATEGORY_ICONS = {
 function CategoryIcon({ cat }) {
   const Comp = DONATE_CATEGORY_ICONS[(cat || '').toLowerCase()] || MdHandshake;
   return <Comp className="w-5 h-5 text-blue-600" />;
+}
+
+/* ── Category-specific banner SVGs ─────────── */
+const CATEGORY_BANNERS = {
+  water: () => (
+    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 64" fill="none" preserveAspectRatio="none">
+      <path d="M0 40 Q50 20, 100 35 T200 30 T300 38 T400 25" stroke="#2563EB" strokeWidth="0.8" opacity="0.10" />
+      <path d="M0 50 Q60 30, 120 45 T240 35 T360 48 T400 35" stroke="#0D9488" strokeWidth="0.5" opacity="0.08" />
+    </svg>
+  ),
+  education: () => (
+    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 64" fill="none" preserveAspectRatio="none">
+      <path d="M340 15 L370 10 L370 35 L340 40 Z" stroke="#2563EB" strokeWidth="0.6" opacity="0.08" />
+      <path d="M345 20 L365 16" stroke="#2563EB" strokeWidth="0.4" opacity="0.06" />
+      <path d="M345 26 L360 23" stroke="#2563EB" strokeWidth="0.4" opacity="0.06" />
+    </svg>
+  ),
+  health: () => (
+    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 64" fill="none" preserveAspectRatio="none">
+      <path d="M355 22 L355 42" stroke="#DC2626" strokeWidth="1" opacity="0.08" />
+      <path d="M345 32 L365 32" stroke="#DC2626" strokeWidth="1" opacity="0.08" />
+      <circle cx="355" cy="32" r="14" stroke="#DC2626" strokeWidth="0.4" opacity="0.06" />
+    </svg>
+  ),
+};
+
+function CampaignBannerSvg({ category }) {
+  const Banner = CATEGORY_BANNERS[(category || '').toLowerCase()];
+  if (!Banner) return (
+    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 64" fill="none" preserveAspectRatio="none">
+      <circle cx="360" cy="32" r="18" stroke="#2563EB" strokeWidth="0.5" opacity="0.06" />
+      <circle cx="360" cy="32" r="8" stroke="#0D9488" strokeWidth="0.3" strokeDasharray="2 3" opacity="0.05" />
+    </svg>
+  );
+  return <Banner />;
+}
+
+/* ── Trust Badge ───────────────────────────── */
+function TrustBadge({ Icon, label, color }) {
+  return (
+    <div className="relative rounded-xl bg-white/60 backdrop-blur-sm border border-gray-100 p-3 text-center overflow-hidden group hover:shadow-sm transition-all">
+      <svg className="absolute -top-1 -right-1 w-12 h-12 pointer-events-none" viewBox="0 0 48 48" fill="none">
+        <circle cx="36" cy="12" r="10" stroke={color} strokeWidth="0.4" opacity="0.06" />
+      </svg>
+      <Icon className="w-5 h-5 mx-auto mb-1.5" style={{ color }} />
+      <span className="text-[10px] font-medium text-gray-500">{label}</span>
+    </div>
+  );
+}
+
+/* ── Donation Success ──────────────────────── */
+function DonationSuccess({ t }) {
+  return (
+    <div className="text-center py-8 relative">
+      {/* Celebration SVG */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 300 200" fill="none">
+        <circle cx="50" cy="40" r="3" fill="#10B981" opacity="0.15"><animate attributeName="cy" values="40;35;40" dur="2s" repeatCount="indefinite" /></circle>
+        <circle cx="250" cy="50" r="2" fill="#2563EB" opacity="0.12"><animate attributeName="cy" values="50;44;50" dur="2.5s" repeatCount="indefinite" /></circle>
+        <circle cx="80" cy="160" r="2.5" fill="#F43F5E" opacity="0.10"><animate attributeName="cy" values="160;155;160" dur="1.8s" repeatCount="indefinite" /></circle>
+        <circle cx="220" cy="150" r="2" fill="#7C3AED" opacity="0.12"><animate attributeName="cy" values="150;144;150" dur="2.2s" repeatCount="indefinite" /></circle>
+        <path d="M140 20 L145 10 L150 20" stroke="#10B981" strokeWidth="0.5" opacity="0.10"><animate attributeName="opacity" values="0.10;0.20;0.10" dur="2s" repeatCount="indefinite" /></path>
+        <path d="M160 180 L155 190 L150 180" stroke="#2563EB" strokeWidth="0.5" opacity="0.10"><animate attributeName="opacity" values="0.10;0.18;0.10" dur="2.5s" repeatCount="indefinite" /></path>
+      </svg>
+      <div className="relative w-20 h-20 mx-auto mb-4">
+        <div className="absolute inset-0 rounded-full bg-green-100 animate-ping opacity-20" />
+        <div className="absolute inset-0 rounded-full bg-green-50 flex items-center justify-center">
+          <HiOutlineCheckCircle className="w-10 h-10 text-green-600" />
+        </div>
+      </div>
+      <p className="relative text-lg font-semibold text-green-600">{t('donate.success')}</p>
+      <p className="relative text-sm text-gray-400 mt-1">Your donation is being processed on the blockchain</p>
+      <Link to="/dashboard" className="relative inline-flex items-center gap-1.5 text-sm text-blue-600 hover:underline mt-4 font-medium">
+        {t('donate.view_history')} <span>→</span>
+      </Link>
+    </div>
+  );
 }

@@ -9,9 +9,8 @@ import {
   HiOutlineCog6Tooth, HiOutlineUser, HiOutlineArrowRightOnRectangle,
   HiOutlineArrowLeftOnRectangle, HiOutlineBars3, HiOutlineXMark,
   HiOutlineWallet, HiOutlineChevronDown, HiOutlineEllipsisHorizontal,
-  HiOutlineSparkles,
-} from 'react-icons/hi2';
-import { HiOutlineMicrophone } from 'react-icons/hi';
+  HiOutlineSparkles, HiOutlineMicrophone,
+} from './icons';
 
 /* Primary nav — always visible on desktop */
 const PRIMARY_ITEMS = [
@@ -55,30 +54,42 @@ export default function Navbar() {
   useEffect(() => { setMobileOpen(false); setMoreOpen(false); }, [location.pathname]);
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200/60 shadow-sm">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 h-16">
+    <nav className="sticky top-0 z-50">
+      {/* Gradient accent bar — 3px, visually dominant */}
+      <div className="h-[3px] bg-gradient-to-r from-blue-600 via-teal-500 to-blue-600" />
+      {/* Glass morphism body */}
+      <div className="bg-white/70 backdrop-blur-2xl border-b border-gray-200/40 shadow-lg shadow-gray-200/20">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 h-16">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 font-bold text-lg text-gray-900 flex-shrink-0 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center shadow-md shadow-blue-200/50 group-hover:shadow-lg group-hover:shadow-blue-300/50 group-hover:scale-105 transition-all">
+          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center shadow-lg shadow-blue-300/40 group-hover:shadow-xl group-hover:shadow-blue-400/50 group-hover:scale-105 transition-all">
             <HiOutlineMicrophone className="w-5 h-5 text-white" />
+            {/* Animated ring on hover */}
+            <div className="absolute inset-0 rounded-xl border-2 border-blue-400/0 group-hover:border-blue-400/40 transition-all scale-100 group-hover:scale-110" />
           </div>
-          <span className="hidden sm:inline tracking-tight">{t('app_name')}</span>
+          <div className="hidden sm:flex flex-col leading-none">
+            <span className="tracking-tight font-display text-lg">{t('app_name')}</span>
+            <span className="text-[10px] font-medium text-teal-600 tracking-widest uppercase">Transparency</span>
+          </div>
         </Link>
 
-        {/* Desktop nav — clean: 3 primary + More */}
-        <div className="hidden lg:flex items-center gap-1">
+        {/* Desktop nav */}
+        <div className="hidden lg:flex items-center gap-0.5">
           {PRIMARY_ITEMS.map(({ to, key, Icon }) => (
             <Link
               key={to}
               to={to}
-              className={`relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
                 isActive(to)
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'bg-gradient-to-r from-blue-50 to-teal-50 text-blue-700 shadow-sm shadow-blue-100/50'
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50/80'
               }`}
             >
-              <Icon className="w-4 h-4" />
-              {t(key)}
+              <Icon className={`w-4 h-4 ${isActive(to) ? 'text-blue-600' : ''}`} />
+              <span className="font-display">{t(key)}</span>
+              {isActive(to) && (
+                <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full" />
+              )}
             </Link>
           ))}
 
@@ -86,19 +97,19 @@ export default function Navbar() {
           <div ref={moreRef} className="relative">
             <button
               onClick={() => setMoreOpen((v) => !v)}
-              className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center gap-1 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
                 SECONDARY_ITEMS.some((i) => isActive(i.to))
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'bg-gradient-to-r from-blue-50 to-teal-50 text-blue-700'
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50/80'
               }`}
             >
               <HiOutlineEllipsisHorizontal className="w-4 h-4" />
-              {t('nav.more')}
+              <span className="font-display">{t('nav.more')}</span>
               <HiOutlineChevronDown className={`w-3 h-3 transition-transform duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {moreOpen && (
-              <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-xl shadow-xl shadow-gray-200/60 border border-gray-100 py-1.5 animate-fadeIn z-50">
+              <div className="absolute top-full right-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl shadow-gray-300/40 border border-gray-100 py-1.5 animate-fadeIn z-50">
                 {SECONDARY_ITEMS.map(({ to, key, Icon }) => (
                   <Link
                     key={to}
@@ -106,12 +117,12 @@ export default function Navbar() {
                     onClick={() => setMoreOpen(false)}
                     className={`flex items-center gap-2.5 px-4 py-2.5 text-sm transition-all ${
                       isActive(to)
-                        ? 'bg-blue-50 text-blue-700 font-semibold'
+                        ? 'bg-gradient-to-r from-blue-50 to-teal-50 text-blue-700 font-semibold'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   >
                     <Icon className="w-4.5 h-4.5" />
-                    {t(key)}
+                    <span className="font-display">{t(key)}</span>
                   </Link>
                 ))}
               </div>
@@ -129,16 +140,16 @@ export default function Navbar() {
                 to="/dashboard"
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                   isActive('/dashboard')
-                    ? 'bg-blue-50 text-blue-700'
+                    ? 'bg-gradient-to-r from-blue-50 to-teal-50 text-blue-700'
                     : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 <HiOutlineWallet className="w-4 h-4" />
-                {t('nav.dashboard')}
+                <span className="font-display">{t('nav.dashboard')}</span>
               </Link>
-              <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
-                <span className="flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1.5 rounded-lg">
-                  <HiOutlineUser className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-2 pl-2 border-l border-gray-200/60">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-gradient-to-r from-gray-50 to-gray-100 px-2.5 py-1.5 rounded-lg border border-gray-200/50">
+                  <HiOutlineUser className="w-3.5 h-3.5 text-blue-500" />
                   {user.full_name || user.telegram_username || 'User'}
                 </span>
                 <button onClick={logout} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all" title={t('nav.logout')}>
@@ -147,7 +158,7 @@ export default function Navbar() {
               </div>
             </div>
           ) : (
-            <Link to="/login" className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-all shadow-sm shadow-blue-200/50 hover:shadow-md hover:shadow-blue-300/50 hover:-translate-y-px">
+            <Link to="/login" className="hidden sm:flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-teal-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-teal-700 transition-all shadow-lg shadow-blue-300/30 hover:shadow-xl hover:shadow-blue-400/40 hover:-translate-y-px font-display">
               <HiOutlineArrowLeftOnRectangle className="w-4 h-4" />
               {t('nav.login')}
             </Link>
@@ -163,8 +174,9 @@ export default function Navbar() {
           </button>
         </div>
       </div>
+      </div>
 
-      {/* Mobile menu — animated slide */}
+      {/* Mobile menu */}
       <div
         className={`lg:hidden transition-all duration-300 ease-out overflow-hidden ${
           mobileOpen ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0'
@@ -176,8 +188,8 @@ export default function Navbar() {
               <Link
                 key={to}
                 to={to}
-                className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all ${
-                  isActive(to) ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'
+                className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all font-display ${
+                  isActive(to) ? 'bg-gradient-to-r from-blue-50 to-teal-50 text-blue-700 font-semibold' : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -188,19 +200,19 @@ export default function Navbar() {
             {user ? (
               <>
                 <Link to="/dashboard"
-                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-600 hover:bg-gray-50">
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-600 hover:bg-gray-50 font-display">
                   <HiOutlineWallet className="w-5 h-5" />
                   {t('nav.dashboard')}
                 </Link>
                 <button onClick={logout}
-                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50">
+                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50 font-display">
                   <HiOutlineArrowRightOnRectangle className="w-5 h-5" />
                   {t('nav.logout')}
                 </button>
               </>
             ) : (
               <Link to="/login"
-                className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-blue-600 font-semibold hover:bg-blue-50">
+                className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-blue-600 font-semibold hover:bg-blue-50 font-display">
                 <HiOutlineArrowLeftOnRectangle className="w-5 h-5" />
                 {t('nav.login')}
               </Link>

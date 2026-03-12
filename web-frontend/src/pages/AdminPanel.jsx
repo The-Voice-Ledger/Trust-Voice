@@ -9,7 +9,8 @@ import {
 import {
   HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineCheck, HiOutlineXMark,
   HiOutlineBuildingOffice2, HiOutlineBanknotes, HiOutlineChartBarSquare,
-} from 'react-icons/hi2';
+} from '../components/icons';
+import { PageBg, PageHeader } from '../components/SvgDecorations';
 
 const TABS = ['pending_ngos', 'pending_users', 'ngos', 'payouts', 'stats'];
 
@@ -18,14 +19,12 @@ export default function AdminPanel() {
   const [tab, setTab] = useState('pending_ngos');
 
   return (
+    <PageBg pattern="blueprint" colorA="#2563EB" colorB="#0D9488">
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">{t('admin.title')}</h1>
-        <p className="text-gray-500 text-sm mt-1">{t('admin.subtitle')}</p>
-      </div>
+      <PageHeader icon={HiOutlineChartBarSquare} title={t('admin.title')} subtitle={t('admin.subtitle')} accentColor="blue" />
 
       {/* Tab bar */}
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-8 overflow-x-auto scrollbar-hide">
+      <div className="flex gap-1 bg-white/60 backdrop-blur-sm rounded-xl p-1 mb-8 overflow-x-auto scrollbar-hide border border-gray-200/50 shadow-sm">
         {TABS.map((tb) => (
           <button
             key={tb}
@@ -46,6 +45,7 @@ export default function AdminPanel() {
       {tab === 'payouts' && <PayoutList t={t} />}
       {tab === 'stats' && <DashboardStats t={t} />}
     </div>
+    </PageBg>
   );
 }
 
@@ -85,8 +85,15 @@ function PendingNgos({ t }) {
         <EmptyState icon="✅" message={t('admin.no_pending_ngos')} />
       ) : (
         items.map((reg) => (
-          <div key={reg.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div key={reg.id} className="group relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 overflow-hidden transition-all hover:shadow-md hover:border-transparent">
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500 via-teal-500 to-transparent" />
+            <svg className="absolute -top-1 -right-1 w-20 h-20 pointer-events-none" viewBox="0 0 80 80" fill="none">
+              <rect x="45" y="10" width="24" height="30" rx="3" stroke="#2563EB" strokeWidth="0.5" opacity="0.05" />
+              <path d="M50 20 L64 20" stroke="#2563EB" strokeWidth="0.4" opacity="0.04" />
+              <path d="M50 26 L60 26" stroke="#2563EB" strokeWidth="0.4" opacity="0.04" />
+              <circle cx="57" cy="45" r="1.5" fill="#2563EB" opacity="0.06" />
+            </svg>
+            <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <h3 className="font-semibold text-gray-900">{reg.organization_name || reg.org_name}</h3>
                 <p className="text-sm text-gray-500 mt-0.5">
@@ -157,8 +164,15 @@ function PendingUsers({ t }) {
         <EmptyState icon="✅" message={t('admin.no_pending_users')} />
       ) : (
         items.map((reg) => (
-          <div key={reg.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div key={reg.id} className="group relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 overflow-hidden transition-all hover:shadow-md hover:border-transparent">
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-blue-500 to-transparent" />
+            <svg className="absolute -top-1 -right-1 w-20 h-20 pointer-events-none" viewBox="0 0 80 80" fill="none">
+              <circle cx="55" cy="22" r="10" stroke="#7C3AED" strokeWidth="0.5" opacity="0.05" />
+              <path d="M55 12 L55 6" stroke="#7C3AED" strokeWidth="0.4" opacity="0.04" />
+              <circle cx="55" cy="22" r="4" stroke="#7C3AED" strokeWidth="0.3" opacity="0.04" />
+              <path d="M48 32 L62 32" stroke="#7C3AED" strokeWidth="0.4" opacity="0.04" />
+            </svg>
+            <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <h3 className="font-semibold text-gray-900">{reg.full_name || reg.telegram_username || `User #${reg.id}`}</h3>
                 <p className="text-sm text-gray-500">
@@ -210,8 +224,14 @@ function NgoList({ t }) {
         <EmptyState icon="🏛️" message={t('admin.no_ngos')} />
       ) : (
         items.map((ngo) => (
-          <div key={ngo.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div key={ngo.id} className="group relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 overflow-hidden transition-all hover:shadow-md hover:border-transparent">
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-teal-500 to-transparent" />
+            <svg className="absolute -top-1 -right-1 w-20 h-20 pointer-events-none" viewBox="0 0 80 80" fill="none">
+              <path d="M50 35 L57 15 L64 35" stroke="#059669" strokeWidth="0.5" opacity="0.05" />
+              <path d="M47 35 L67 35" stroke="#059669" strokeWidth="0.4" opacity="0.05" />
+              <rect x="53" y="22" width="8" height="8" stroke="#059669" strokeWidth="0.3" opacity="0.04" />
+            </svg>
+            <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <h3 className="font-semibold text-gray-900">{ngo.name}</h3>
                 <p className="text-sm text-gray-500">{ngo.description || '-'}</p>
@@ -266,8 +286,15 @@ function PayoutList({ t }) {
         <EmptyState icon="💸" message={t('admin.no_pending_payouts')} />
       ) : (
         items.map((p) => (
-          <div key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div key={p.id} className="group relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 overflow-hidden transition-all hover:shadow-md hover:border-transparent">
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-500 via-orange-500 to-transparent" />
+            <svg className="absolute -top-1 -right-1 w-20 h-20 pointer-events-none" viewBox="0 0 80 80" fill="none">
+              <circle cx="57" cy="22" r="12" stroke="#D97706" strokeWidth="0.5" opacity="0.05" />
+              <path d="M52 22 L57 17 L62 22 L57 27 Z" stroke="#D97706" strokeWidth="0.4" opacity="0.05" />
+              <path d="M57 10 L57 6" stroke="#D97706" strokeWidth="0.3" opacity="0.04" />
+              <path d="M69 22 L73 22" stroke="#D97706" strokeWidth="0.3" opacity="0.04" />
+            </svg>
+            <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
                 <h3 className="font-semibold text-gray-900">
                   {p.amount} {p.currency} → {p.recipient_name}
@@ -320,7 +347,12 @@ function DashboardStats({ t }) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
       {Object.entries(stats).map(([key, value]) => (
-        <div key={key} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 text-center">
+        <div key={key} className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 text-center overflow-hidden transition-all hover:shadow-md hover:border-transparent">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500 via-teal-500 to-transparent" />
+          <svg className="absolute -top-1 -right-1 w-16 h-16 pointer-events-none" viewBox="0 0 64 64" fill="none">
+            <circle cx="45" cy="20" r="14" stroke="#2563EB" strokeWidth="0.5" opacity="0.05" />
+            <circle cx="45" cy="20" r="6" stroke="#2563EB" strokeWidth="0.3" strokeDasharray="2 2" opacity="0.04" />
+          </svg>
           <p className="text-sm text-gray-400 capitalize">{key.replace(/_/g, ' ')}</p>
           <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">
             {typeof value === 'object' ? JSON.stringify(value) : String(value)}

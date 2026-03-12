@@ -6,7 +6,8 @@ import ProgressBar from '../components/ProgressBar';
 import VideoPlayer from '../components/VideoPlayer';
 import DonationForm from '../components/DonationForm';
 import useAuthStore from '../stores/authStore';
-import { HiOutlineArrowLeft, HiOutlineMapPin, HiOutlineCheckCircle, HiOutlineFilm, HiOutlineSparkles } from 'react-icons/hi2';
+import { HiOutlineArrowLeft, HiOutlineMapPin, HiOutlineCheckCircle, HiOutlineFilm, HiOutlineSparkles } from '../components/icons';
+import { PageBg } from '../components/SvgDecorations';
 
 export default function CampaignDetail() {
   const { id } = useParams();
@@ -42,6 +43,7 @@ export default function CampaignDetail() {
     : 0;
 
   return (
+    <PageBg pattern="topography" colorA="#2563EB" colorB="#0D9488">
     <div className="max-w-3xl mx-auto px-4 py-6">
       <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline mb-4 py-2">
         <HiOutlineArrowLeft className="w-4 h-4" /> {t('common.back')}
@@ -54,7 +56,7 @@ export default function CampaignDetail() {
             {campaign.category}
           </span>
         )}
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{campaign.title}</h1>
+        <h1 className="page-header-accent text-2xl sm:text-3xl text-gray-900">{campaign.title}</h1>
         {campaign.ngo_name && (
           <p className="text-gray-500 mt-1">by {campaign.ngo_name}</p>
         )}
@@ -71,7 +73,13 @@ export default function CampaignDetail() {
       )}
 
       {/* Progress */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 mb-6">
+        <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 mb-6 overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500 via-teal-500 to-transparent" />
+        <svg className="absolute -top-1 -right-1 w-20 h-20 pointer-events-none" viewBox="0 0 80 80" fill="none">
+          <path d="M45 35 L57 10 L69 35" stroke="#2563EB" strokeWidth="0.5" opacity="0.05" />
+          <path d="M45 35 L69 35" stroke="#2563EB" strokeWidth="0.4" opacity="0.04" />
+          <circle cx="57" cy="10" r="2" fill="#2563EB" opacity="0.06" />
+        </svg>
         <ProgressBar percentage={pct} className="mb-3" />
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-1">
           <div>
@@ -104,7 +112,12 @@ export default function CampaignDetail() {
       </div>
 
       {/* Donate section */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5">
+        <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-rose-500 via-pink-500 to-transparent" />
+        <svg className="absolute top-2 right-2 w-20 h-20 pointer-events-none" viewBox="0 0 80 80" fill="none">
+          <path d="M40 22 C40 16, 48 12, 48 20 C48 28, 40 32, 40 32 C40 32, 32 28, 32 20 C32 12, 40 16, 40 22" stroke="#F43F5E" strokeWidth="0.5" opacity="0.06" />
+          <circle cx="40" cy="38" r="1" fill="#F43F5E" opacity="0.05" />
+        </svg>
         {!showDonate ? (
           <button
             onClick={() => setShowDonate(true)}
@@ -129,6 +142,7 @@ export default function CampaignDetail() {
         </Link>
       </div>
     </div>
+    </PageBg>
   );
 }
 

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
-import { HiOutlineLockClosed, HiOutlineInformationCircle } from 'react-icons/hi2';
+import { HiOutlineLockClosed, HiOutlineInformationCircle } from '../components/icons';
+import { PageBg } from '../components/SvgDecorations';
 
 export default function Login() {
   const { t } = useTranslation();
@@ -28,12 +29,36 @@ export default function Login() {
   };
 
   return (
+    <PageBg pattern="hex" colorA="#2563EB" colorB="#0D9488">
     <div className="max-w-sm mx-auto px-4 py-8 sm:py-16">
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center shadow-lg shadow-blue-200/50 mb-4">
-          <HiOutlineLockClosed className="w-8 h-8 text-white" />
+      {/* Bespoke login card */}
+      <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 overflow-hidden p-6 sm:p-8 shadow-xl shadow-gray-200/30">
+        {/* Top gradient accent */}
+        <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: 'linear-gradient(to right, #2563EB, #0D9488)' }} />
+
+        {/* Decorative SVG */}
+        <svg className="absolute -top-4 -right-4 w-40 h-40 pointer-events-none" viewBox="0 0 160 160" fill="none">
+          <circle cx="120" cy="40" r="50" stroke="#2563EB" strokeWidth="0.5" opacity="0.06" />
+          <circle cx="120" cy="40" r="30" stroke="#2563EB" strokeWidth="0.3" strokeDasharray="3 4" opacity="0.04" />
+          <polygon points="120,10 135,18 135,34 120,42 105,34 105,18" stroke="#0D9488" strokeWidth="0.5" opacity="0.06" />
+        </svg>
+        <svg className="absolute bottom-0 left-0 w-24 h-24 pointer-events-none" viewBox="0 0 100 100" fill="none">
+          <path d="M0 100V40" stroke="#2563EB" strokeWidth="0.5" opacity="0.06" />
+          <path d="M0 100H60" stroke="#0D9488" strokeWidth="0.5" opacity="0.06" />
+          <circle cx="0" cy="100" r="2" fill="#2563EB" opacity="0.08" />
+        </svg>
+
+      <div className="relative text-center mb-8">
+        <div className="relative w-16 h-16 mx-auto mb-4">
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 64 64" fill="none">
+            <polygon points="32,2 58,17 58,47 32,62 6,47 6,17" stroke="#2563EB" strokeWidth="1" opacity="0.12" />
+            <polygon points="32,8 52,20 52,44 32,56 12,44 12,20" fill="#2563EB" opacity="0.04" />
+          </svg>
+          <div className="absolute inset-[8px] rounded-2xl bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center shadow-lg shadow-blue-200/50">
+            <HiOutlineLockClosed className="w-7 h-7 text-white" />
+          </div>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('auth.sign_in')}</h1>
+        <h1 className="page-header-accent text-2xl text-gray-900">{t('auth.sign_in')}</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -102,6 +127,8 @@ export default function Login() {
           Register your NGO
         </Link>
       </p>
+      </div>{/* end bespoke card */}
     </div>
+    </PageBg>
   );
 }

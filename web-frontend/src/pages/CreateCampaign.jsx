@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
 import VoiceButton from '../components/VoiceButton';
 import useAuthStore from '../stores/authStore';
-import { HiOutlineMapPin, HiOutlineFilm, HiOutlineVideoCameraSlash } from 'react-icons/hi2';
-import { HiOutlineMicrophone } from 'react-icons/hi';
+import { HiOutlineMapPin, HiOutlineFilm, HiOutlineVideoCameraSlash, HiOutlineMicrophone } from '../components/icons';
+import { PageBg, PageHeader } from '../components/SvgDecorations';
 
 const STEPS = ['basics', 'details', 'funding', 'media', 'review'];
 const CATEGORIES = ['water', 'education', 'health', 'infrastructure', 'food', 'environment', 'shelter', 'children'];
@@ -86,14 +86,9 @@ export default function CreateCampaign() {
   };
 
   return (
+    <PageBg pattern="isometric" colorA="#7C3AED" colorB="#2563EB">
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          {t('create_campaign.title')}
-          <HiOutlineMicrophone className="w-6 h-6 text-blue-500" />
-        </h1>
-        <p className="text-gray-500 text-sm mt-1">{t('create_campaign.subtitle')}</p>
-      </div>
+      <PageHeader icon={HiOutlineMicrophone} title={t('create_campaign.title')} subtitle={t('create_campaign.subtitle')} accentColor="violet" />
 
       {/* Progress */}
       <div className="flex gap-1 mb-8">
@@ -109,7 +104,19 @@ export default function CreateCampaign() {
 
       {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-600">{error}</div>}
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-6">
+      <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-6 mb-6 overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-blue-500 to-transparent" />
+        <svg className="absolute top-2 right-2 w-24 h-24 pointer-events-none" viewBox="0 0 96 96" fill="none">
+          <circle cx="65" cy="28" r="20" stroke="#7C3AED" strokeWidth="0.5" opacity="0.05" />
+          <path d="M55 28 L65 18 L75 28" stroke="#7C3AED" strokeWidth="0.4" opacity="0.04" />
+          <path d="M60 32 L65 28 L70 32" stroke="#7C3AED" strokeWidth="0.3" opacity="0.03" />
+          <circle cx="65" cy="18" r="2" fill="#7C3AED" opacity="0.05" />
+        </svg>
+        <svg className="absolute bottom-1 left-1 w-10 h-10 pointer-events-none" viewBox="0 0 40 40" fill="none">
+          <path d="M0 40V25" stroke="#2563EB" strokeWidth="0.5" opacity="0.04" />
+          <path d="M0 40H15" stroke="#2563EB" strokeWidth="0.5" opacity="0.04" />
+          <circle cx="0" cy="40" r="1.5" fill="#2563EB" opacity="0.05" />
+        </svg>
         {step === 0 && (
           <div className="space-y-4">
             <Field label={t('create_campaign.campaign_title')} required value={form.title}
@@ -270,6 +277,7 @@ export default function CreateCampaign() {
         )}
       </div>
     </div>
+    </PageBg>
   );
 }
 

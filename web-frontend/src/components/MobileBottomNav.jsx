@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   HiOutlineGlobeAlt, HiOutlineHeart, HiOutlineCamera, HiOutlineUser,
   HiOutlineSparkles,
-} from 'react-icons/hi2';
+} from './icons';
 import useAuthStore from '../stores/authStore';
 
 const NAV_ITEMS = [
