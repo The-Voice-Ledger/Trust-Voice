@@ -216,6 +216,48 @@ const BESPOKE_SVGS = {
       <circle cx="48" cy="41" r="1" fill={c} opacity="0.08" />
     </>
   ),
+  /* ── Project-specific bespoke icons ── */
+  leaf: (c) => (
+    <>
+      <path d="M28 52C28 36 40 24 56 24c0 16-12 28-28 28z" stroke={c} strokeWidth="0.7" fill="none" opacity="0.10" />
+      <path d="M28 52C36 44 44 36 56 24" stroke={c} strokeWidth="0.5" fill="none" opacity="0.08" />
+      <path d="M36 44c-2 4-6 6-8 8" stroke={c} strokeWidth="0.4" fill="none" opacity="0.06" />
+      <path d="M44 36c-2 4-4 6-6 8" stroke={c} strokeWidth="0.4" fill="none" opacity="0.06" />
+    </>
+  ),
+  sun: (c) => (
+    <>
+      <circle cx="40" cy="40" r="8" stroke={c} strokeWidth="0.7" fill="none" opacity="0.10" />
+      <circle cx="40" cy="40" r="4" fill={c} opacity="0.06" />
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => {
+        const r = (a * Math.PI) / 180;
+        return <line key={a} x1={40 + 11 * Math.cos(r)} y1={40 + 11 * Math.sin(r)} x2={40 + 16 * Math.cos(r)} y2={40 + 16 * Math.sin(r)} stroke={c} strokeWidth="0.5" opacity="0.08" strokeLinecap="round" />;
+      })}
+    </>
+  ),
+  mountain: (c) => (
+    <>
+      <path d="M20 56L34 28l8 12 6-8L60 56z" stroke={c} strokeWidth="0.7" fill="none" opacity="0.10" />
+      <path d="M28 56l6-9 4 5 3-4 8 8" stroke={c} strokeWidth="0.4" fill="none" opacity="0.06" />
+      <circle cx="52" cy="26" r="4" stroke={c} strokeWidth="0.5" fill="none" opacity="0.06" />
+    </>
+  ),
+  cottage: (c) => (
+    <>
+      <path d="M22 42L40 26l18 16" stroke={c} strokeWidth="0.7" fill="none" opacity="0.10" />
+      <rect x="26" y="42" width="28" height="14" stroke={c} strokeWidth="0.6" fill="none" opacity="0.08" />
+      <rect x="35" y="46" width="10" height="10" stroke={c} strokeWidth="0.5" fill="none" opacity="0.06" />
+      <path d="M40 42v-2" stroke={c} strokeWidth="0.4" fill="none" opacity="0.06" />
+      <rect x="48" y="44" width="4" height="4" rx="0.5" stroke={c} strokeWidth="0.3" fill="none" opacity="0.05" />
+    </>
+  ),
+  'oil-drop': (c) => (
+    <>
+      <path d="M40 20C40 20 26 36 26 46a14 14 0 0028 0c0-10-14-26-14-26z" stroke={c} strokeWidth="0.7" fill="none" opacity="0.10" />
+      <path d="M40 26c0 0-8 10-8 16a8 8 0 0016 0c0-6-8-16-8-16z" stroke={c} strokeWidth="0.4" fill="none" opacity="0.06" />
+      <ellipse cx="36" cy="44" rx="2" ry="3" fill={c} opacity="0.05" />
+    </>
+  ),
 };
 
 /* ─── Size presets ─── */
