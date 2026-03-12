@@ -85,9 +85,9 @@ export default function ProjectHero({ config }) {
         </div>
       </div>
 
-      {/* Panoramic landscape illustration */}
-      <div className="absolute bottom-24 left-0 right-0 pointer-events-none z-[1]">
-        <HeroPanorama className="opacity-70" />
+      {/* Panoramic sunrise landscape illustration */}
+      <div className="absolute bottom-20 left-0 right-0 pointer-events-none z-[1]" style={{ height: '55%' }}>
+        <HeroPanorama className="opacity-80 h-full" />
       </div>
 
       {/* Bottom transition -- soft gradient into the next section */}

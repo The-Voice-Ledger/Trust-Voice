@@ -100,3 +100,73 @@
 .scene-fade-in {
   animation: fade-up 0.8s ease-out both;
 }
+
+/* ── Hero Sunrise Animations ── */
+
+/* Sun rises from behind mountains on page load */
+@keyframes sunrise-rise {
+  0%   { transform: translateY(40px); opacity: 0; }
+  30%  { opacity: 0.6; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.scene-sunrise {
+  animation: sunrise-rise 4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Sun halo grows outward */
+@keyframes halo-expand {
+  0%   { transform: scale(0.3); opacity: 0; }
+  40%  { opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.scene-halo {
+  animation: halo-expand 5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: center;
+}
+
+/* Rays fan out from sun after it rises */
+@keyframes rays-appear {
+  0%   { opacity: 0; transform: scaleY(0.2); }
+  100% { opacity: 1; transform: scaleY(1); }
+}
+.scene-rays {
+  animation: rays-appear 3s ease-out 1.5s both;
+  transform-origin: bottom center;
+}
+
+/* Sky warm glow spreads across panorama */
+@keyframes sky-warm {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+.scene-sky-warm {
+  animation: sky-warm 4s ease-out 0.5s both;
+}
+
+/* Mountain rim light appears as sun rises */
+@keyframes rim-light {
+  0%   { opacity: 0; stroke-dashoffset: 2000; }
+  100% { opacity: 1; stroke-dashoffset: 0; }
+}
+.scene-rim-light {
+  animation: rim-light 4s ease-out 1s both;
+}
+
+/* Slow sun ray rotation (after initial appear) */
+.scene-rays-rotate {
+  animation: rays-appear 3s ease-out 1.5s both, sun-rotate 90s linear 4.5s infinite;
+  transform-origin: center;
+}
+
+/* Birds appear late in sunrise */
+@keyframes birds-fly {
+  0%   { opacity: 0; transform: translate(0, 8px); }
+  20%  { opacity: 0.5; }
+  100% { opacity: 0.4; transform: translate(20px, -4px); }
+}
+.scene-birds {
+  animation: birds-fly 8s ease-in-out 3s both infinite;
+}
+.scene-birds-delay {
+  animation: birds-fly 9s ease-in-out 4s both infinite;
+}
