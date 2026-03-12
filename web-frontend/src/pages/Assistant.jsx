@@ -5,6 +5,7 @@ import { textAgent, voiceAgent } from '../api/voice';
 import useAuthStore from '../stores/authStore';
 import useVoiceStore from '../stores/voiceStore';
 import voiceManager from '../voice/VoiceManager';
+import Markdown from 'react-markdown';
 import ProgressBar from '../components/ProgressBar';
 import {
   HiOutlinePaperAirplane, HiOutlineSparkles,
@@ -526,7 +527,14 @@ function ChatMessage({ msg, onPlayAudio }) {
           <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-gray-100/80 overflow-hidden">
             {/* Top accent */}
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-indigo-500/20 via-violet-500/20 to-transparent" />
-            <p className="relative text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+            <Markdown
+              className="relative text-sm text-gray-700 leading-relaxed prose prose-sm prose-gray max-w-none
+                prose-p:my-1 prose-ol:my-1 prose-ul:my-1 prose-li:my-0.5
+                prose-strong:text-gray-900 prose-strong:font-semibold
+                prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline"
+            >
+              {msg.text}
+            </Markdown>
             {/* Replay audio button */}
             {msg.audioUrl && (
               <button
