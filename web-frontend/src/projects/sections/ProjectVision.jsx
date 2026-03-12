@@ -1,3 +1,5 @@
+import { VISION_SCENES } from '../illustrations/ProjectScenes';
+
 /**
  * ProjectVision -- warm three-column "Core Vision" section.
  * Clean cards with subtle color accent, generous white space.
@@ -25,6 +27,12 @@ export default function ProjectVision({ config }) {
               key={i}
               className="group bg-white rounded-xl p-7 shadow-sm hover:shadow-md transition-shadow duration-300"
             >
+              {/* Scene illustration */}
+              {VISION_SCENES[i] && (() => {
+                const Scene = VISION_SCENES[i];
+                return <Scene className="w-full h-20 mb-4 scene-fade-in" />;
+              })()}
+
               {/* Color dot + label */}
               <div className="flex items-center gap-2.5 mb-4">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: colors[i] }} />

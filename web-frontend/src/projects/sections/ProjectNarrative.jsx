@@ -1,7 +1,9 @@
+import { NARRATIVE_SCENES } from '../illustrations/ProjectScenes';
+
 /**
  * ProjectNarrative -- clean storytelling section.
  * Alternating blocks with warm accents, generous spacing.
- * No giant numbers or competing decorations.
+ * Scene illustrations accompany each story.
  */
 export default function ProjectNarrative({ config }) {
   const { narrative, theme } = config;
@@ -26,18 +28,25 @@ export default function ProjectNarrative({ config }) {
           {narrative.blocks.map((block, i) => {
             const color = i % 2 === 0 ? p : s;
 
+            const Scene = NARRATIVE_SCENES[i];
+
             return (
-              <div key={i} className="flex items-start gap-6">
-                {/* Accent marker */}
-                <div className="flex-shrink-0 mt-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color, opacity: 0.6 }} />
-                </div>
+              <div key={i} className="flex flex-col md:flex-row items-start gap-6">
+                {/* Scene illustration (alternating side) */}
+                {Scene && (
+                  <div className={`flex-shrink-0 w-full md:w-56 ${i % 2 !== 0 ? 'md:order-2' : ''}`}>
+                    <Scene className="w-full rounded-lg scene-fade-in" />
+                  </div>
+                )}
 
                 {/* Text */}
                 <div className="flex-1">
-                  <h3 className="font-display text-xl sm:text-2xl font-semibold text-gray-900 mb-3 leading-snug">
-                    {block.title}
-                  </h3>
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color, opacity: 0.6 }} />
+                    <h3 className="font-display text-xl sm:text-2xl font-semibold text-gray-900 leading-snug">
+                      {block.title}
+                    </h3>
+                  </div>
                   <p className="text-gray-500 leading-[1.8] text-[15px] sm:text-base">
                     {block.text}
                   </p>

@@ -1,6 +1,8 @@
+import { PILLAR_SCENES } from '../illustrations/ProjectScenes';
+
 /**
  * ProjectPillars -- revenue model section.
- * Clean cards with warm top accent, generous spacing.
+ * Clean cards with warm top accent, scene illustration, generous spacing.
  */
 export default function ProjectPillars({ config }) {
   const { pillars, theme } = config;
@@ -28,6 +30,12 @@ export default function ProjectPillars({ config }) {
             >
               {/* Top color bar */}
               <div className="h-1" style={{ backgroundColor: colors[i] }} />
+
+              {/* Scene illustration */}
+              {PILLAR_SCENES[i] && (() => {
+                const Scene = PILLAR_SCENES[i];
+                return <Scene className="w-full scene-fade-in" />;
+              })()}
 
               <div className="p-7">
                 {/* Highlight */}
