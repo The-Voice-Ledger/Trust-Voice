@@ -33,23 +33,23 @@ const PROJECTS = {
       links: [
         { label: 'Vision', href: '#vision' },
         { label: 'Our Story', href: '#narrative' },
-        { label: 'Market', href: '#market' },
+        { label: 'The Opportunity', href: '#market' },
         { label: 'Experience', href: '#experience' },
-        { label: 'Financials', href: '#financials' },
+        { label: 'The Plan', href: '#financials' },
       ],
-      ctaLabel: 'Back This Project',
+      ctaLabel: 'Fund the Farm',
       ctaLink: '/donate',
     },
 
     /* -- Hero -- */
     hero: {
-      badge: 'Impact Investment  ·  Agritourism  ·  Superfood',
+      badge: 'Community Farm  ·  Agritourism  ·  Superfood',
       overtitle: 'Moringa Oasis Zimbabwe',
       title: 'Where Ancient Wisdom\nMeets the Future of Food',
       subtitle:
-        'A 10-hectare vertically integrated sanctuary combining high-density Moringa production, an industrial processing facility, and a premium eco-lodge. Real agriculture. Real impact. Real returns.',
+        'A 10-hectare sanctuary combining Moringa production, on-site processing, and eco-lodging. Help us build it, come live and learn on it, and watch the farm grow itself. Real agriculture. Real impact. Real community.',
       stats: [],
-      ctaLabel: 'Back This Project',
+      ctaLabel: 'Fund the Farm',
       ctaLink: '/donate',
       secondaryLabel: 'Talk to the AI Assistant',
       secondaryLink: '/assistant',
@@ -64,19 +64,19 @@ const PROJECTS = {
           label: 'The Concept',
           icon: 'leaf',
           bespoke: 'leaf',
-          text: 'A 10-hectare vertically integrated facility combining high-density Moringa production, industrial-grade processing, and a premium "Live-Work-Learn" eco-lodge.',
+          text: 'A 10-hectare sanctuary combining high-density Moringa production, on-site processing, and a "Live-Work-Learn" eco-lodge where contributors become community.',
         },
         {
           label: 'The Mission',
           icon: 'globe',
           bespoke: 'globe',
-          text: 'To capture the full Moringa value chain, from seed to supplement, while monetizing global "Impact Tourism" demand.',
+          text: 'Build a self-sustaining ecosystem where Moringa sales fund growth, the farm feeds itself, and every contributor can come live, learn, and work on the land.',
         },
         {
-          label: 'The Investment',
-          icon: 'money',
-          bespoke: 'money',
-          text: '$400,000 Seed Round for land preparation, industrial processing machinery, and luxury solar-powered hospitality infrastructure.',
+          label: 'The Opportunity',
+          icon: 'heart',
+          bespoke: 'heart',
+          text: 'Help us raise $400,000 to build the farm, the processing facility, and the eco-lodge. In return, come be part of it — stay, harvest, create, and grow with us.',
         },
       ],
     },
@@ -84,7 +84,7 @@ const PROJECTS = {
     /* -- Narrative (The Spirit of the Oasis) -- */
     narrative: {
       sectionLabel: 'The Spirit of the Oasis',
-      heading: 'A Story of Adventure,\nAncient Wisdom, and Legacy',
+      heading: 'A Story of Adventure,\nAncient Wisdom, and Community',
       blocks: [
         {
           title: 'The Ancient Pulse of the Land',
@@ -99,73 +99,73 @@ const PROJECTS = {
           text: 'For the seeker, the adventurer, and the one who finds peace at the end of a dusty trail, this is the ultimate destination. The journey to the Moringa Oasis is a physical rush, navigating the untamed, vibrant dirt trails of Zimbabwe to find a sanctuary that is entirely off-grid and powered by the sun. This is where the thrill of the "untamed" meets the precision of high-tech agriculture.',
         },
         {
-          title: 'A Legacy You Can Touch',
+          title: 'A Place You Can Touch',
           icon: 'cottage',
           bespoke: 'cottage',
-          text: 'This is not a "paper" investment. It is a tangible oasis. It is 10 hectares of precision-irrigated life. It is 6 luxury eco-lodge cottages, hand-built from local stone and sustainable timber, offering a real-world asset that generates both revenue and impact. It is the smell of fresh earth during a dawn harvest and the gold of cold-pressed oil. This is real estate with a heartbeat.',
+          text: 'This is not a spectator project. It is a living, breathing oasis — 10 hectares of precision-irrigated life, 6 eco-lodge cottages hand-built from local stone and sustainable timber, and a community you help create. It is the smell of fresh earth during a dawn harvest and the gold of cold-pressed oil. A place with a heartbeat that you helped bring to life.',
         },
         {
-          title: 'Join the "Live-Work-Learn" Movement',
+          title: 'Join the "Live-Work-Learn" Community',
           icon: 'users',
           bespoke: 'users',
-          text: 'We invite you to do more than just invest; we invite you to contribute. From dawn harvests in the African bush to formulating your own custom tea blends, you step directly into our ecosystem. Witness the 800% margin increase of our on-site value-add facility first-hand. You are a partner in breaking the "commodity trap" and building a sustainable future for African agriculture.',
+          text: 'We invite you to do more than fund — we invite you to come and be part of it. From dawn harvests in the African bush to formulating your own custom tea blends, you step directly into the ecosystem. The moringa we grow and sell funds the next phase. Every contributor is welcome to come stay, work alongside us, and learn the craft — building a sustainable future for African agriculture, together.',
         },
       ],
     },
 
-    /* -- Market (The "Green Gold" Economy) -- */
+    /* -- Market (Why the Farm Sustains Itself) -- */
     market: {
-      sectionLabel: 'Market Dynamics',
-      heading: 'The "Green Gold" Economy',
+      sectionLabel: 'The Opportunity',
+      heading: 'Why the Farm Grows Itself',
       tam: {
         value: '$10.78B',
-        label: 'Total Addressable Market',
-        detail: 'Global Moringa market by 2026 (9.7% CAGR)',
+        label: 'Global Demand',
+        detail: 'The global Moringa market is booming at 9.7% annual growth — there is no shortage of buyers.',
         icon: 'trending',
         bespoke: 'trending',
       },
       sam: {
         value: '$1.2B',
-        label: 'Serviceable Market',
-        detail: 'EU/UK/UAE nutraceutical and organic skincare corridors',
+        label: 'Our Corridors',
+        detail: 'EU, UK, and UAE nutraceutical and organic skincare markets hungry for certified African-origin Moringa.',
         icon: 'chart',
         bespoke: 'chart',
       },
       revenue: {
         value: '$3.1M',
-        label: 'Obtainable Revenue',
-        detail: 'Targeted annual revenue by Year 4 from the pilot facility',
+        label: 'Farm Revenue by Year 4',
+        detail: 'Projected annual sales that fund operations, expansion, and community growth — no further fundraising needed.',
         icon: 'money',
         bespoke: 'money',
       },
     },
 
-    /* -- Revenue Pillars (Three-Pronged Resilience) -- */
+    /* -- Revenue Pillars (How the Farm Grows Itself) -- */
     pillars: {
-      sectionLabel: 'Revenue Pillars',
-      heading: 'Three-Pronged Resilience',
-      subtitle: 'A diversified revenue engine that insulates the project from single-point-of-failure risk.',
+      sectionLabel: 'How It Works',
+      heading: 'How the Farm Grows Itself',
+      subtitle: 'Three income streams that keep the oasis self-sustaining — every sale funds the next phase of growth.',
       items: [
         {
-          title: 'Industrial B2B',
-          description: 'Bulk export of organic-certified powder and oil to European wellness brands.',
+          title: 'Moringa Sales (B2B)',
+          description: 'Organic-certified powder and oil exported to European wellness brands. This is the engine that funds everything.',
           icon: 'building',
           bespoke: 'building',
-          highlight: 'Bulk Export Pipeline',
+          highlight: 'Funds Operations & Growth',
         },
         {
-          title: 'Premium B2C',
-          description: 'Direct-to-consumer sales via on-site retail and global e-commerce.',
+          title: 'Moringa Sales (Direct)',
+          description: 'Premium products sold on-site and via e-commerce. Higher margins go straight back into the farm.',
           icon: 'creditcard',
           bespoke: 'creditcard',
-          highlight: 'Direct Sales Channel',
+          highlight: 'Funds Expansion',
         },
         {
-          title: 'Experiential Hospitality',
-          description: '"Work-Stay-Learn" packages at $150/night for high-net-worth wellness travelers and adventurers.',
+          title: 'Live-Work-Learn Stays',
+          description: 'Contributors and travelers stay at the eco-lodge, join harvests, learn the craft. Stays fund the community experience.',
           icon: 'cottage',
           bespoke: 'cottage',
-          highlight: '$150/Night Packages',
+          highlight: 'Funds the Community',
         },
       ],
     },
@@ -212,9 +212,9 @@ const PROJECTS = {
 
     /* -- Experience Timeline (Live-Work-Learn) -- */
     experience: {
-      sectionLabel: 'The Guest Experience',
+      sectionLabel: 'The Experience',
       heading: 'Live. Work. Learn.',
-      subtitle: 'A three-day immersion into the heart of the Moringa Oasis, designed for wellness travelers, impact investors, and curious adventurers.',
+      subtitle: 'A three-day immersion into the heart of the Moringa Oasis. This is what you get to be part of — open to every contributor, traveler, and curious soul.',
       days: [
         {
           day: 'Day 1',
@@ -240,30 +240,30 @@ const PROJECTS = {
       ],
     },
 
-    /* -- Financials -- */
+    /* -- Financials (Building the Oasis) -- */
     financials: {
-      sectionLabel: 'Investment',
-      heading: 'Investment & Projections',
+      sectionLabel: 'The Plan',
+      heading: 'Building the Oasis',
       totalRaise: '$400,000',
-      totalRaiseLabel: 'Seed Round',
+      totalRaiseLabel: 'Fundraising Goal',
       capex: [
-        { item: 'Agri-Infrastructure', amount: '$110K', detail: 'Solar drip irrigation, borehole, and high-yield seeds' },
-        { item: 'Processing Plant', amount: '$50K', detail: 'Industrial dehydrators, pulverizers, and cold-press oil expellers' },
-        { item: 'Eco-Lodging', amount: '$180K', detail: '6 luxury solar-powered cottages ($30K each) using sustainable local materials' },
-        { item: 'Operations & Certification', amount: '$60K', detail: 'EU/UK Organic certification and global marketing' },
+        { item: 'Agri-Infrastructure', amount: '$110K', detail: 'Solar drip irrigation, borehole, and high-yield Moringa seedlings' },
+        { item: 'Processing Facility', amount: '$50K', detail: 'Industrial dehydrators, pulverizers, and cold-press oil expellers — this is where the value gets created' },
+        { item: 'Eco-Lodge', amount: '$180K', detail: '6 solar-powered cottages ($30K each) for contributors and travelers to live and learn on the farm' },
+        { item: 'Operations & Certification', amount: '$60K', detail: 'EU/UK Organic certification and market access so the farm can sell globally from day one' },
       ],
       projections: [
-        { year: 'Year 1', label: 'Setup', revenue: '$180K', ebitda: null },
-        { year: 'Year 2', label: 'Growth', revenue: '$1.25M', ebitda: '$570K' },
-        { year: 'Year 3', label: 'Maturity', revenue: '$3.1M', ebitda: '$2.18M' },
+        { year: 'Year 1', label: 'Building', revenue: '$180K', ebitda: null },
+        { year: 'Year 2', label: 'Growing', revenue: '$1.25M', ebitda: null },
+        { year: 'Year 3', label: 'Self-Sustaining', revenue: '$3.1M', ebitda: null },
       ],
     },
 
     /* -- CTA -- */
     cta: {
-      heading: 'Be Part of the Oasis',
-      subheading: 'Backed by blockchain-verified transparency. Every dollar tracked, every impact measured. Join us in building something real.',
-      primaryLabel: 'Invest Now',
+      heading: 'Help Build the Oasis',
+      subheading: 'Every contribution is tracked with blockchain-verified transparency. Fund the farm, come live and learn on it, and watch it grow itself.',
+      primaryLabel: 'Fund the Farm',
       primaryLink: '/donate',
       secondaryLabel: 'Talk to the AI Assistant',
       secondaryLink: '/assistant',
@@ -271,24 +271,24 @@ const PROJECTS = {
 
     /* -- Footer -- */
     footer: {
-      description: 'A 10-hectare vertically integrated Moringa farm, processing facility, and eco-lodge in Zimbabwe. Reviving ancient wisdom through modern innovation.',
+      description: 'A 10-hectare Moringa farm, processing facility, and eco-lodge in Zimbabwe. Community-funded. Self-sustaining. Open to all who want to be part of it.',
       columns: [
         {
           title: 'Explore',
           links: [
             { label: 'Our Vision', href: '#vision' },
             { label: 'The Story', href: '#narrative' },
-            { label: 'Market', href: '#market' },
+            { label: 'The Opportunity', href: '#market' },
             { label: 'Experience', href: '#experience' },
           ],
         },
         {
-          title: 'Invest',
+          title: 'Get Involved',
           links: [
-            { label: 'Back This Project', href: '/donate' },
-            { label: 'Revenue Model', href: '#pillars' },
-            { label: 'Financials', href: '#financials' },
-            { label: 'Advantages', href: '#advantages' },
+            { label: 'Fund the Farm', href: '/donate' },
+            { label: 'How It Works', href: '#pillars' },
+            { label: 'The Plan', href: '#financials' },
+            { label: 'Why Ukulima', href: '#advantages' },
           ],
         },
         {
@@ -299,7 +299,7 @@ const PROJECTS = {
           ],
         },
       ],
-      legal: 'This is an informational overview and does not constitute a formal investment offering or financial advice.',
+      legal: 'This is an informational overview of the Ukulima project. All contributions are transparently tracked via the TrustVoice platform.',
     },
 
     /* -- Sections to render (order matters) -- */
