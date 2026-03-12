@@ -261,7 +261,7 @@ const PROJECTS = {
 
     /* -- CTA -- */
     cta: {
-      heading: 'Help Build the Oasis',
+      heading: 'Pioneer the Oasis',
       subheading: 'Every contribution is tracked with blockchain-verified transparency. Fund the farm, come live and learn on it, and watch it grow itself.',
       primaryLabel: 'Build The Farm',
       primaryLink: '/donate',
