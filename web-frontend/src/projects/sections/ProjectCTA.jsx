@@ -15,14 +15,6 @@ export default function ProjectCTA({ config }) {
 
   return (
     <section id="cta" className={`relative py-28 sm:py-36 px-6 overflow-hidden bg-gradient-to-b ${theme.heroBg}`}>
-      {/* Ambient scattered light motes */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        <div className="absolute top-16 left-[15%] w-1.5 h-1.5 rounded-full opacity-[0.06] scene-glow-slow" style={{ backgroundColor: s }} />
-        <div className="absolute top-28 right-[22%] w-1 h-1 rounded-full opacity-[0.04] scene-glow-slow" style={{ backgroundColor: p, animationDelay: '1.2s' }} />
-        <div className="absolute top-10 right-[40%] w-2 h-2 rounded-full opacity-[0.03] scene-glow-slow" style={{ backgroundColor: s, animationDelay: '2.4s' }} />
-        <div className="absolute bottom-32 left-[60%] w-1 h-1 rounded-full opacity-[0.05] scene-glow-slow" style={{ backgroundColor: p, animationDelay: '0.8s' }} />
-      </div>
-
       <div className="relative max-w-2xl mx-auto text-center z-10">
         <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold text-white tracking-tight mb-5">
           {cta.heading}

@@ -37,7 +37,7 @@ const PROJECTS = {
         { label: 'Experience', href: '#experience' },
         { label: 'The Plan', href: '#financials' },
       ],
-      ctaLabel: 'Fund the Farm',
+      ctaLabel: 'Build the Farm',
       ctaLink: '/donate',
     },
 
@@ -49,7 +49,7 @@ const PROJECTS = {
       subtitle:
         'A 10-hectare sanctuary combining Moringa production, on-site processing, and eco-lodging. Help us build it, come live and learn on it, and watch the farm grow itself. Real agriculture. Real impact. Real community.',
       stats: [],
-      ctaLabel: 'Fund the Farm',
+      ctaLabel: 'Build the Farm',
       ctaLink: '/donate',
       secondaryLabel: 'Talk to the AI Assistant',
       secondaryLink: '/assistant',
@@ -263,7 +263,7 @@ const PROJECTS = {
     cta: {
       heading: 'Help Build the Oasis',
       subheading: 'Every contribution is tracked with blockchain-verified transparency. Fund the farm, come live and learn on it, and watch it grow itself.',
-      primaryLabel: 'Fund the Farm',
+      primaryLabel: 'Build The Farm',
       primaryLink: '/donate',
       secondaryLabel: 'Talk to the AI Assistant',
       secondaryLink: '/assistant',

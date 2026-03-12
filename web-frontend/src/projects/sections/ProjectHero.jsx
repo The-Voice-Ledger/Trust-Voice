@@ -46,21 +46,22 @@ export default function ProjectHero({ config }) {
           {hero.subtitle}
         </p>
 
-        {/* CTAs -- side by side, understated */}
-        <div className="flex flex-wrap items-center gap-3 mb-14">
+        {/* CTAs -- prominent, warm cards */}
+        <div className="flex flex-wrap items-center gap-4 mb-14">
           <Link
             to={hero.ctaLink}
-            className="group inline-flex items-center gap-2.5 px-7 py-3 rounded-lg text-sm font-semibold text-white transition-all duration-200 hover:opacity-90"
+            className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-xl text-[15px] font-semibold text-white shadow-lg shadow-emerald-900/20 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-800/25 hover:scale-[1.02]"
             style={{ backgroundColor: p }}
           >
+            <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/10" />
             {hero.ctaLabel}
-            <HiOutlineArrowRight className="w-3.5 h-3.5 opacity-60 group-hover:translate-x-0.5 transition-transform" />
+            <HiOutlineArrowRight className="w-4 h-4 opacity-70 group-hover:translate-x-1 transition-transform duration-300" />
           </Link>
           <Link
             to={hero.secondaryLink}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium text-white/50 border border-white/[0.08] hover:text-white/70 hover:border-white/15 transition-all duration-200"
+            className="group inline-flex items-center gap-2.5 px-7 py-4 rounded-xl text-[15px] font-medium text-white/55 border border-white/[0.1] bg-white/[0.03] backdrop-blur-sm hover:text-white/75 hover:border-white/20 hover:bg-white/[0.05] transition-all duration-300"
           >
-            <HiOutlineChatBubbleLeftRight className="w-4 h-4 opacity-50" />
+            <HiOutlineChatBubbleLeftRight className="w-4 h-4 opacity-50 group-hover:opacity-70 transition-opacity" />
             {hero.secondaryLabel}
           </Link>
         </div>

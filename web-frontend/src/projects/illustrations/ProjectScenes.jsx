@@ -669,27 +669,6 @@ export function CtaHorizon({ className = '' }) {
         );
       })}
 
-      {/* Fireflies -- warm amber dots drifting among the canopy */}
-      {[
-        { x: 120, y: 72, r: 2.0, d: 0 },
-        { x: 230, y: 60, r: 1.5, d: 1.2 },
-        { x: 340, y: 78, r: 1.8, d: 0.6 },
-        { x: 440, y: 55, r: 1.3, d: 2.0 },
-        { x: 520, y: 68, r: 2.2, d: 0.3 },
-        { x: 610, y: 58, r: 1.4, d: 1.8 },
-        { x: 700, y: 74, r: 1.6, d: 0.9 },
-        { x: 180, y: 88, r: 1.2, d: 1.5 },
-        { x: 480, y: 85, r: 1.0, d: 2.5 },
-        { x: 650, y: 90, r: 1.3, d: 0.4 },
-      ].map((f, i) => (
-        <circle
-          key={i} cx={f.x} cy={f.y} r={f.r}
-          fill={a600} opacity="0.18"
-          className="scene-glow-slow"
-          style={{ animationDelay: `${f.d}s` }}
-        />
-      ))}
-
       {/* Ground */}
       <path d="M0 120 Q200 112 400 118 Q600 112 800 120 L800 160 L0 160Z" fill={e600} opacity="0.08" />
     </svg>
