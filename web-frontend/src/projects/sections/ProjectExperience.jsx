@@ -149,14 +149,14 @@ export default function ProjectExperience({ config }) {
     >
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-14">
+        <div className="text-center mb-20">
           <p className="text-xs font-medium tracking-[0.2em] uppercase mb-3 text-gray-400">
             {experience.sectionLabel}
           </p>
-          <h2 className="font-display text-3xl sm:text-4xl font-semibold text-gray-900 tracking-tight">
+          <h2 className="font-display text-4xl sm:text-5xl font-semibold text-gray-900 tracking-tight">
             {experience.heading}
           </h2>
-          <p className="text-gray-400 mt-3 max-w-lg mx-auto text-[15px] leading-relaxed">
+          <p className="text-gray-400 mt-3 max-w-lg mx-auto text-base leading-relaxed">
             {experience.subtitle}
           </p>
         </div>
@@ -165,11 +165,11 @@ export default function ProjectExperience({ config }) {
         <div className="flex flex-col items-center">
 
           {/* Arc with day labels on the curve */}
-          <div className="relative mb-12" style={{ width: 420, height: 200 }}>
-            <svg width="420" height="200" viewBox="0 0 420 200" className="absolute inset-0">
+          <div className="relative mb-12" style={{ width: 420, height: 230 }}>
+            <svg width="420" height="230" viewBox="0 0 420 230" className="absolute inset-0">
               {/* Background arc */}
               <path
-                d="M 35 185 A 175 175 0 0 1 385 185"
+                d="M 35 215 A 175 175 0 0 1 385 215"
                 fill="none"
                 stroke="rgba(0,0,0,0.05)"
                 strokeWidth="3"
@@ -178,7 +178,7 @@ export default function ProjectExperience({ config }) {
               {/* Active progress arc */}
               {visible && (
                 <path
-                  d="M 35 185 A 175 175 0 0 1 385 185"
+                  d="M 35 215 A 175 175 0 0 1 385 215"
                   fill="none"
                   stroke={colors[active]}
                   strokeWidth="3.5"
@@ -190,7 +190,7 @@ export default function ProjectExperience({ config }) {
 
               {/* 3Cs slogan in the arc center */}
               <text
-                x="210" y="138"
+                x="210" y="168"
                 textAnchor="middle"
                 className="font-display"
                 style={{
@@ -204,7 +204,7 @@ export default function ProjectExperience({ config }) {
                 3Cs
               </text>
               <text
-                x="210" y="158"
+                x="210" y="188"
                 textAnchor="middle"
                 style={{
                   fontSize: 10,
@@ -224,7 +224,7 @@ export default function ProjectExperience({ config }) {
             {experience.days.map((day, i) => {
               const angle = Math.PI - (Math.PI * (i + 0.5)) / experience.days.length;
               const cx = 210 + 175 * Math.cos(angle);
-              const cy = 185 - 175 * Math.sin(angle);
+              const cy = 215 - 175 * Math.sin(angle);
               const isActive = i === active;
 
               return (
