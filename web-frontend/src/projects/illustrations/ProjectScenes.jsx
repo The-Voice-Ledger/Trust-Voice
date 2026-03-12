@@ -66,34 +66,40 @@ export function HeroPanorama({ className = '' }) {
 
       {/* ── Sun group (rises from behind the eastern ridge) ── */}
       <g className="scene-sunrise">
-        {/* Outer halo -- soft, atmospheric */}
-        <circle cx={sunX} cy={sunY} r="90" fill="url(#hp-sun-glow)" className="scene-halo" />
-        {/* Inner warmth */}
-        <circle cx={sunX} cy={sunY} r="40" fill={a600} opacity="0.06" className="scene-halo" />
-        {/* Sun disc -- small, suggestive */}
-        <circle cx={sunX} cy={sunY} r="16" fill={a600} opacity="0.25" />
-        <circle cx={sunX} cy={sunY} r="10" fill="#FDE68A" opacity="0.2" />
+        {/* Ambient radial glow */}
+        <ellipse cx={sunX} cy={sunY} rx="110" ry="80" fill="url(#hp-sun-glow)" />
 
-        {/* Delicate rays -- fewer, shorter, radiating from the small disc */}
-        <g className="scene-rays-rotate" style={{ transformOrigin: `${sunX}px ${sunY}px` }}>
-          {Array.from({ length: 16 }, (_, i) => {
-            const angle = i * 22.5;
-            const len = i % 3 === 0 ? 45 : 28;
-            const w = i % 3 === 0 ? 0.8 : 0.5;
-            const op = i % 3 === 0 ? 0.08 : 0.04;
-            return (
-              <line
-                key={i}
-                x1={sunX} y1={sunY - 20}
-                x2={sunX} y2={sunY - 20 - len}
-                stroke={a600}
-                strokeWidth={w}
-                opacity={op}
-                transform={`rotate(${angle} ${sunX} ${sunY})`}
-              />
-            );
-          })}
-        </g>
+        {/* Sun rays radiating outward */}
+        {[0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340].map((angle, i) => {
+          const rad = (angle * Math.PI) / 180;
+          const x1 = sunX + 24 * Math.cos(rad);
+          const y1 = sunY - 24 * Math.sin(rad);
+          const x2 = sunX + (50 + (i % 3) * 14) * Math.cos(rad);
+          const y2 = sunY - (50 + (i % 3) * 14) * Math.sin(rad);
+          return (
+            <line key={i}
+              x1={x1} y1={y1} x2={x2} y2={y2}
+              stroke="#F59E0B"
+              strokeWidth={1 + (i % 2) * 0.6}
+              opacity={0.07 + (i % 3) * 0.03}
+              strokeLinecap="round"
+            />
+          );
+        })}
+
+        {/* Layered sun disc */}
+        <circle cx={sunX} cy={sunY} r="24" fill="#F59E0B" opacity="0.18" />
+        <circle cx={sunX} cy={sunY} r="18" fill="#FBBF24" opacity="0.14" />
+        <circle cx={sunX} cy={sunY} r="11" fill="#FDE68A" opacity="0.12" />
+
+        {/* Reflection beneath sun */}
+        <ellipse cx={sunX} cy={sunY + 12} rx="45" ry="8" fill="#F59E0B" opacity="0.05" />
+        <ellipse cx={sunX} cy={sunY + 20} rx="28" ry="4" fill="#D97706" opacity="0.03" />
+
+        {/* Warm sky bands near horizon */}
+        <rect x={sunX - 85} y={sunY - 20} width="170" height="3" rx="1.5" fill="#F59E0B" opacity="0.04" />
+        <rect x={sunX - 70} y={sunY - 12} width="140" height="2" rx="1" fill="#EA580C" opacity="0.03" />
+        <rect x={sunX - 55} y={sunY - 5} width="110" height="2" rx="1" fill="#D97706" opacity="0.04" />
       </g>
 
       {/* ── Distant mountain range (back layer) ── */}
