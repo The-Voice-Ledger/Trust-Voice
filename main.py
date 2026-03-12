@@ -232,20 +232,19 @@ if _web_frontend_dist.exists():
     # Mount static assets first (JS, CSS, images)
     app.mount("/app/assets", StaticFiles(directory=str(_web_frontend_dist / "assets")), name="web-assets")
 
-    # SPA catch-all: any /app/* route that isn't a static file serves index.html
-    # This allows React Router to handle client-side routing on refresh/direct nav
-    @app.get("/app/{full_path:path}")
-    async def serve_spa(full_path: str):
-        # Check if the requested path is an actual file in dist
-        file_path = _web_frontend_dist / full_path
-        if file_path.is_file():
-            return FileResponse(str(file_path))
-        # Otherwise serve index.html for client-side routing
-        return FileResponse(str(_web_frontend_dist / "index.html"))
+    # SPA catch-all: any /app route serves index.html (React Router handles routing)
+    _spa_index = str(_web_frontend_dist / "index.html")
 
     @app.get("/app")
     async def serve_spa_root():
-        return FileResponse(str(_web_frontend_dist / "index.html"))
+        return FileResponse(_spa_index)
+
+    @app.get("/app/{full_path:path}")
+    async def serve_spa(full_path: str):
+        file_path = _web_frontend_dist / full_path
+        if file_path.is_file():
+            return FileResponse(str(file_path))
+        return FileResponse(_spa_index)
 
     logger.info("✅ Web frontend SPA mounted at /app with client-side routing support")
 else:

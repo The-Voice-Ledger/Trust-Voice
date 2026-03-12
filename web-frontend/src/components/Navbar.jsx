@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import useAuthStore from '../stores/authStore';
 import LanguageToggle from './LanguageToggle';
 import {
-  HiOutlineGlobeAlt, HiOutlineChartBar, HiOutlineHeart,
+  HiOutlineGlobeAlt, HiOutlineChartBar, HiOutlineBanknotes,
   HiOutlineBuildingOffice2, HiOutlinePlusCircle, HiOutlineCamera,
   HiOutlineCog6Tooth, HiOutlineUser, HiOutlineArrowRightOnRectangle,
   HiOutlineArrowLeftOnRectangle, HiOutlineBars3, HiOutlineXMark,
@@ -16,7 +16,7 @@ import {
 const PRIMARY_ITEMS = [
   { to: '/campaigns', key: 'nav.campaigns', Icon: HiOutlineGlobeAlt },
   { to: '/projects', key: 'nav.projects', Icon: HiOutlineMapPin },
-  { to: '/donate', key: 'nav.donate', Icon: HiOutlineHeart },
+  { to: '/fund', key: 'nav.fund', Icon: HiOutlineBanknotes },
   { to: '/assistant', key: 'nav.assistant', Icon: HiOutlineSparkles },
 ];
 

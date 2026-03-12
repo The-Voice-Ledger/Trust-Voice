@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { HiOutlineMicrophone } from './icons';
 import {
-  HiOutlineGlobeAlt, HiOutlineHeart, HiOutlineChartBar,
+  HiOutlineGlobeAlt, HiOutlineBanknotes, HiOutlineChartBar,
   HiOutlineBuildingOffice2, HiOutlinePlusCircle, HiOutlineCamera,
   HiOutlineShieldCheck, HiOutlineMapPin, HiOutlineDocumentText,
 } from './icons';
@@ -19,7 +19,7 @@ export default function Footer() {
             <nav className="space-y-2.5">
               <FooterLink to="/campaigns" Icon={HiOutlineGlobeAlt}>Campaigns</FooterLink>
               <FooterLink to="/projects" Icon={HiOutlineMapPin}>Projects</FooterLink>
-              <FooterLink to="/donate" Icon={HiOutlineHeart}>Donate</FooterLink>
+              <FooterLink to="/fund" Icon={HiOutlineBanknotes}>Fund</FooterLink>
               <FooterLink to="/analytics" Icon={HiOutlineChartBar}>Analytics</FooterLink>
             </nav>
           </div>

@@ -15,7 +15,7 @@ import {
   HiOutlineChatBubbleLeftRight, HiOutlineCheckBadge,
   HiOutlineChartBarSquare, HiOutlineRocketLaunch,
   HiOutlineGlobeAlt, HiOutlineChartBar, HiOutlineCog6Tooth,
-  HiOutlineHeart, HiOutlineBuildingOffice2, HiOutlinePlusCircle,
+  HiOutlineBanknotes, HiOutlineBuildingOffice2, HiOutlinePlusCircle,
   HiOutlineCamera, HiOutlinePlayCircle, HiOutlineMapPin,
   HiOutlineUserGroup, HiOutlineArrowRight,
   HiOutlineSpeakerWave, HiOutlineSpeakerXMark, HiOutlineSparkles,
@@ -311,8 +311,8 @@ export default function Landing() {
               accentFrom="#D97706" accentTo="#F59E0B" svgType="gear" Icon={HiOutlineCog6Tooth}
             />
             <BespokeFeatureCard
-              to="/donate" title={t('landing.feat_donate')} desc={t('landing.feat_donate_desc')}
-              accentFrom="#E11D48" accentTo="#F43F5E" svgType="heart" Icon={HiOutlineHeart}
+              to="/fund" title={t('landing.feat_donate')} desc={t('landing.feat_donate_desc')}
+              accentFrom="#059669" accentTo="#10B981" svgType="globe" Icon={HiOutlineBanknotes}
             />
             <BespokeFeatureCard
               to="/register-ngo" title={t('landing.feat_ngo')} desc={t('landing.feat_ngo_desc')}

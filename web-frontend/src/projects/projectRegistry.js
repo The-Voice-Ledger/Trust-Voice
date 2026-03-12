@@ -2,7 +2,7 @@
  * Project Registry -- config-driven project landing pages.
  *
  * Each entry defines a complete micro-site that reuses TrustVoice's
- * shared components, donation flow, and backend.  To add a new project,
+ * shared components, funding flow, and backend.  To add a new project,
  * simply add an object to PROJECTS and it will be routable at
  * /project/:slug.
  */
@@ -38,7 +38,7 @@ const PROJECTS = {
         { label: 'The Plan', href: '#financials' },
       ],
       ctaLabel: 'Build the Farm',
-      ctaLink: '/donate',
+      ctaLink: '/fund',
     },
 
     /* -- Hero -- */
@@ -50,7 +50,7 @@ const PROJECTS = {
         'A 10-hectare sanctuary combining Moringa production, on-site processing, and eco-lodging. Help us build it, come live and learn on it, and watch the farm grow itself. Real agriculture. Real impact. Real community.',
       stats: [],
       ctaLabel: 'Build the Farm',
-      ctaLink: '/donate',
+      ctaLink: '/fund',
       secondaryLabel: 'Talk to the AI Assistant',
       secondaryLink: '/assistant',
     },
@@ -286,7 +286,7 @@ const PROJECTS = {
       heading: 'Pioneer the Oasis',
       subheading: 'Every contribution is tracked with immutable transparency. Fund the farm, come live and learn on it, and watch it grow itself.',
       primaryLabel: 'Build The Farm',
-      primaryLink: '/donate',
+      primaryLink: '/fund',
       secondaryLabel: 'Talk to the AI Assistant',
       secondaryLink: '/assistant',
     },
@@ -307,7 +307,7 @@ const PROJECTS = {
         {
           title: 'Get Involved',
           links: [
-            { label: 'Fund the Farm', href: '/donate' },
+            { label: 'Fund the Farm', href: '/fund' },
             { label: 'How It Works', href: '#pillars' },
             { label: 'The Plan', href: '#financials' },
             { label: 'Why Ukulima', href: '#advantages' },

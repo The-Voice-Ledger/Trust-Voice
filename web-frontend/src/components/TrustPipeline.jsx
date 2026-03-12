@@ -1,12 +1,12 @@
 /**
- * TrustPipeline — animated SVG showing the donation-to-verification cycle.
- * 6 nodes: Donate → Record → Transfer → Verify → Impact → Receipt
+ * TrustPipeline — animated SVG showing the funding-to-verification cycle.
+ * 6 nodes: Fund → Record → Transfer → Verify → Impact → Receipt
  * Cubic-Bézier connections, animated travelling dot, CSS-only animation.
  */
 import { useEffect, useRef, useState } from 'react';
 
 const NODES = [
-  { label: 'Donate',   sub: 'Voice or card',        color: '#818CF8' },
+  { label: 'Fund',     sub: 'Voice or card',        color: '#818CF8' },
   { label: 'Record',   sub: 'Blockchain ledger',     color: '#A78BFA' },
   { label: 'Transfer', sub: 'Funds dispatched',      color: '#C084FC' },
   { label: 'Verify',   sub: 'Field agent proof',     color: '#E879F9' },
@@ -16,7 +16,7 @@ const NODES = [
 
 /* Mini SVG icons for each node */
 const nodeIcons = [
-  /* Donate — heart */
+  /* Fund — heart */
   <path key="ic0" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />,
   /* Record — chain link */
   <path key="ic1" d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />,

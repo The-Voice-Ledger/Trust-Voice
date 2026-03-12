@@ -1,14 +1,14 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  HiOutlineGlobeAlt, HiOutlineHeart, HiOutlineCamera, HiOutlineUser,
+  HiOutlineGlobeAlt, HiOutlineBanknotes, HiOutlineCamera, HiOutlineUser,
   HiOutlineSparkles,
 } from './icons';
 import useAuthStore from '../stores/authStore';
 
 const NAV_ITEMS = [
   { to: '/campaigns', key: 'nav.campaigns', Icon: HiOutlineGlobeAlt },
-  { to: '/donate', key: 'nav.donate', Icon: HiOutlineHeart },
+  { to: '/fund', key: 'nav.fund', Icon: HiOutlineBanknotes },
   { to: '/assistant', key: 'nav.assistant', Icon: HiOutlineSparkles, isHome: true },
   { to: '/field-agent', key: 'nav.field_agent', Icon: HiOutlineCamera },
   { to: '/dashboard', key: 'nav.dashboard', Icon: HiOutlineUser, authOnly: true },

@@ -44,6 +44,8 @@ export default function App() {
               <Route path="/" element={<Landing />} />
               <Route path="/campaigns" element={<Home />} />
               <Route path="/campaign/:id" element={<CampaignDetail />} />
+              <Route path="/fund" element={<DonateCheckout />} />
+              <Route path="/fund/:campaignId" element={<DonateCheckout />} />
               <Route path="/donate" element={<DonateCheckout />} />
               <Route path="/donate/:campaignId" element={<DonateCheckout />} />
               <Route path="/analytics" element={<Analytics />} />

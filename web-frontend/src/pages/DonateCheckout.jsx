@@ -6,7 +6,7 @@ import DonationForm from '../components/DonationForm';
 import useAuthStore from '../stores/authStore';
 import ProgressBar from '../components/ProgressBar';
 import {
-  HiOutlineHeart, HiOutlineCheckCircle, HiOutlineArrowLeft,
+  HiOutlineBanknotes, HiOutlineCheckCircle, HiOutlineArrowLeft,
   HiOutlineShieldCheck, HiOutlineLockClosed, HiOutlineFingerPrint,
   MdOutlineWaterDrop, MdOutlineSchool, MdOutlineLocalHospital,
   MdOutlineConstruction, MdOutlineRestaurant, MdOutlineForest,
@@ -56,9 +56,9 @@ export default function DonateCheckout() {
       {/* ── Hero Section ──────────────────────── */}
       <div className="relative text-center mb-10">
         {/* Decorative rings behind icon */}
-        <HexIcon Icon={HiOutlineHeart} accent="#F43F5E" size="lg" bespoke="heart" gradient gradientTo="#A855F7" className="mx-auto mb-5" />
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 font-display">{t('donate.title')}</h1>
-        <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto">{t('donate.checkout_subtitle')}</p>
+        <HexIcon Icon={HiOutlineBanknotes} accent="#059669" size="lg" bespoke="globe" gradient gradientTo="#10B981" className="mx-auto mb-5" />
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 font-display">{t('fund.title')}</h1>
+        <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto">{t('fund.checkout_subtitle')}</p>
         {/* Decorative line */}
         <div className="mt-5 flex items-center gap-3 max-w-[200px] mx-auto">
           <div className="flex-1 h-px bg-gradient-to-r from-transparent via-rose-300 to-transparent" />
@@ -77,13 +77,13 @@ export default function DonateCheckout() {
             <path d="M68 8 L68 48" stroke="#F43F5E" strokeWidth="0.2" opacity="0.03" />
             <path d="M48 28 L88 28" stroke="#F43F5E" strokeWidth="0.2" opacity="0.03" />
           </svg>
-          <label className="relative block text-sm font-medium text-gray-700 mb-2">{t('donate.select_campaign')}</label>
+          <label className="relative block text-sm font-medium text-gray-700 mb-2">{t('fund.select_campaign')}</label>
           <select
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
             className="relative w-full rounded-xl border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-rose-500 focus:border-transparent bg-white/50"
           >
-            <option value="">{t('donate.choose_campaign')}</option>
+            <option value="">{t('fund.choose_campaign')}</option>
             {campaigns.map((c) => (
               <option key={c.id} value={c.id}>{c.title} · ${fmt(c.goal_amount_usd)} goal</option>
             ))}
@@ -125,23 +125,25 @@ export default function DonateCheckout() {
         </div>
       )}
 
-      {/* ── Donation Form Card ────────────────── */}
+      {/* ── Funding Form Card ────────────────── */}
       {campaign ? (
         <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 overflow-hidden">
           {/* Top accent */}
-          <div className="h-[2px] bg-gradient-to-r from-rose-500 via-pink-500 to-transparent" />
-          {/* Heart SVG decoration */}
+          <div className="h-[2px] bg-gradient-to-r from-emerald-500 via-teal-500 to-transparent" />
+          {/* Currency SVG decoration */}
           <svg className="absolute top-4 right-4 w-24 h-24 pointer-events-none" viewBox="0 0 96 96" fill="none">
-            <path d="M48 30 C48 20, 62 14, 62 26 C62 38, 48 48, 48 48 C48 48, 34 38, 34 26 C34 14, 48 20, 48 30" stroke="#F43F5E" strokeWidth="0.5" opacity="0.05" />
-            <path d="M48 36 C48 30, 56 26, 56 32 C56 38, 48 42, 48 42 C48 42, 40 38, 40 32 C40 26, 48 30, 48 36" stroke="#F43F5E" strokeWidth="0.3" strokeDasharray="2 2" opacity="0.04" />
+            <circle cx="68" cy="28" r="18" stroke="#059669" strokeWidth="0.5" opacity="0.06" />
+            <circle cx="68" cy="28" r="9" stroke="#059669" strokeWidth="0.3" strokeDasharray="2 3" opacity="0.04" />
+            <path d="M68 16V40" stroke="#059669" strokeWidth="0.4" opacity="0.05" />
+            <path d="M64 20 C72 20, 72 28, 64 28 C72 28, 72 36, 64 36" stroke="#059669" strokeWidth="0.5" opacity="0.06" />
           </svg>
           {/* Connection lines */}
           <svg className="absolute bottom-0 left-0 w-16 h-16 pointer-events-none" viewBox="0 0 64 64" fill="none">
-            <path d="M0 64V32" stroke="#F43F5E" strokeWidth="0.4" opacity="0.04" />
-            <path d="M0 64H32" stroke="#F43F5E" strokeWidth="0.4" opacity="0.04" />
-            <circle cx="0" cy="64" r="1.5" fill="#F43F5E" opacity="0.06" />
-            <circle cx="0" cy="32" r="1" fill="#F43F5E" opacity="0.04" />
-            <circle cx="32" cy="64" r="1" fill="#F43F5E" opacity="0.04" />
+            <path d="M0 64V32" stroke="#059669" strokeWidth="0.4" opacity="0.04" />
+            <path d="M0 64H32" stroke="#059669" strokeWidth="0.4" opacity="0.04" />
+            <circle cx="0" cy="64" r="1.5" fill="#059669" opacity="0.06" />
+            <circle cx="0" cy="32" r="1" fill="#059669" opacity="0.04" />
+            <circle cx="32" cy="64" r="1" fill="#059669" opacity="0.04" />
           </svg>
 
           <div className="relative p-5 sm:p-6">
@@ -162,23 +164,23 @@ export default function DonateCheckout() {
             <circle cx="200" cy="100" r="60" stroke="#F43F5E" strokeWidth="0.3" strokeDasharray="4 8" opacity="0.06" />
             <circle cx="200" cy="100" r="90" stroke="#A855F7" strokeWidth="0.2" strokeDasharray="2 10" opacity="0.04" />
           </svg>
-          <HiOutlineHeart className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-          <p className="text-gray-400 text-sm">{t('donate.select_campaign_first')}</p>
+          <HiOutlineBanknotes className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+          <p className="text-gray-400 text-sm">{t('fund.select_campaign_first')}</p>
         </div>
       )}
 
       {/* ── Trust Signals ─────────────────────── */}
       <div className="mt-8 grid grid-cols-3 gap-3">
-        <TrustBadge Icon={HiOutlineShieldCheck} label={t('donate.trust_secure', 'Secure')} color="#059669" />
-        <TrustBadge Icon={HiOutlineLockClosed} label={t('donate.trust_encrypted', 'Encrypted')} color="#6366F1" />
-        <TrustBadge Icon={HiOutlineFingerPrint} label={t('donate.trust_verified', 'Verified')} color="#7C3AED" />
+        <TrustBadge Icon={HiOutlineShieldCheck} label={t('fund.trust_secure', 'Secure')} color="#059669" />
+        <TrustBadge Icon={HiOutlineLockClosed} label={t('fund.trust_encrypted', 'Encrypted')} color="#6366F1" />
+        <TrustBadge Icon={HiOutlineFingerPrint} label={t('fund.trust_verified', 'Verified')} color="#7C3AED" />
       </div>
 
       {/* ── Transparency pipeline ─────────────── */}
       <div className="mt-6 relative">
         <div className="flex items-center justify-between px-2">
-          {['Donate', 'Verify', 'Track', 'Impact'].map((step, i) => {
-            const stepIcons = [HiOutlineHeart, HiOutlineShieldCheck, HiOutlineFingerPrint, HiOutlineCheckCircle];
+          {['Fund', 'Verify', 'Track', 'Impact'].map((step, i) => {
+            const stepIcons = [HiOutlineBanknotes, HiOutlineShieldCheck, HiOutlineFingerPrint, HiOutlineCheckCircle];
             const stepColors = ['#E11D48', '#059669', '#7C3AED', '#6366F1'];
             const stepBesps = ['heart', 'shield', 'fingerprint', 'check'];
             return (
@@ -202,14 +204,14 @@ function fmt(n) {
   return Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
 
-const DONATE_CATEGORY_ICONS = {
+const FUND_CATEGORY_ICONS = {
   water: MdOutlineWaterDrop, education: MdOutlineSchool, health: MdOutlineLocalHospital,
   infrastructure: MdOutlineConstruction, food: MdOutlineRestaurant, environment: MdOutlineForest,
   shelter: MdOutlineHouse, children: MdOutlineChildCare,
 };
 
 function CategoryIcon({ cat }) {
-  const Comp = DONATE_CATEGORY_ICONS[(cat || '').toLowerCase()] || MdHandshake;
+  const Comp = FUND_CATEGORY_ICONS[(cat || '').toLowerCase()] || MdHandshake;
   return <Comp className="w-5 h-5 text-indigo-600" />;
 }
 
@@ -258,7 +260,7 @@ function TrustBadge({ Icon, label, color }) {
   );
 }
 
-/* ── Donation Success ──────────────────────── */
+/* ── Funding Success ──────────────────────── */
 function DonationSuccess({ t }) {
   return (
     <div className="text-center py-8 relative">
@@ -274,10 +276,10 @@ function DonationSuccess({ t }) {
       <div className="relative w-20 h-20 mx-auto mb-4">
         <HexIcon Icon={HiOutlineCheckCircle} accent="#059669" size="lg" bespoke="check" />
       </div>
-      <p className="relative text-lg font-semibold text-green-600">{t('donate.success')}</p>
-      <p className="relative text-sm text-gray-400 mt-1">Your donation is being processed on the blockchain</p>
+      <p className="relative text-lg font-semibold text-green-600">{t('fund.success')}</p>
+      <p className="relative text-sm text-gray-400 mt-1">Your contribution is being processed on the blockchain</p>
       <Link to="/dashboard" className="relative inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:underline mt-4 font-medium">
-        {t('donate.view_history')} <span>→</span>
+        {t('fund.view_history')} <span>→</span>
       </Link>
     </div>
   );

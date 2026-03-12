@@ -127,7 +127,7 @@ export default function CampaignDetail() {
           </button>
         ) : (
           <>
-            <h2 className="text-lg font-semibold mb-4">{t('donate.title')}</h2>
+            <h2 className="text-lg font-semibold mb-4">{t('fund.title')}</h2>
             <DonationForm campaignId={campaign.id} donorId={user?.donor_id} />
           </>
         )}
