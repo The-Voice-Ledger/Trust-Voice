@@ -180,7 +180,7 @@ export default function ProjectExperience({ config }) {
               {visible && (
                 <circle
                   cx="160" cy="160"
-                  r={60 + active * 35}
+                  r={75 + active * 30}
                   fill="none"
                   stroke={colors[active]}
                   strokeWidth="1"
@@ -191,7 +191,7 @@ export default function ProjectExperience({ config }) {
               )}
 
               {/* Three concentric ring tracks */}
-              {[60, 95, 130].map((r, i) => {
+              {[75, 105, 135].map((r, i) => {
                 const isActive = i === active;
                 return (
                   <g key={i}>
@@ -257,13 +257,16 @@ export default function ProjectExperience({ config }) {
 
             {/* Day node buttons positioned on each ring */}
             {experience.days.map((day, i) => {
-              /* Place labels at visually balanced angles: top-right, right, bottom-right */
-              const angles = [-60, 20, 80]; // degrees from top
-              const radii = [60, 95, 130];
-              const angleRad = ((angles[i] - 90) * Math.PI) / 180;
+              /* Spread nodes: upper-left, top-center, upper-right */
+              const angles = [220, 270, 320]; // degrees clockwise from 3-o'clock
+              const radii = [75, 105, 135];
+              const angleRad = (angles[i] * Math.PI) / 180;
               const nx = 160 + radii[i] * Math.cos(angleRad);
               const ny = 160 + radii[i] * Math.sin(angleRad);
               const isActive = i === active;
+              /* Label direction: outward from center */
+              const labelOnLeft = nx < 160;
+              const labelDir = labelOnLeft ? 'row-reverse' : 'row';
 
               return (
                 <button
@@ -273,6 +276,7 @@ export default function ProjectExperience({ config }) {
                   style={{
                     left: nx,
                     top: ny,
+                    flexDirection: labelDir,
                     transform: 'translate(-50%, -50%)',
                     opacity: visible ? 1 : 0,
                     transition: `opacity 0.5s ease ${0.3 + i * 0.15}s`,
@@ -302,7 +306,7 @@ export default function ProjectExperience({ config }) {
                   {/* Label */}
                   <div
                     className="whitespace-nowrap transition-all duration-300"
-                    style={{ opacity: isActive ? 1 : 0.45 }}
+                    style={{ opacity: isActive ? 1 : 0.45, textAlign: labelOnLeft ? 'right' : 'left' }}
                   >
                     <span
                       className="block text-xs font-display font-bold tracking-wide uppercase"
