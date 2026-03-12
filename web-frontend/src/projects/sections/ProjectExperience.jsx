@@ -264,9 +264,14 @@ export default function ProjectExperience({ config }) {
               const nx = 160 + radii[i] * Math.cos(angleRad);
               const ny = 160 + radii[i] * Math.sin(angleRad);
               const isActive = i === active;
-              /* Label direction: outward from center */
-              const labelOnLeft = nx < 160;
-              const labelDir = labelOnLeft ? 'row-reverse' : 'row';
+
+              /* Label placement: Day 1=left, Day 2=above, Day 3=right */
+              const layouts = [
+                { dir: 'row-reverse', align: 'right', offsetX: 0, offsetY: 0, flexDir: 'row-reverse' },
+                { dir: 'column-reverse', align: 'center', offsetX: 0, offsetY: 0, flexDir: 'column-reverse' },
+                { dir: 'row', align: 'left', offsetX: 0, offsetY: 0, flexDir: 'row' },
+              ];
+              const layout = layouts[i];
 
               return (
                 <button
@@ -276,7 +281,7 @@ export default function ProjectExperience({ config }) {
                   style={{
                     left: nx,
                     top: ny,
-                    flexDirection: labelDir,
+                    flexDirection: layout.flexDir,
                     transform: 'translate(-50%, -50%)',
                     opacity: visible ? 1 : 0,
                     transition: `opacity 0.5s ease ${0.3 + i * 0.15}s`,
@@ -306,7 +311,7 @@ export default function ProjectExperience({ config }) {
                   {/* Label */}
                   <div
                     className="whitespace-nowrap transition-all duration-300"
-                    style={{ opacity: isActive ? 1 : 0.45, textAlign: labelOnLeft ? 'right' : 'left' }}
+                    style={{ opacity: isActive ? 1 : 0.45, textAlign: layout.align }}
                   >
                     <span
                       className="block text-xs font-display font-bold tracking-wide uppercase"
