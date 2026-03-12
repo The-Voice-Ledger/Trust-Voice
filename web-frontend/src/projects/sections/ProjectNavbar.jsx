@@ -72,6 +72,19 @@ export default function ProjectNavbar({ config }) {
               {link.label}
             </button>
           ))}
+          {/* Separator + TrustVoice home */}
+          <span className={`mx-1 text-[11px] ${scrolled ? 'text-gray-300' : 'text-white/20'}`}>|</span>
+          <Link
+            to="/"
+            className={`px-3 py-1.5 text-[13px] font-medium rounded-lg transition-all duration-200 flex items-center gap-1 ${
+              scrolled
+                ? 'text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50/60'
+                : 'text-indigo-300/70 hover:text-white hover:bg-white/[0.08]'
+            }`}
+          >
+            TrustVoice
+            <svg className="w-3 h-3 opacity-60" viewBox="0 0 12 12" fill="none"><path d="M3 9L9 3M9 3H4.5M9 3V7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </Link>
         </div>
 
         {/* Right side */}
@@ -110,13 +123,22 @@ export default function ProjectNavbar({ config }) {
               </button>
             ))}
           </div>
-          <div className="mt-3 pt-3 border-t border-gray-200/10">
+          <div className="mt-3 pt-3 border-t border-gray-200/10 space-y-2">
             <Link
               to={nav.ctaLink}
               className="block text-center px-4 py-2.5 rounded-lg text-sm font-semibold text-white"
               style={{ backgroundColor: p }}
             >
               {nav.ctaLabel}
+            </Link>
+            <Link
+              to="/"
+              className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition ${
+                scrolled ? 'text-indigo-600 hover:bg-indigo-50' : 'text-indigo-300 hover:bg-white/5'
+              }`}
+            >
+              TrustVoice Home
+              <svg className="w-3.5 h-3.5 opacity-60" viewBox="0 0 12 12" fill="none"><path d="M3 9L9 3M9 3H4.5M9 3V7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </Link>
           </div>
         </div>
