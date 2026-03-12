@@ -61,7 +61,7 @@ const PROJECTS = {
       heading: 'Step Inside the Farm',
       url: 'https://violet-rainy-toad-577.mypinata.cloud/ipfs/bafybeif4fgejblthfvw3lyc677ncy5nlcex4xwgo3evb7yrwnoynzfczla',
       playLabel: 'Watch the full tour',
-      caption: 'A 3-minute walk through the Moringa Oasis — the land, the trees, and the vision taking root.',
+      caption: 'A 3-minute walk through the Moringa Oasis. The land, the trees, and the vision taking root.',
     },
 
     /* -- Vision (The Core Vision) -- */
@@ -229,7 +229,7 @@ const PROJECTS = {
       heading: 'See Who\u2019s Already Walking the Land',
       url: 'https://violet-rainy-toad-577.mypinata.cloud/ipfs/bafybeibgz2tbx7ivgoqzxuum6mdekcl75zu7aha26shldv7ds7vzlbpujm',
       playLabel: 'Watch the visit',
-      caption: 'Real people, real soil, real progress \u2014 visitors experiencing the Moringa Oasis first-hand.',
+      caption: 'Real people, real soil, real progress. Visitors experiencing the Moringa Oasis first-hand.',
     },
 
     /* -- Experience Timeline (Live-Work-Learn) -- */

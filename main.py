@@ -216,14 +216,18 @@ async def shutdown_event():
 # Static file mounts act as catch-all routes, so they must come after
 # all API endpoints to avoid intercepting API requests
 
-# Serve admin dashboard at /admin (must come before root mount)
-app.mount("/admin", StaticFiles(directory="frontend", html=True), name="admin-frontend")
-
-# Serve web frontend SPA at /app (must come before root catch-all)
 import pathlib
 from fastapi.responses import FileResponse
 
-_web_frontend_dist = pathlib.Path("web-frontend/dist")
+_base_dir = pathlib.Path(__file__).parent
+
+# Serve admin dashboard at /admin (must come before root mount)
+_admin_dir = _base_dir / "frontend"
+if _admin_dir.exists():
+    app.mount("/admin", StaticFiles(directory=str(_admin_dir), html=True), name="admin-frontend")
+
+# Serve web frontend SPA at /app (must come before root catch-all)
+_web_frontend_dist = _base_dir / "web-frontend" / "dist"
 if _web_frontend_dist.exists():
     # Mount static assets first (JS, CSS, images)
     app.mount("/app/assets", StaticFiles(directory=str(_web_frontend_dist / "assets")), name="web-assets")
@@ -248,7 +252,9 @@ else:
     logger.info("ℹ️  Web frontend not built yet — /app not mounted (run: cd web-frontend && npm run build)")
 
 # Serve public miniapps at root path
-app.mount("/", StaticFiles(directory="frontend-miniapps", html=True), name="frontend-miniapps")
+_miniapps_dir = _base_dir / "frontend-miniapps"
+if _miniapps_dir.exists():
+    app.mount("/", StaticFiles(directory=str(_miniapps_dir), html=True), name="frontend-miniapps")
 
 
 # ============================================
