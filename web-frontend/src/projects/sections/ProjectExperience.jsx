@@ -149,7 +149,7 @@ export default function ProjectExperience({ config }) {
     >
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-28">
+        <div className="text-center mb-16">
           <p className="text-xs font-medium tracking-[0.2em] uppercase mb-3 text-gray-400">
             {experience.sectionLabel}
           </p>
@@ -161,40 +161,75 @@ export default function ProjectExperience({ config }) {
           </p>
         </div>
 
-        {/* Day selector arc + content */}
+        {/* Day selector rings + content */}
         <div className="flex flex-col items-center">
 
-          {/* Arc with day labels on the curve */}
-          <div className="relative mb-12" style={{ width: 420, height: 230 }}>
-            <svg width="420" height="230" viewBox="0 0 420 230" className="absolute inset-0">
-              {/* Background arc */}
-              <path
-                d="M 35 215 A 175 175 0 0 1 385 215"
-                fill="none"
-                stroke="rgba(0,0,0,0.05)"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-              {/* Active progress arc */}
+          {/* Concentric rings with day labels */}
+          <div className="relative mb-12" style={{ width: 320, height: 320 }}>
+            <svg width="320" height="320" viewBox="0 0 320 320" className="absolute inset-0">
+              <defs>
+                {colors.map((c, i) => (
+                  <radialGradient key={i} id={`ring-glow-${i}`} cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor={c} stopOpacity="0.15" />
+                    <stop offset="100%" stopColor={c} stopOpacity="0" />
+                  </radialGradient>
+                ))}
+              </defs>
+
+              {/* Radial pulse on active change */}
               {visible && (
-                <path
-                  d="M 35 215 A 175 175 0 0 1 385 215"
+                <circle
+                  cx="160" cy="160"
+                  r={60 + active * 35}
                   fill="none"
                   stroke={colors[active]}
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  strokeDasharray={`${(active + 1) * 183} 600`}
-                  style={{ transition: 'stroke-dasharray 0.6s ease, stroke 0.4s ease' }}
+                  strokeWidth="1"
+                  opacity="0"
+                  className="exp-ripple"
+                  key={`ripple-${active}`}
                 />
               )}
 
-              {/* 3Cs slogan in the arc center */}
+              {/* Three concentric ring tracks */}
+              {[60, 95, 130].map((r, i) => {
+                const isActive = i === active;
+                return (
+                  <g key={i}>
+                    {/* Background ring */}
+                    <circle
+                      cx="160" cy="160" r={r}
+                      fill="none"
+                      stroke="rgba(0,0,0,0.04)"
+                      strokeWidth={isActive ? 2.5 : 1.5}
+                      style={{ transition: 'stroke-width 0.4s ease' }}
+                    />
+                    {/* Active colored ring */}
+                    <circle
+                      cx="160" cy="160" r={r}
+                      fill="none"
+                      stroke={colors[i]}
+                      strokeWidth={isActive ? 2.5 : 0}
+                      opacity={isActive ? 0.5 : 0}
+                      strokeDasharray={`${2 * Math.PI * r}`}
+                      strokeDashoffset={isActive ? 0 : 2 * Math.PI * r}
+                      strokeLinecap="round"
+                      style={{ transition: 'stroke-dashoffset 0.8s ease, opacity 0.4s ease, stroke-width 0.4s ease' }}
+                    />
+                    {/* Soft glow behind active ring */}
+                    {isActive && (
+                      <circle cx="160" cy="160" r={r} fill={`url(#ring-glow-${i})`} opacity="0.6" />
+                    )}
+                  </g>
+                );
+              })}
+
+              {/* 3Cs center text */}
               <text
-                x="210" y="168"
+                x="160" y="154"
                 textAnchor="middle"
                 className="font-display"
                 style={{
-                  fontSize: 32,
+                  fontSize: 28,
                   fontWeight: 700,
                   fill: visible ? (colors[active] || '#059669') : 'transparent',
                   transition: 'fill 0.5s ease',
@@ -204,12 +239,12 @@ export default function ProjectExperience({ config }) {
                 3Cs
               </text>
               <text
-                x="210" y="188"
+                x="160" y="172"
                 textAnchor="middle"
                 style={{
-                  fontSize: 10,
+                  fontSize: 8.5,
                   fontWeight: 600,
-                  fill: 'rgba(0,0,0,0.25)',
+                  fill: 'rgba(0,0,0,0.22)',
                   letterSpacing: '0.15em',
                   textTransform: 'uppercase',
                   opacity: visible ? 1 : 0,
@@ -220,56 +255,63 @@ export default function ProjectExperience({ config }) {
               </text>
             </svg>
 
-            {/* Day nodes positioned along the arc */}
+            {/* Day node buttons positioned on each ring */}
             {experience.days.map((day, i) => {
-              /* Distribute nodes evenly across the full arc, inset 10% from endpoints */
-              const t = 0.1 + (i / (experience.days.length - 1)) * 0.8;
-              const angle = Math.PI * (1 - t);
-              const cx = 210 + 175 * Math.cos(angle);
-              const cy = 215 - 175 * Math.sin(angle);
+              /* Place labels at visually balanced angles: top-right, right, bottom-right */
+              const angles = [-60, 20, 80]; // degrees from top
+              const radii = [60, 95, 130];
+              const angleRad = ((angles[i] - 90) * Math.PI) / 180;
+              const nx = 160 + radii[i] * Math.cos(angleRad);
+              const ny = 160 + radii[i] * Math.sin(angleRad);
               const isActive = i === active;
 
               return (
                 <button
                   key={i}
                   onClick={() => handleSelect(i)}
-                  className="absolute flex flex-col items-center gap-2 -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
+                  className="absolute flex items-center gap-2.5 cursor-pointer group"
                   style={{
-                    left: cx,
-                    top: cy,
+                    left: nx,
+                    top: ny,
+                    transform: 'translate(-50%, -50%)',
                     opacity: visible ? 1 : 0,
-                    transform: `translate(-50%, -50%) ${isActive ? 'scale(1.1)' : 'scale(1)'}`,
-                    transition: `opacity 0.5s ease ${0.2 + i * 0.12}s, transform 0.3s ease`,
+                    transition: `opacity 0.5s ease ${0.3 + i * 0.15}s`,
                   }}
                 >
-                  {/* Outer ring + inner dot */}
+                  {/* Node dot */}
                   <span
-                    className="relative w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300"
+                    className="relative flex-shrink-0 rounded-full flex items-center justify-center transition-all duration-400"
                     style={{
-                      borderColor: isActive ? colors[i] : 'rgba(0,0,0,0.08)',
+                      width: isActive ? 36 : 28,
+                      height: isActive ? 36 : 28,
+                      border: `2px solid ${isActive ? colors[i] : 'rgba(0,0,0,0.08)'}`,
                       backgroundColor: isActive ? `${colors[i]}15` : 'white',
-                      boxShadow: isActive ? `0 0 16px ${colors[i]}30` : 'none',
+                      boxShadow: isActive ? `0 0 20px ${colors[i]}25` : '0 1px 3px rgba(0,0,0,0.06)',
                     }}
                   >
                     <span
-                      className="w-3 h-3 rounded-full transition-all duration-300"
+                      className="rounded-full transition-all duration-300"
                       style={{
+                        width: isActive ? 12 : 8,
+                        height: isActive ? 12 : 8,
                         backgroundColor: colors[i],
-                        opacity: isActive ? 1 : 0.35,
-                        transform: isActive ? 'scale(1.2)' : 'scale(1)',
+                        opacity: isActive ? 1 : 0.3,
                       }}
                     />
                   </span>
-                  {/* Day label + title */}
-                  <div className="text-center">
+                  {/* Label */}
+                  <div
+                    className="whitespace-nowrap transition-all duration-300"
+                    style={{ opacity: isActive ? 1 : 0.45 }}
+                  >
                     <span
-                      className="block text-xs font-display font-bold tracking-wide uppercase transition-colors duration-300"
+                      className="block text-xs font-display font-bold tracking-wide uppercase"
                       style={{ color: isActive ? colors[i] : '#9ca3af' }}
                     >
                       {day.day}
                     </span>
                     <span
-                      className="block text-[11px] font-medium transition-colors duration-300 mt-0.5"
+                      className="block text-[11px] font-medium mt-0.5"
                       style={{ color: isActive ? '#374151' : '#d1d5db' }}
                     >
                       {day.title}
@@ -362,6 +404,11 @@ export default function ProjectExperience({ config }) {
           50% { opacity: 0.3; }
         }
         .exp-sparkle { animation: expSparkle 2s ease-in-out infinite; }
+        @keyframes expRipple {
+          0% { opacity: 0.35; transform-origin: center; r: inherit; }
+          100% { opacity: 0; r: 160; }
+        }
+        .exp-ripple { animation: expRipple 0.8s ease-out forwards; }
       `}</style>
     </section>
   );
