@@ -1,6 +1,8 @@
+import { EXPERIENCE_SCENES } from '../illustrations/ProjectScenes';
+
 /**
  * ProjectExperience -- the "Live-Work-Learn" timeline.
- * Clean vertical flow with subtle colour dots and warm cards.
+ * Clean vertical flow with scene illustrations and warm cards.
  */
 export default function ProjectExperience({ config }) {
   const { experience, theme } = config;
@@ -50,6 +52,12 @@ export default function ProjectExperience({ config }) {
                     <h3 className="font-display text-base sm:text-lg font-semibold text-gray-900">{day.title}</h3>
                   </div>
                   <p className="text-gray-500 leading-relaxed text-[15px]">{day.description}</p>
+
+                  {/* Scene illustration */}
+                  {EXPERIENCE_SCENES[i] && (() => {
+                    const Scene = EXPERIENCE_SCENES[i];
+                    return <Scene className="w-full mt-4 rounded-lg scene-fade-in" />;
+                  })()}
                 </div>
               </div>
             ))}

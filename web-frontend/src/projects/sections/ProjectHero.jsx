@@ -4,6 +4,7 @@ import {
   HiOutlineArrowRight,
   HiOutlineChatBubbleLeftRight,
 } from '../../components/icons';
+import { HeroPanorama } from '../illustrations/ProjectScenes';
 
 /**
  * ProjectHero -- warm, spacious, cinematic hero.
@@ -84,8 +85,13 @@ export default function ProjectHero({ config }) {
         </div>
       </div>
 
+      {/* Panoramic landscape illustration */}
+      <div className="absolute bottom-24 left-0 right-0 pointer-events-none z-[1]">
+        <HeroPanorama className="opacity-70" />
+      </div>
+
       {/* Bottom transition -- soft gradient into the next section */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-stone-50 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-stone-50 to-transparent z-[2]" />
     </section>
   );
 }

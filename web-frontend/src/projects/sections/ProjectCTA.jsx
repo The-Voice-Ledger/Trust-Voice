@@ -4,6 +4,7 @@ import {
   HiOutlineChatBubbleLeftRight,
   HiOutlineArrowRight,
 } from '../../components/icons';
+import { CtaHorizon } from '../illustrations/ProjectScenes';
 
 /**
  * ProjectCTA -- warm final call-to-action. Simple and inviting.
@@ -43,6 +44,10 @@ export default function ProjectCTA({ config }) {
             {cta.secondaryLabel}
           </Link>
         </div>
+      </div>
+      {/* Horizon landscape illustration */}
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none z-[1]">
+        <CtaHorizon className="opacity-60" />
       </div>
     </section>
   );
