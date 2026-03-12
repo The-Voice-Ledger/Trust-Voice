@@ -464,15 +464,17 @@ export default function ProjectNarrative({ config }) {
                     />
                     {block.video ? (
                       <video
-                        src={block.video}
+                        controls
                         muted
                         autoPlay
                         loop
                         playsInline
-                        preload="metadata"
-                        className="w-full aspect-video object-cover"
+                        preload="auto"
+                        className="w-full max-h-[420px] object-contain bg-black/5 rounded-2xl"
                         style={{ opacity: blockVis ? 1 : 0, transition: 'opacity 0.6s ease 0.2s' }}
-                      />
+                      >
+                        <source src={block.video} type="video/mp4" />
+                      </video>
                     ) : (
                       <div className="p-3 sm:p-4">
                         {Scene && <Scene visible={blockVis} />}
