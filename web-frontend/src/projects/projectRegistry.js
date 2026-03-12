@@ -76,7 +76,7 @@ const PROJECTS = {
           label: 'The Opportunity',
           icon: 'heart',
           bespoke: 'heart',
-          text: 'Help us raise $400,000 to build the farm, the processing facility, and the eco-lodge. In return, come be part of it — stay, harvest, create, and grow with us.',
+          text: 'Help us raise $400,000 to build the farm, the processing facility, and the eco-lodge. In return, come be part of it. Stay, harvest, create, and grow with us.',
         },
       ],
     },
@@ -102,13 +102,13 @@ const PROJECTS = {
           title: 'A Place You Can Touch',
           icon: 'cottage',
           bespoke: 'cottage',
-          text: 'This is not a spectator project. It is a living, breathing oasis — 10 hectares of precision-irrigated life, 6 eco-lodge cottages hand-built from local stone and sustainable timber, and a community you help create. It is the smell of fresh earth during a dawn harvest and the gold of cold-pressed oil. A place with a heartbeat that you helped bring to life.',
+          text: 'This is not a spectator project. It is a living, breathing oasis: 10 hectares of precision-irrigated life, 6 eco-lodge cottages hand-built from local stone and sustainable timber, and a community you help create. It is the smell of fresh earth during a dawn harvest and the gold of cold-pressed oil. A place with a heartbeat that you helped bring to life.',
         },
         {
           title: 'Join the "Live-Work-Learn" Community',
           icon: 'users',
           bespoke: 'users',
-          text: 'We invite you to do more than fund — we invite you to come and be part of it. From dawn harvests in the African bush to formulating your own custom tea blends, you step directly into the ecosystem. The moringa we grow and sell funds the next phase. Every contributor is welcome to come stay, work alongside us, and learn the craft — building a sustainable future for African agriculture, together.',
+          text: 'We invite you to do more than fund. We invite you to come and be part of it. From dawn harvests in the African bush to formulating your own custom tea blends, you step directly into the ecosystem. The moringa we grow and sell funds the next phase. Every contributor is welcome to come stay, work alongside us, and learn the craft, building a sustainable future for African agriculture, together.',
         },
       ],
     },
@@ -120,7 +120,7 @@ const PROJECTS = {
       tam: {
         value: '$10.78B',
         label: 'Global Demand',
-        detail: 'The global Moringa market is booming at 9.7% annual growth — there is no shortage of buyers.',
+        detail: 'The global Moringa market is booming at 9.7% annual growth. There is no shortage of buyers.',
         icon: 'trending',
         bespoke: 'trending',
       },
@@ -134,7 +134,7 @@ const PROJECTS = {
       revenue: {
         value: '$3.1M',
         label: 'Farm Revenue by Year 4',
-        detail: 'Projected annual sales that fund operations, expansion, and community growth — no further fundraising needed.',
+        detail: 'Projected annual sales that fund operations, expansion, and community growth. No further fundraising needed.',
         icon: 'money',
         bespoke: 'money',
       },
@@ -144,7 +144,7 @@ const PROJECTS = {
     pillars: {
       sectionLabel: 'How It Works',
       heading: 'How the Farm Grows Itself',
-      subtitle: 'Three income streams that keep the oasis self-sustaining — every sale funds the next phase of growth.',
+      subtitle: 'Three income streams that keep the oasis self-sustaining. Every sale funds the next phase of growth.',
       items: [
         {
           title: 'Moringa Sales (B2B)',
@@ -214,7 +214,7 @@ const PROJECTS = {
     experience: {
       sectionLabel: 'The Experience',
       heading: 'Live. Work. Learn.',
-      subtitle: 'A three-day immersion into the heart of the Moringa Oasis. This is what you get to be part of — open to every contributor, traveler, and curious soul.',
+      subtitle: 'A three-day immersion into the heart of the Moringa Oasis. This is what you get to be part of, open to every contributor, traveler, and curious soul.',
       days: [
         {
           day: 'Day 1',
@@ -248,7 +248,7 @@ const PROJECTS = {
       totalRaiseLabel: 'Fundraising Goal',
       capex: [
         { item: 'Agri-Infrastructure', amount: '$110K', detail: 'Solar drip irrigation, borehole, and high-yield Moringa seedlings' },
-        { item: 'Processing Facility', amount: '$50K', detail: 'Industrial dehydrators, pulverizers, and cold-press oil expellers — this is where the value gets created' },
+        { item: 'Processing Facility', amount: '$50K', detail: 'Industrial dehydrators, pulverizers, and cold-press oil expellers. This is where the value gets created' },
         { item: 'Eco-Lodge', amount: '$180K', detail: '6 solar-powered cottages ($30K each) for contributors and travelers to live and learn on the farm' },
         { item: 'Operations & Certification', amount: '$60K', detail: 'EU/UK Organic certification and market access so the farm can sell globally from day one' },
       ],
