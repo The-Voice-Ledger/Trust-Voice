@@ -55,6 +55,15 @@ const PROJECTS = {
       secondaryLink: '/assistant',
     },
 
+    /* -- Video Showcase (right after hero) -- */
+    videoShowcase: {
+      sectionLabel: 'See the Oasis',
+      heading: 'Step Inside the Farm',
+      url: 'https://violet-rainy-toad-577.mypinata.cloud/ipfs/bafybeif4fgejblthfvw3lyc677ncy5nlcex4xwgo3evb7yrwnoynzfczla',
+      playLabel: 'Watch the full tour',
+      caption: 'A 3-minute walk through the Moringa Oasis — the land, the trees, and the vision taking root.',
+    },
+
     /* -- Vision (The Core Vision) -- */
     vision: {
       sectionLabel: 'The Core Vision',
@@ -307,7 +316,7 @@ const PROJECTS = {
     },
 
     /* -- Sections to render (order matters) -- */
-    sections: ['hero', 'vision', 'narrative', 'market', 'pipeline', 'pillars', 'advantages', 'experience', 'financials', 'cta'],
+    sections: ['hero', 'videoShowcase', 'vision', 'narrative', 'market', 'pipeline', 'pillars', 'advantages', 'experience', 'financials', 'cta'],
   },
 };
 

@@ -8,6 +8,7 @@ import ProjectFooter from './sections/ProjectFooter';
 
 /* Section components */
 import ProjectHero from './sections/ProjectHero';
+import ProjectVideoShowcase from './sections/ProjectVideoShowcase';
 import ProjectVision from './sections/ProjectVision';
 import ProjectNarrative from './sections/ProjectNarrative';
 import ProjectMarket from './sections/ProjectMarket';
@@ -20,6 +21,7 @@ import MoringaPipeline from './sections/MoringaPipeline';
 
 const SECTION_MAP = {
   hero: ProjectHero,
+  videoShowcase: ProjectVideoShowcase,
   vision: ProjectVision,
   narrative: ProjectNarrative,
   market: ProjectMarket,
