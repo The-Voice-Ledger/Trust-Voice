@@ -20,6 +20,10 @@ const dSoil= '#57534E'; // dark earth
  *     Sits at the bottom of the hero, just above the fade
  * ======================================================== */
 export function HeroPanorama({ className = '' }) {
+  /* Sun positioned east (right), nestled at ~x=980 behind the mountain ridge at ~y=145 */
+  const sunX = 980;
+  const sunY = 145;
+
   return (
     <svg
       viewBox="0 0 1200 340"
@@ -35,57 +39,57 @@ export function HeroPanorama({ className = '' }) {
           <stop offset="0%" stopColor="#1a3a2e" />
           <stop offset="100%" stopColor="#0d1f17" />
         </linearGradient>
-        {/* Sun radial glow */}
+        {/* Sun radial glow -- smaller, tighter */}
         <radialGradient id="hp-sun-glow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor={a600} stopOpacity="0.35" />
-          <stop offset="40%" stopColor={a600} stopOpacity="0.12" />
+          <stop offset="0%" stopColor="#FDE68A" stopOpacity="0.4" />
+          <stop offset="30%" stopColor={a600} stopOpacity="0.18" />
           <stop offset="100%" stopColor={a600} stopOpacity="0" />
         </radialGradient>
-        {/* Wide warm sky wash triggered by sunrise */}
-        <radialGradient id="hp-sky-warm" cx="50%" cy="65%" r="60%">
-          <stop offset="0%" stopColor={a600} stopOpacity="0.14" />
-          <stop offset="50%" stopColor="#F59E0B" stopOpacity="0.06" />
+        {/* Warm sky wash -- anchored to the east */}
+        <radialGradient id="hp-sky-warm" cx="82%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={a600} stopOpacity="0.1" />
+          <stop offset="40%" stopColor="#F59E0B" stopOpacity="0.04" />
           <stop offset="100%" stopColor={a600} stopOpacity="0" />
         </radialGradient>
-        {/* Rim light gradient for mountain edge */}
+        {/* Rim light gradient -- stronger toward the east */}
         <linearGradient id="hp-rim" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%" stopColor={a600} stopOpacity="0" />
-          <stop offset="30%" stopColor={a600} stopOpacity="0.6" />
-          <stop offset="50%" stopColor="#FDE68A" stopOpacity="0.8" />
-          <stop offset="70%" stopColor={a600} stopOpacity="0.6" />
-          <stop offset="100%" stopColor={a600} stopOpacity="0" />
+          <stop offset="50%" stopColor={a600} stopOpacity="0.2" />
+          <stop offset="75%" stopColor="#FDE68A" stopOpacity="0.7" />
+          <stop offset="90%" stopColor="#FDE68A" stopOpacity="0.9" />
+          <stop offset="100%" stopColor={a600} stopOpacity="0.4" />
         </linearGradient>
       </defs>
 
-      {/* ── Warm sky wash (fades in) ── */}
+      {/* ── Warm sky wash (fades in from east) ── */}
       <rect x="0" y="0" width="1200" height="340" fill="url(#hp-sky-warm)" className="scene-sky-warm" />
 
-      {/* ── Sun group (rises upward on load) ── */}
+      {/* ── Sun group (rises from behind the eastern ridge) ── */}
       <g className="scene-sunrise">
-        {/* Outer halo */}
-        <circle cx="600" cy="120" r="140" fill="url(#hp-sun-glow)" className="scene-halo" />
-        {/* Mid glow ring */}
-        <circle cx="600" cy="120" r="70" fill={a600} opacity="0.08" className="scene-halo" />
-        {/* Sun disc */}
-        <circle cx="600" cy="120" r="30" fill={a600} opacity="0.2" />
-        <circle cx="600" cy="120" r="20" fill="#FDE68A" opacity="0.15" />
+        {/* Outer halo -- soft, atmospheric */}
+        <circle cx={sunX} cy={sunY} r="90" fill="url(#hp-sun-glow)" className="scene-halo" />
+        {/* Inner warmth */}
+        <circle cx={sunX} cy={sunY} r="40" fill={a600} opacity="0.06" className="scene-halo" />
+        {/* Sun disc -- small, suggestive */}
+        <circle cx={sunX} cy={sunY} r="16" fill={a600} opacity="0.25" />
+        <circle cx={sunX} cy={sunY} r="10" fill="#FDE68A" opacity="0.2" />
 
-        {/* Light rays (fan out, then slowly rotate) */}
-        <g className="scene-rays-rotate" style={{ transformOrigin: '600px 120px' }}>
-          {Array.from({ length: 24 }, (_, i) => {
-            const angle = i * 15;
-            const len = i % 3 === 0 ? 80 : i % 3 === 1 ? 55 : 40;
-            const w = i % 3 === 0 ? 1.2 : 0.7;
-            const op = i % 3 === 0 ? 0.1 : 0.05;
+        {/* Delicate rays -- fewer, shorter, radiating from the small disc */}
+        <g className="scene-rays-rotate" style={{ transformOrigin: `${sunX}px ${sunY}px` }}>
+          {Array.from({ length: 16 }, (_, i) => {
+            const angle = i * 22.5;
+            const len = i % 3 === 0 ? 45 : 28;
+            const w = i % 3 === 0 ? 0.8 : 0.5;
+            const op = i % 3 === 0 ? 0.08 : 0.04;
             return (
               <line
                 key={i}
-                x1="600" y1={120 - 35}
-                x2="600" y2={120 - 35 - len}
+                x1={sunX} y1={sunY - 20}
+                x2={sunX} y2={sunY - 20 - len}
                 stroke={a600}
                 strokeWidth={w}
                 opacity={op}
-                transform={`rotate(${angle} 600 120)`}
+                transform={`rotate(${angle} ${sunX} ${sunY})`}
               />
             );
           })}
@@ -104,23 +108,23 @@ export function HeroPanorama({ className = '' }) {
         fill="url(#hp-mtn)" opacity="0.7"
       />
 
-      {/* ── Mountain rim light (golden edge tracing the closer peaks) ── */}
+      {/* ── Mountain rim light (golden edge -- brightest toward east) ── */}
       <path
         d="M0 260 L150 170 L300 220 L420 150 L550 200 L650 140 L780 190 L900 130 L1020 180 L1150 150 L1200 175"
         fill="none"
         stroke="url(#hp-rim)"
-        strokeWidth="2"
+        strokeWidth="1.5"
         className="scene-rim-light"
         strokeDasharray="2000"
       />
 
-      {/* Second rim for back peaks (subtler) */}
+      {/* Back ridge rim (subtler, also east-biased) */}
       <path
-        d="M200 190 L350 110 L500 170 L600 100 L700 140 L850 80 L950 130 L1100 90"
+        d="M500 170 L600 100 L700 140 L850 80 L950 130 L1100 90 L1200 160"
         fill="none"
         stroke={a600}
-        strokeWidth="1"
-        opacity="0.15"
+        strokeWidth="0.8"
+        opacity="0.12"
         className="scene-rim-light"
         strokeDasharray="2000"
       />
@@ -163,14 +167,14 @@ export function HeroPanorama({ className = '' }) {
         </g>
       ))}
 
-      {/* ── Birds silhouettes (appear late) ── */}
+      {/* ── Birds silhouettes (appear late, near the sun) ── */}
       <g className="scene-birds">
-        <path d="M480 90 Q484 85 488 90 Q492 85 496 90" stroke="white" strokeWidth="1" fill="none" opacity="0.3" />
-        <path d="M500 82 Q503 78 506 82 Q509 78 512 82" stroke="white" strokeWidth="0.8" fill="none" opacity="0.2" />
+        <path d="M880 100 Q884 95 888 100 Q892 95 896 100" stroke="white" strokeWidth="1" fill="none" opacity="0.3" />
+        <path d="M900 92 Q903 88 906 92 Q909 88 912 92" stroke="white" strokeWidth="0.8" fill="none" opacity="0.2" />
       </g>
       <g className="scene-birds-delay">
-        <path d="M680 75 Q684 70 688 75 Q692 70 696 75" stroke="white" strokeWidth="1" fill="none" opacity="0.25" />
-        <path d="M660 85 Q663 81 666 85 Q669 81 672 85" stroke="white" strokeWidth="0.8" fill="none" opacity="0.15" />
+        <path d="M920 110 Q924 105 928 110 Q932 105 936 110" stroke="white" strokeWidth="1" fill="none" opacity="0.25" />
+        <path d="M850 115 Q853 111 856 115 Q859 111 862 115" stroke="white" strokeWidth="0.8" fill="none" opacity="0.15" />
       </g>
 
       {/* Falling leaves */}
