@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { GlowOrb } from '../../components/SvgDecorations';
 import {
   HiOutlineArrowRight,
   HiOutlineChatBubbleLeftRight,
@@ -20,11 +19,7 @@ export default function ProjectHero({ config }) {
       id="hero"
       className={`relative min-h-screen flex flex-col justify-end overflow-hidden bg-gradient-to-b ${theme.heroBg}`}
     >
-      {/* Background -- just two soft glows, nothing more */}
-      <div className="absolute inset-0 pointer-events-none">
-        <GlowOrb className="absolute -top-40 right-[10%] w-[600px] h-[600px] opacity-[0.06]" color={p} />
-        <GlowOrb className="absolute bottom-[10%] -left-32 w-[400px] h-[400px] opacity-[0.04]" color={s} />
-      </div>
+
 
       {/* Content -- pushed toward center-bottom for cinematic feel */}
       <div className="relative z-10 px-6 max-w-4xl mx-auto w-full pb-32 sm:pb-36 pt-48 sm:pt-56">
@@ -71,18 +66,20 @@ export default function ProjectHero({ config }) {
         </div>
 
         {/* Stat ribbon -- subtle, horizontal */}
-        <div className="flex items-center gap-10 sm:gap-14">
-          {hero.stats.map((stat, i) => (
-            <div key={i}>
-              <p className="text-xl sm:text-2xl font-display font-semibold" style={{ color: i === 0 ? p : i === 1 ? s : 'rgba(255,255,255,0.5)' }}>
-                {stat.value}
-              </p>
-              <p className="text-[10px] text-white/30 font-medium tracking-wider uppercase mt-0.5">
-                {stat.label}
-              </p>
-            </div>
-          ))}
-        </div>
+        {hero.stats?.length > 0 && (
+          <div className="flex items-center gap-10 sm:gap-14">
+            {hero.stats.map((stat, i) => (
+              <div key={i}>
+                <p className="text-xl sm:text-2xl font-display font-semibold" style={{ color: i === 0 ? p : i === 1 ? s : 'rgba(255,255,255,0.5)' }}>
+                  {stat.value}
+                </p>
+                <p className="text-[10px] text-white/30 font-medium tracking-wider uppercase mt-0.5">
+                  {stat.label}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Panoramic sunrise landscape illustration */}
