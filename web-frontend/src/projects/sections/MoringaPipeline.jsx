@@ -1,5 +1,5 @@
 /**
- * MoringaPipeline — animated SVG value-chain visualisation.
+ * MoringaPipeline - animated SVG value-chain visualisation.
  *
  * Shows the full Moringa journey:
  *   Farm → Harvest → Processing → Products (branch) → Community Market
@@ -209,7 +209,7 @@ export default function MoringaPipeline({ config }) {
           The Moringa Journey
         </h2>
         <p className="text-white/30 text-sm sm:text-base text-center max-w-xl mx-auto mb-14 leading-relaxed">
-          Every leaf tells a story — from the soil to the shelf, powered by the community that built it.
+          Every leaf tells a story, from the soil to the shelf, powered by the community that built it.
         </p>
 
         {/* Pipeline SVG */}

@@ -1,5 +1,5 @@
 /**
- * ThemeScope — injects project-level CSS custom properties so all
+ * ThemeScope - injects project-level CSS custom properties so all
  * child components can pick up the project's brand palette.
  *
  * Usage:
