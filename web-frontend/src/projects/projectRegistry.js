@@ -223,6 +223,15 @@ const PROJECTS = {
       ],
     },
 
+    /* -- Video Showcase 2 (visitors at the farm) -- */
+    videoShowcase2: {
+      sectionLabel: 'Visitors on the Ground',
+      heading: 'See Who\u2019s Already Walking the Land',
+      url: 'https://violet-rainy-toad-577.mypinata.cloud/ipfs/bafybeibgz2tbx7ivgoqzxuum6mdekcl75zu7aha26shldv7ds7vzlbpujm',
+      playLabel: 'Watch the visit',
+      caption: 'Real people, real soil, real progress \u2014 visitors experiencing the Moringa Oasis first-hand.',
+    },
+
     /* -- Experience Timeline (Live-Work-Learn) -- */
     experience: {
       sectionLabel: 'The Experience',
@@ -316,7 +325,7 @@ const PROJECTS = {
     },
 
     /* -- Sections to render (order matters) -- */
-    sections: ['hero', 'videoShowcase', 'vision', 'narrative', 'market', 'pipeline', 'pillars', 'advantages', 'experience', 'financials', 'cta'],
+    sections: ['hero', 'videoShowcase', 'vision', 'narrative', 'market', 'pipeline', 'pillars', 'advantages', 'videoShowcase2', 'experience', 'financials', 'cta'],
   },
 };
 
