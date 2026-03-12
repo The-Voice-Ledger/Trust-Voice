@@ -48,11 +48,7 @@ const PROJECTS = {
       title: 'Where Ancient Wisdom\nMeets the Future of Food',
       subtitle:
         'A 10-hectare vertically integrated sanctuary combining high-density Moringa production, an industrial processing facility, and a premium eco-lodge. Real agriculture. Real impact. Real returns.',
-      stats: [
-        { value: '$400K', label: 'Seed Round' },
-        { value: '10 ha', label: 'Integrated Facility' },
-        { value: '8x', label: 'Annual Harvests' },
-      ],
+      stats: [],
       ctaLabel: 'Back This Project',
       ctaLink: '/donate',
       secondaryLabel: 'Talk to the AI Assistant',
