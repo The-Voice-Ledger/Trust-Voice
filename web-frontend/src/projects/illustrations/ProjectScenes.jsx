@@ -163,7 +163,6 @@ export function HeroPanorama({ className = '' }) {
           <rect x={c.x + 5} y={290 - c.h + 10} width="6" height="5" rx="1" fill={a600} className="scene-glow-slow" opacity="0.5" />
           {/* Chimney */}
           <rect x={c.x + c.w - 10} y={290 - c.h - 15 - 8} width="5" height="12" rx="1" fill="#2d1f0e" opacity="0.6" />
-          <circle cx={c.x + c.w - 7.5} cy={290 - c.h - 15 - 10} r="3" fill="white" opacity="0.06" className="scene-steam" />
         </g>
       ))}
 
@@ -176,11 +175,6 @@ export function HeroPanorama({ className = '' }) {
         <path d="M920 110 Q924 105 928 110 Q932 105 936 110" stroke="white" strokeWidth="1" fill="none" opacity="0.25" />
         <path d="M850 115 Q853 111 856 115 Q859 111 862 115" stroke="white" strokeWidth="0.8" fill="none" opacity="0.15" />
       </g>
-
-      {/* Falling leaves */}
-      <circle cx="350" cy="200" r="2" fill={e600} opacity="0.4" className="scene-leaf-fall" />
-      <circle cx="700" cy="180" r="1.5" fill={e600} opacity="0.3" className="scene-leaf-fall-delay" />
-      <circle cx="1000" cy="190" r="1.5" fill={e600} opacity="0.25" className="scene-leaf-fall" />
     </svg>
   );
 }
