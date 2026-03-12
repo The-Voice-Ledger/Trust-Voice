@@ -152,8 +152,10 @@ def _build_system_prompt(
         "handle them step-by-step with multiple tool calls.\n"
         "4. ALWAYS confirm before write actions "
         "(donations, campaign creation, withdrawals).\n"
-        "5. When listing campaigns, always include the campaign ID.\n"
-        "6. If information is missing, ask — don't guess.\n"
+        "5. IMPORTANT: You have access to conversation history. "
+        "REMEMBER what you already asked to avoid repeating questions.\n"
+        "6. When listing campaigns, always include the campaign ID.\n"
+        "7. If information is missing, ask — don't guess.\n"
         f"{ctx_note}"
     )
 
@@ -197,6 +199,7 @@ class AgentExecutor:
         """
         conv_id = conversation_id or str(uuid.uuid4())
         history = _get_history(user_id, conv_id)
+        logger.info(f"📚 Chat history loaded: user_id={user_id}, conv_id={conv_id}, history_count={len(history)}")
 
         system_prompt = _build_system_prompt(user_id, db, language, context)
         messages: List[Dict] = [{"role": "system", "content": system_prompt}]
@@ -259,6 +262,7 @@ class AgentExecutor:
                         result = await self._execute_tool(
                             tool_name, tool_args, user_id, db
                         )
+                        logger.info(f"🤖 Agent tool {tool_name} result: {result}")
                     except Exception as exc:
                         logger.error(f"Tool {tool_name} error: {exc}")
                         result = {"error": str(exc)}
@@ -290,6 +294,7 @@ class AgentExecutor:
             raise  # Let callers handle fallback
 
         # Save history (everything except system prompt)
+        logger.info(f"💾 Saving chat history: user_id={user_id}, conv_id={conv_id}, messages_count={len(messages)-1}")
         _save_history(user_id, conv_id, messages[1:])
 
         # Derive response_type from collected data for frontend rendering
@@ -576,6 +581,8 @@ class AgentExecutor:
         self, args: Dict, user_id: str, db: Session
     ) -> Dict:
         """Initiate a donation (delegates to Lab 5 payment handler)."""
+        logger.info(f"DONATION TOOL CALLED: args={args}, user_id={user_id}")
+        
         from voice.handlers.donation_handler import initiate_voice_donation
 
         campaign = (

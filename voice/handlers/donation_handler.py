@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 async def initiate_voice_donation(
     db: Session,
     telegram_user_id: str,
-    campaign_id: uuid.UUID,
+    campaign_id: int,
     amount: float,
     currency: str = "USD",
     payment_method: Optional[str] = None
@@ -49,7 +49,9 @@ async def initiate_voice_donation(
     try:
         # Get or create donor
         user = db.query(User).filter(User.telegram_user_id == telegram_user_id).first()
+        
         if not user:
+            logger.warning(f"❌ User not found for telegram_user_id={telegram_user_id}")
             return {
                 "success": False,
                 "error": "User not registered. Please register first."
@@ -274,7 +276,6 @@ async def _initiate_stripe_payment(
         result = create_payment_intent(
             amount=amount_cents,
             currency="usd",
-            description=f"Donation to {campaign.title}",
             metadata={
                 "donation_id": str(donation.id),
                 "campaign_id": str(campaign.id),
@@ -283,8 +284,9 @@ async def _initiate_stripe_payment(
             }
         )
         
-        if result.get("success"):
-            payment_intent = result["payment_intent"]
+        # Check if Stripe call succeeded (has 'id' and 'client_secret')
+        if result.get("id") and result.get("client_secret"):
+            payment_intent = result
             
             # Update donation with Stripe info
             donation.payment_intent_id = payment_intent["id"]
@@ -313,7 +315,7 @@ async def _initiate_stripe_payment(
             }
         else:
             donation.status = "failed"
-            logger.warning(f"Stripe payment failed for donation {donation.id}: {result.get('error')}")
+            logger.warning(f"Stripe payment failed for donation {donation.id}: {result}")
             db.commit()
             
             return {

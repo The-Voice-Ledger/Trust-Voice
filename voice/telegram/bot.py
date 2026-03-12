@@ -801,12 +801,15 @@ async def handle_voice_message(update: Update, context: ContextTypes.DEFAULT_TYP
                     _agent_user = _agent_db.query(User).filter(
                         User.telegram_user_id == telegram_user_id
                     ).first()
-                    _agent_uid = str(_agent_user.id) if _agent_user else telegram_user_id
+                    # Always pass actual Telegram user ID to agent
+                    # Use a consistent conversation ID per user to preserve history
+                    conversation_id = f"telegram_{telegram_user_id}"
                     agent_result = await _agent_exec.run(
                         user_message=transcript,
-                        user_id=_agent_uid,
+                        user_id=telegram_user_id,
                         db=_agent_db,
                         language=language,
+                        conversation_id=conversation_id,  # Add persistent conversation ID
                     )
                     _agent_text = agent_result.get("response_text", "")
                     if _agent_text:
@@ -1045,12 +1048,15 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
             _agent_user = _agent_db.query(User).filter(
                 User.telegram_user_id == telegram_user_id
             ).first()
-            _agent_uid = str(_agent_user.id) if _agent_user else telegram_user_id
+            # Always pass actual Telegram user ID to agent
+            # Use a consistent conversation ID per user to preserve history
+            conversation_id = f"telegram_{telegram_user_id}"
             agent_result = await _agent_exec.run(
                 user_message=update.message.text,
-                user_id=_agent_uid,
+                user_id=telegram_user_id,
                 db=_agent_db,
                 language=language,
+                conversation_id=conversation_id,  # Add persistent conversation ID
             )
             _agent_text = agent_result.get("response_text", "")
             if _agent_text:
