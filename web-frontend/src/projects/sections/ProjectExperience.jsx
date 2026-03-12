@@ -145,11 +145,11 @@ export default function ProjectExperience({ config }) {
         <div className="flex flex-col items-center">
 
           {/* Arc indicator with day dots */}
-          <div className="relative mb-10" style={{ width: 320, height: 120 }}>
-            <svg width="320" height="120" viewBox="0 0 320 120">
+          <div className="relative mb-10" style={{ width: 340, height: 180 }}>
+            <svg width="340" height="180" viewBox="0 0 340 180" className="absolute inset-0">
               {/* Background arc */}
               <path
-                d="M 30 105 A 130 130 0 0 1 290 105"
+                d="M 40 160 A 130 130 0 0 1 300 160"
                 fill="none"
                 stroke="rgba(0,0,0,0.06)"
                 strokeWidth="3"
@@ -158,7 +158,7 @@ export default function ProjectExperience({ config }) {
               {/* Active progress arc */}
               {visible && (
                 <path
-                  d="M 30 105 A 130 130 0 0 1 290 105"
+                  d="M 40 160 A 130 130 0 0 1 300 160"
                   fill="none"
                   stroke={colors[active]}
                   strokeWidth="3"
@@ -172,8 +172,8 @@ export default function ProjectExperience({ config }) {
             {/* Day dots positioned along the arc */}
             {experience.days.map((day, i) => {
               const angle = Math.PI - (Math.PI * (i + 0.5)) / experience.days.length;
-              const cx = 160 + 130 * Math.cos(angle);
-              const cy = 105 - 130 * Math.sin(angle);
+              const cx = 170 + 130 * Math.cos(angle);
+              const cy = 160 - 130 * Math.sin(angle);
               const isActive = i === active;
 
               return (
