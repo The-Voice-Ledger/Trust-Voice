@@ -437,7 +437,7 @@ export default function ProjectNarrative({ config }) {
                     : 'md:flex-row-reverse'
                 } items-center`}
               >
-                {/* ─── Illustration panel ─── */}
+                {/* ─── Illustration / Video panel ─── */}
                 <div
                   className="w-full md:w-[48%] flex-shrink-0"
                   style={{
@@ -457,14 +457,27 @@ export default function ProjectNarrative({ config }) {
                   >
                     {/* Corner accent */}
                     <div
-                      className="absolute top-0 left-0 w-12 h-12 rounded-br-2xl"
+                      className="absolute top-0 left-0 w-12 h-12 rounded-br-2xl z-10"
                       style={{
                         background: `linear-gradient(135deg, ${color}12, transparent)`,
                       }}
                     />
-                    <div className="p-3 sm:p-4">
-                      {Scene && <Scene visible={blockVis} />}
-                    </div>
+                    {block.video ? (
+                      <video
+                        src={block.video}
+                        muted
+                        autoPlay
+                        loop
+                        playsInline
+                        preload="metadata"
+                        className="w-full aspect-video object-cover"
+                        style={{ opacity: blockVis ? 1 : 0, transition: 'opacity 0.6s ease 0.2s' }}
+                      />
+                    ) : (
+                      <div className="p-3 sm:p-4">
+                        {Scene && <Scene visible={blockVis} />}
+                      </div>
+                    )}
                   </div>
                 </div>
 
