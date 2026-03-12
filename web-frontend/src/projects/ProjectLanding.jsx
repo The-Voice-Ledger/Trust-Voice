@@ -22,6 +22,7 @@ import MoringaPipeline from './sections/MoringaPipeline';
 const SECTION_MAP = {
   hero: ProjectHero,
   videoShowcase: ProjectVideoShowcase,
+  videoShowcase2: ProjectVideoShowcase,
   vision: ProjectVision,
   narrative: ProjectNarrative,
   market: ProjectMarket,
@@ -72,7 +73,7 @@ export default function ProjectLanding() {
           {config.sections.map((key) => {
             const Section = SECTION_MAP[key];
             if (!Section) return null;
-            return <Section key={key} config={config} />;
+            return <Section key={key} config={config} sectionKey={key} />;
           })}
         </main>
 

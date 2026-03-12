@@ -32,9 +32,11 @@ function FilmGrain() {
   );
 }
 
-export default function ProjectVideoShowcase({ config }) {
-  const { videoShowcase, theme } = config;
-  if (!videoShowcase) return null;
+export default function ProjectVideoShowcase({ config, sectionKey }) {
+  const data = config[sectionKey] || config.videoShowcase;
+  const { theme } = config;
+  if (!data) return null;
+  const videoShowcase = data;
 
   const ref = useRef(null);
   const videoRef = useRef(null);
