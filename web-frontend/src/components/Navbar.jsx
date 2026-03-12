@@ -133,7 +133,7 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
-          <LanguageToggle />
+          {/* LanguageToggle hidden until more languages added */}
 
           {user ? (
             <div className="hidden sm:flex items-center gap-2">
