@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { FooterMoonscape } from '../illustrations/ProjectScenes';
 
 /**
  * ProjectFooter -- warm, clean footer for project micro-sites.
@@ -15,8 +16,13 @@ export default function ProjectFooter({ config }) {
   };
 
   return (
-    <footer className="relative bg-gray-950 border-t border-white/[0.06]">
-      <div className="max-w-5xl mx-auto px-6 pt-14 pb-10">
+    <footer className="relative bg-gray-950 border-t border-white/[0.06] overflow-hidden">
+      {/* Moonlit mountain silhouette behind footer content */}
+      <div className="absolute top-0 left-0 right-0 pointer-events-none opacity-60" style={{ height: '140px' }}>
+        <FooterMoonscape />
+      </div>
+
+      <div className="relative z-10 max-w-5xl mx-auto px-6 pt-14 pb-10">
         {/* Top row: brand + columns */}
         <div className="grid md:grid-cols-5 gap-10 mb-10">
           {/* Brand column */}

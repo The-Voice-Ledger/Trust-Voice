@@ -665,6 +665,112 @@ export function CtaHorizon({ className = '' }) {
   );
 }
 
+/* ========================================================
+ *  8. FOOTER MOONSCAPE
+ *     Night mountain range with a crescent moon peeking
+ *     behind the western (left) peaks. Subtle stars.
+ * ======================================================== */
+export function FooterMoonscape({ className = '' }) {
+  const moonX = 180;
+  const moonY = 42;
+
+  return (
+    <svg
+      viewBox="0 0 1200 140"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`w-full ${className}`}
+      preserveAspectRatio="xMidYMax slice"
+      aria-hidden="true"
+    >
+      <defs>
+        {/* Moon glow */}
+        <radialGradient id="ft-moon-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#E0E7FF" stopOpacity="0.12" />
+          <stop offset="40%" stopColor="#C7D2FE" stopOpacity="0.05" />
+          <stop offset="100%" stopColor="#818CF8" stopOpacity="0" />
+        </radialGradient>
+        {/* Mountain gradient (night) */}
+        <linearGradient id="ft-mtn" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#111827" />
+          <stop offset="100%" stopColor="#030712" />
+        </linearGradient>
+        {/* Rim light from the moonlit side (left-biased) */}
+        <linearGradient id="ft-rim" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#818CF8" stopOpacity="0.5" />
+          <stop offset="15%" stopColor="#C7D2FE" stopOpacity="0.35" />
+          <stop offset="35%" stopColor="#818CF8" stopOpacity="0.12" />
+          <stop offset="60%" stopColor="#818CF8" stopOpacity="0.04" />
+          <stop offset="100%" stopColor="#818CF8" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+
+      {/* ── Stars (tiny, scattered) ── */}
+      {[
+        { x: 60, y: 18, r: 1.2, o: 0.25 },
+        { x: 140, y: 10, r: 0.8, o: 0.2 },
+        { x: 310, y: 22, r: 1, o: 0.15 },
+        { x: 480, y: 12, r: 0.7, o: 0.12 },
+        { x: 620, y: 28, r: 0.9, o: 0.1 },
+        { x: 780, y: 16, r: 1.1, o: 0.14 },
+        { x: 890, y: 8, r: 0.6, o: 0.1 },
+        { x: 1020, y: 20, r: 0.8, o: 0.08 },
+        { x: 1140, y: 14, r: 0.7, o: 0.1 },
+        { x: 260, y: 6, r: 0.5, o: 0.18 },
+        { x: 550, y: 4, r: 0.6, o: 0.12 },
+        { x: 950, y: 30, r: 0.9, o: 0.09 },
+      ].map((s, i) => (
+        <circle key={i} cx={s.x} cy={s.y} r={s.r} fill="white" opacity={s.o}
+          className={i % 3 === 0 ? 'scene-glow-slow' : ''} />
+      ))}
+
+      {/* ── Moon (crescent, behind western peaks) ── */}
+      <g>
+        {/* Outer glow */}
+        <circle cx={moonX} cy={moonY} r="55" fill="url(#ft-moon-glow)" />
+        {/* Moon disc */}
+        <circle cx={moonX} cy={moonY} r="14" fill="#E0E7FF" opacity="0.18" />
+        <circle cx={moonX} cy={moonY} r="10" fill="#EEF2FF" opacity="0.12" />
+        {/* Crescent shadow (overlapping disc to create crescent shape) */}
+        <circle cx={moonX + 5} cy={moonY - 2} r="10" fill="#030712" opacity="0.2" />
+      </g>
+
+      {/* ── Distant mountain range ── */}
+      <path
+        d="M0 90 L80 55 L160 72 L260 40 L380 65 L480 48 L580 58 L700 35 L820 55 L920 42 L1040 52 L1120 60 L1200 50 L1200 140 L0 140Z"
+        fill="url(#ft-mtn)" opacity="0.5"
+      />
+
+      {/* ── Closer mountain range ── */}
+      <path
+        d="M0 105 L100 70 L200 88 L320 58 L440 78 L540 62 L660 75 L780 52 L900 72 L1000 60 L1100 68 L1200 75 L1200 140 L0 140Z"
+        fill="url(#ft-mtn)" opacity="0.8"
+      />
+
+      {/* ── Mountain rim light (moonlit from left) ── */}
+      <path
+        d="M0 105 L100 70 L200 88 L320 58 L440 78 L540 62 L660 75 L780 52 L900 72 L1000 60 L1100 68 L1200 75"
+        fill="none"
+        stroke="url(#ft-rim)"
+        strokeWidth="1"
+        opacity="0.6"
+      />
+
+      {/* ── Thin tree silhouettes on the ridge ── */}
+      {[120, 250, 400, 560, 710, 860, 1000, 1130].map((x, i) => {
+        const baseY = 75 + (i % 3) * 8;
+        const h = 14 + (i % 3) * 5;
+        return (
+          <g key={i}>
+            <rect x={x - 0.8} y={baseY - h} width="1.6" height={h} rx="0.8" fill="#111827" opacity="0.6" />
+            <ellipse cx={x} cy={baseY - h - 3} rx={5 + (i % 2) * 3} ry={4 + (i % 2) * 2} fill="#111827" opacity="0.4" />
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
 /* ─── Convenience mapping for config-driven usage ─── */
 export const NARRATIVE_SCENES = [NarrativeFarmland, NarrativeHarvest, NarrativeProcessing, NarrativeDistribution];
 export const VISION_SCENES    = [VisionSeedling, VisionCommunity, VisionGrowth];
