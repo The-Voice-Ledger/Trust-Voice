@@ -138,7 +138,7 @@ export default function CampaignDetail() {
           className="mt-4 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-all border border-blue-100"
         >
           <HiOutlineSparkles className="w-4 h-4" />
-          Ask Assistant about this campaign
+          Ask the Assistant about this campaign
         </Link>
       </div>
     </div>

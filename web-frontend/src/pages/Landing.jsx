@@ -212,29 +212,29 @@ export default function Landing() {
             <HiOutlineMicrophone className="w-4 h-4 text-blue-300" />
             <span className="text-blue-200">{t('landing.badge')}</span>
           </div>
-          <h1 className="hero-heading text-3xl sm:text-5xl lg:text-7xl mb-6">
+          <h1 className="hero-heading text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
             <span className="bg-gradient-to-r from-white via-blue-200 to-teal-200 bg-clip-text text-transparent">
               {t('landing.hero_title')}
             </span>
           </h1>
-          <p className="text-lg sm:text-xl text-blue-200/70 max-w-2xl mx-auto mb-12">
+          <p className="text-base sm:text-lg text-blue-200/70 max-w-2xl mx-auto mb-10">
             {t('landing.hero_subtitle')}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center w-full sm:w-auto">
             <Link
               to="/campaigns"
-              className="group w-full sm:w-auto text-center px-8 py-4 rounded-2xl bg-white text-blue-700 font-bold text-lg shadow-xl shadow-blue-500/25 hover:shadow-2xl hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+              className="group w-full sm:w-auto text-center px-6 py-3 rounded-xl bg-gradient-to-r from-white to-blue-50 text-blue-700 font-semibold text-sm shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 border border-white/80"
             >
               {t('landing.explore_btn')}
-              <HiOutlineArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <HiOutlineArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
               to="/assistant"
-              className="w-full sm:w-auto text-center px-8 py-4 rounded-2xl bg-white/10 backdrop-blur-md text-white font-bold text-lg border border-white/20 hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+              className="group w-full sm:w-auto text-center px-6 py-3 rounded-xl bg-white/[0.08] backdrop-blur-md text-white font-medium text-sm border border-white/[0.12] hover:bg-white/[0.15] hover:border-white/20 transition-all flex items-center justify-center gap-2"
             >
-              <HiOutlineSparkles className="w-5 h-5" />
-              {t('landing.ask_assistant', 'Ask Assistant')}
+              <HiOutlineSparkles className="w-4 h-4" />
+              {t('landing.ask_assistant', 'Ask the Assistant')}
             </Link>
           </div>
         </div>

@@ -85,7 +85,7 @@ export default function Home() {
           className="group flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-teal-600 text-white text-sm font-medium hover:shadow-lg hover:shadow-blue-500/25 transition-all"
         >
           <HiOutlineSparkles className="w-4 h-4" />
-          {t('home.ask_assistant', 'Ask Assistant')}
+          {t('home.ask_assistant', 'Ask the Assistant')}
           <HiOutlineArrowRight className="w-3.5 h-3.5 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" />
         </Link>
       </div>
