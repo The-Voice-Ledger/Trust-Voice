@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
 import { HiOutlineLockClosed, HiOutlineInformationCircle } from '../components/icons';
+import HexIcon from '../components/HexIcon';
 import { PageBg } from '../components/SvgDecorations';
 
 export default function Login() {
@@ -49,14 +50,8 @@ export default function Login() {
         </svg>
 
       <div className="relative text-center mb-8">
-        <div className="relative w-16 h-16 mx-auto mb-4">
-          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 64 64" fill="none">
-            <polygon points="32,2 58,17 58,47 32,62 6,47 6,17" stroke="#2563EB" strokeWidth="1" opacity="0.12" />
-            <polygon points="32,8 52,20 52,44 32,56 12,44 12,20" fill="#2563EB" opacity="0.04" />
-          </svg>
-          <div className="absolute inset-[8px] rounded-2xl bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center shadow-lg shadow-blue-200/50">
-            <HiOutlineLockClosed className="w-7 h-7 text-white" />
-          </div>
+        <div className="flex justify-center mb-4">
+          <HexIcon Icon={HiOutlineLockClosed} accent="#2563EB" size="lg" bespoke="lock" gradient gradientTo="#0D9488" />
         </div>
         <h1 className="page-header-accent text-2xl text-gray-900">{t('auth.sign_in')}</h1>
       </div>

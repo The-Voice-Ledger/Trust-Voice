@@ -11,6 +11,7 @@ import {
   HiOutlineBuildingOffice2, HiOutlineBanknotes, HiOutlineChartBarSquare,
 } from '../components/icons';
 import { PageBg, PageHeader } from '../components/SvgDecorations';
+import HexIcon from '../components/HexIcon';
 
 const TABS = ['pending_ngos', 'pending_users', 'ngos', 'payouts', 'stats'];
 
@@ -21,7 +22,7 @@ export default function AdminPanel() {
   return (
     <PageBg pattern="blueprint" colorA="#2563EB" colorB="#0D9488">
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <PageHeader icon={HiOutlineChartBarSquare} title={t('admin.title')} subtitle={t('admin.subtitle')} accentColor="blue" />
+      <PageHeader icon={HiOutlineChartBarSquare} title={t('admin.title')} subtitle={t('admin.subtitle')} accentColor="blue" bespoke="gear" />
 
       {/* Tab bar */}
       <div className="flex gap-1 bg-white/60 backdrop-blur-sm rounded-xl p-1 mb-8 overflow-x-auto scrollbar-hide border border-gray-200/50 shadow-sm">
@@ -369,19 +370,17 @@ function Loading({ t }) {
 }
 
 const EMPTY_ICONS = {
-  '✅': HiOutlineCheckCircle,
-  '🏛️': HiOutlineBuildingOffice2,
-  '💸': HiOutlineBanknotes,
-  '📊': HiOutlineChartBarSquare,
+  '✅': { Icon: HiOutlineCheckCircle, accent: '#059669', bespoke: 'check' },
+  '🏛️': { Icon: HiOutlineBuildingOffice2, accent: '#2563EB', bespoke: 'building' },
+  '💸': { Icon: HiOutlineBanknotes, accent: '#D97706', bespoke: 'money' },
+  '📊': { Icon: HiOutlineChartBarSquare, accent: '#7C3AED', bespoke: 'chart' },
 };
 
 function EmptyState({ icon, message }) {
-  const IconComp = EMPTY_ICONS[icon] || HiOutlineCheckCircle;
+  const cfg = EMPTY_ICONS[icon] || { Icon: HiOutlineCheckCircle, accent: '#059669', bespoke: 'check' };
   return (
     <div className="text-center py-16">
-      <div className="w-14 h-14 mx-auto rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
-        <IconComp className="w-7 h-7 text-gray-400" />
-      </div>
+      <HexIcon Icon={cfg.Icon} accent={cfg.accent} bespoke={cfg.bespoke} size="md" className="mx-auto mb-3" />
       <p className="text-gray-400">{message}</p>
     </div>
   );

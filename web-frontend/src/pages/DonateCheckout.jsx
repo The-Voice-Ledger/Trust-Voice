@@ -13,6 +13,7 @@ import {
   MdOutlineHouse, MdOutlineChildCare, MdHandshake,
 } from '../components/icons';
 import { PageBg } from '../components/SvgDecorations';
+import HexIcon from '../components/HexIcon';
 
 export default function DonateCheckout() {
   const { t } = useTranslation();
@@ -55,28 +56,7 @@ export default function DonateCheckout() {
       {/* ── Hero Section ──────────────────────── */}
       <div className="relative text-center mb-10">
         {/* Decorative rings behind icon */}
-        <div className="relative w-20 h-20 mx-auto mb-5">
-          <svg className="absolute inset-0 w-full h-full animate-spin-slow" viewBox="0 0 80 80" fill="none" style={{ animationDuration: '20s' }}>
-            <circle cx="40" cy="40" r="38" stroke="url(#donate-ring1)" strokeWidth="0.5" strokeDasharray="4 6" />
-            <defs>
-              <linearGradient id="donate-ring1" x1="0" y1="0" x2="80" y2="80">
-                <stop offset="0%" stopColor="#F43F5E" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="#0D9488" stopOpacity="0.1" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <svg className="absolute inset-1 w-[calc(100%-8px)] h-[calc(100%-8px)]" viewBox="0 0 72 72" fill="none" style={{ animation: 'spin 30s linear reverse infinite' }}>
-            <circle cx="36" cy="36" r="34" stroke="#F43F5E" strokeWidth="0.3" strokeDasharray="2 8" opacity="0.2" />
-          </svg>
-          <div className="absolute inset-2 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center shadow-xl shadow-rose-200/60">
-            <HiOutlineHeart className="w-8 h-8 text-white" />
-          </div>
-          {/* Pulse dot */}
-          <div className="absolute -top-1 right-1 w-4 h-4">
-            <div className="absolute inset-0 rounded-full bg-rose-400 animate-ping opacity-30" />
-            <div className="absolute inset-0.5 rounded-full bg-rose-500 border-2 border-white" />
-          </div>
-        </div>
+        <HexIcon Icon={HiOutlineHeart} accent="#F43F5E" size="lg" bespoke="heart" gradient gradientTo="#0D9488" className="mx-auto mb-5" />
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 font-display">{t('donate.title')}</h1>
         <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto">{t('donate.checkout_subtitle')}</p>
         {/* Decorative line */}
@@ -121,9 +101,7 @@ export default function DonateCheckout() {
           </div>
           <div className="px-5 pb-5 -mt-5">
             <div className="relative flex items-start gap-3">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-50 to-teal-50 border border-white shadow-sm flex items-center justify-center flex-shrink-0">
-                <CategoryIcon cat={campaign.category} />
-              </div>
+              <HexIcon Icon={() => <CategoryIcon cat={campaign.category} />} accent="#2563EB" size="sm" bespoke="globe" />
               <div className="flex-1 pt-1">
                 <h2 className="font-semibold text-gray-900">{campaign.title}</h2>
                 {campaign.ngo_name && <p className="text-xs text-gray-400 mt-0.5">{campaign.ngo_name}</p>}
@@ -199,17 +177,17 @@ export default function DonateCheckout() {
       {/* ── Transparency pipeline ─────────────── */}
       <div className="mt-6 relative">
         <div className="flex items-center justify-between px-2">
-          {['Donate', 'Verify', 'Track', 'Impact'].map((step, i) => (
+          {['Donate', 'Verify', 'Track', 'Impact'].map((step, i) => {
+            const stepIcons = [HiOutlineHeart, HiOutlineShieldCheck, HiOutlineFingerPrint, HiOutlineCheckCircle];
+            const stepColors = ['#E11D48', '#059669', '#7C3AED', '#2563EB'];
+            const stepBesps = ['heart', 'shield', 'fingerprint', 'check'];
+            return (
             <div key={step} className="flex flex-col items-center gap-1.5 relative z-10">
-              <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-[10px] font-bold ${
-                i === 0 ? 'border-rose-400 text-rose-600 bg-rose-50' :
-                'border-gray-200 text-gray-400 bg-white'
-              }`}>
-                {i + 1}
-              </div>
+              <HexIcon Icon={stepIcons[i]} accent={stepColors[i]} bespoke={stepBesps[i]} size="xs" />
               <span className="text-[10px] text-gray-400 font-medium">{step}</span>
             </div>
-          ))}
+            );
+          })}
         </div>
         {/* Connection line */}
         <div className="absolute top-4 left-6 right-6 h-px bg-gradient-to-r from-rose-300 via-gray-200 to-gray-200 -z-0" />
@@ -274,10 +252,7 @@ function CampaignBannerSvg({ category }) {
 function TrustBadge({ Icon, label, color }) {
   return (
     <div className="relative rounded-xl bg-white/60 backdrop-blur-sm border border-gray-100 p-3 text-center overflow-hidden group hover:shadow-sm transition-all">
-      <svg className="absolute -top-1 -right-1 w-12 h-12 pointer-events-none" viewBox="0 0 48 48" fill="none">
-        <circle cx="36" cy="12" r="10" stroke={color} strokeWidth="0.4" opacity="0.06" />
-      </svg>
-      <Icon className="w-5 h-5 mx-auto mb-1.5" style={{ color }} />
+      <HexIcon Icon={Icon} accent={color} size="xs" className="mx-auto mb-1.5" />
       <span className="text-[10px] font-medium text-gray-500">{label}</span>
     </div>
   );
@@ -297,10 +272,7 @@ function DonationSuccess({ t }) {
         <path d="M160 180 L155 190 L150 180" stroke="#2563EB" strokeWidth="0.5" opacity="0.10"><animate attributeName="opacity" values="0.10;0.18;0.10" dur="2.5s" repeatCount="indefinite" /></path>
       </svg>
       <div className="relative w-20 h-20 mx-auto mb-4">
-        <div className="absolute inset-0 rounded-full bg-green-100 animate-ping opacity-20" />
-        <div className="absolute inset-0 rounded-full bg-green-50 flex items-center justify-center">
-          <HiOutlineCheckCircle className="w-10 h-10 text-green-600" />
-        </div>
+        <HexIcon Icon={HiOutlineCheckCircle} accent="#059669" size="lg" bespoke="check" />
       </div>
       <p className="relative text-lg font-semibold text-green-600">{t('donate.success')}</p>
       <p className="relative text-sm text-gray-400 mt-1">Your donation is being processed on the blockchain</p>

@@ -88,7 +88,7 @@ export default function CreateCampaign() {
   return (
     <PageBg pattern="isometric" colorA="#7C3AED" colorB="#2563EB">
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <PageHeader icon={HiOutlineMicrophone} title={t('create_campaign.title')} subtitle={t('create_campaign.subtitle')} accentColor="violet" />
+      <PageHeader icon={HiOutlineMicrophone} title={t('create_campaign.title')} subtitle={t('create_campaign.subtitle')} accentColor="violet" bespoke="rocket" />
 
       {/* Progress */}
       <div className="flex gap-1 mb-8">

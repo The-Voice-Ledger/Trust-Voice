@@ -7,6 +7,7 @@ import {
   HiOutlineCheckCircle, HiOutlineXMark, HiOutlineMapPin,
   HiOutlineCamera, HiOutlineSparkles,
 } from '../components/icons';
+import HexIcon from '../components/HexIcon';
 import { PageBg, PageHeader } from '../components/SvgDecorations';
 
 const STEPS = ['photos', 'location', 'details', 'review'];
@@ -116,8 +117,8 @@ export default function FieldAgent() {
   if (success) {
     return (
       <div className="max-w-lg mx-auto px-4 py-20 text-center">
-        <div className="w-20 h-20 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-4">
-          <HiOutlineCheckCircle className="w-10 h-10 text-green-600" />
+        <div className="flex justify-center mb-4">
+          <HexIcon Icon={HiOutlineCheckCircle} accent="#059669" size="lg" bespoke="check" />
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('field_agent.success_title')}</h1>
         <p className="text-gray-500 mb-4">{t('field_agent.success_desc')}</p>
@@ -132,7 +133,7 @@ export default function FieldAgent() {
   return (
     <PageBg pattern="blueprint" colorA="#0D9488" colorB="#F59E0B">
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <PageHeader icon={HiOutlineCamera} title={t('field_agent.title')} subtitle={t('field_agent.subtitle')} accentColor="teal" />
+      <PageHeader icon={HiOutlineCamera} title={t('field_agent.title')} subtitle={t('field_agent.subtitle')} accentColor="teal" bespoke="camera" />
 
       {/* Progress */}
       <div className="flex gap-1 mb-8">

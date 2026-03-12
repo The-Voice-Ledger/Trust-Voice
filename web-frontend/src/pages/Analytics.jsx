@@ -10,6 +10,7 @@ import {
   MdOutlineBookmarkAdded, MdOutlineAttachMoney, MdOutlinePushPin,
 } from '../components/icons';
 import { PageBg, PageHeader } from '../components/SvgDecorations';
+import HexIcon from '../components/HexIcon';
 
 const PERIODS = [
   { label: '7d', days: 7 },
@@ -51,7 +52,7 @@ export default function Analytics() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <PageHeader icon={HiOutlineChartBarSquare} title={t('analytics.title')} subtitle={t('analytics.subtitle')} accentColor="violet" />
+        <PageHeader icon={HiOutlineChartBarSquare} title={t('analytics.title')} subtitle={t('analytics.subtitle')} accentColor="violet" bespoke="chart" />
 
         <div className="flex items-center gap-3">
           {/* Period selector */}
@@ -150,9 +151,7 @@ export default function Analytics() {
                 <div className="space-y-2 max-h-80 overflow-y-auto">
                   {events.map((ev, i) => (
                     <div key={i} className="flex items-start gap-3 text-sm py-2.5 border-b border-gray-50 last:border-0">
-                      <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                        <EventIcon type={ev.event_type} />
-                      </div>
+                      <HexIcon Icon={EVENT_ICON_MAP[ev.event_type] || MdOutlinePushPin} accent="#2563EB" size="sm" spin={false} />
                       <div className="flex-1 min-w-0">
                         <p className="text-gray-700 font-medium truncate">{ev.event_type}</p>
                         {ev.details && (
@@ -267,9 +266,7 @@ function SummaryCard({ title, value, Icon, color = 'blue', change }) {
         <circle cx="0" cy="40" r="1.5" fill={accent} opacity="0.06" />
       </svg>
       <div className="relative flex items-center gap-2 sm:gap-2.5 mb-3">
-        <div className={`w-9 h-9 rounded-xl ${colors[color]} flex items-center justify-center`}>
-          <Icon className="w-5 h-5" />
-        </div>
+        <HexIcon Icon={Icon} accent={accent} size="sm" spin={false} />
         <span className="text-sm text-gray-500 font-medium">{title}</span>
       </div>
       <div className="relative flex items-baseline gap-2">

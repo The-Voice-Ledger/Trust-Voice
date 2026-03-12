@@ -7,6 +7,7 @@ import { listCampaigns } from '../api/campaigns';
 import { getAnalyticsSummary } from '../api/analytics';
 import ProgressBar from '../components/ProgressBar';
 import TrustPipeline from '../components/TrustPipeline';
+import HexIcon from '../components/HexIcon';
 import {
   CircuitTrace, HexGrid, GlowOrb,
   PulseRing, WaveDivider, DataParticles, SectionAccent, TopographyBg, NodeNetwork,
@@ -214,31 +215,31 @@ export default function Landing() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <BespokeFeatureCard
               to="/campaigns" title={t('landing.feat_campaigns')} desc={t('landing.feat_campaigns_desc')}
-              accentFrom="#2563EB" accentTo="#3B82F6" svgType="globe"
+              accentFrom="#2563EB" accentTo="#3B82F6" svgType="globe" Icon={HiOutlineGlobeAlt}
             />
             <BespokeFeatureCard
               to="/analytics" title={t('landing.feat_analytics')} desc={t('landing.feat_analytics_desc')}
-              accentFrom="#059669" accentTo="#10B981" svgType="chart"
+              accentFrom="#059669" accentTo="#10B981" svgType="chart" Icon={HiOutlineChartBar}
             />
             <BespokeFeatureCard
               to="/admin" title={t('landing.feat_admin')} desc={t('landing.feat_admin_desc')}
-              accentFrom="#D97706" accentTo="#F59E0B" svgType="gear"
+              accentFrom="#D97706" accentTo="#F59E0B" svgType="gear" Icon={HiOutlineCog6Tooth}
             />
             <BespokeFeatureCard
               to="/donate" title={t('landing.feat_donate')} desc={t('landing.feat_donate_desc')}
-              accentFrom="#E11D48" accentTo="#F43F5E" svgType="heart"
+              accentFrom="#E11D48" accentTo="#F43F5E" svgType="heart" Icon={HiOutlineHeart}
             />
             <BespokeFeatureCard
               to="/register-ngo" title={t('landing.feat_ngo')} desc={t('landing.feat_ngo_desc')}
-              accentFrom="#7C3AED" accentTo="#8B5CF6" svgType="building" hasMic
+              accentFrom="#7C3AED" accentTo="#8B5CF6" svgType="building" Icon={HiOutlineBuildingOffice2} hasMic
             />
             <BespokeFeatureCard
               to="/create-campaign" title={t('landing.feat_create')} desc={t('landing.feat_create_desc')}
-              accentFrom="#0D9488" accentTo="#14B8A6" svgType="rocket" hasMic
+              accentFrom="#0D9488" accentTo="#14B8A6" svgType="rocket" Icon={HiOutlineRocketLaunch} hasMic
             />
             <BespokeFeatureCard
               to="/field-agent" title={t('landing.feat_field')} desc={t('landing.feat_field_desc')}
-              accentFrom="#0284C7" accentTo="#0EA5E9" svgType="camera"
+              accentFrom="#0284C7" accentTo="#0EA5E9" svgType="camera" Icon={HiOutlineCamera}
               className="sm:col-start-1 lg:col-start-2"
             />
           </div>
@@ -279,27 +280,17 @@ export default function Landing() {
 /* ── Sub-components ──────────────────────── */
 
 const STAT_ACCENTS = {
-  blue: { from: '#2563EB', to: '#3B82F6' },
-  emerald: { from: '#059669', to: '#10B981' },
-  amber: { from: '#D97706', to: '#F59E0B' },
-  teal: { from: '#0D9488', to: '#14B8A6' },
+  blue: { from: '#2563EB', bespoke: 'chat' },
+  emerald: { from: '#059669', bespoke: 'badge' },
+  amber: { from: '#D97706', bespoke: 'chart' },
+  teal: { from: '#0D9488', bespoke: 'rocket' },
 };
 
 function StatCard({ value, label, Icon, color = 'blue' }) {
   const accent = STAT_ACCENTS[color] || STAT_ACCENTS.blue;
   return (
     <div className="relative flex flex-col items-center text-center group">
-      {/* Bespoke icon container with SVG ring */}
-      <div className="relative w-14 h-14 mb-3">
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 56 56" fill="none">
-          <circle cx="28" cy="28" r="26" stroke={accent.from} strokeWidth="1" opacity="0.15" />
-          <circle cx="28" cy="28" r="22" stroke={accent.from} strokeWidth="0.5" strokeDasharray="3 4" opacity="0.10" className="group-hover:animate-spin" style={{ animationDuration: '8s' }} />
-          <circle cx="28" cy="2" r="2" fill={accent.from} opacity="0.20" />
-        </svg>
-        <div className="absolute inset-[6px] rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${accent.from}15, ${accent.to}10)` }}>
-          <Icon className="w-5 h-5" style={{ color: accent.from }} />
-        </div>
-      </div>
+      <HexIcon Icon={Icon} accent={accent.from} bespoke={accent.bespoke} size="md" className="mx-auto mb-3" />
       <div className="text-xl sm:text-2xl font-bold text-gray-900 font-display">{value}</div>
       <p className="text-xs text-gray-500 mt-0.5">{label}</p>
     </div>
@@ -307,24 +298,14 @@ function StatCard({ value, label, Icon, color = 'blue' }) {
 }
 
 const STEP_COLORS = ['#2563EB', '#0D9488', '#7C3AED', '#E11D48'];
+const STEP_BESPS = ['microphone', 'eye', 'creditcard', 'camera'];
 
 function StepCard({ step, Icon, title, desc }) {
-  const accent = STEP_COLORS[(parseInt(step) - 1) % 4];
+  const idx = (parseInt(step) - 1) % 4;
+  const accent = STEP_COLORS[idx];
   return (
     <div className="relative text-center group">
-      {/* Bespoke hexagonal node */}
-      <div className="relative w-20 h-20 mx-auto mb-5">
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 80 80" fill="none">
-          <polygon points="40,4 72,22 72,58 40,76 8,58 8,22" stroke={accent} strokeWidth="1.5" opacity="0.15" />
-          <polygon points="40,12 64,26 64,54 40,68 16,54 16,26" fill={accent} opacity="0.06" />
-          <circle cx="40" cy="4" r="2" fill={accent} opacity="0.25" />
-          <circle cx="72" cy="22" r="1.5" fill={accent} opacity="0.15" />
-          <circle cx="8" cy="22" r="1.5" fill={accent} opacity="0.15" />
-        </svg>
-        <div className="absolute inset-[12px] rounded-2xl flex items-center justify-center bg-white shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all" style={{ boxShadow: `0 8px 30px ${accent}20` }}>
-          <Icon className="w-7 h-7" style={{ color: accent }} />
-        </div>
-      </div>
+      <HexIcon Icon={Icon} accent={accent} bespoke={STEP_BESPS[idx]} size="lg" className="mx-auto mb-5" />
       <div className="inline-flex items-center justify-center w-7 h-7 rounded-lg mb-2 text-xs font-bold font-display text-white" style={{ background: `linear-gradient(135deg, ${accent}, ${accent}CC)` }}>{step}</div>
       <h3 className="font-semibold text-gray-900 mb-1 font-display">{title}</h3>
       <p className="text-sm text-gray-500">{desc}</p>
@@ -527,7 +508,7 @@ const FEATURE_SVG = {
   ),
 };
 
-function BespokeFeatureCard({ to, title, desc, accentFrom, accentTo, svgType, hasMic, className = '' }) {
+function BespokeFeatureCard({ to, title, desc, accentFrom, accentTo, svgType, Icon, hasMic, className = '' }) {
   const renderSvg = FEATURE_SVG[svgType];
   return (
     <Link
@@ -551,23 +532,8 @@ function BespokeFeatureCard({ to, title, desc, accentFrom, accentTo, svgType, ha
         </svg>
       </div>
 
-      {/* Icon */}
-      <div className="relative w-14 h-14 rounded-2xl flex items-center justify-center mb-4 transition-all duration-500 group-hover:scale-105"
-        style={{
-          background: `linear-gradient(135deg, ${accentFrom}12, ${accentTo}08)`,
-          boxShadow: `0 0 0 1px ${accentFrom}15`,
-        }}
-      >
-        <div className="w-8 h-8" style={{ color: accentFrom }}>
-          {renderSvg && (
-            <svg viewBox="0 0 80 80" className="w-full h-full">
-              <g transform="translate(15,15) scale(0.625)">
-                {renderSvg(accentFrom).props.children}
-              </g>
-            </svg>
-          )}
-        </div>
-      </div>
+      {/* Icon — hexagonal node */}
+      <HexIcon Icon={Icon} accent={accentFrom} bespoke={svgType} size="md" className="mb-4" />
 
       {/* Content */}
       <div className="relative">
@@ -622,9 +588,7 @@ function MediaCard({ campaign, t }) {
 
         {campaign.has_video || campaign.video_cid ? (
           <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-            <div className="w-16 h-16 rounded-2xl bg-white/90 backdrop-blur flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
-              <HiOutlinePlayCircle className="w-9 h-9" style={{ color: accent.from }} />
-            </div>
+            <HexIcon Icon={HiOutlinePlayCircle} accent={accent.from} bespoke="play" size="lg" className="group-hover:scale-110 transition-transform" />
             <span className="absolute bottom-3 left-3 bg-black/50 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5">
               <HiOutlinePlayCircle className="w-3.5 h-3.5" />
               {t('campaign.watch_video')}

@@ -66,7 +66,7 @@ export default function Home() {
     <PageBg pattern="topography">
     <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Hero */}
-      <PageHeader icon={HiOutlineGlobeAlt} title={t('home.hero_title')} subtitle={t('home.hero_subtitle')} accentColor="blue" />
+      <PageHeader icon={HiOutlineGlobeAlt} title={t('home.hero_title')} subtitle={t('home.hero_subtitle')} accentColor="blue" bespoke="globe" />
 
       {/* Search */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">

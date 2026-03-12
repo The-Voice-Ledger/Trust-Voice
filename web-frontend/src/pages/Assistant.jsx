@@ -16,6 +16,7 @@ import {
   HiOutlineSpeakerWave, HiOutlineSpeakerXMark,
   HiOutlineMicrophone,
 } from '../components/icons';
+import HexIcon from '../components/HexIcon';
 
 // ── Chat message store (local, per-session) ────────────────────
 function useChat() {
@@ -212,21 +213,7 @@ export default function Assistant() {
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-blue-500/20 via-teal-500/20 to-transparent" />
         <div className="flex items-center gap-3">
           <div className="relative">
-            {/* Animated ring around icon */}
-            <svg className="absolute -inset-1.5 w-[calc(100%+12px)] h-[calc(100%+12px)] pointer-events-none" viewBox="0 0 52 52" fill="none">
-              <circle cx="26" cy="26" r="24" stroke="url(#asst-hdr-ring)" strokeWidth="0.5" strokeDasharray="3 5" opacity="0.3">
-                <animateTransform attributeName="transform" type="rotate" values="0 26 26;360 26 26" dur="20s" repeatCount="indefinite" />
-              </circle>
-              <defs>
-                <linearGradient id="asst-hdr-ring" x1="0" y1="0" x2="52" y2="52">
-                  <stop offset="0%" stopColor="#2563EB" />
-                  <stop offset="100%" stopColor="#0D9488" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center shadow-md shadow-blue-200/50">
-              <HiOutlineSparkles className="w-5 h-5 text-white" />
-            </div>
+            <HexIcon Icon={HiOutlineSparkles} accent="#2563EB" size="sm" bespoke="sparkles" gradient gradientTo="#0D9488" spin />
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2 border-white" />
           </div>
           <div>
@@ -276,20 +263,7 @@ export default function Assistant() {
         {loading && (
           <div className="flex gap-3">
             <div className="relative w-8 h-8 flex-shrink-0">
-              <svg className="absolute -inset-0.5 w-[calc(100%+4px)] h-[calc(100%+4px)]" viewBox="0 0 36 36" fill="none">
-                <circle cx="18" cy="18" r="16" stroke="url(#think-ring)" strokeWidth="0.5" strokeDasharray="2 4" opacity="0.4">
-                  <animateTransform attributeName="transform" type="rotate" values="0 18 18;360 18 18" dur="3s" repeatCount="indefinite" />
-                </circle>
-                <defs>
-                  <linearGradient id="think-ring" x1="0" y1="0" x2="36" y2="36">
-                    <stop offset="0%" stopColor="#2563EB" />
-                    <stop offset="100%" stopColor="#0D9488" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center">
-                <HiOutlineSparkles className="w-4 h-4 text-white" />
-              </div>
+              <HexIcon Icon={HiOutlineSparkles} accent="#2563EB" size="xs" bespoke="sparkles" gradient gradientTo="#0D9488" spin />
             </div>
             <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-gray-100/80 overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-blue-500/30 via-teal-500/30 to-transparent" />
@@ -455,39 +429,14 @@ function WelcomeScreen({ onSuggestion, t }) {
     amber: 'hover:border-amber-200',
   };
 
+  const SUGGESTION_ACCENTS = { blue: '#2563EB', emerald: '#059669', sky: '#0284C7', amber: '#D97706' };
+  const SUGGESTION_BESPS = { blue: 'search', emerald: 'chart', sky: 'globe', amber: 'question' };
+
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       {/* Central icon with animated rings */}
       <div className="relative mb-6">
-        <svg className="absolute -inset-4 w-[calc(100%+32px)] h-[calc(100%+32px)]" viewBox="0 0 96 96" fill="none">
-          <circle cx="48" cy="48" r="44" stroke="url(#welcome-ring1)" strokeWidth="0.5" strokeDasharray="3 6" opacity="0.3">
-            <animateTransform attributeName="transform" type="rotate" values="0 48 48;360 48 48" dur="25s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="48" cy="48" r="36" stroke="url(#welcome-ring2)" strokeWidth="0.4" strokeDasharray="2 8" opacity="0.2">
-            <animateTransform attributeName="transform" type="rotate" values="360 48 48;0 48 48" dur="30s" repeatCount="indefinite" />
-          </circle>
-          {/* Orbital nodes */}
-          <circle cx="48" cy="4" r="2" fill="#2563EB" opacity="0.15">
-            <animateTransform attributeName="transform" type="rotate" values="0 48 48;360 48 48" dur="25s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="92" cy="48" r="1.5" fill="#0D9488" opacity="0.12">
-            <animateTransform attributeName="transform" type="rotate" values="360 48 48;0 48 48" dur="30s" repeatCount="indefinite" />
-          </circle>
-          <defs>
-            <linearGradient id="welcome-ring1" x1="0" y1="0" x2="96" y2="96">
-              <stop offset="0%" stopColor="#2563EB" />
-              <stop offset="100%" stopColor="#0D9488" />
-            </linearGradient>
-            <linearGradient id="welcome-ring2" x1="96" y1="0" x2="0" y2="96">
-              <stop offset="0%" stopColor="#7C3AED" />
-              <stop offset="100%" stopColor="#2563EB" />
-            </linearGradient>
-          </defs>
-        </svg>
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center shadow-xl shadow-blue-200/50">
-          <HiOutlineSparkles className="w-8 h-8 text-white" />
-        </div>
-        <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-green-400 border-2 border-white animate-pulse" />
+        <HexIcon Icon={HiOutlineSparkles} accent="#2563EB" size="lg" bespoke="sparkles" gradient gradientTo="#0D9488" spin />
       </div>
 
       <h2 className="text-xl font-bold text-gray-900 mb-2 font-display">{t('assistant.welcome', 'How can I help?')}</h2>
@@ -512,9 +461,7 @@ function WelcomeScreen({ onSuggestion, t }) {
             {svg}
             {/* Top accent */}
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-blue-500/10 via-teal-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className={`relative w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${colorMap[color]}`}>
-              <Icon className="w-4.5 h-4.5" />
-            </div>
+            <HexIcon Icon={Icon} accent={SUGGESTION_ACCENTS[color]} bespoke={SUGGESTION_BESPS[color]} size="xs" />
             <span className="relative leading-snug">{text}</span>
           </button>
         ))}
@@ -558,15 +505,7 @@ function ChatMessage({ msg, onPlayAudio }) {
   return (
     <div className="flex gap-3">
       <div className="relative w-8 h-8 flex-shrink-0 mt-0.5">
-        <svg className="absolute -inset-0.5 w-[calc(100%+4px)] h-[calc(100%+4px)] pointer-events-none" viewBox="0 0 36 36" fill="none">
-          <circle cx="18" cy="18" r="16" stroke="url(#msg-ring)" strokeWidth="0.4" strokeDasharray="2 4" opacity="0.2">
-            <animateTransform attributeName="transform" type="rotate" values="0 18 18;360 18 18" dur="15s" repeatCount="indefinite" />
-          </circle>
-          <defs><linearGradient id="msg-ring" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stopColor="#2563EB" /><stop offset="100%" stopColor="#0D9488" /></linearGradient></defs>
-        </svg>
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-teal-600 flex items-center justify-center">
-          <HiOutlineSparkles className="w-4 h-4 text-white" />
-        </div>
+        <HexIcon Icon={HiOutlineSparkles} accent="#2563EB" size="xs" bespoke="sparkles" gradient gradientTo="#0D9488" spin />
       </div>
       <div className="max-w-[85%] space-y-2">
         {/* Text response */}
@@ -715,9 +654,7 @@ function DonationConfirmationCard({ data }) {
         <circle cx="280" cy="90" r="1.5" fill="#059669" opacity="0.08"><animate attributeName="opacity" values="0.08;0.14;0.08" dur="2.5s" repeatCount="indefinite" /></circle>
       </svg>
       <div className="relative flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
-          <HiOutlineCheckBadge className="w-5 h-5 text-green-600" />
-        </div>
+        <HexIcon Icon={HiOutlineCheckBadge} accent="#059669" size="xs" bespoke="check" />
         <span className="font-semibold text-green-800 text-sm">Donation Initiated</span>
       </div>
       {data.donation_id && (
@@ -799,6 +736,9 @@ function AnalyticsSummaryCard({ stats }) {
     amber: (s) => (<>{/* people */}<circle cx="11" cy="10" r="4" stroke={s} strokeWidth="0.6" fill="none" opacity="0.08"/><circle cx="21" cy="10" r="4" stroke={s} strokeWidth="0.6" fill="none" opacity="0.08"/><path d="M4 26c0-4 3.5-7 7-7s7 3 7 7M16 26c0-4 3.5-7 7-7s5 3 5 7" stroke={s} strokeWidth="0.5" fill="none" opacity="0.08"/></>),
   };
 
+  const ANALYTICS_ACCENTS = { blue: '#2563EB', green: '#16A34A', teal: '#0D9488', amber: '#D97706' };
+  const ANALYTICS_BESPS = { blue: 'chart', green: 'money', teal: 'trending', amber: 'users' };
+
   return (
     <div className="grid grid-cols-2 gap-2">
       {items.map(({ label, value, icon: Icon, color }) => {
@@ -809,9 +749,7 @@ function AnalyticsSummaryCard({ stats }) {
             <svg className="absolute bottom-0 right-0 w-8 h-8 pointer-events-none" viewBox="0 0 32 32" fill="none">
               {svgByColor[color]?.(cm.stroke)}
             </svg>
-            <div className={`w-7 h-7 rounded-lg ${cm.bg} ${cm.text} flex items-center justify-center mb-2`}>
-              <Icon className="w-4 h-4" />
-            </div>
+            <HexIcon Icon={Icon} accent={ANALYTICS_ACCENTS[color]} bespoke={ANALYTICS_BESPS[color]} size="xs" className="mb-2" />
             <p className="text-lg font-bold text-gray-900">{value}</p>
             <p className="text-[10px] text-gray-400">{label}</p>
           </div>

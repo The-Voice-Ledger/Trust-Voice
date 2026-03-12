@@ -5,6 +5,7 @@ import { api } from '../api/client';
 import VoiceButton from '../components/VoiceButton';
 import useAuthStore from '../stores/authStore';
 import { HiOutlineCheckCircle, HiOutlineMicrophone } from '../components/icons';
+import HexIcon from '../components/HexIcon';
 import { PageBg, PageHeader } from '../components/SvgDecorations';
 
 const STEPS = ['org_info', 'contact', 'mission', 'banking', 'review'];
@@ -85,8 +86,8 @@ export default function RegisterNgo() {
   if (success) {
     return (
       <div className="max-w-lg mx-auto px-4 py-20 text-center">
-        <div className="w-20 h-20 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-4">
-          <HiOutlineCheckCircle className="w-10 h-10 text-green-600" />
+        <div className="flex justify-center mb-4">
+          <HexIcon Icon={HiOutlineCheckCircle} accent="#059669" size="lg" bespoke="check" />
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('ngo_reg.success_title')}</h1>
         <p className="text-gray-500">{t('ngo_reg.success_desc')}</p>
@@ -97,7 +98,7 @@ export default function RegisterNgo() {
   return (
     <PageBg pattern="circuit" colorA="#2563EB" colorB="#0D9488">
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <PageHeader icon={HiOutlineMicrophone} title={t('ngo_reg.title')} subtitle={t('ngo_reg.subtitle')} accentColor="blue" />
+      <PageHeader icon={HiOutlineMicrophone} title={t('ngo_reg.title')} subtitle={t('ngo_reg.subtitle')} accentColor="blue" bespoke="building" />
 
       {/* Progress bar */}
       <div className="flex gap-1 mb-8">

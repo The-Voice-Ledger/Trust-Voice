@@ -3,6 +3,7 @@
  * These are NOT subtle. Each pattern gives its page a unique techno-organic identity.
  */
 import { useId } from 'react';
+import HexIcon from './HexIcon';
 
 /* ─── Circuit Trace Background (VISIBLE — used in footer, proven to work) ── */
 export function CircuitTrace({ className = '' }) {
@@ -260,31 +261,18 @@ export function PageBg({ children, pattern = 'topography', colorA = '#2563EB', c
 }
 
 /* ─── Page Header Block — gradient accent bar + title ─────── */
-export function PageHeader({ icon: Icon, title, subtitle, accentColor = 'blue' }) {
-  const colorMap = {
-    blue: 'from-blue-500 to-blue-600',
-    teal: 'from-teal-500 to-teal-600',
-    rose: 'from-rose-500 to-rose-600',
-    amber: 'from-amber-500 to-amber-600',
-    violet: 'from-violet-500 to-violet-600',
-    emerald: 'from-emerald-500 to-emerald-600',
+export function PageHeader({ icon: Icon, title, subtitle, accentColor = 'blue', bespoke }) {
+  const hexColors = {
+    blue: '#2563EB', teal: '#0D9488', rose: '#E11D48',
+    amber: '#D97706', violet: '#7C3AED', emerald: '#059669',
   };
-  const glowMap = {
-    blue: 'shadow-blue-200/50',
-    teal: 'shadow-teal-200/50',
-    rose: 'shadow-rose-200/50',
-    amber: 'shadow-amber-200/50',
-    violet: 'shadow-violet-200/50',
-    emerald: 'shadow-emerald-200/50',
-  };
+  const accent = hexColors[accentColor] || hexColors.blue;
 
   return (
     <div className="mb-8 sm:mb-10">
       <div className="flex items-center gap-4">
         {Icon && (
-          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colorMap[accentColor]} flex items-center justify-center shadow-lg ${glowMap[accentColor]} flex-shrink-0`}>
-            <Icon className="w-6 h-6 text-white" />
-          </div>
+          <HexIcon Icon={Icon} accent={accent} size="md" bespoke={bespoke} />
         )}
         <div>
           <h1 className="font-display text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">{title}</h1>
