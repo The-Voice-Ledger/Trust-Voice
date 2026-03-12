@@ -18,6 +18,7 @@ export default function Footer() {
             <h4 className="text-sm font-semibold text-gray-900 mb-3 font-display">Platform</h4>
             <nav className="space-y-2.5">
               <FooterLink to="/campaigns" Icon={HiOutlineGlobeAlt}>Campaigns</FooterLink>
+              <FooterLink to="/projects" Icon={HiOutlineMapPin}>Projects</FooterLink>
               <FooterLink to="/donate" Icon={HiOutlineHeart}>Donate</FooterLink>
               <FooterLink to="/analytics" Icon={HiOutlineChartBar}>Analytics</FooterLink>
             </nav>
