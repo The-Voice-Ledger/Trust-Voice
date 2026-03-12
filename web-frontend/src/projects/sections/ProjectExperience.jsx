@@ -145,11 +145,11 @@ export default function ProjectExperience({ config }) {
         <div className="flex flex-col items-center">
 
           {/* Arc indicator with day dots */}
-          <div className="relative mb-8">
-            <svg width="200" height="60" viewBox="0 0 200 60">
+          <div className="relative mb-10" style={{ width: 320, height: 120 }}>
+            <svg width="320" height="120" viewBox="0 0 320 120">
               {/* Background arc */}
               <path
-                d="M 20 55 A 80 80 0 0 1 180 55"
+                d="M 30 105 A 130 130 0 0 1 290 105"
                 fill="none"
                 stroke="rgba(0,0,0,0.06)"
                 strokeWidth="3"
@@ -158,12 +158,12 @@ export default function ProjectExperience({ config }) {
               {/* Active progress arc */}
               {visible && (
                 <path
-                  d="M 20 55 A 80 80 0 0 1 180 55"
+                  d="M 30 105 A 130 130 0 0 1 290 105"
                   fill="none"
                   stroke={colors[active]}
                   strokeWidth="3"
                   strokeLinecap="round"
-                  strokeDasharray={`${(active + 1) * 52} 300`}
+                  strokeDasharray={`${(active + 1) * 72} 500`}
                   style={{ transition: 'stroke-dasharray 0.6s ease, stroke 0.4s ease' }}
                 />
               )}
@@ -172,15 +172,15 @@ export default function ProjectExperience({ config }) {
             {/* Day dots positioned along the arc */}
             {experience.days.map((day, i) => {
               const angle = Math.PI - (Math.PI * (i + 0.5)) / experience.days.length;
-              const cx = 100 + 80 * Math.cos(angle);
-              const cy = 55 - 80 * Math.sin(angle);
+              const cx = 160 + 130 * Math.cos(angle);
+              const cy = 105 - 130 * Math.sin(angle);
               const isActive = i === active;
 
               return (
                 <button
                   key={i}
                   onClick={() => handleSelect(i)}
-                  className="absolute flex flex-col items-center gap-1 -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
+                  className="absolute flex flex-col items-center gap-1.5 -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
                   style={{
                     left: cx,
                     top: cy,
@@ -189,7 +189,7 @@ export default function ProjectExperience({ config }) {
                   }}
                 >
                   <span
-                    className="w-5 h-5 rounded-full border-2 transition-all duration-300"
+                    className="w-6 h-6 rounded-full border-2 transition-all duration-300"
                     style={{
                       borderColor: colors[i],
                       backgroundColor: isActive ? colors[i] : 'white',
@@ -197,7 +197,7 @@ export default function ProjectExperience({ config }) {
                     }}
                   />
                   <span
-                    className="text-[10px] font-display font-semibold whitespace-nowrap transition-colors duration-300"
+                    className="text-[11px] font-display font-semibold whitespace-nowrap transition-colors duration-300"
                     style={{ color: isActive ? colors[i] : '#9ca3af' }}
                   >
                     {day.day}
