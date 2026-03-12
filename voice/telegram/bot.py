@@ -413,6 +413,79 @@ async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return LANGUAGE_CHANGE
 
 
+async def campaign_detail_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle /campaign_<id> command - Show campaign details"""
+    
+    from database.db import SessionLocal
+    from database.models import Campaign
+    
+    # Extract campaign ID from command
+    command_text = update.message.text
+    
+    try:
+        campaign_id = int(command_text.split('_')[1])
+    except (IndexError, ValueError) as e:
+        print(f"🔍 DEBUG: Error extracting campaign_id: {e}")
+        await update.message.reply_text("❌ Invalid campaign format. Use /campaigns to see list.")
+        return
+    
+    telegram_user_id = str(update.effective_user.id)
+    language = get_user_language(telegram_user_id)
+    
+    db = SessionLocal()
+    try:
+        campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+        print(f"🔍 DEBUG: Campaign found: {campaign is not None}")
+        
+        if not campaign:
+            await update.message.reply_text("❌ Campaign not found.")
+            return
+        
+        if campaign.status != "active":
+            await update.message.reply_text("❌ This campaign is no longer active.")
+            return
+        raised = campaign.raised_amount_usd or 0
+        goal = campaign.goal_amount_usd or 1
+        progress = (raised / goal * 100)
+        
+        # Get location with fallbacks
+        location = (
+            getattr(campaign, 'location_region', None) or 
+            getattr(campaign, 'location_country', None) or 
+            getattr(campaign, 'location_city', None) or
+            'N/A'
+        )
+        
+        # Progress bar
+        bar_filled = int(progress / 10)
+        bar = "█" * bar_filled + "░" * (10 - bar_filled)
+        
+        message = (
+            f"📋 <b>{campaign.title}</b>\n\n"
+            f"📝 {campaign.description}\n\n"
+            f"💰 <b>Funding Progress</b>\n"
+            f"   {bar} {progress:.1f}%\n"
+            f"   ${raised:,.0f} / ${goal:,.0f}\n\n"
+            f"📍 <b>Location</b>: {location}\n"
+            f"🏷️ <b>Category</b>: {campaign.category}\n"
+            f"📅 <b>Created</b>: {campaign.created_at.strftime('%Y-%m-%d')}\n\n"
+            f"💬 <b>How to Donate</b>:\n"
+            f"   • Voice: 'Donate $50 to {campaign.title}'\n"
+            f"   • Web: Visit campaign page\n\n"
+            f"❓ Need help? Use /help"
+        )
+        
+        await send_voice_reply(
+            update=update,
+            text=message,
+            language=language,
+            parse_mode="HTML"
+        )
+        
+    finally:
+        db.close()
+
+
 async def campaigns_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle /campaigns command - List active campaigns"""
     from database.db import SessionLocal
@@ -1262,6 +1335,9 @@ async def initialize_bot_for_webhooks():
     
     # Campaign and donation commands
     application.add_handler(CommandHandler("campaigns", campaigns_command))
+    application.add_handler(CommandHandler("campaign", campaign_detail_command))
+    # Also handle campaign_<id> as message (backup)
+    application.add_handler(MessageHandler(filters.Regex(r'^/campaign_\d+$'), campaign_detail_command))
     application.add_handler(CommandHandler("donations", donations_command))
     application.add_handler(CommandHandler("my_campaigns", my_campaigns_command))
     
@@ -1373,6 +1449,9 @@ def main():
     
     # Campaign and donation commands
     application.add_handler(CommandHandler("campaigns", campaigns_command))
+    application.add_handler(CommandHandler("campaign", campaign_detail_command))
+    # Also handle campaign_<id> as message (backup)
+    application.add_handler(MessageHandler(filters.Regex(r'^/campaign_\d+$'), campaign_detail_command))
     application.add_handler(CommandHandler("donations", donations_command))
     application.add_handler(CommandHandler("my_campaigns", my_campaigns_command))
     
