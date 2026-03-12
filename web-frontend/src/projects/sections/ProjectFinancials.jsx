@@ -1,5 +1,5 @@
 /**
- * ProjectFinancials -- investment breakdown.
+ * ProjectFinancials -- fundraising breakdown.
  * Clean dark section with toned-down callout and warm tables.
  */
 export default function ProjectFinancials({ config }) {
@@ -33,7 +33,7 @@ export default function ProjectFinancials({ config }) {
           {/* CAPEX */}
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
             <div className="px-6 py-4 font-display font-semibold text-white text-base border-b border-white/[0.06]">
-              Capital Deployment
+              Where the Funds Go
             </div>
             <div className="divide-y divide-white/[0.04]">
               {financials.capex.map((row, i) => (
@@ -50,17 +50,16 @@ export default function ProjectFinancials({ config }) {
             </div>
           </div>
 
-          {/* Projections */}
+          {/* Growth Path */}
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
             <div className="px-6 py-4 font-display font-semibold text-white text-base border-b border-white/[0.06]">
-              Revenue Projections
+              Growth Path
             </div>
             <table className="w-full text-left">
               <thead>
                 <tr className="text-[11px] uppercase tracking-wider text-white/25 border-b border-white/[0.04]">
                   <th className="px-6 py-3 font-medium">Period</th>
-                  <th className="px-4 py-3 font-medium">Revenue</th>
-                  <th className="px-4 py-3 font-medium">EBITDA</th>
+                  <th className="px-4 py-3 font-medium">Farm Revenue</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
@@ -72,9 +71,6 @@ export default function ProjectFinancials({ config }) {
                     </td>
                     <td className="px-4 py-4 font-display font-semibold text-sm" style={{ color: p }}>
                       {row.revenue}
-                    </td>
-                    <td className="px-4 py-4 font-display font-semibold text-sm" style={{ color: row.ebitda ? s : 'transparent' }}>
-                      {row.ebitda || '--'}
                     </td>
                   </tr>
                 ))}
