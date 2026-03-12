@@ -37,12 +37,6 @@ const CATEGORY_ICONS = {
   children: MdOutlineChildCare,
 };
 
-const CATEGORY_BESPOKE = {
-  water: 'globe', education: 'badge', health: 'heart',
-  infrastructure: 'gear', food: 'trending', environment: 'globe',
-  shelter: 'building', children: 'users',
-};
-
 /* ── Category-specific hero illustrations (wide viewBox 400×225) ── */
 const MEDIA_ILLUSTRATIONS = {
   water: (c) => (
@@ -716,37 +710,45 @@ function MediaCard({ campaign, t }) {
       <div className="h-[2px] w-full" style={{ background: `linear-gradient(to right, ${accent.from}, ${accent.to})` }} />
 
       {/* Video/Image preview — elegant light SVG illustration */}
-      <div className="relative aspect-video overflow-hidden" style={{ background: `linear-gradient(135deg, ${accent.from}06, ${accent.to}04)` }}>
-        {/* Category-specific illustration */}
+      <div className="relative aspect-video overflow-hidden" style={{ background: `linear-gradient(135deg, ${accent.from}0A, ${accent.to}08)` }}>
+        {/* Category illustration — boosted visibility */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 225" fill="none" preserveAspectRatio="xMidYMid slice">
-          {(MEDIA_ILLUSTRATIONS[catKey] || MEDIA_DEFAULT_ILLUSTRATION)(accent.from)}
+          <defs><filter id={`mf${campaign.id}`}><feComponentTransfer><feFuncA type="linear" slope="2.2" /></feComponentTransfer></filter></defs>
+          <g filter={`url(#mf${campaign.id})`}>{(MEDIA_ILLUSTRATIONS[catKey] || MEDIA_DEFAULT_ILLUSTRATION)(accent.from)}</g>
         </svg>
 
         {/* Hex grid texture */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 225" fill="none" preserveAspectRatio="none">
-          <polygon points="370,12 390,24 390,48 370,60 350,48 350,24" stroke={accent.from} strokeWidth="0.4" opacity="0.06" />
-          <polygon points="30,165 48,177 48,197 30,209 12,197 12,177" stroke={accent.from} strokeWidth="0.4" opacity="0.06" />
-          <path d="M370 60 L310 100" stroke={accent.from} strokeWidth="0.2" strokeDasharray="3 5" opacity="0.04" />
-          <path d="M30 165 L90 130" stroke={accent.from} strokeWidth="0.2" strokeDasharray="3 5" opacity="0.04" />
-          <circle cx="370" cy="12" r="1.5" fill={accent.from} opacity="0.10" />
-          <circle cx="30" cy="209" r="1.5" fill={accent.from} opacity="0.10" />
-          <circle cx="310" cy="100" r="1" fill={accent.from} opacity="0.06" />
-          <circle cx="90" cy="130" r="1" fill={accent.from} opacity="0.06" />
+          <polygon points="370,12 390,24 390,48 370,60 350,48 350,24" stroke={accent.from} strokeWidth="0.4" opacity="0.08" />
+          <polygon points="30,165 48,177 48,197 30,209 12,197 12,177" stroke={accent.from} strokeWidth="0.4" opacity="0.08" />
+          <path d="M370 60 L310 100" stroke={accent.from} strokeWidth="0.3" strokeDasharray="3 5" opacity="0.05" />
+          <path d="M30 165 L90 130" stroke={accent.from} strokeWidth="0.3" strokeDasharray="3 5" opacity="0.05" />
+          <circle cx="370" cy="12" r="1.5" fill={accent.from} opacity="0.12" />
+          <circle cx="30" cy="209" r="1.5" fill={accent.from} opacity="0.12" />
+          <circle cx="310" cy="100" r="1" fill={accent.from} opacity="0.08" />
+          <circle cx="90" cy="130" r="1" fill={accent.from} opacity="0.08" />
         </svg>
 
-        {/* Central hex-node icon */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <HexIcon Icon={campaign.has_video || campaign.video_cid ? HiOutlinePlayCircle : CategoryIcon} accent={accent.from} bespoke={CATEGORY_BESPOKE[catKey] || 'globe'} size="lg" />
-        </div>
+        {/* Soft radial glow */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at 50% 50%, ${accent.from}0D, transparent 60%)` }} />
 
+        {/* Play button for video campaigns */}
         {campaign.has_video || campaign.video_cid ? (
-          <span className="absolute bottom-3 left-3 bg-white/80 backdrop-blur-sm text-xs font-medium px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm" style={{ color: accent.from }}>
-            <HiOutlinePlayCircle className="w-3.5 h-3.5" />
-            {t('campaign.watch_video')}
-          </span>
+          <>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-white/80 backdrop-blur-sm shadow-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <HiOutlinePlayCircle className="w-8 h-8" style={{ color: accent.from }} />
+              </div>
+            </div>
+            <span className="absolute bottom-3 left-3 bg-white/80 backdrop-blur-sm text-xs font-medium px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm" style={{ color: accent.from }}>
+              <HiOutlinePlayCircle className="w-3.5 h-3.5" />
+              {t('campaign.watch_video')}
+            </span>
+          </>
         ) : null}
         {campaign.category && (
-          <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-xs font-bold px-2.5 py-1 rounded-lg capitalize font-display" style={{ color: accent.from }}>
+          <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-xs font-bold px-2.5 py-1 rounded-lg capitalize font-display shadow-sm flex items-center gap-1" style={{ color: accent.from }}>
+            <CategoryIcon className="w-3.5 h-3.5" />
             {campaign.category}
           </span>
         )}

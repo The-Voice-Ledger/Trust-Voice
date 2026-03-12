@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import ProgressBar from './ProgressBar';
-import HexIcon from './HexIcon';
 import {
   MdOutlineWaterDrop, MdOutlineSchool, MdOutlineLocalHospital,
   MdOutlineConstruction, MdOutlineRestaurant, MdOutlineForest,
@@ -12,12 +11,6 @@ const CATEGORY_ICONS = {
   water: MdOutlineWaterDrop, education: MdOutlineSchool, health: MdOutlineLocalHospital,
   infrastructure: MdOutlineConstruction, food: MdOutlineRestaurant, environment: MdOutlineForest,
   shelter: MdOutlineHouse, children: MdOutlineChildCare,
-};
-
-const CATEGORY_BESPOKE = {
-  water: 'globe', education: 'badge', health: 'heart',
-  infrastructure: 'gear', food: 'trending', environment: 'globe',
-  shelter: 'building', children: 'users',
 };
 
 const CATEGORY_ACCENT_COLORS = {
@@ -195,7 +188,6 @@ export default function CampaignCard({ campaign }) {
   const catKey = (campaign.category || '').toLowerCase();
   const accent = CATEGORY_ACCENT_COLORS[catKey] || CATEGORY_ACCENT_COLORS._default;
   const CatIcon = CATEGORY_ICONS[catKey] || MdHandshake;
-  const bespoke = CATEGORY_BESPOKE[catKey] || 'globe';
   const illustration = HERO_ILLUSTRATIONS[catKey] || DEFAULT_ILLUSTRATION;
 
   return (
@@ -207,33 +199,32 @@ export default function CampaignCard({ campaign }) {
       <div className="h-[2px] w-full" style={{ background: `linear-gradient(to right, ${accent.from}, ${accent.to})` }} />
 
       {/* ── Elegant SVG hero ── */}
-      <div className="relative h-36 flex items-center justify-center overflow-hidden" style={{ background: `linear-gradient(135deg, ${accent.from}06, ${accent.to}04)` }}>
-        {/* Bespoke category illustration */}
+      <div className="relative h-36 flex items-center justify-center overflow-hidden" style={{ background: `linear-gradient(135deg, ${accent.from}0A, ${accent.to}08)` }}>
+        {/* Category illustration — boosted visibility */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 150" fill="none" preserveAspectRatio="xMidYMid slice">
-          {illustration(accent.from)}
+          <defs><filter id={`cf${campaign.id}`}><feComponentTransfer><feFuncA type="linear" slope="2.2" /></feComponentTransfer></filter></defs>
+          <g filter={`url(#cf${campaign.id})`}>{illustration(accent.from)}</g>
         </svg>
 
-        {/* Shared hex grid texture */}
+        {/* Hex grid texture */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 150" fill="none" preserveAspectRatio="none">
-          {/* Corner hexagons */}
-          <polygon points="370,8 388,18 388,38 370,48 352,38 352,18" stroke={accent.from} strokeWidth="0.4" opacity="0.06" />
-          <polygon points="30,102 48,112 48,132 30,142 12,132 12,112" stroke={accent.from} strokeWidth="0.4" opacity="0.06" />
-          {/* Connection lines */}
-          <path d="M370 48 L300 75" stroke={accent.from} strokeWidth="0.2" strokeDasharray="3 5" opacity="0.04" />
-          <path d="M30 102 L100 80" stroke={accent.from} strokeWidth="0.2" strokeDasharray="3 5" opacity="0.04" />
-          {/* Small node dots */}
-          <circle cx="370" cy="8" r="1.5" fill={accent.from} opacity="0.10" />
-          <circle cx="30" cy="142" r="1.5" fill={accent.from} opacity="0.10" />
-          <circle cx="300" cy="75" r="1" fill={accent.from} opacity="0.06" />
-          <circle cx="100" cy="80" r="1" fill={accent.from} opacity="0.06" />
+          <polygon points="370,8 388,18 388,38 370,48 352,38 352,18" stroke={accent.from} strokeWidth="0.4" opacity="0.08" />
+          <polygon points="30,102 48,112 48,132 30,142 12,132 12,112" stroke={accent.from} strokeWidth="0.4" opacity="0.08" />
+          <path d="M370 48 L300 75" stroke={accent.from} strokeWidth="0.3" strokeDasharray="3 5" opacity="0.05" />
+          <path d="M30 102 L100 80" stroke={accent.from} strokeWidth="0.3" strokeDasharray="3 5" opacity="0.05" />
+          <circle cx="370" cy="8" r="1.5" fill={accent.from} opacity="0.12" />
+          <circle cx="30" cy="142" r="1.5" fill={accent.from} opacity="0.12" />
+          <circle cx="300" cy="75" r="1" fill={accent.from} opacity="0.08" />
+          <circle cx="100" cy="80" r="1" fill={accent.from} opacity="0.08" />
         </svg>
 
-        {/* Central hex-node icon */}
-        <HexIcon Icon={CatIcon} accent={accent.from} bespoke={bespoke} size="lg" />
+        {/* Soft radial glow for depth */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at 50% 50%, ${accent.from}0D, transparent 60%)` }} />
 
         {/* Category badge */}
         {campaign.category && (
-          <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-xs font-bold px-2.5 py-1 rounded-lg capitalize font-display shadow-sm" style={{ color: accent.from }}>
+          <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-xs font-bold px-2.5 py-1 rounded-lg capitalize font-display shadow-sm flex items-center gap-1" style={{ color: accent.from }}>
+            <CatIcon className="w-3.5 h-3.5" />
             {campaign.category}
           </span>
         )}
