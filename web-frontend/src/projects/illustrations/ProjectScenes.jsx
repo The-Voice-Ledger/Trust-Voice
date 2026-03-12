@@ -631,7 +631,7 @@ export function ExperienceSunset({ className = '' }) {
 
 /* ========================================================
  *  6. CTA HORIZON
- *     Sun setting behind moringa canopy, warm and inviting
+ *     Moringa grove at dusk with fireflies and warm horizon glow
  * ======================================================== */
 export function CtaHorizon({ className = '' }) {
   return (
@@ -643,24 +643,55 @@ export function CtaHorizon({ className = '' }) {
       preserveAspectRatio="xMidYMax slice"
       aria-hidden="true"
     >
-      {/* Sun */}
-      <circle cx="400" cy="100" r="50" fill={a600} opacity="0.12" className="scene-glow-slow" />
-      <circle cx="400" cy="100" r="30" fill={a600} opacity="0.08" />
-      {/* Rays */}
-      <g className="scene-sun-rotate" style={{ transformOrigin: '400px 100px' }}>
-        {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((a, i) => (
-          <line key={i} x1="400" y1="45" x2="400" y2="35" stroke={a600} strokeWidth="1" opacity="0.06" transform={`rotate(${a} 400 100)`} />
-        ))}
-      </g>
+      <defs>
+        {/* Warm horizon glow along the ground line */}
+        <linearGradient id="cta-horizon-glow" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={a600} stopOpacity="0" />
+          <stop offset="60%" stopColor={a600} stopOpacity="0.06" />
+          <stop offset="100%" stopColor={e600} stopOpacity="0.04" />
+        </linearGradient>
+      </defs>
+
+      {/* Ambient horizon wash */}
+      <rect x="0" y="80" width="800" height="80" fill="url(#cta-horizon-glow)" />
+
       {/* Moringa canopy silhouettes */}
-      {[80, 180, 300, 420, 540, 650, 740].map((x, i) => (
-        <g key={i} className={i % 2 === 0 ? 'scene-sway' : 'scene-sway-delay'}>
-          <rect x={x - 1.5} y={110 - 12 - (i % 3) * 6} width="3" height={30 + (i % 3) * 6} rx="1.5" fill={e600} opacity="0.15" />
-          <ellipse cx={x} cy={110 - 18 - (i % 3) * 6} rx={14 + (i % 2) * 6} ry={10 + (i % 2) * 3} fill={e600} opacity="0.1" />
-        </g>
+      {[60, 150, 260, 370, 480, 580, 670, 760].map((x, i) => {
+        const h = 35 + (i % 3) * 10;
+        const cls = i % 2 === 0 ? 'scene-sway' : 'scene-sway-delay';
+        return (
+          <g key={i} className={cls}>
+            <rect x={x - 1.5} y={120 - h} width="3" height={h} rx="1.5" fill={e600} opacity="0.18" />
+            <ellipse cx={x} cy={120 - h - 6} rx={14 + (i % 2) * 6} ry={10 + (i % 2) * 3} fill={e600} opacity="0.12" />
+            <ellipse cx={x - 7} cy={120 - h + 3} rx={7} ry={4} fill={e600} opacity="0.08" />
+            <ellipse cx={x + 7} cy={120 - h + 3} rx={7} ry={4} fill={e600} opacity="0.07" />
+          </g>
+        );
+      })}
+
+      {/* Fireflies -- warm amber dots drifting among the canopy */}
+      {[
+        { x: 120, y: 72, r: 2.0, d: 0 },
+        { x: 230, y: 60, r: 1.5, d: 1.2 },
+        { x: 340, y: 78, r: 1.8, d: 0.6 },
+        { x: 440, y: 55, r: 1.3, d: 2.0 },
+        { x: 520, y: 68, r: 2.2, d: 0.3 },
+        { x: 610, y: 58, r: 1.4, d: 1.8 },
+        { x: 700, y: 74, r: 1.6, d: 0.9 },
+        { x: 180, y: 88, r: 1.2, d: 1.5 },
+        { x: 480, y: 85, r: 1.0, d: 2.5 },
+        { x: 650, y: 90, r: 1.3, d: 0.4 },
+      ].map((f, i) => (
+        <circle
+          key={i} cx={f.x} cy={f.y} r={f.r}
+          fill={a600} opacity="0.18"
+          className="scene-glow-slow"
+          style={{ animationDelay: `${f.d}s` }}
+        />
       ))}
+
       {/* Ground */}
-      <path d="M0 120 Q200 110 400 118 Q600 110 800 120 L800 160 L0 160Z" fill={e600} opacity="0.08" />
+      <path d="M0 120 Q200 112 400 118 Q600 112 800 120 L800 160 L0 160Z" fill={e600} opacity="0.08" />
     </svg>
   );
 }
