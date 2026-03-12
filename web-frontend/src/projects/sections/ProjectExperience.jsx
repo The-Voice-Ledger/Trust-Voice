@@ -149,7 +149,7 @@ export default function ProjectExperience({ config }) {
     >
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-20">
+        <div className="text-center mb-28">
           <p className="text-xs font-medium tracking-[0.2em] uppercase mb-3 text-gray-400">
             {experience.sectionLabel}
           </p>
@@ -183,7 +183,7 @@ export default function ProjectExperience({ config }) {
                   stroke={colors[active]}
                   strokeWidth="3.5"
                   strokeLinecap="round"
-                  strokeDasharray={`${(active + 1) * 97} 600`}
+                  strokeDasharray={`${(active + 1) * 183} 600`}
                   style={{ transition: 'stroke-dasharray 0.6s ease, stroke 0.4s ease' }}
                 />
               )}
