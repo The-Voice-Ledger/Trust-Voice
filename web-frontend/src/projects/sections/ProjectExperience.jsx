@@ -1,73 +1,98 @@
 import { useEffect, useRef, useState } from 'react';
 
 /**
- * ProjectExperience - compact animated "day arc" for Live-Work-Learn.
+ * ProjectExperience - bold animated "day arc" for Live-Work-Learn.
  *
- * Three days rendered as an auto-rotating horizontal strip with a
- * semicircular progress arc, staggered fade-in, and subtle scene
- * colour accents. Much less vertical space than the old timeline.
+ * Large semicircular arc with day titles on the arc itself,
+ * wide content card with prominent scene illustration.
  */
 
-/* Mini scene vignettes (inline SVG, no external dependency) */
+/* Mini scene vignettes (inline SVG) */
 function SceneConnection() {
   return (
-    <svg viewBox="0 0 120 60" className="w-full h-auto opacity-40">
+    <svg viewBox="0 0 160 90" className="w-full h-auto">
+      {/* Ground line */}
+      <line x1="10" y1="78" x2="150" y2="78" stroke="#059669" strokeWidth="0.5" opacity="0.1" />
       {/* Tea cup */}
-      <rect x="45" y="28" width="30" height="18" rx="4" fill="#059669" opacity="0.3" />
-      <path d="M75 34 Q82 34 82 40 Q82 46 75 46" fill="none" stroke="#059669" strokeWidth="1.5" opacity="0.25" />
+      <rect x="55" y="45" width="40" height="24" rx="5" fill="#059669" opacity="0.2" />
+      <path d="M95 52 Q106 52 106 62 Q106 72 95 72" fill="none" stroke="#059669" strokeWidth="2" opacity="0.15" />
       {/* Steam wisps */}
-      <path d="M55 26 Q53 20 56 16" fill="none" stroke="#059669" strokeWidth="1" opacity="0.2" className="exp-steam" />
-      <path d="M62 24 Q60 18 63 14" fill="none" stroke="#059669" strokeWidth="1" opacity="0.15" className="exp-steam" style={{ animationDelay: '0.4s' }} />
-      {/* Leaf */}
-      <ellipse cx="35" cy="36" rx="8" ry="4" fill="#059669" opacity="0.2" transform="rotate(-30 35 36)" />
-      <line x1="35" y1="36" x2="28" y2="42" stroke="#059669" strokeWidth="0.8" opacity="0.2" />
+      <path d="M68 42 Q65 32 69 24" fill="none" stroke="#059669" strokeWidth="1.5" opacity="0.15" className="exp-steam" />
+      <path d="M78 39 Q75 28 79 20" fill="none" stroke="#059669" strokeWidth="1.5" opacity="0.12" className="exp-steam" style={{ animationDelay: '0.5s' }} />
+      <path d="M88 41 Q86 33 89 26" fill="none" stroke="#059669" strokeWidth="1" opacity="0.1" className="exp-steam" style={{ animationDelay: '1s' }} />
+      {/* Leaves decoration */}
+      <ellipse cx="28" cy="58" rx="12" ry="5" fill="#059669" opacity="0.12" transform="rotate(-25 28 58)" />
+      <ellipse cx="22" cy="66" rx="9" ry="4" fill="#059669" opacity="0.1" transform="rotate(15 22 66)" />
+      <line x1="28" y1="58" x2="18" y2="74" stroke="#059669" strokeWidth="0.8" opacity="0.1" />
+      {/* Person sitting */}
+      <circle cx="125" cy="50" r="4.5" fill="#059669" opacity="0.2" />
+      <line x1="125" y1="55" x2="125" y2="68" stroke="#059669" strokeWidth="2" opacity="0.2" />
+      <line x1="125" y1="60" x2="118" y2="56" stroke="#059669" strokeWidth="1.5" opacity="0.15" />
+      <line x1="125" y1="68" x2="120" y2="78" stroke="#059669" strokeWidth="1.5" opacity="0.15" />
+      <line x1="125" y1="68" x2="130" y2="78" stroke="#059669" strokeWidth="1.5" opacity="0.15" />
     </svg>
   );
 }
 
 function SceneContribution() {
   return (
-    <svg viewBox="0 0 120 60" className="w-full h-auto opacity-40">
+    <svg viewBox="0 0 160 90" className="w-full h-auto">
       {/* Sun */}
-      <circle cx="90" cy="15" r="8" fill="#D97706" opacity="0.15" />
+      <circle cx="130" cy="18" r="12" fill="#D97706" opacity="0.1" />
+      <circle cx="130" cy="18" r="7" fill="#D97706" opacity="0.08" className="exp-sparkle" />
+      {/* Ground */}
+      <line x1="10" y1="78" x2="150" y2="78" stroke="#059669" strokeWidth="0.5" opacity="0.1" />
       {/* Person harvesting */}
-      <circle cx="40" cy="20" r="3" fill="#059669" opacity="0.3" />
-      <line x1="40" y1="23" x2="40" y2="34" stroke="#059669" strokeWidth="1.5" opacity="0.3" />
-      <line x1="40" y1="27" x2="34" y2="32" stroke="#059669" strokeWidth="1.2" opacity="0.25" />
-      <line x1="40" y1="27" x2="47" y2="30" stroke="#059669" strokeWidth="1.2" opacity="0.25" />
-      <line x1="40" y1="34" x2="36" y2="44" stroke="#059669" strokeWidth="1.2" opacity="0.25" />
-      <line x1="40" y1="34" x2="44" y2="44" stroke="#059669" strokeWidth="1.2" opacity="0.25" />
-      {/* Moringa branch being picked */}
-      <path d="M47 30 Q55 28 60 22" fill="none" stroke="#059669" strokeWidth="1" opacity="0.2" />
-      <ellipse cx="60" cy="18" rx="6" ry="3" fill="#059669" opacity="0.15" />
-      {/* Oil press silhouette */}
-      <rect x="72" y="30" width="16" height="14" rx="2" fill="#D97706" opacity="0.12" />
-      <circle cx="80" cy="37" r="3" fill="#D97706" opacity="0.1" />
+      <circle cx="45" cy="30" r="4.5" fill="#059669" opacity="0.25" />
+      <line x1="45" y1="35" x2="45" y2="52" stroke="#059669" strokeWidth="2" opacity="0.25" />
+      <line x1="45" y1="42" x2="36" y2="48" stroke="#059669" strokeWidth="1.5" opacity="0.2" />
+      <line x1="45" y1="42" x2="56" y2="44" stroke="#059669" strokeWidth="1.5" opacity="0.2" />
+      <line x1="45" y1="52" x2="40" y2="66" stroke="#059669" strokeWidth="1.5" opacity="0.2" />
+      <line x1="45" y1="52" x2="50" y2="66" stroke="#059669" strokeWidth="1.5" opacity="0.2" />
+      {/* Moringa branch */}
+      <path d="M56 44 Q68 40 78 30" fill="none" stroke="#059669" strokeWidth="1.2" opacity="0.15" />
+      <ellipse cx="78" cy="24" rx="10" ry="5" fill="#059669" opacity="0.1" />
+      <ellipse cx="70" cy="32" rx="7" ry="3.5" fill="#059669" opacity="0.08" />
+      {/* Oil press */}
+      <rect x="95" y="45" width="26" height="20" rx="3" fill="#D97706" opacity="0.12" />
+      <rect x="100" y="38" width="8" height="7" rx="1.5" fill="#D97706" opacity="0.08" />
+      <circle cx="108" cy="55" r="5" fill="#D97706" opacity="0.08" />
+      {/* Second person */}
+      <circle cx="90" cy="30" r="4" fill="#D97706" opacity="0.18" />
+      <line x1="90" y1="34" x2="90" y2="48" stroke="#D97706" strokeWidth="1.8" opacity="0.18" />
+      <line x1="90" y1="40" x2="96" y2="46" stroke="#D97706" strokeWidth="1.3" opacity="0.14" />
     </svg>
   );
 }
 
 function SceneCreation() {
   return (
-    <svg viewBox="0 0 120 60" className="w-full h-auto opacity-40">
-      {/* Product bottles */}
-      <rect x="25" y="26" width="10" height="20" rx="2" fill="#059669" opacity="0.25" />
-      <rect x="28" y="22" width="4" height="4" rx="1" fill="#059669" opacity="0.2" />
-      <rect x="42" y="30" width="8" height="16" rx="2" fill="#D97706" opacity="0.2" />
-      <circle cx="46" cy="38" r="2" fill="#D97706" opacity="0.15" />
-      {/* Person */}
-      <circle cx="72" cy="22" r="3" fill="#059669" opacity="0.3" />
-      <line x1="72" y1="25" x2="72" y2="36" stroke="#059669" strokeWidth="1.5" opacity="0.3" />
-      <line x1="72" y1="29" x2="65" y2="33" stroke="#059669" strokeWidth="1.2" opacity="0.25" />
-      <line x1="72" y1="29" x2="79" y2="33" stroke="#059669" strokeWidth="1.2" opacity="0.25" />
-      <line x1="72" y1="36" x2="68" y2="46" stroke="#059669" strokeWidth="1.2" opacity="0.25" />
-      <line x1="72" y1="36" x2="76" y2="46" stroke="#059669" strokeWidth="1.2" opacity="0.25" />
-      {/* Sparkle */}
-      <g opacity="0.2" className="exp-sparkle">
-        <line x1="95" y1="18" x2="95" y2="28" stroke="#D97706" strokeWidth="1" />
-        <line x1="90" y1="23" x2="100" y2="23" stroke="#D97706" strokeWidth="1" />
-        <line x1="91.5" y1="19.5" x2="98.5" y2="26.5" stroke="#D97706" strokeWidth="0.8" />
-        <line x1="98.5" y1="19.5" x2="91.5" y2="26.5" stroke="#D97706" strokeWidth="0.8" />
+    <svg viewBox="0 0 160 90" className="w-full h-auto">
+      {/* Ground */}
+      <line x1="10" y1="78" x2="150" y2="78" stroke="#059669" strokeWidth="0.5" opacity="0.1" />
+      {/* Product bottles - larger */}
+      <rect x="22" y="40" width="14" height="28" rx="3" fill="#059669" opacity="0.18" />
+      <rect x="26" y="34" width="6" height="6" rx="1.5" fill="#059669" opacity="0.14" />
+      <rect x="42" y="46" width="12" height="22" rx="2.5" fill="#D97706" opacity="0.15" />
+      <circle cx="48" cy="56" r="3" fill="#D97706" opacity="0.1" />
+      <rect x="60" y="50" width="10" height="18" rx="2" fill="#059669" opacity="0.12" />
+      {/* Person creating */}
+      <circle cx="100" cy="32" r="4.5" fill="#059669" opacity="0.25" />
+      <line x1="100" y1="37" x2="100" y2="54" stroke="#059669" strokeWidth="2" opacity="0.25" />
+      <line x1="100" y1="44" x2="90" y2="50" stroke="#059669" strokeWidth="1.5" opacity="0.2" />
+      <line x1="100" y1="44" x2="110" y2="50" stroke="#059669" strokeWidth="1.5" opacity="0.2" />
+      <line x1="100" y1="54" x2="95" y2="68" stroke="#059669" strokeWidth="1.5" opacity="0.2" />
+      <line x1="100" y1="54" x2="105" y2="68" stroke="#059669" strokeWidth="1.5" opacity="0.2" />
+      {/* Sparkles */}
+      <g opacity="0.15" className="exp-sparkle">
+        <line x1="132" y1="24" x2="132" y2="38" stroke="#D97706" strokeWidth="1.2" />
+        <line x1="125" y1="31" x2="139" y2="31" stroke="#D97706" strokeWidth="1.2" />
+        <line x1="127" y1="26" x2="137" y2="36" stroke="#D97706" strokeWidth="0.8" />
+        <line x1="137" y1="26" x2="127" y2="36" stroke="#D97706" strokeWidth="0.8" />
+      </g>
+      <g opacity="0.1" className="exp-sparkle" style={{ animationDelay: '0.7s' }}>
+        <line x1="78" y1="22" x2="78" y2="32" stroke="#D97706" strokeWidth="1" />
+        <line x1="73" y1="27" x2="83" y2="27" stroke="#D97706" strokeWidth="1" />
       </g>
     </svg>
   );
@@ -92,7 +117,7 @@ export default function ProjectExperience({ config }) {
     if (!ref.current) return;
     const io = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { setVisible(true); io.disconnect(); } },
-      { threshold: 0.2 },
+      { threshold: 0.15 },
     );
     io.observe(ref.current);
     return () => io.disconnect();
@@ -115,28 +140,23 @@ export default function ProjectExperience({ config }) {
     }, 4000);
   };
 
-  /* Arc progress SVG */
-  const arcR = 38;
-  const arcCirc = Math.PI * arcR; // semicircle
-  const arcSegment = arcCirc / experience.days.length;
-
   return (
     <section
       ref={ref}
       id="experience"
-      className="relative py-20 sm:py-24 px-6 overflow-hidden"
+      className="relative py-20 sm:py-28 px-6 overflow-hidden"
       style={{ background: 'linear-gradient(to bottom, #fafaf9, #f5f5f0, #fafaf9)' }}
     >
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-10">
-          <p className="text-xs font-medium tracking-[0.2em] uppercase mb-2 text-gray-400">
+        <div className="text-center mb-14">
+          <p className="text-xs font-medium tracking-[0.2em] uppercase mb-3 text-gray-400">
             {experience.sectionLabel}
           </p>
-          <h2 className="font-display text-2xl sm:text-3xl font-semibold text-gray-900 tracking-tight">
+          <h2 className="font-display text-3xl sm:text-4xl font-semibold text-gray-900 tracking-tight">
             {experience.heading}
           </h2>
-          <p className="text-gray-400 mt-2 max-w-md mx-auto text-sm leading-relaxed">
+          <p className="text-gray-400 mt-3 max-w-lg mx-auto text-[15px] leading-relaxed">
             {experience.subtitle}
           </p>
         </div>
@@ -144,71 +164,91 @@ export default function ProjectExperience({ config }) {
         {/* Day selector arc + content */}
         <div className="flex flex-col items-center">
 
-          {/* Arc indicator with day dots */}
-          <div className="relative mb-10" style={{ width: 340, height: 180 }}>
-            <svg width="340" height="180" viewBox="0 0 340 180" className="absolute inset-0">
+          {/* Arc with day labels on the curve */}
+          <div className="relative mb-12" style={{ width: 420, height: 200 }}>
+            <svg width="420" height="200" viewBox="0 0 420 200" className="absolute inset-0">
               {/* Background arc */}
               <path
-                d="M 40 160 A 130 130 0 0 1 300 160"
+                d="M 35 185 A 175 175 0 0 1 385 185"
                 fill="none"
-                stroke="rgba(0,0,0,0.06)"
+                stroke="rgba(0,0,0,0.05)"
                 strokeWidth="3"
                 strokeLinecap="round"
               />
               {/* Active progress arc */}
               {visible && (
                 <path
-                  d="M 40 160 A 130 130 0 0 1 300 160"
+                  d="M 35 185 A 175 175 0 0 1 385 185"
                   fill="none"
                   stroke={colors[active]}
-                  strokeWidth="3"
+                  strokeWidth="3.5"
                   strokeLinecap="round"
-                  strokeDasharray={`${(active + 1) * 72} 500`}
+                  strokeDasharray={`${(active + 1) * 97} 600`}
                   style={{ transition: 'stroke-dasharray 0.6s ease, stroke 0.4s ease' }}
                 />
               )}
             </svg>
 
-            {/* Day dots positioned along the arc */}
+            {/* Day nodes positioned along the arc */}
             {experience.days.map((day, i) => {
               const angle = Math.PI - (Math.PI * (i + 0.5)) / experience.days.length;
-              const cx = 170 + 130 * Math.cos(angle);
-              const cy = 160 - 130 * Math.sin(angle);
+              const cx = 210 + 175 * Math.cos(angle);
+              const cy = 185 - 175 * Math.sin(angle);
               const isActive = i === active;
 
               return (
                 <button
                   key={i}
                   onClick={() => handleSelect(i)}
-                  className="absolute flex flex-col items-center gap-1.5 -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
+                  className="absolute flex flex-col items-center gap-2 -translate-x-1/2 -translate-y-1/2 group cursor-pointer"
                   style={{
                     left: cx,
                     top: cy,
                     opacity: visible ? 1 : 0,
-                    transition: `opacity 0.4s ease ${0.3 + i * 0.15}s`,
+                    transform: `translate(-50%, -50%) ${isActive ? 'scale(1.1)' : 'scale(1)'}`,
+                    transition: `opacity 0.5s ease ${0.2 + i * 0.12}s, transform 0.3s ease`,
                   }}
                 >
+                  {/* Outer ring + inner dot */}
                   <span
-                    className="w-6 h-6 rounded-full border-2 transition-all duration-300"
+                    className="relative w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300"
                     style={{
-                      borderColor: colors[i],
-                      backgroundColor: isActive ? colors[i] : 'white',
-                      transform: isActive ? 'scale(1.3)' : 'scale(1)',
+                      borderColor: isActive ? colors[i] : 'rgba(0,0,0,0.08)',
+                      backgroundColor: isActive ? `${colors[i]}15` : 'white',
+                      boxShadow: isActive ? `0 0 16px ${colors[i]}30` : 'none',
                     }}
-                  />
-                  <span
-                    className="text-[11px] font-display font-semibold whitespace-nowrap transition-colors duration-300"
-                    style={{ color: isActive ? colors[i] : '#9ca3af' }}
                   >
-                    {day.day}
+                    <span
+                      className="w-3 h-3 rounded-full transition-all duration-300"
+                      style={{
+                        backgroundColor: colors[i],
+                        opacity: isActive ? 1 : 0.35,
+                        transform: isActive ? 'scale(1.2)' : 'scale(1)',
+                      }}
+                    />
                   </span>
+                  {/* Day label + title */}
+                  <div className="text-center">
+                    <span
+                      className="block text-xs font-display font-bold tracking-wide uppercase transition-colors duration-300"
+                      style={{ color: isActive ? colors[i] : '#9ca3af' }}
+                    >
+                      {day.day}
+                    </span>
+                    <span
+                      className="block text-[11px] font-medium transition-colors duration-300 mt-0.5"
+                      style={{ color: isActive ? '#374151' : '#d1d5db' }}
+                    >
+                      {day.title}
+                    </span>
+                  </div>
                 </button>
               );
             })}
           </div>
 
           {/* Content card (swaps on active change) */}
-          <div className="relative w-full max-w-lg">
+          <div className="relative w-full max-w-2xl">
             {experience.days.map((day, i) => {
               const isActive = i === active;
               const Scene = SCENES[i];
@@ -222,30 +262,34 @@ export default function ProjectExperience({ config }) {
                     top: 0,
                     left: 0,
                     opacity: isActive ? 1 : 0,
-                    transform: isActive ? 'translateY(0) scale(1)' : 'translateY(8px) scale(0.97)',
+                    transform: isActive ? 'translateY(0) scale(1)' : 'translateY(12px) scale(0.96)',
                     pointerEvents: isActive ? 'auto' : 'none',
                   }}
                 >
-                  <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100">
-                    <div className="flex items-start gap-5">
-                      {/* Inline scene */}
-                      <div className="w-24 sm:w-28 flex-shrink-0">
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="flex flex-col sm:flex-row">
+                      {/* Scene illustration - prominent */}
+                      <div
+                        className="sm:w-48 md:w-56 flex-shrink-0 p-5 sm:p-6 flex items-center justify-center"
+                        style={{ backgroundColor: `${colors[i]}06` }}
+                      >
                         {Scene && <Scene />}
                       </div>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1.5">
+                      {/* Text content */}
+                      <div className="flex-1 p-6 sm:p-8">
+                        <div className="flex items-center gap-2.5 mb-3">
                           <span
-                            className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full"
-                            style={{ backgroundColor: `${colors[i]}15`, color: colors[i] }}
+                            className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full"
+                            style={{ backgroundColor: `${colors[i]}12`, color: colors[i] }}
                           >
                             {day.day}
                           </span>
-                          <h3 className="font-display text-base sm:text-lg font-semibold text-gray-900">
+                          <h3 className="font-display text-lg sm:text-xl font-semibold text-gray-900">
                             {day.title}
                           </h3>
                         </div>
-                        <p className="text-gray-500 text-sm leading-relaxed">
+                        <p className="text-gray-500 text-[15px] leading-relaxed">
                           {day.description}
                         </p>
                       </div>
@@ -256,16 +300,16 @@ export default function ProjectExperience({ config }) {
             })}
           </div>
 
-          {/* Dot indicators */}
-          <div className="flex gap-2 mt-5">
+          {/* Progress dots */}
+          <div className="flex gap-2.5 mt-6">
             {experience.days.map((_, i) => (
               <button
                 key={i}
                 onClick={() => handleSelect(i)}
-                className="w-1.5 h-1.5 rounded-full transition-all duration-300 cursor-pointer"
+                className="h-1.5 rounded-full transition-all duration-400 cursor-pointer"
                 style={{
+                  width: i === active ? 24 : 6,
                   backgroundColor: i === active ? colors[i] : '#d1d5db',
-                  transform: i === active ? 'scale(1.5)' : 'scale(1)',
                 }}
               />
             ))}
@@ -276,13 +320,13 @@ export default function ProjectExperience({ config }) {
       {/* Scoped animations */}
       <style>{`
         @keyframes expSteam {
-          0%, 100% { opacity: 0.15; transform: translateY(0); }
-          50% { opacity: 0.25; transform: translateY(-3px); }
+          0%, 100% { opacity: 0.12; transform: translateY(0); }
+          50% { opacity: 0.22; transform: translateY(-4px); }
         }
         .exp-steam { animation: expSteam 2.5s ease-in-out infinite; }
         @keyframes expSparkle {
-          0%, 100% { opacity: 0.15; }
-          50% { opacity: 0.35; }
+          0%, 100% { opacity: 0.1; }
+          50% { opacity: 0.3; }
         }
         .exp-sparkle { animation: expSparkle 2s ease-in-out infinite; }
       `}</style>
