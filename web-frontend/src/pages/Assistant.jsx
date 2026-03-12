@@ -48,6 +48,7 @@ export default function Assistant() {
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
   const audioRef = useRef(null);
+  const recordStartRef = useRef(0);  // timestamp when recording started
 
   const userId = user?.id || user?.telegram_user_id || 'web_anonymous';
   const [searchParams, setSearchParams] = useSearchParams();
@@ -139,55 +140,66 @@ export default function Assistant() {
     }
   };
 
-  // ── Voice recording ──────────────────────────────────────────
-  const startVoice = useCallback(async () => {
+  // ── Voice recording (toggle: tap to start, tap to stop) ────
+  const MIN_RECORD_MS = 600; // minimum recording duration in ms
+
+  const toggleVoice = useCallback(async () => {
+    // If already recording → stop and process
+    if (voiceStatus === 'recording') {
+      const elapsed = Date.now() - recordStartRef.current;
+      if (elapsed < MIN_RECORD_MS) {
+        // Too short — keep recording, don't stop yet
+        return;
+      }
+      setVoiceStatus('processing');
+
+      try {
+        const blob = await voiceManager.stopRecording();
+        if (!blob || blob.size < 1000) {
+          // Blob too small to be valid audio
+          setVoiceStatus('idle');
+          return;
+        }
+
+        setLoading(true);
+        const res = await voiceAgent(blob, userId, language, conversationId);
+        if (res.conversation_id) setConversationId(res.conversation_id);
+
+        // Show user's transcribed message
+        if (res.transcription) {
+          addMessage({ role: 'user', text: res.transcription, isVoice: true });
+        }
+
+        addMessage({
+          role: 'assistant',
+          text: res.response_text,
+          responseType: res.response_type || 'text',
+          data: res.data || {},
+          audioUrl: res.audio_url,
+          toolsUsed: res.tools_used || [],
+        });
+
+        // Play TTS
+        await playAudio(res.audio_url);
+      } catch (err) {
+        addMessage({ role: 'assistant', text: err.message || 'Voice processing failed.', responseType: 'error' });
+      } finally {
+        setVoiceStatus('idle');
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Not recording → start
     try {
       stopAudio();
       setVoiceStatus('recording');
+      recordStartRef.current = Date.now();
       await voiceManager.startRecording();
     } catch {
       setVoiceStatus('idle');
     }
-  }, [stopAudio]);
-
-  const stopVoice = useCallback(async () => {
-    if (voiceStatus !== 'recording') return;
-    setVoiceStatus('processing');
-
-    try {
-      const blob = await voiceManager.stopRecording();
-      if (!blob) { setVoiceStatus('idle'); return; }
-
-      const hasAudio = await voiceManager.hasSound(blob);
-      if (!hasAudio) { setVoiceStatus('idle'); return; }
-
-      setLoading(true);
-      const res = await voiceAgent(blob, userId, language, conversationId);
-      if (res.conversation_id) setConversationId(res.conversation_id);
-
-      // Show user's transcribed message
-      if (res.transcription) {
-        addMessage({ role: 'user', text: res.transcription, isVoice: true });
-      }
-
-      addMessage({
-        role: 'assistant',
-        text: res.response_text,
-        responseType: res.response_type || 'text',
-        data: res.data || {},
-        audioUrl: res.audio_url,
-        toolsUsed: res.tools_used || [],
-      });
-
-      // Play TTS
-      await playAudio(res.audio_url);
-    } catch (err) {
-      addMessage({ role: 'assistant', text: err.message || 'Voice processing failed.', responseType: 'error' });
-    } finally {
-      setVoiceStatus('idle');
-      setLoading(false);
-    }
-  }, [voiceStatus, userId, language, conversationId, addMessage, setConversationId, setLoading, playAudio]);
+  }, [voiceStatus, userId, language, conversationId, addMessage, setConversationId, setLoading, playAudio, stopAudio]);
 
   const cancelVoice = useCallback(() => {
     voiceManager.stopRecording();
@@ -287,7 +299,7 @@ export default function Assistant() {
           <div className="mb-3 mt-2 relative flex items-center gap-3 bg-red-50/80 backdrop-blur-sm border border-red-200 rounded-2xl px-4 py-3 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-transparent pointer-events-none" />
             <div className="relative w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-            <span className="relative text-sm font-medium text-red-700 flex-1">{t('voice.listening', 'Listening...')}</span>
+            <span className="relative text-sm font-medium text-red-700 flex-1">{t('voice.listening', 'Listening... tap mic to send')}</span>
             <button onClick={cancelVoice} className="relative text-xs text-red-500 font-medium hover:underline">{t('common.cancel', 'Cancel')}</button>
           </div>
         )}
@@ -309,9 +321,7 @@ export default function Assistant() {
               </circle>
             </svg>
             <button
-              onPointerDown={(e) => { e.preventDefault(); if (voiceStatus === 'idle' && !loading) startVoice(); }}
-              onPointerUp={(e) => { e.preventDefault(); if (voiceStatus === 'recording') stopVoice(); }}
-              onPointerLeave={(e) => { e.preventDefault(); if (voiceStatus === 'recording') stopVoice(); }}
+              onClick={(e) => { e.preventDefault(); if (!loading && voiceStatus !== 'processing') toggleVoice(); }}
               disabled={loading || voiceStatus === 'processing'}
               className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 ${
                 voiceStatus === 'recording'
@@ -320,9 +330,12 @@ export default function Assistant() {
                     ? 'bg-amber-500 text-white cursor-wait shadow-md'
                     : 'bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-200/50 hover:shadow-lg hover:scale-105 active:scale-95'
               }`}
-              aria-label={voiceStatus === 'recording' ? 'Release to send' : 'Hold to speak'}
+              aria-label={voiceStatus === 'recording' ? 'Tap to send' : 'Tap to speak'}
             >
-              <HiOutlineMicrophone className="w-5 h-5" />
+              {voiceStatus === 'recording'
+                ? <HiOutlineXMark className="w-5 h-5" />
+                : <HiOutlineMicrophone className="w-5 h-5" />
+              }
             </button>
           </div>
 
@@ -334,7 +347,7 @@ export default function Assistant() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={t('assistant.placeholder', 'Type a message or hold the mic...')}
+              placeholder={t('assistant.placeholder', 'Type a message or tap the mic...')}
               rows={1}
               className="w-full resize-none rounded-2xl border border-gray-200/80 bg-white/70 backdrop-blur-sm px-4 py-3 pr-12 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 focus:bg-white shadow-sm transition-all"
               style={{ maxHeight: '120px' }}
@@ -474,7 +487,7 @@ function WelcomeScreen({ onSuggestion, t }) {
           <path d="M4 8a4 4 0 008 0" stroke="currentColor" strokeWidth="1" fill="none" />
           <path d="M8 12v2" stroke="currentColor" strokeWidth="1" />
         </svg>
-        Hold the mic button to speak
+        Tap the mic button to speak
       </div>
     </div>
   );

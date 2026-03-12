@@ -127,20 +127,35 @@ def transcribe_with_whisper_api(
         # reject it with "Invalid file format".  Converting to WAV via
         # ffmpeg guarantees compatibility regardless of source format.
         whisper_file = audio_file_path
+        converted = False
         try:
             from voice.audio_utils import convert_to_whisper_format
             converted_path = convert_to_whisper_format(audio_file_path)
             whisper_file = converted_path
+            converted = True
             logger.info(f"Audio converted for Whisper: {whisper_file}")
         except Exception as conv_err:
             # If conversion fails (e.g. ffmpeg not installed), try the
-            # original file — it may already be a valid format.
+            # original file — but we must detect its actual format so
+            # the filename we send to the Whisper API matches the content.
             logger.warning(f"Audio conversion skipped ({conv_err}), using original file")
+
+        # Detect correct extension so the Whisper API doesn't reject the
+        # file due to a mismatch between the temp-file suffix and the
+        # actual audio codec inside (common on Safari).
+        if converted:
+            # convert_to_whisper_format always produces WAV
+            open_name = "audio.wav"
+        else:
+            from voice.audio_utils import detect_audio_format
+            detected_ext = detect_audio_format(whisper_file)
+            open_name = f"audio.{detected_ext}"
+            logger.info(f"Detected audio format: {detected_ext} for file {whisper_file}")
         
         with open(whisper_file, "rb") as audio_file:
             response = client.audio.transcriptions.create(
                 model="whisper-1",
-                file=audio_file,
+                file=(open_name, audio_file),
                 language=language,
                 response_format="verbose_json"
             )

@@ -27,6 +27,52 @@ TARGET_CHANNELS = 1  # Mono audio
 SUPPORTED_FORMATS = {'.mp3', '.wav', '.m4a', '.ogg', '.flac', '.webm'}
 
 
+def detect_audio_format(file_path: str) -> str:
+    """
+    Detect the actual audio format by reading magic bytes.
+    Returns a Whisper-compatible extension (e.g. 'webm', 'mp4', 'ogg', 'wav', 'mp3', 'flac').
+    Falls back to the file's own extension if unrecognised.
+    """
+    try:
+        with open(file_path, "rb") as f:
+            header = f.read(32)
+
+        if len(header) < 4:
+            return Path(file_path).suffix.lstrip(".") or "webm"
+
+        # EBML / WebM / Matroska: first 4 bytes = 0x1A45DFA3
+        if header[:4] == b"\x1a\x45\xdf\xa3":
+            return "webm"
+
+        # OGG container: starts with "OggS"
+        if header[:4] == b"OggS":
+            return "ogg"
+
+        # RIFF / WAV: "RIFF"…"WAVE"
+        if header[:4] == b"RIFF" and header[8:12] == b"WAVE":
+            return "wav"
+
+        # FLAC: starts with "fLaC"
+        if header[:4] == b"fLaC":
+            return "flac"
+
+        # MP3: ID3 tag or frame sync bytes
+        if header[:3] == b"ID3" or (len(header) >= 2 and header[0] == 0xFF and (header[1] & 0xE0) == 0xE0):
+            return "mp3"
+
+        # ISO BMFF / MP4 / M4A: "ftyp" at offset 4
+        if header[4:8] == b"ftyp":
+            return "mp4"
+
+        # Fallback: use file extension
+        ext = Path(file_path).suffix.lstrip(".")
+        return ext if ext else "webm"
+
+    except Exception:
+        ext = Path(file_path).suffix.lstrip(".")
+        return ext if ext else "webm"
+
+
 class AudioProcessingError(Exception):
     """Custom exception for audio processing errors"""
     pass

@@ -198,6 +198,19 @@ async def voice_agent(
             tmp.write(content)
             temp_path = tmp.name
 
+        # Reject obviously too-small files (< 1 KB is likely an empty or
+        # corrupted recording that Whisper will reject with "too short").
+        if len(content) < 1000:
+            logger.warning(f"Audio file too small ({len(content)} bytes), skipping ASR")
+            return JSONResponse(content={
+                "success": False,
+                "error": "audio_too_short",
+                "response_text": (
+                    "ድምጹ በጣም አጭር ነው። እባክዎ ረዘም ያድርጉ።" if language == "am"
+                    else "Recording too short. Please speak a bit longer."
+                ),
+            })
+
         from voice.asr.asr_infer import transcribe_audio
 
         asr_result = transcribe_audio(

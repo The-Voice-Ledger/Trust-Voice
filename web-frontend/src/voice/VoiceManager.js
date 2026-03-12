@@ -26,13 +26,13 @@ class VoiceManager {
     this.chunks = [];
 
     // Prefer webm, fall back to ogg or default
-    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+    this._requestedMime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
       ? 'audio/webm;codecs=opus'
       : MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')
         ? 'audio/ogg;codecs=opus'
         : undefined;
 
-    this.mediaRecorder = new MediaRecorder(this.stream, mimeType ? { mimeType } : {});
+    this.mediaRecorder = new MediaRecorder(this.stream, this._requestedMime ? { mimeType: this._requestedMime } : {});
 
     this.mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) this.chunks.push(e.data);
@@ -52,7 +52,13 @@ class VoiceManager {
         return;
       }
       this.mediaRecorder.onstop = () => {
-        const mime = this.mediaRecorder.mimeType || 'audio/webm';
+        // Safari may return '' for mimeType even though it records mp4/aac.
+        // Use the recorder's reported mimeType, or fall back to the one
+        // we requested at start, and finally default to webm.
+        const mime =
+          this.mediaRecorder.mimeType ||                // what the browser recorded
+          this._requestedMime ||                        // what we requested at start
+          'audio/webm';
         const blob = new Blob(this.chunks, { type: mime });
         // Attach extension so callers can set the correct filename
         blob.ext = VoiceManager.extForMime(mime);
