@@ -187,6 +187,37 @@ export default function ProjectExperience({ config }) {
                   style={{ transition: 'stroke-dasharray 0.6s ease, stroke 0.4s ease' }}
                 />
               )}
+
+              {/* 3Cs slogan in the arc center */}
+              <text
+                x="210" y="138"
+                textAnchor="middle"
+                className="font-display"
+                style={{
+                  fontSize: 32,
+                  fontWeight: 700,
+                  fill: visible ? (colors[active] || '#059669') : 'transparent',
+                  transition: 'fill 0.5s ease',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                3Cs
+              </text>
+              <text
+                x="210" y="158"
+                textAnchor="middle"
+                style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  fill: 'rgba(0,0,0,0.25)',
+                  letterSpacing: '0.15em',
+                  textTransform: 'uppercase',
+                  opacity: visible ? 1 : 0,
+                  transition: 'opacity 0.6s ease 0.3s',
+                }}
+              >
+                Connect · Contribute · Create
+              </text>
             </svg>
 
             {/* Day nodes positioned along the arc */}
