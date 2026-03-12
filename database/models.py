@@ -348,6 +348,10 @@ class Campaign(Base):
     # Status
     status = Column(String(20), default="active")  # active, paused, completed, cancelled
     
+    # Milestone-based funding
+    platform_fee_rate = Column(Numeric(5, 4), default=0.0600)  # 6 % default
+    use_milestones = Column(Boolean, default=False)  # True = milestone-gated releases
+    
     # Verification Metrics (for impact reports)
     verification_count = Column(Integer, default=0)  # Number of field agent verifications
     total_trust_score = Column(Numeric(8, 2), default=0.0)  # Sum of all trust scores
@@ -708,6 +712,173 @@ class UserPreference(Base):
     
     def __repr__(self):
         return f"<UserPreference(user_id={self.user_id}, key={self.preference_key}, value={self.preference_value})>"
+
+
+# ── Milestone-Based Crowdfunding Models ─────────────────────────
+
+
+class MilestoneStatus(enum.Enum):
+    """Lifecycle of a project milestone."""
+    PENDING = "pending"                      # Created, not yet funded
+    ACTIVE = "active"                        # Campaign is raising for this milestone
+    EVIDENCE_SUBMITTED = "evidence_submitted"  # NGO submitted photos/docs
+    UNDER_REVIEW = "under_review"            # Field agent assigned
+    VERIFIED = "verified"                    # Field agent confirmed
+    RELEASED = "released"                    # Funds released to NGO
+    FAILED = "failed"                        # Verification failed
+
+
+class ProjectMilestone(Base):
+    """
+    A single milestone within a campaign.
+
+    Campaigns are broken into sequential milestones. Funds are released
+    only after a field agent verifies the milestone is complete.
+
+    Example (campaign: "Moringa Oasis Zimbabwe"):
+      Milestone 1: Land Preparation   — $2,000
+      Milestone 2: Seedling Purchase   — $3,500
+      Milestone 3: Irrigation Setup    — $5,000
+      Milestone 4: First Harvest       — $1,500
+    """
+    __tablename__ = "project_milestones"
+
+    id = Column(Integer, primary_key=True)
+    campaign_id = Column(Integer, ForeignKey("campaigns.id"), nullable=False, index=True)
+
+    # Milestone info
+    title = Column(String(255), nullable=False)
+    description = Column(Text)
+    sequence = Column(Integer, nullable=False, default=1)  # 1-based ordering
+
+    # Financial
+    target_amount_usd = Column(Numeric(12, 2), nullable=False)
+    released_amount_usd = Column(Numeric(12, 2), default=0.0)
+    platform_fee_usd = Column(Numeric(10, 2), default=0.0)
+
+    # Status
+    status = Column(
+        String(30), default=MilestoneStatus.PENDING.value, nullable=False
+    )
+
+    # Evidence (submitted by NGO / campaign owner)
+    evidence_notes = Column(Text)  # Description of completed work
+    evidence_ipfs_hashes = Column(JSON, default=list)  # Photo/doc IPFS hashes
+    evidence_submitted_at = Column(DateTime, nullable=True)
+
+    # Blockchain audit trail
+    chain_tx_hash = Column(String(66), nullable=True)  # On-chain record of release
+
+    # Dates
+    due_date = Column(DateTime, nullable=True)
+    released_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    campaign = relationship("Campaign", backref="milestones")
+    verifications = relationship("MilestoneVerification", back_populates="milestone")
+
+    def __repr__(self):
+        return (
+            f"<ProjectMilestone(id={self.id}, seq={self.sequence}, "
+            f"title='{self.title}', status={self.status})>"
+        )
+
+
+class MilestoneVerification(Base):
+    """
+    Field-agent verification linked to a specific milestone.
+
+    Same $30-per-verification incentive model, but now attached to
+    a milestone instead of just a campaign.
+    """
+    __tablename__ = "milestone_verifications"
+
+    id = Column(Integer, primary_key=True)
+    milestone_id = Column(Integer, ForeignKey("project_milestones.id"), nullable=False, index=True)
+    field_agent_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # Verification details
+    agent_notes = Column(Text)
+    photos = Column(JSON, default=list)  # IPFS hashes or URLs
+    gps_latitude = Column(Float)
+    gps_longitude = Column(Float)
+
+    # Scoring
+    trust_score = Column(Integer, default=0)  # 0-100
+    status = Column(String(20), default="pending")  # pending, approved, rejected
+
+    # Agent payout
+    agent_payout_amount_usd = Column(Numeric(8, 2))
+    agent_payout_status = Column(String(20))  # initiated, completed, failed
+
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    milestone = relationship("ProjectMilestone", back_populates="verifications")
+    field_agent = relationship("User", foreign_keys=[field_agent_id])
+
+    def __repr__(self):
+        return (
+            f"<MilestoneVerification(id={self.id}, milestone={self.milestone_id}, "
+            f"score={self.trust_score}, status={self.status})>"
+        )
+
+
+class ProjectUpdate(Base):
+    """
+    Public updates posted by campaign owners for backers/followers.
+    """
+    __tablename__ = "project_updates"
+
+    id = Column(Integer, primary_key=True)
+    campaign_id = Column(Integer, ForeignKey("campaigns.id"), nullable=False, index=True)
+    posted_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    title = Column(String(255), nullable=False)
+    body = Column(Text, nullable=False)
+    media_ipfs_hashes = Column(JSON, default=list)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    campaign = relationship("Campaign", backref="updates")
+    author = relationship("User", foreign_keys=[posted_by])
+
+    def __repr__(self):
+        return f"<ProjectUpdate(id={self.id}, campaign={self.campaign_id}, title='{self.title}')>"
+
+
+class PlatformFee(Base):
+    """
+    Ledger of platform fees collected on milestone releases.
+    5-8 % deducted when verified milestone funds are released.
+    """
+    __tablename__ = "platform_fees"
+
+    id = Column(Integer, primary_key=True)
+    milestone_id = Column(Integer, ForeignKey("project_milestones.id"), nullable=False)
+    campaign_id = Column(Integer, ForeignKey("campaigns.id"), nullable=False)
+
+    gross_amount_usd = Column(Numeric(12, 2), nullable=False)  # Full milestone amount
+    fee_rate = Column(Numeric(5, 4), nullable=False)  # e.g. 0.0600 = 6 %
+    fee_amount_usd = Column(Numeric(10, 2), nullable=False)
+    net_to_project_usd = Column(Numeric(12, 2), nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    milestone = relationship("ProjectMilestone", backref="fee_record")
+    campaign = relationship("Campaign", backref="fee_records")
+
+    def __repr__(self):
+        return (
+            f"<PlatformFee(milestone={self.milestone_id}, "
+            f"fee={self.fee_amount_usd} USD @ {float(self.fee_rate)*100:.1f}%)>"
+        )
 
 
 class ConversationEvent(Base):

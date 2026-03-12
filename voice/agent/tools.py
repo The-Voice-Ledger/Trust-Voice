@@ -354,4 +354,133 @@ AGENT_TOOLS = [
             },
         },
     },
+
+    # ── Milestone tools ─────────────────────────────────────────
+    {
+        "type": "function",
+        "function": {
+            "name": "get_project_milestones",
+            "description": (
+                "Get the milestones for a campaign/project. Shows each "
+                "milestone title, target amount, status, and progress. "
+                "Use when user asks about milestones, project progress, "
+                "or how funds are being released."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "campaign_id": {
+                        "type": "integer",
+                        "description": "The campaign ID to get milestones for",
+                    },
+                },
+                "required": ["campaign_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "submit_milestone_evidence",
+            "description": (
+                "Submit evidence that a milestone has been completed. "
+                "Only the campaign owner can do this. Provide the "
+                "milestone ID and a description of the completed work. "
+                "Optionally include IPFS hashes of photos/documents."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "milestone_id": {
+                        "type": "integer",
+                        "description": "The milestone ID to submit evidence for",
+                    },
+                    "notes": {
+                        "type": "string",
+                        "description": (
+                            "Description of the completed work and evidence"
+                        ),
+                    },
+                    "ipfs_hashes": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": (
+                            "IPFS content hashes of photos or documents "
+                            "(optional)"
+                        ),
+                    },
+                },
+                "required": ["milestone_id", "notes"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "verify_milestone",
+            "description": (
+                "Verify a milestone as a field agent. Submit your trust "
+                "score (0-100), observations, optional photos and GPS. "
+                "Milestones with score >= 80 are auto-approved for fund "
+                "release. Only field agents can use this."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "milestone_id": {
+                        "type": "integer",
+                        "description": "The milestone ID to verify",
+                    },
+                    "trust_score": {
+                        "type": "integer",
+                        "description": (
+                            "Trust/quality score from 0 to 100 based on "
+                            "on-the-ground assessment"
+                        ),
+                    },
+                    "agent_notes": {
+                        "type": "string",
+                        "description": "Your observations and assessment notes",
+                    },
+                    "photos": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "IPFS hashes or URLs of verification photos",
+                    },
+                    "gps_lat": {
+                        "type": "number",
+                        "description": "GPS latitude of verification location",
+                    },
+                    "gps_lng": {
+                        "type": "number",
+                        "description": "GPS longitude of verification location",
+                    },
+                },
+                "required": ["milestone_id", "trust_score", "agent_notes"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_project_treasury",
+            "description": (
+                "Get the treasury overview for a campaign: total raised, "
+                "how much is allocated to milestones, how much has been "
+                "released, platform fees collected, and funds still held. "
+                "Use when user asks about project finances, where the "
+                "money is, or fund allocation."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "campaign_id": {
+                        "type": "integer",
+                        "description": "The campaign ID to get treasury for",
+                    },
+                },
+                "required": ["campaign_id"],
+            },
+        },
+    },
 ]

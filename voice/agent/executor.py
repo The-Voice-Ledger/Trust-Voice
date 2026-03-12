@@ -140,8 +140,14 @@ def _build_system_prompt(
 
     return (
         "You are TrustVoice Assistant — a helpful AI for a voice-first "
-        "donation platform connecting donors with verified NGO campaigns "
+        "crowdfunding platform connecting donors with verified projects "
         "across Africa.\n\n"
+        "PLATFORM MODEL: Projects raise funds through milestone-based "
+        "releases. Donors fund a campaign, and money is released only "
+        "after each milestone is verified by an independent field agent "
+        "on the ground. A small platform fee (typically 6%) is deducted "
+        "on each milestone release. This ensures transparency and "
+        "accountability.\n\n"
         f"USER: {user_name}  |  ROLE: {user_role}  |  LANG: {lang_name}\n"
         f"{lang_instruction}\n"
         "\nRULES:\n"
@@ -151,11 +157,15 @@ def _build_system_prompt(
         "3. For compound requests (\"find campaigns and donate\"), "
         "handle them step-by-step with multiple tool calls.\n"
         "4. ALWAYS confirm before write actions "
-        "(donations, campaign creation, withdrawals).\n"
+        "(donations, evidence submission, fund releases).\n"
         "5. IMPORTANT: You have access to conversation history. "
         "REMEMBER what you already asked to avoid repeating questions.\n"
         "6. When listing campaigns, always include the campaign ID.\n"
         "7. If information is missing, ask — don't guess.\n"
+        "8. When users ask about project progress, use "
+        "get_project_milestones to show milestone status.\n"
+        "9. When users ask where the money goes, use "
+        "get_project_treasury for a clear breakdown.\n"
         f"{ctx_note}"
     )
 
@@ -272,6 +282,7 @@ class AgentExecutor:
                         for key in (
                             "campaigns", "campaign", "donation",
                             "donations", "stats", "success",
+                            "milestones", "treasury",
                         ):
                             if key in result:
                                 collected_data[key] = result[key]
@@ -313,6 +324,10 @@ class AgentExecutor:
             response_type = "donation_history"
         elif "stats" in collected_data:
             response_type = "analytics_summary"
+        elif "milestones" in collected_data:
+            response_type = "milestone_list"
+        elif "treasury" in collected_data:
+            response_type = "treasury_overview"
 
         return {
             "conversation_id": conv_id,
@@ -340,6 +355,11 @@ class AgentExecutor:
             "get_platform_stats": self._tool_get_platform_stats,
             "change_language": self._tool_change_language,
             "get_help": self._tool_get_help,
+            # Milestone tools
+            "get_project_milestones": self._tool_get_project_milestones,
+            "submit_milestone_evidence": self._tool_submit_milestone_evidence,
+            "verify_milestone": self._tool_verify_milestone,
+            "get_project_treasury": self._tool_get_project_treasury,
         }
         handler = dispatch.get(name)
         if not handler:
@@ -554,19 +574,24 @@ class AgentExecutor:
         role = (user.role if user else "guest") or "guest"
         capabilities = [
             "Search campaigns by category, location, or keyword",
-            "View campaign details",
+            "View campaign details and milestone progress",
             "Make a donation (M-Pesa or card)",
             "Check donation status",
             "View your donation history",
+            "View project treasury and fund allocation",
         ]
         if role in ("CAMPAIGN_CREATOR", "SYSTEM_ADMIN", "ngo_admin", "super_admin"):
             capabilities += [
                 "Create a new campaign",
                 "View your campaigns",
-                "Withdraw funds",
+                "Submit milestone evidence",
+                "Withdraw funds / release milestone funds",
             ]
         if role in ("FIELD_AGENT", "SYSTEM_ADMIN", "super_admin"):
-            capabilities.append("Submit field impact report")
+            capabilities += [
+                "Submit field impact report",
+                "Verify project milestones",
+            ]
         capabilities += [
             "Get platform statistics",
             "Change language (English / Amharic)",
@@ -710,3 +735,67 @@ class AgentExecutor:
             db=db,
             context={},
         )
+
+    # ────────────────────────────────────────────────────────────
+    #  MILESTONE tools
+    # ────────────────────────────────────────────────────────────
+
+    async def _tool_get_project_milestones(
+        self, args: Dict, user_id: str, db: Session
+    ) -> Dict:
+        """Get milestones for a campaign."""
+        from voice.handlers.milestone_handler import get_milestones
+
+        result = await get_milestones(args["campaign_id"], db)
+        # Wrap milestones list for collected_data key detection
+        if "milestones" not in result:
+            result["milestones"] = []
+        return result
+
+    async def _tool_submit_milestone_evidence(
+        self, args: Dict, user_id: str, db: Session
+    ) -> Dict:
+        """Submit evidence for a milestone (campaign owner)."""
+        from voice.handlers.milestone_handler import submit_milestone_evidence
+
+        return await submit_milestone_evidence(
+            milestone_id=args["milestone_id"],
+            notes=args["notes"],
+            ipfs_hashes=args.get("ipfs_hashes"),
+            user_id=user_id,
+            db=db,
+        )
+
+    async def _tool_verify_milestone(
+        self, args: Dict, user_id: str, db: Session
+    ) -> Dict:
+        """Verify a milestone (field agent)."""
+        from voice.handlers.milestone_handler import verify_milestone
+
+        return await verify_milestone(
+            milestone_id=args["milestone_id"],
+            trust_score=args["trust_score"],
+            agent_notes=args["agent_notes"],
+            user_id=user_id,
+            db=db,
+            photos=args.get("photos"),
+            gps_lat=args.get("gps_lat"),
+            gps_lng=args.get("gps_lng"),
+        )
+
+    async def _tool_get_project_treasury(
+        self, args: Dict, user_id: str, db: Session
+    ) -> Dict:
+        """Get treasury overview for a campaign."""
+        from voice.handlers.milestone_handler import get_project_treasury
+
+        result = await get_project_treasury(args["campaign_id"], db)
+        # Wrap for collected_data detection
+        if "milestones" in result:
+            result["treasury"] = {
+                "total_raised_usd": result.get("total_raised_usd", 0),
+                "total_released_usd": result.get("total_released_usd", 0),
+                "total_fees_collected_usd": result.get("total_fees_collected_usd", 0),
+                "funds_held_usd": result.get("funds_held_usd", 0),
+            }
+        return result
