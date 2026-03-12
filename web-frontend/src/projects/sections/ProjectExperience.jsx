@@ -222,7 +222,9 @@ export default function ProjectExperience({ config }) {
 
             {/* Day nodes positioned along the arc */}
             {experience.days.map((day, i) => {
-              const angle = Math.PI - (Math.PI * (i + 0.5)) / experience.days.length;
+              /* Distribute nodes evenly across the full arc, inset 10% from endpoints */
+              const t = 0.1 + (i / (experience.days.length - 1)) * 0.8;
+              const angle = Math.PI * (1 - t);
               const cx = 210 + 175 * Math.cos(angle);
               const cy = 215 - 175 * Math.sin(angle);
               const isActive = i === active;
