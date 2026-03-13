@@ -3,8 +3,8 @@ import { api, setToken, clearToken } from './client';
 /** POST /api/auth/login */
 export async function login({ identifier, phoneNumber, pin }) {
   const body = { pin };
-  if (identifier) body.telegram_username = identifier;
-  if (phoneNumber) body.phone_number = phoneNumber;
+  if (identifier) body.username = identifier.replace(/^@/, '');
+  if (phoneNumber) body.phone = phoneNumber;
   const data = await api.post('/auth/login', body);
   if (data.access_token) setToken(data.access_token);
   return data;
