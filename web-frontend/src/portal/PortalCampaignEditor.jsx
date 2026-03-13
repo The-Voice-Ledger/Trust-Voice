@@ -109,7 +109,7 @@ export default function PortalCampaignEditor() {
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center justify-between mb-6">
-        <Link to="/portal/projects" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline">
+        <Link to="/portal/projects" className="inline-flex items-center gap-1 text-sm text-emerald-600 hover:underline">
           <HiOutlineArrowLeft className="w-4 h-4" /> My Projects
         </Link>
         <Link to={`/campaign/${id}`} className="text-xs text-gray-400 hover:text-gray-600 transition">View public page →</Link>
@@ -129,10 +129,10 @@ export default function PortalCampaignEditor() {
 
       {/* Core fields */}
       <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-6 mb-6 overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-violet-500 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-green-500 via-green-500 to-transparent" />
         <svg className="absolute top-2 right-2 w-20 h-20 pointer-events-none" viewBox="0 0 80 80" fill="none">
-          <circle cx="60" cy="20" r="15" stroke="#7C3AED" strokeWidth="0.5" opacity="0.04" />
-          <path d="M55 18 L60 12 L65 18" stroke="#7C3AED" strokeWidth="0.4" opacity="0.03" />
+          <circle cx="60" cy="20" r="15" stroke="#0D9488" strokeWidth="0.5" opacity="0.04" />
+          <path d="M55 18 L60 12 L65 18" stroke="#0D9488" strokeWidth="0.4" opacity="0.03" />
         </svg>
 
         <div className="space-y-4">
@@ -172,7 +172,7 @@ export default function PortalCampaignEditor() {
           </div>
 
           <button onClick={handleSave} disabled={saving}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold hover:from-indigo-700 hover:to-violet-700 transition disabled:opacity-50 text-sm">
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 text-white font-semibold hover:from-emerald-700 hover:to-green-700 transition disabled:opacity-50 text-sm">
             {saving ? 'Saving…' : 'Save Changes'}
           </button>
         </div>
@@ -200,9 +200,9 @@ export default function PortalCampaignEditor() {
             <div className="flex items-center gap-3">
               <input type="file" accept="video/mp4,video/mov,video/avi,video/webm"
                 onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-                className="flex-1 text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 file:text-xs file:font-semibold hover:file:bg-indigo-100" />
+                className="flex-1 text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:text-emerald-700 file:text-xs file:font-semibold hover:file:bg-emerald-100" />
               <button onClick={handleVideoUpload} disabled={!videoFile || videoUploading}
-                className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition disabled:opacity-50">
+                className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition disabled:opacity-50">
                 {videoUploading ? 'Uploading…' : 'Upload'}
               </button>
             </div>
@@ -212,7 +212,7 @@ export default function PortalCampaignEditor() {
 
       {/* Quick links */}
       <div className="flex flex-wrap gap-2">
-        <Link to={`/portal/projects/${id}/milestones`} className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-violet-50 text-violet-700 text-xs font-semibold hover:bg-violet-100 transition border border-violet-100">
+        <Link to={`/portal/projects/${id}/milestones`} className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-green-50 text-green-700 text-xs font-semibold hover:bg-green-100 transition border border-green-100">
           <HiOutlineCheckCircle className="w-3.5 h-3.5" /> Manage Milestones
         </Link>
         <Link to={`/portal/projects/${id}/financials`} className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 transition border border-emerald-100">

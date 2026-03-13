@@ -6,12 +6,12 @@
 import { useEffect, useRef, useState } from 'react';
 
 const NODES = [
-  { label: 'Fund',     sub: 'Voice or card',        color: '#818CF8' },
-  { label: 'Record',   sub: 'Blockchain ledger',     color: '#A78BFA' },
-  { label: 'Transfer', sub: 'Funds dispatched',      color: '#C084FC' },
-  { label: 'Verify',   sub: 'Field agent proof',     color: '#E879F9' },
-  { label: 'Impact',   sub: 'Transparent report',    color: '#A78BFA' },
-  { label: 'Receipt',  sub: 'NFT tax receipt',       color: '#818CF8' },
+  { label: 'Fund',     sub: 'Voice or card',        color: '#059669' },
+  { label: 'Record',   sub: 'Blockchain ledger',     color: '#D97706' },
+  { label: 'Transfer', sub: 'Funds dispatched',      color: '#10B981' },
+  { label: 'Verify',   sub: 'Field agent proof',     color: '#B45309' },
+  { label: 'Impact',   sub: 'Transparent report',    color: '#D97706' },
+  { label: 'Receipt',  sub: 'NFT tax receipt',       color: '#059669' },
 ];
 
 /* Mini SVG icons for each node */
@@ -58,13 +58,13 @@ export default function TrustPipeline() {
   }
 
   return (
-    <section ref={ref} className="relative py-20 overflow-hidden bg-indigo-950">
+    <section ref={ref} className="relative py-20 overflow-hidden bg-emerald-950">
       {/* subtle grid background */}
       <div className="absolute inset-0 opacity-[0.04]"
         style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
       <div className="max-w-5xl mx-auto px-4">
-        <p className="text-center text-xs font-semibold tracking-[0.2em] uppercase text-violet-400 mb-2 font-display">
+        <p className="text-center text-xs font-semibold tracking-[0.2em] uppercase text-green-400 mb-2 font-display">
           How It Works
         </p>
         <h2 className="section-heading text-3xl md:text-4xl text-center text-white mb-12">
@@ -82,9 +82,9 @@ export default function TrustPipeline() {
               </filter>
               {/* gradient for the path */}
               <linearGradient id="pipeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#6366F1" />
-                <stop offset="50%" stopColor="#A855F7" />
-                <stop offset="100%" stopColor="#6366F1" />
+                <stop offset="0%" stopColor="#10B981" />
+                <stop offset="50%" stopColor="#14B8A6" />
+                <stop offset="100%" stopColor="#10B981" />
               </linearGradient>
             </defs>
 
@@ -98,7 +98,7 @@ export default function TrustPipeline() {
 
             {/* Travelling dot */}
             {visible && (
-              <circle r="5" fill="#8B5CF6" filter="url(#glow)">
+              <circle r="5" fill="#0F766E" filter="url(#glow)">
                 <animateMotion dur="4s" repeatCount="indefinite" path={pathD} />
               </circle>
             )}
@@ -125,7 +125,7 @@ export default function TrustPipeline() {
                   <text x={x} y={y + 46} textAnchor="middle"
                     className="fill-white text-[13px] font-display font-semibold">{n.label}</text>
                   <text x={x} y={y + 61} textAnchor="middle"
-                    className="fill-violet-300 text-[10px]">{n.sub}</text>
+                    className="fill-green-300 text-[10px]">{n.sub}</text>
                 </g>
               );
             })}

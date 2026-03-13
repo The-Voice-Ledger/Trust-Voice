@@ -40,7 +40,7 @@ html {
   letter-spacing: -0.02em;
 }
 .text-gradient-animated {
-  background: linear-gradient(135deg, #6366F1 0%, #A855F7 50%, #6366F1 100%);
+  background: linear-gradient(135deg, #10B981 0%, #14B8A6 50%, #10B981 100%);
   background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -154,7 +154,7 @@ html {
   transform: translateX(-50%);
   width: 0;
   height: 2px;
-  background: linear-gradient(90deg, #6366F1, #A855F7);
+  background: linear-gradient(90deg, #10B981, #14B8A6);
   border-radius: 1px;
   transition: width 0.4s ease;
 }
@@ -202,7 +202,7 @@ html {
   font-weight: 600;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #6366F1;
+  color: #10B981;
   background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(168,85,247,0.06));
   border: 1px solid rgba(99,102,241,0.12);
   border-radius: 9999px;
@@ -212,7 +212,7 @@ html {
   content: '';
   width: 6px;
   height: 6px;
-  background: linear-gradient(135deg, #6366F1, #A855F7);
+  background: linear-gradient(135deg, #10B981, #14B8A6);
   border-radius: 50%;
 }
 
@@ -225,7 +225,7 @@ html {
 /* ── Swiper overrides ─────────────────────── */
 .swiper-button-prev,
 .swiper-button-next {
-  color: #6366F1 !important;
+  color: #10B981 !important;
   background: rgba(255,255,255,0.9);
   width: 40px !important;
   height: 40px !important;
@@ -239,7 +239,7 @@ html {
   font-weight: 700;
 }
 .swiper-pagination-bullet-active {
-  background: #6366F1 !important;
+  background: #10B981 !important;
 }
 
 /* ── Glass card utility ───────────────────── */
@@ -252,7 +252,7 @@ html {
 
 /* ── Gradient text ────────────────────────── */
 .gradient-text {
-  background: linear-gradient(135deg, #6366F1 0%, #A855F7 100%);
+  background: linear-gradient(135deg, #10B981 0%, #14B8A6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

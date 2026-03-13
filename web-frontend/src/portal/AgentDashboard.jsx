@@ -40,14 +40,14 @@ export default function AgentDashboard({ user }) {
           <p className="text-sm text-gray-500">Verify milestones, earn rewards, build trust</p>
         </div>
         <Link to="/portal/verify"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white text-sm font-semibold hover:from-violet-700 hover:to-purple-700 transition shadow-lg shadow-violet-300/30">
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-green-600 to-green-600 text-white text-sm font-semibold hover:from-green-700 hover:to-green-700 transition shadow-lg shadow-green-300/30">
           <HiOutlineCamera className="w-4 h-4" /> New Verification
         </Link>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <Stat accent="#6366F1" icon={HiOutlineDocumentText} label="Assignments" value={campaigns.length} />
+        <Stat accent="#10B981" icon={HiOutlineDocumentText} label="Assignments" value={campaigns.length} />
         <Stat accent="#059669" icon={HiOutlineCheckCircle} label="Approved" value={approved} />
         <Stat accent="#D97706" icon={HiOutlineClock} label="Pending" value={pending} />
       </div>
@@ -66,17 +66,17 @@ export default function AgentDashboard({ user }) {
           {campaigns.map((c) => (
             <Link key={c.id} to={`/portal/verify?campaign=${c.id}`}
               className="group relative block rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 overflow-hidden transition-all hover:shadow-md hover:border-transparent">
-              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-violet-500/30 via-emerald-500/30 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-green-500/30 via-emerald-500/30 to-transparent" />
               <svg className="absolute bottom-0 right-0 w-12 h-12 pointer-events-none" viewBox="0 0 50 50" fill="none">
-                <path d="M50 0v50H0" stroke="#A855F7" strokeWidth="0.5" opacity="0.04" />
-                <circle cx="50" cy="50" r="1.5" fill="#A855F7" opacity="0.06" />
+                <path d="M50 0v50H0" stroke="#14B8A6" strokeWidth="0.5" opacity="0.04" />
+                <circle cx="50" cy="50" r="1.5" fill="#14B8A6" opacity="0.06" />
               </svg>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-gray-900 text-sm">{c.title}</p>
                   <p className="text-xs text-gray-400 mt-0.5">Campaign #{c.id}</p>
                 </div>
-                <span className="text-xs px-3 py-1.5 rounded-lg bg-violet-50 text-violet-700 font-semibold group-hover:bg-violet-100 transition">
+                <span className="text-xs px-3 py-1.5 rounded-lg bg-green-50 text-green-700 font-semibold group-hover:bg-green-100 transition">
                   Verify →
                 </span>
               </div>
@@ -90,12 +90,12 @@ export default function AgentDashboard({ user }) {
         <>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-            <Link to="/portal/history" className="text-sm text-indigo-600 hover:underline">View all →</Link>
+            <Link to="/portal/history" className="text-sm text-emerald-600 hover:underline">View all →</Link>
           </div>
           <div className="space-y-3">
             {history.slice(0, 5).map((v, i) => (
               <div key={i} className="group relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 overflow-hidden transition-all hover:shadow-sm">
-                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-violet-500/20 via-emerald-500/20 to-transparent" />
+                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-transparent" />
                 <div>
                   <p className="font-medium text-gray-900 text-sm">Campaign #{v.campaign_id}</p>
                   <p className="text-xs text-gray-400">{v.created_at ? new Date(v.created_at).toLocaleDateString() : ''}</p>

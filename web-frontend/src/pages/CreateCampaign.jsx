@@ -20,11 +20,11 @@ export default function CreateCampaign() {
   // Gate: must be logged in with an approved NGO
   if (!user) {
     return (
-      <PageBg pattern="isometric" colorA="#7C3AED" colorB="#6366F1">
+      <PageBg pattern="isometric" colorA="#0D9488" colorB="#10B981">
         <div className="max-w-lg mx-auto px-4 py-20 text-center">
           <h1 className="text-xl font-bold text-gray-900 mb-2">Sign in required</h1>
           <p className="text-gray-500 text-sm mb-4">You need to be logged in to create a campaign.</p>
-          <a href="/login" className="text-indigo-600 text-sm hover:underline">Go to Login</a>
+          <a href="/login" className="text-emerald-600 text-sm hover:underline">Go to Login</a>
         </div>
       </PageBg>
     );
@@ -32,12 +32,12 @@ export default function CreateCampaign() {
 
   if (!user.ngo_id) {
     return (
-      <PageBg pattern="isometric" colorA="#7C3AED" colorB="#6366F1">
+      <PageBg pattern="isometric" colorA="#0D9488" colorB="#10B981">
         <div className="max-w-lg mx-auto px-4 py-20 text-center">
           <h1 className="text-xl font-bold text-gray-900 mb-2">NGO account required</h1>
           <p className="text-gray-500 text-sm mb-4">
             Only approved NGOs can create campaigns. If you represent an NGO,{' '}
-            <a href="/register-ngo" className="text-indigo-600 hover:underline">register your organisation</a>{' '}
+            <a href="/register-ngo" className="text-emerald-600 hover:underline">register your organisation</a>{' '}
             first and wait for admin approval.
           </p>
         </div>
@@ -114,14 +114,14 @@ export default function CreateCampaign() {
   };
 
   return (
-    <PageBg pattern="isometric" colorA="#7C3AED" colorB="#6366F1">
+    <PageBg pattern="isometric" colorA="#0D9488" colorB="#10B981">
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <PageHeader icon={HiOutlineRocketLaunch} title={t('create_campaign.title')} subtitle={t('create_campaign.subtitle')} accentColor="violet" bespoke="rocket" />
+      <PageHeader icon={HiOutlineRocketLaunch} title={t('create_campaign.title')} subtitle={t('create_campaign.subtitle')} accentColor="green" bespoke="rocket" />
 
       {/* Progress */}
       <div className="flex gap-1 mb-8">
         {STEPS.map((_, i) => (
-          <div key={i} className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-indigo-600' : 'bg-gray-200'}`} />
+          <div key={i} className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-emerald-600' : 'bg-gray-200'}`} />
         ))}
       </div>
 
@@ -133,17 +133,17 @@ export default function CreateCampaign() {
       {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-600">{error}</div>}
 
       <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-6 mb-6 overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-violet-500 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-green-500 via-green-500 to-transparent" />
         <svg className="absolute top-2 right-2 w-24 h-24 pointer-events-none" viewBox="0 0 96 96" fill="none">
-          <circle cx="65" cy="28" r="20" stroke="#7C3AED" strokeWidth="0.5" opacity="0.05" />
-          <path d="M55 28 L65 18 L75 28" stroke="#7C3AED" strokeWidth="0.4" opacity="0.04" />
-          <path d="M60 32 L65 28 L70 32" stroke="#7C3AED" strokeWidth="0.3" opacity="0.03" />
-          <circle cx="65" cy="18" r="2" fill="#7C3AED" opacity="0.05" />
+          <circle cx="65" cy="28" r="20" stroke="#0D9488" strokeWidth="0.5" opacity="0.05" />
+          <path d="M55 28 L65 18 L75 28" stroke="#0D9488" strokeWidth="0.4" opacity="0.04" />
+          <path d="M60 32 L65 28 L70 32" stroke="#0D9488" strokeWidth="0.3" opacity="0.03" />
+          <circle cx="65" cy="18" r="2" fill="#0D9488" opacity="0.05" />
         </svg>
         <svg className="absolute bottom-1 left-1 w-10 h-10 pointer-events-none" viewBox="0 0 40 40" fill="none">
-          <path d="M0 40V25" stroke="#6366F1" strokeWidth="0.5" opacity="0.04" />
-          <path d="M0 40H15" stroke="#6366F1" strokeWidth="0.5" opacity="0.04" />
-          <circle cx="0" cy="40" r="1.5" fill="#6366F1" opacity="0.05" />
+          <path d="M0 40V25" stroke="#10B981" strokeWidth="0.5" opacity="0.04" />
+          <path d="M0 40H15" stroke="#10B981" strokeWidth="0.5" opacity="0.04" />
+          <circle cx="0" cy="40" r="1.5" fill="#10B981" opacity="0.05" />
         </svg>
         {step === 0 && (
           <div className="space-y-4">
@@ -158,7 +158,7 @@ export default function CreateCampaign() {
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('create_campaign.description')} *</label>
               <textarea value={form.description} onChange={(e) => set('description', e.target.value)}
                 rows={5} placeholder={t('create_campaign.desc_placeholder')}
-                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('create_campaign.category')}</label>
@@ -167,8 +167,8 @@ export default function CreateCampaign() {
                   <button key={c} type="button" onClick={() => set('category', c)}
                     className={`px-4 py-2 rounded-full text-xs font-medium border transition capitalize ${
                       form.category === c
-                        ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300'
                     }`}>
                     {c}
                   </button>
@@ -231,7 +231,7 @@ export default function CreateCampaign() {
               <label htmlFor="video-upload" className="cursor-pointer">
                 {form.video_file ? (
                   <div className="flex flex-col items-center">
-                    <HiOutlineFilm className="w-10 h-10 text-indigo-500" />
+                    <HiOutlineFilm className="w-10 h-10 text-emerald-500" />
                     <p className="text-sm font-medium text-gray-700 mt-2">{form.video_file.name}</p>
                     <p className="text-xs text-gray-400">{(form.video_file.size / 1024 / 1024).toFixed(1)} MB</p>
                   </div>
@@ -286,7 +286,7 @@ export default function CreateCampaign() {
         </button>
         {step < STEPS.length - 1 ? (
           <button onClick={() => setStep((s) => s + 1)} disabled={!canNext()}
-            className="px-5 py-3 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition">
+            className="px-5 py-3 rounded-xl text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition">
             {t('create_campaign.next')} →
           </button>
         ) : (
@@ -307,7 +307,7 @@ function Field({ label, required, value, onChange, placeholder, type = 'text' })
       <label className="block text-sm font-medium text-gray-700 mb-1">{label} {required && '*'}</label>
       <input type={type} required={required} value={value} onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+        className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
     </div>
   );
 }

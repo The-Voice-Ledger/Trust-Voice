@@ -53,7 +53,7 @@ export default function PortalHistory() {
         <div className="text-center py-16">
           <HiOutlineShieldCheck className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-400 text-sm">No verifications yet</p>
-          <Link to="/portal/verify" className="text-indigo-600 text-sm hover:underline mt-2 inline-block">
+          <Link to="/portal/verify" className="text-emerald-600 text-sm hover:underline mt-2 inline-block">
             Start your first verification →
           </Link>
         </div>
@@ -61,10 +61,10 @@ export default function PortalHistory() {
         <div className="space-y-3">
           {history.map((v, i) => (
             <div key={i} className="group relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 overflow-hidden transition-all hover:shadow-sm">
-              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-violet-500/20 via-emerald-500/20 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-transparent" />
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
-                  <HiOutlineDocumentText className="w-4 h-4 text-violet-600" />
+                <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+                  <HiOutlineDocumentText className="w-4 h-4 text-green-600" />
                 </div>
                 <div>
                   <p className="font-medium text-gray-900 text-sm">Campaign #{v.campaign_id}</p>

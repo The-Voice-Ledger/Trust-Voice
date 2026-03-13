@@ -37,8 +37,8 @@ export default function AdminDashboard({ user }) {
   }, []);
 
   const actions = [
-    { to: '/portal/admin/ngos', icon: HiOutlineBuildingOffice2, label: 'NGO Approvals', count: pendingNgos, accent: '#6366F1', desc: 'Review and approve NGO registration applications' },
-    { to: '/portal/admin/users', icon: HiOutlineUserGroup, label: 'User Approvals', count: pendingUsers, accent: '#A855F7', desc: 'Manage pending user role requests' },
+    { to: '/portal/admin/ngos', icon: HiOutlineBuildingOffice2, label: 'NGO Approvals', count: pendingNgos, accent: '#10B981', desc: 'Review and approve NGO registration applications' },
+    { to: '/portal/admin/users', icon: HiOutlineUserGroup, label: 'User Approvals', count: pendingUsers, accent: '#14B8A6', desc: 'Manage pending user role requests' },
     { to: '/portal/admin/payouts', icon: HiOutlineBanknotes, label: 'Payouts', count: pendingPayouts, accent: '#D97706', desc: 'Review and release payout requests' },
     { to: '/portal/admin/milestones', icon: HiOutlineShieldCheck, label: 'Milestones', count: null, accent: '#059669', desc: 'Verify milestones and release on-chain funds' },
   ];
@@ -98,10 +98,10 @@ export default function AdminDashboard({ user }) {
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.entries(stats).map(([key, value]) => (
             <div key={key} className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 text-center overflow-hidden transition-all hover:shadow-md hover:border-transparent">
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-violet-500 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-green-500 to-transparent" />
               <svg className="absolute -top-1 -right-1 w-16 h-16 pointer-events-none" viewBox="0 0 64 64" fill="none">
-                <circle cx="45" cy="20" r="14" stroke="#6366F1" strokeWidth="0.5" opacity="0.05" />
-                <circle cx="45" cy="20" r="6" stroke="#6366F1" strokeWidth="0.3" strokeDasharray="2 2" opacity="0.04" />
+                <circle cx="45" cy="20" r="14" stroke="#10B981" strokeWidth="0.5" opacity="0.05" />
+                <circle cx="45" cy="20" r="6" stroke="#10B981" strokeWidth="0.3" strokeDasharray="2 2" opacity="0.04" />
               </svg>
               <p className="text-sm text-gray-400 capitalize">{key.replace(/_/g, ' ')}</p>
               <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">

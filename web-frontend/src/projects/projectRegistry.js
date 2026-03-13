@@ -1,7 +1,7 @@
 /**
  * Project Registry -- config-driven project landing pages.
  *
- * Each entry defines a complete micro-site that reuses TrustVoice's
+ * Each entry defines a complete micro-site that reuses VBV's
  * shared components, funding flow, and backend.  To add a new project,
  * simply add an object to PROJECTS and it will be routable at
  * /project/:slug.
@@ -15,8 +15,8 @@ const PROJECTS = {
     slug: 'ukulima',
     name: 'Ukulima',
     tagline: 'Moringa Oasis Zimbabwe',
-    poweredBy: 'TrustVoice',
-    campaignId: 28,          // Links to TrustVoice campaign id
+    poweredBy: 'VBV',
+    campaignId: 28,          // Links to VBV campaign id
 
     /* -- Theme -- */
     theme: {
@@ -316,11 +316,11 @@ const PROJECTS = {
           title: 'Connect',
           links: [
             { label: 'AI Assistant', href: '/assistant' },
-            { label: 'TrustVoice Platform', href: '/' },
+            { label: 'VBV Platform', href: '/' },
           ],
         },
       ],
-      legal: 'This is an informational overview of the Ukulima project. All contributions are transparently tracked via the TrustVoice platform.',
+      legal: 'This is an informational overview of the Ukulima project. All contributions are transparently tracked via the VBV platform.',
     },
 
     /* -- Sections to render (order matters) -- */

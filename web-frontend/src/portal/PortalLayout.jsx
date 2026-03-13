@@ -89,7 +89,7 @@ export default function PortalLayout() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <p className="text-gray-500 mb-4">Sign in to access your portal</p>
-          <Link to="/login" className="px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition">
+          <Link to="/login" className="px-6 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition">
             Sign In
           </Link>
         </div>
@@ -110,25 +110,25 @@ export default function PortalLayout() {
         {/* Brand bar */}
         <div className="h-16 flex items-center gap-2.5 px-5 border-b border-gray-100">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-300/40 group-hover:shadow-lg transition-all">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-green-700 flex items-center justify-center shadow-md shadow-emerald-300/40 group-hover:shadow-lg transition-all">
               <HiOutlineMicrophone className="w-4 h-4 text-white" />
             </div>
             <div className="leading-none">
-              <span className="font-bold text-gray-900 text-sm tracking-tight">TrustVoice</span>
-              <span className="block text-[9px] font-semibold text-violet-600 tracking-widest uppercase">Portal</span>
+              <span className="font-bold text-gray-900 text-sm tracking-tight">VBV</span>
+              <span className="block text-[9px] font-semibold text-emerald-700 tracking-widest uppercase">Portal</span>
             </div>
           </Link>
         </div>
 
         {/* Role badge */}
         <div className="px-5 py-3">
-          <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-violet-50 rounded-xl px-3 py-2.5 border border-indigo-100/60">
-            <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
-              <HiOutlineUser className="w-4 h-4 text-indigo-600" />
+          <div className="flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl px-3 py-2.5 border border-emerald-100/60">
+            <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+              <HiOutlineUser className="w-4 h-4 text-emerald-600" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold text-gray-900 truncate">{user.full_name || user.telegram_username || 'User'}</p>
-              <p className="text-[10px] text-indigo-600 font-medium">{roleLabel}</p>
+              <p className="text-[10px] text-emerald-600 font-medium">{roleLabel}</p>
             </div>
           </div>
         </div>
@@ -141,11 +141,11 @@ export default function PortalLayout() {
               to={to}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                 isActive(to, end)
-                  ? 'bg-gradient-to-r from-indigo-50 to-violet-50 text-indigo-700 shadow-sm border border-indigo-100/60'
+                  ? 'bg-gradient-to-r from-emerald-50 to-green-50 text-emerald-700 shadow-sm border border-emerald-100/60'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >
-              <Icon className={`w-[18px] h-[18px] ${isActive(to, end) ? 'text-indigo-600' : 'text-gray-400'}`} />
+              <Icon className={`w-[18px] h-[18px] ${isActive(to, end) ? 'text-emerald-600' : 'text-gray-400'}`} />
               {label}
             </Link>
           ))}
@@ -154,7 +154,7 @@ export default function PortalLayout() {
         {/* Bottom */}
         <div className="px-3 py-4 border-t border-gray-100 space-y-1">
           <Link to="/" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition">
-            <HiOutlineArrowLeft className="w-[18px] h-[18px]" /> Back to TrustVoice
+            <HiOutlineArrowLeft className="w-[18px] h-[18px]" /> Back to VBV
           </Link>
           <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-500 hover:bg-red-50 transition">
             <HiOutlineArrowRightOnRectangle className="w-[18px] h-[18px]" /> Sign Out
@@ -164,16 +164,16 @@ export default function PortalLayout() {
 
       {/* ── Mobile top bar ────────────────── */}
       <div className="lg:hidden fixed top-0 inset-x-0 z-50">
-        <div className="h-[3px] bg-gradient-to-r from-indigo-600 via-violet-500 to-purple-500" />
+        <div className="h-[3px] bg-gradient-to-r from-emerald-600 via-green-500 to-amber-500" />
         <div className="h-14 bg-white/90 backdrop-blur-xl border-b border-gray-200/40 flex items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <button onClick={() => setSidebarOpen((v) => !v)} className="p-2 -ml-2 rounded-lg hover:bg-gray-100 transition">
               {sidebarOpen ? <HiOutlineXMark className="w-5 h-5" /> : <HiOutlineBars3 className="w-5 h-5" />}
             </button>
             <span className="font-bold text-sm text-gray-900">Portal</span>
-            <span className="text-[10px] font-semibold text-violet-600 px-1.5 py-0.5 bg-violet-50 rounded-full">{roleLabel}</span>
+            <span className="text-[10px] font-semibold text-emerald-700 px-1.5 py-0.5 bg-emerald-50 rounded-full">{roleLabel}</span>
           </div>
-          <Link to="/" className="text-xs text-gray-400 hover:text-gray-600">← TrustVoice</Link>
+          <Link to="/" className="text-xs text-gray-400 hover:text-gray-600">← VBV</Link>
         </div>
       </div>
 
@@ -183,20 +183,20 @@ export default function PortalLayout() {
           <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
           <div className="relative w-72 bg-white shadow-2xl flex flex-col">
             <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-green-700 flex items-center justify-center">
                 <HiOutlineMicrophone className="w-4 h-4 text-white" />
               </div>
               <div className="leading-none">
-                <span className="font-bold text-gray-900 text-sm">TrustVoice</span>
-                <span className="block text-[9px] font-semibold text-violet-600 tracking-widest uppercase">Portal</span>
+                <span className="font-bold text-gray-900 text-sm">VBV</span>
+                <span className="block text-[9px] font-semibold text-emerald-700 tracking-widest uppercase">Portal</span>
               </div>
             </div>
             <div className="px-5 py-3">
-              <div className="flex items-center gap-2 bg-indigo-50 rounded-xl px-3 py-2.5">
-                <HiOutlineUser className="w-4 h-4 text-indigo-600" />
+              <div className="flex items-center gap-2 bg-emerald-50 rounded-xl px-3 py-2.5">
+                <HiOutlineUser className="w-4 h-4 text-emerald-600" />
                 <div>
                   <p className="text-xs font-semibold text-gray-900 truncate">{user.full_name || user.telegram_username || 'User'}</p>
-                  <p className="text-[10px] text-indigo-600 font-medium">{roleLabel}</p>
+                  <p className="text-[10px] text-emerald-600 font-medium">{roleLabel}</p>
                 </div>
               </div>
             </div>
@@ -204,7 +204,7 @@ export default function PortalLayout() {
               {navItems.map(({ to, icon: Icon, label, end }) => (
                 <Link key={to} to={to}
                   className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all ${
-                    isActive(to, end) ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'
+                    isActive(to, end) ? 'bg-emerald-50 text-emerald-700' : 'text-gray-600 hover:bg-gray-50'
                   }`}>
                   <Icon className="w-5 h-5" /> {label}
                 </Link>
@@ -212,7 +212,7 @@ export default function PortalLayout() {
             </nav>
             <div className="px-3 py-4 border-t border-gray-100 space-y-1">
               <Link to="/" className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-500 hover:bg-gray-50">
-                <HiOutlineArrowLeft className="w-5 h-5" /> Back to TrustVoice
+                <HiOutlineArrowLeft className="w-5 h-5" /> Back to VBV
               </Link>
               <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50">
                 <HiOutlineArrowRightOnRectangle className="w-5 h-5" /> Sign Out

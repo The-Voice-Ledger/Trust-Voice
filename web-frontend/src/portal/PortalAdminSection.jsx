@@ -24,8 +24,8 @@ import {
 } from '../components/icons';
 
 const SECTION_META = {
-  ngos:       { title: 'NGO Approvals',   desc: 'Review and approve NGO registration applications', icon: HiOutlineBuildingOffice2, accent: '#6366F1' },
-  users:      { title: 'User Approvals',   desc: 'Manage pending user role requests',                icon: HiOutlineUserGroup,       accent: '#A855F7' },
+  ngos:       { title: 'NGO Approvals',   desc: 'Review and approve NGO registration applications', icon: HiOutlineBuildingOffice2, accent: '#10B981' },
+  users:      { title: 'User Approvals',   desc: 'Manage pending user role requests',                icon: HiOutlineUserGroup,       accent: '#14B8A6' },
   payouts:    { title: 'Payouts',          desc: 'Review and release payout requests',               icon: HiOutlineBanknotes,       accent: '#D97706' },
   milestones: { title: 'Milestones',       desc: 'Verify milestones and release on-chain funds',     icon: HiOutlineShieldCheck,     accent: '#059669' },
 };
@@ -100,7 +100,7 @@ function PendingNgos() {
       ) : (
         items.map((reg) => (
           <div key={reg.id} className="group relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 overflow-hidden transition-all hover:shadow-md hover:border-transparent">
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-violet-500 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-green-500 to-transparent" />
             <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-gray-900">{reg.organization_name || reg.org_name}</h3>
@@ -169,12 +169,12 @@ function PendingUsers() {
       ) : (
         items.map((reg) => (
           <div key={reg.id} className="group relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 overflow-hidden transition-all hover:shadow-md hover:border-transparent">
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-purple-500 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-green-500 via-green-500 to-transparent" />
             <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-gray-900">{reg.full_name || reg.telegram_username || `User #${reg.id}`}</h3>
                 <p className="text-sm text-gray-500">
-                  Role: <span className="font-medium text-indigo-600">{reg.requested_role || reg.role}</span>
+                  Role: <span className="font-medium text-emerald-600">{reg.requested_role || reg.role}</span>
                 </p>
                 <p className="text-xs text-gray-400">
                   {reg.phone_number || ''} · {reg.telegram_username ? `@${reg.telegram_username}` : ''}

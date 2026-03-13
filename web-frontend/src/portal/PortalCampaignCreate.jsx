@@ -50,7 +50,7 @@ export default function PortalCampaignCreate() {
         <h1 className="text-xl font-bold text-gray-900 mb-2">NGO account required</h1>
         <p className="text-gray-500 text-sm mb-4">
           Only verified NGOs can create campaigns. If you represent an NGO,{' '}
-          <Link to="/register-ngo" className="text-indigo-600 hover:underline">register your organisation</Link>{' '}
+          <Link to="/register-ngo" className="text-emerald-600 hover:underline">register your organisation</Link>{' '}
           first and wait for admin approval.
         </p>
       </div>
@@ -120,11 +120,11 @@ export default function PortalCampaignCreate() {
         <p className="text-gray-500 text-sm mb-6">Your campaign is live. Add milestones, videos, and updates to build trust with funders.</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link to={`/portal/projects/${success.id}/edit`}
-            className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition text-sm">
+            className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition text-sm">
             Edit Campaign
           </Link>
           <Link to={`/portal/projects/${success.id}/milestones`}
-            className="px-5 py-2.5 rounded-xl bg-violet-50 text-violet-700 font-semibold hover:bg-violet-100 transition text-sm border border-violet-100">
+            className="px-5 py-2.5 rounded-xl bg-green-50 text-green-700 font-semibold hover:bg-green-100 transition text-sm border border-green-100">
             Add Milestones
           </Link>
           <Link to="/portal/projects"
@@ -150,7 +150,7 @@ export default function PortalCampaignCreate() {
       {/* Progress */}
       <div className="flex gap-1 mb-8">
         {STEPS.map((_, i) => (
-          <div key={i} className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-indigo-600' : 'bg-gray-200'}`} />
+          <div key={i} className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-emerald-600' : 'bg-gray-200'}`} />
         ))}
       </div>
 
@@ -163,7 +163,7 @@ export default function PortalCampaignCreate() {
 
       {/* Form card */}
       <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-6 mb-6 overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-violet-500 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-green-500 to-transparent" />
 
         {/* Step 1: Basics */}
         {step === 0 && (
@@ -180,7 +180,7 @@ export default function PortalCampaignCreate() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
               <textarea value={form.description} onChange={(e) => set('description', e.target.value)}
                 rows={5} placeholder="Describe the campaign's goals, who it helps, and why it matters…"
-                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
@@ -189,8 +189,8 @@ export default function PortalCampaignCreate() {
                   <button key={c} type="button" onClick={() => set('category', c)}
                     className={`px-4 py-2 rounded-full text-xs font-medium border transition capitalize ${
                       form.category === c
-                        ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300'
                     }`}>
                     {c}
                   </button>
@@ -246,7 +246,7 @@ export default function PortalCampaignCreate() {
               <label htmlFor="portal-video-upload" className="cursor-pointer">
                 {form.video_file ? (
                   <div className="flex flex-col items-center">
-                    <HiOutlineFilm className="w-10 h-10 text-indigo-500" />
+                    <HiOutlineFilm className="w-10 h-10 text-emerald-500" />
                     <p className="text-sm font-medium text-gray-700 mt-2">{form.video_file.name}</p>
                     <p className="text-xs text-gray-400">{(form.video_file.size / 1024 / 1024).toFixed(1)} MB</p>
                   </div>
@@ -294,7 +294,7 @@ export default function PortalCampaignCreate() {
         </button>
         {step < STEPS.length - 1 ? (
           <button onClick={() => setStep((s) => s + 1)} disabled={!canNext()}
-            className="px-5 py-3 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition">
+            className="px-5 py-3 rounded-xl text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition">
             Next →
           </button>
         ) : (
@@ -314,7 +314,7 @@ function Field({ label, required, value, onChange, placeholder, type = 'text' })
       <label className="block text-sm font-medium text-gray-700 mb-1">{label} {required && '*'}</label>
       <input type={type} required={required} value={value} onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+        className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
     </div>
   );
 }

@@ -23,7 +23,7 @@ import {
 } from '../components/icons';
 
 const STATUS_MAP = {
-  active:             { label: 'Raising',       color: 'text-indigo-600', bg: 'bg-indigo-50',  border: 'border-indigo-200', icon: HiOutlineClock,        ring: 'ring-indigo-400' },
+  active:             { label: 'Raising',       color: 'text-emerald-600', bg: 'bg-emerald-50',  border: 'border-emerald-200', icon: HiOutlineClock,        ring: 'ring-emerald-400' },
   pending:            { label: 'Upcoming',      color: 'text-gray-400',   bg: 'bg-gray-50',    border: 'border-gray-200',   icon: HiOutlineLockClosed,   ring: 'ring-gray-300' },
   evidence_submitted: { label: 'Evidence Sent', color: 'text-amber-600',  bg: 'bg-amber-50',   border: 'border-amber-200',  icon: HiOutlineClock,        ring: 'ring-amber-400' },
   under_review:       { label: 'Under Review',  color: 'text-amber-600',  bg: 'bg-amber-50',   border: 'border-amber-200',  icon: HiOutlineShieldCheck,  ring: 'ring-amber-400' },
@@ -119,7 +119,7 @@ export default function MilestoneManager() {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
       {/* Back + title */}
       <div className="flex items-center justify-between mb-6">
-        <Link to="/portal/projects" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline">
+        <Link to="/portal/projects" className="inline-flex items-center gap-1 text-sm text-emerald-600 hover:underline">
           <HiOutlineArrowLeft className="w-4 h-4" /> My Projects
         </Link>
         {campaign && <Link to={`/campaign/${id}`} className="text-xs text-gray-400 hover:text-gray-600">View public page →</Link>}
@@ -134,7 +134,7 @@ export default function MilestoneManager() {
 
       {/* Summary bar */}
       <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-5 mb-6 overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-indigo-500 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-emerald-500 to-transparent" />
         <svg className="absolute -top-1 -right-1 w-20 h-20 pointer-events-none" viewBox="0 0 80 80" fill="none">
           <rect x="45" y="10" width="24" height="30" rx="3" stroke="#059669" strokeWidth="0.5" opacity="0.05" />
           <path d="M50 18 L64 18" stroke="#059669" strokeWidth="0.4" opacity="0.04" />
@@ -149,7 +149,7 @@ export default function MilestoneManager() {
           <span className="text-xs text-gray-400">${fmt(totalReleased)} / ${fmt(totalTarget)} released</span>
         </div>
         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-emerald-500 to-indigo-500 rounded-full transition-all duration-700" style={{ width: `${progressPct}%` }} />
+          <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-500 rounded-full transition-all duration-700" style={{ width: `${progressPct}%` }} />
         </div>
         <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
           <span>{milestones.length} milestones</span>
@@ -163,7 +163,7 @@ export default function MilestoneManager() {
           <HiOutlineShieldCheck className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 mb-4">No milestones defined for this campaign yet.</p>
           <button onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold hover:from-indigo-700 hover:to-violet-700 transition text-sm">
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 text-white font-semibold hover:from-emerald-700 hover:to-green-700 transition text-sm">
             <HiOutlinePlusCircle className="w-4 h-4" /> Create Milestones
           </button>
         </div>
@@ -194,7 +194,7 @@ export default function MilestoneManager() {
                     {/* Amount bar */}
                     <div className="mt-2 flex items-center gap-2">
                       <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full transition-all duration-500 ${m.status === 'released' ? 'bg-emerald-500' : m.status === 'active' ? 'bg-indigo-500' : 'bg-gray-200'}`}
+                        <div className={`h-full rounded-full transition-all duration-500 ${m.status === 'released' ? 'bg-emerald-500' : m.status === 'active' ? 'bg-emerald-500' : 'bg-gray-200'}`}
                           style={{ width: `${m.status === 'released' ? 100 : pct}%` }} />
                       </div>
                       <span className="text-xs font-medium text-gray-600 whitespace-nowrap">${fmt(m.target_amount_usd)}</span>
@@ -204,17 +204,17 @@ export default function MilestoneManager() {
                     {canSubmitEvidence && (
                       <div className="mt-3">
                         {evidenceFor === m.id ? (
-                          <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-3 space-y-3">
+                          <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 space-y-3">
                             <textarea
                               value={evidenceNotes}
                               onChange={(e) => setEvidenceNotes(e.target.value)}
                               rows={3}
                               placeholder="Describe the evidence, progress made, photos taken…"
-                              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm resize-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none"
+                              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm resize-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 outline-none"
                             />
                             <div className="flex gap-2">
                               <button onClick={handleEvidence} disabled={submittingEvidence || !evidenceNotes.trim()}
-                                className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition disabled:opacity-50">
+                                className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition disabled:opacity-50">
                                 {submittingEvidence ? 'Submitting…' : 'Submit Evidence'}
                               </button>
                               <button onClick={() => { setEvidenceFor(null); setEvidenceNotes(''); }}
@@ -225,7 +225,7 @@ export default function MilestoneManager() {
                           </div>
                         ) : (
                           <button onClick={() => setEvidenceFor(m.id)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold hover:bg-indigo-100 transition">
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 transition">
                             <HiOutlineDocumentText className="w-3.5 h-3.5" /> Submit Evidence
                           </button>
                         )}
@@ -242,7 +242,7 @@ export default function MilestoneManager() {
                     {/* On-chain TX link */}
                     {m.blockchain_tx && (
                       <a href={m.blockchain_tx} target="_blank" rel="noreferrer"
-                        className="inline-block mt-2 text-xs text-indigo-600 hover:underline font-mono">
+                        className="inline-block mt-2 text-xs text-emerald-600 hover:underline font-mono">
                         On-chain: {m.blockchain_tx.slice(0, 20)}…
                       </a>
                     )}
@@ -265,7 +265,7 @@ export default function MilestoneManager() {
       {/* Create milestones form */}
       {showCreate && (
         <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-5 mb-6 overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-indigo-500 to-transparent" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-green-500 via-emerald-500 to-transparent" />
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-900 text-sm">Create Milestones</h3>
             <button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-gray-600 p-1">
@@ -282,25 +282,25 @@ export default function MilestoneManager() {
                   </button>
                 )}
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 text-xs font-bold flex items-center justify-center">{i + 1}</span>
+                  <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold flex items-center justify-center">{i + 1}</span>
                   <span className="text-xs font-medium text-gray-500">Milestone {i + 1}</span>
                 </div>
                 <input type="text" value={m.title} onChange={(e) => updateRow(i, 'title', e.target.value)} placeholder="Milestone title"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none" />
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 outline-none" />
                 <textarea rows={2} value={m.description} onChange={(e) => updateRow(i, 'description', e.target.value)} placeholder="What will be accomplished?"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm resize-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none" />
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm resize-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 outline-none" />
                 <input type="number" min={1} value={m.target_amount_usd} onChange={(e) => updateRow(i, 'target_amount_usd', e.target.value)} placeholder="Target amount (USD)"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none" />
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 outline-none" />
               </div>
             ))}
           </div>
 
           <div className="flex items-center justify-between mt-4">
-            <button onClick={addRow} className="inline-flex items-center gap-1.5 text-sm text-indigo-600 font-medium hover:underline">
+            <button onClick={addRow} className="inline-flex items-center gap-1.5 text-sm text-emerald-600 font-medium hover:underline">
               <HiOutlinePlusCircle className="w-4 h-4" /> Add milestone
             </button>
             <button onClick={handleCreate} disabled={creating || newMilestones.some((m) => !m.title || !m.target_amount_usd)}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-semibold hover:from-indigo-700 hover:to-violet-700 transition disabled:opacity-50">
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 text-white text-sm font-semibold hover:from-emerald-700 hover:to-green-700 transition disabled:opacity-50">
               {creating ? 'Creating…' : 'Create Milestones'}
             </button>
           </div>

@@ -23,23 +23,23 @@ export default function ProjectsIndex() {
   return (
     <div className="relative">
       {/* ═══ HERO ═══ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-950 via-violet-950 to-purple-950 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-950 via-green-950 to-stone-950 text-white">
         <HexGrid className="absolute inset-0 text-white opacity-20" />
-        <CircuitTrace className="absolute inset-0 w-full h-full text-violet-300 opacity-25" />
-        <GlowOrb className="absolute -top-32 -right-32 w-[500px] h-[500px]" color="#6D28D9" />
-        <GlowOrb className="absolute -bottom-32 -left-32 w-[400px] h-[400px]" color="#7C3AED" />
+        <CircuitTrace className="absolute inset-0 w-full h-full text-emerald-300 opacity-25" />
+        <GlowOrb className="absolute -top-32 -right-32 w-[500px] h-[500px]" color="#D97706" />
+        <GlowOrb className="absolute -bottom-32 -left-32 w-[400px] h-[400px]" color="#059669" />
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-20 sm:py-28 text-center">
-          <span className="inline-flex items-center gap-2 bg-white/[0.07] backdrop-blur-xl rounded-full px-5 py-2 text-sm font-medium mb-8 border border-white/[0.08] shadow-lg shadow-violet-500/10">
-            <HiOutlineGlobeAlt className="w-4 h-4 text-violet-300" />
-            <span className="text-violet-200">Community Projects</span>
+          <span className="inline-flex items-center gap-2 bg-white/[0.07] backdrop-blur-xl rounded-full px-5 py-2 text-sm font-medium mb-8 border border-white/[0.08] shadow-lg shadow-emerald-500/10">
+            <HiOutlineGlobeAlt className="w-4 h-4 text-emerald-300" />
+            <span className="text-emerald-200">Community Projects</span>
           </span>
           <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-5">
-            <span className="bg-gradient-to-r from-white via-violet-200 to-pink-200 bg-clip-text text-transparent">
-              Projects Powered by TrustVoice
+            <span className="bg-gradient-to-r from-white via-emerald-200 to-amber-200 bg-clip-text text-transparent">
+              Projects Powered by VBV
             </span>
           </h1>
-          <p className="text-violet-200/60 text-base sm:text-lg max-w-2xl mx-auto">
+          <p className="text-emerald-200/60 text-base sm:text-lg max-w-2xl mx-auto">
             Transparent, voice-verified, community-funded. Explore the projects building real impact on the ground.
           </p>
         </div>
@@ -137,7 +137,7 @@ export default function ProjectsIndex() {
               >
                 <div className={`h-36 bg-gradient-to-br ${p.theme.heroBg}`} />
                 <div className="p-5">
-                  <h4 className="font-display font-semibold text-gray-900 mb-1 group-hover:text-indigo-600 transition">
+                  <h4 className="font-display font-semibold text-gray-900 mb-1 group-hover:text-emerald-600 transition">
                     {p.name}
                   </h4>
                   <p className="text-sm text-gray-500">{p.tagline}</p>
@@ -151,10 +151,10 @@ export default function ProjectsIndex() {
       {/* ═══ EMPTY STATE ═══ */}
       {rest.length === 0 && (
         <section className="max-w-3xl mx-auto px-4 sm:px-6 pb-20 text-center">
-          <div className="bg-gradient-to-b from-indigo-50/60 to-white rounded-2xl py-12 px-6 ring-1 ring-indigo-100/50">
+          <div className="bg-gradient-to-b from-emerald-50/60 to-white rounded-2xl py-12 px-6 ring-1 ring-emerald-100/50">
             <p className="text-gray-500 text-sm mb-1">More projects coming soon.</p>
             <p className="text-gray-400 text-xs">
-              TrustVoice enables transparent, voice-verified fundraising for community projects worldwide.
+              VBV enables transparent, voice-verified fundraising for community projects worldwide.
             </p>
           </div>
           <SectionAccent className="mt-8 max-w-xs mx-auto" />

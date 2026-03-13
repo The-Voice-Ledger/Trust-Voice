@@ -127,7 +127,7 @@ export function BlueprintGrid({ className = '' }) {
 }
 
 /* ─── Gradient Mesh Orbs (top-right + bottom-left visible color washes) ── */
-export function GradientMesh({ className = '', colorA = '#6366F1', colorB = '#A855F7' }) {
+export function GradientMesh({ className = '', colorA = '#10B981', colorB = '#14B8A6' }) {
   return (
     <div className={`pointer-events-none ${className}`} aria-hidden="true">
       <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.07]"
@@ -144,19 +144,19 @@ export function GradientMesh({ className = '', colorA = '#6366F1', colorB = '#A8
 export function SectionAccent({ className = '' }) {
   return (
     <div className={`flex items-center gap-3 ${className}`} aria-hidden="true">
-      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-indigo-300/30 to-transparent" />
+      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-emerald-300/30 to-transparent" />
       <div className="flex gap-1.5">
-        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/40" />
-        <div className="w-1.5 h-1.5 rounded-full bg-violet-500/40" />
-        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/40" />
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/40" />
+        <div className="w-1.5 h-1.5 rounded-full bg-green-500/40" />
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/40" />
       </div>
-      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-violet-300/30 to-transparent" />
+      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-green-300/30 to-transparent" />
     </div>
   );
 }
 
 /* ─── Glowing Orb (for hero) ──────────────────── */
-export function GlowOrb({ className = '', color = '#6366F1' }) {
+export function GlowOrb({ className = '', color = '#10B981' }) {
   return (
     <div className={className} aria-hidden="true"
       style={{
@@ -169,7 +169,7 @@ export function GlowOrb({ className = '', color = '#6366F1' }) {
 }
 
 /* ─── Animated Pulse Ring ─────────────────────────────────── */
-export function PulseRing({ className = '', color = '#6366F1' }) {
+export function PulseRing({ className = '', color = '#10B981' }) {
   return (
     <svg className={className} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <circle cx="50" cy="50" r="20" fill="none" stroke={color} strokeWidth="0.5" opacity="0.3">
@@ -229,7 +229,7 @@ export function DataParticles({ className = '' }) {
 }
 
 /* ─── Page Background Shell — wraps a page with visible pattern + gradient orbs ─ */
-export function PageBg({ children, pattern = 'topography', colorA = '#6366F1', colorB = '#A855F7' }) {
+export function PageBg({ children, pattern = 'topography', colorA = '#10B981', colorB = '#14B8A6' }) {
   const patterns = {
     topography: TopographyBg,
     circuit: CircuitTrace,
@@ -263,8 +263,8 @@ export function PageBg({ children, pattern = 'topography', colorA = '#6366F1', c
 /* ─── Page Header Block — gradient accent bar + title ─────── */
 export function PageHeader({ icon: Icon, title, subtitle, accentColor = 'blue', bespoke }) {
   const hexColors = {
-    blue: '#6366F1', teal: '#A855F7', rose: '#E11D48',
-    amber: '#D97706', violet: '#7C3AED', emerald: '#059669',
+    blue: '#10B981', green: '#16A34A', rose: '#E11D48',
+    amber: '#D97706', emerald: '#059669',
   };
   const accent = hexColors[accentColor] || hexColors.blue;
 

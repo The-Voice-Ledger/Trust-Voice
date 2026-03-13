@@ -105,16 +105,16 @@ export default function RegisterNgo() {
   }
 
   return (
-    <PageBg pattern="circuit" colorA="#6366F1" colorB="#A855F7">
+    <PageBg pattern="circuit" colorA="#10B981" colorB="#14B8A6">
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <PageHeader icon={HiOutlineBuildingOffice2} title={t('ngo_reg.title')} subtitle={t('ngo_reg.subtitle')} accentColor="violet" bespoke="building" />
+      <PageHeader icon={HiOutlineBuildingOffice2} title={t('ngo_reg.title')} subtitle={t('ngo_reg.subtitle')} accentColor="green" bespoke="building" />
 
       {/* Progress bar */}
       <div className="flex gap-1 mb-8">
         {STEPS.map((s, i) => (
           <div
             key={s}
-            className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-indigo-600' : 'bg-gray-200'}`}
+            className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-emerald-600' : 'bg-gray-200'}`}
           />
         ))}
       </div>
@@ -133,18 +133,18 @@ export default function RegisterNgo() {
 
       {/* Step content */}
       <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-6 mb-6 overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-violet-500 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-green-500 to-transparent" />
         <svg className="absolute top-2 right-2 w-24 h-24 pointer-events-none" viewBox="0 0 96 96" fill="none">
-          <rect x="50" y="10" width="30" height="36" rx="3" stroke="#6366F1" strokeWidth="0.5" opacity="0.05" />
-          <path d="M56 22 L74 22" stroke="#6366F1" strokeWidth="0.4" opacity="0.04" />
-          <path d="M56 28 L70 28" stroke="#6366F1" strokeWidth="0.4" opacity="0.04" />
-          <path d="M56 34 L68 34" stroke="#6366F1" strokeWidth="0.4" opacity="0.03" />
-          <circle cx="65" cy="50" r="1.5" fill="#6366F1" opacity="0.05" />
+          <rect x="50" y="10" width="30" height="36" rx="3" stroke="#10B981" strokeWidth="0.5" opacity="0.05" />
+          <path d="M56 22 L74 22" stroke="#10B981" strokeWidth="0.4" opacity="0.04" />
+          <path d="M56 28 L70 28" stroke="#10B981" strokeWidth="0.4" opacity="0.04" />
+          <path d="M56 34 L68 34" stroke="#10B981" strokeWidth="0.4" opacity="0.03" />
+          <circle cx="65" cy="50" r="1.5" fill="#10B981" opacity="0.05" />
         </svg>
         <svg className="absolute bottom-1 left-1 w-10 h-10 pointer-events-none" viewBox="0 0 40 40" fill="none">
-          <path d="M0 40V25" stroke="#A855F7" strokeWidth="0.5" opacity="0.04" />
-          <path d="M0 40H15" stroke="#A855F7" strokeWidth="0.5" opacity="0.04" />
-          <circle cx="0" cy="40" r="1.5" fill="#A855F7" opacity="0.05" />
+          <path d="M0 40V25" stroke="#14B8A6" strokeWidth="0.5" opacity="0.04" />
+          <path d="M0 40H15" stroke="#14B8A6" strokeWidth="0.5" opacity="0.04" />
+          <circle cx="0" cy="40" r="1.5" fill="#14B8A6" opacity="0.05" />
         </svg>
         {step === 0 && (
           <div className="space-y-4">
@@ -186,7 +186,7 @@ export default function RegisterNgo() {
               <label className="block text-sm font-medium text-gray-700 mb-1">{t('ngo_reg.mission')} *</label>
               <textarea value={form.mission_statement} onChange={(e) => set('mission_statement', e.target.value)}
                 rows={4} placeholder={t('ngo_reg.mission_placeholder')}
-                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" />
+                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">{t('ngo_reg.focus_areas')}</label>
@@ -195,8 +195,8 @@ export default function RegisterNgo() {
                   <button key={a} type="button" onClick={() => toggleFocus(a)}
                     className={`px-4 py-2 rounded-full text-xs font-medium border transition capitalize ${
                       form.focus_areas.includes(a)
-                        ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
+                        ? 'bg-emerald-600 text-white border-emerald-600'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300'
                     }`}>
                     {a}
                   </button>
@@ -251,7 +251,7 @@ export default function RegisterNgo() {
           <button
             onClick={() => setStep((s) => s + 1)}
             disabled={!canNext()}
-            className="px-5 py-3 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition"
+            className="px-5 py-3 rounded-xl text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition"
           >
             {t('ngo_reg.next')} →
           </button>
@@ -283,7 +283,7 @@ function Field({ label, required, value, onChange, placeholder, type = 'text' })
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+        className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
       />
     </div>
   );

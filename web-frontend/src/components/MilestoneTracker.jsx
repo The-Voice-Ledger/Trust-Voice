@@ -22,7 +22,7 @@ import {
 /* ── Status config ──────────────────────────────────── */
 
 const STATUS_MAP = {
-  active:             { label: 'Raising',          color: 'text-indigo-600', bg: 'bg-indigo-50',  border: 'border-indigo-200', icon: HiOutlineClock,      ring: 'ring-indigo-400' },
+  active:             { label: 'Raising',          color: 'text-emerald-600', bg: 'bg-emerald-50',  border: 'border-emerald-200', icon: HiOutlineClock,      ring: 'ring-emerald-400' },
   pending:            { label: 'Upcoming',         color: 'text-gray-400',   bg: 'bg-gray-50',    border: 'border-gray-200',   icon: HiOutlineLockClosed, ring: 'ring-gray-300' },
   evidence_submitted: { label: 'Evidence Sent',    color: 'text-amber-600',  bg: 'bg-amber-50',   border: 'border-amber-200',  icon: HiOutlineDocumentText, ring: 'ring-amber-400' },
   under_review:       { label: 'Under Review',     color: 'text-amber-600',  bg: 'bg-amber-50',   border: 'border-amber-200',  icon: HiOutlineShieldCheck,ring: 'ring-amber-400' },
@@ -69,7 +69,7 @@ export default function MilestoneTracker({ campaignId, compact = false }) {
     ).length;
     return (
       <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
-        <span className="inline-flex items-center gap-1 text-indigo-600 font-medium">
+        <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
           <HiOutlineShieldCheck className="w-3.5 h-3.5" />
           Milestone-gated
         </span>
@@ -88,7 +88,7 @@ export default function MilestoneTracker({ campaignId, compact = false }) {
   return (
     <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 mb-6 overflow-hidden">
       {/* Top accent line */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-indigo-500 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-emerald-500 to-transparent" />
 
       {/* Bespoke corner SVG */}
       <svg className="absolute -top-1 -right-1 w-20 h-20 pointer-events-none" viewBox="0 0 80 80" fill="none">
@@ -112,7 +112,7 @@ export default function MilestoneTracker({ campaignId, compact = false }) {
       {/* Overall progress bar */}
       <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-5">
         <div
-          className="h-full bg-gradient-to-r from-emerald-500 to-indigo-500 rounded-full transition-all duration-700 ease-out"
+          className="h-full bg-gradient-to-r from-emerald-500 to-emerald-500 rounded-full transition-all duration-700 ease-out"
           style={{ width: `${progressPct}%` }}
         />
       </div>
@@ -170,7 +170,7 @@ export default function MilestoneTracker({ campaignId, compact = false }) {
                         m.status === 'released'
                           ? 'bg-emerald-500'
                           : m.status === 'active'
-                          ? 'bg-indigo-500'
+                          ? 'bg-emerald-500'
                           : 'bg-gray-200'
                       }`}
                       style={{ width: `${m.status === 'released' ? 100 : pct}%` }}
@@ -183,10 +183,10 @@ export default function MilestoneTracker({ campaignId, compact = false }) {
 
                 {/* ── Evidence from project owner ── */}
                 {hasEvidence && (
-                  <div className="mt-3 bg-indigo-50/60 border border-indigo-100 rounded-xl px-3 py-2.5">
+                  <div className="mt-3 bg-emerald-50/60 border border-emerald-100 rounded-xl px-3 py-2.5">
                     <div className="flex items-center gap-1.5 mb-1">
-                      <HiOutlineDocumentText className="w-3.5 h-3.5 text-indigo-500" />
-                      <span className="text-[11px] font-semibold text-indigo-600 uppercase tracking-wide">Project Evidence</span>
+                      <HiOutlineDocumentText className="w-3.5 h-3.5 text-emerald-500" />
+                      <span className="text-[11px] font-semibold text-emerald-600 uppercase tracking-wide">Project Evidence</span>
                       {!approvedV.length && (
                         <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Unverified</span>
                       )}
@@ -204,7 +204,7 @@ export default function MilestoneTracker({ campaignId, compact = false }) {
                         <HiOutlineCamera className="w-3 h-3 text-gray-400" />
                         {m.evidence_ipfs_hashes.map((hash, i) => (
                           <a key={i} href={`https://gateway.pinata.cloud/ipfs/${hash}`} target="_blank" rel="noreferrer"
-                            className="text-[10px] text-indigo-600 hover:underline font-mono bg-white/60 px-1.5 py-0.5 rounded">
+                            className="text-[10px] text-emerald-600 hover:underline font-mono bg-white/60 px-1.5 py-0.5 rounded">
                             Doc {i + 1}
                           </a>
                         ))}
@@ -283,7 +283,7 @@ export default function MilestoneTracker({ campaignId, compact = false }) {
                 {/* ── On-chain TX ── */}
                 {m.chain_tx_hash && (
                   <a href={`https://sepolia.basescan.org/tx/${m.chain_tx_hash}`} target="_blank" rel="noreferrer"
-                    className="inline-flex items-center gap-1 mt-2 text-[10px] text-indigo-600 hover:underline font-mono">
+                    className="inline-flex items-center gap-1 mt-2 text-[10px] text-emerald-600 hover:underline font-mono">
                     <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" strokeLinecap="round" strokeLinejoin="round" /></svg>
                     On-chain: {m.chain_tx_hash.slice(0, 10)}…{m.chain_tx_hash.slice(-6)}
                   </a>

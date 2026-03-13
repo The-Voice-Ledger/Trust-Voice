@@ -1,5 +1,5 @@
 {
-  "app_name": "TrustVoice",
+  "app_name": "VBV",
   "tagline": "Voice-First Funding Platform",
   "nav": {
     "campaigns": "Campaigns",
@@ -19,7 +19,7 @@
   },
   "landing": {
     "badge": "Voice-First · Transparent · Verified",
-    "hero_title": "Transparent Funding, One Voice at a Time",
+    "hero_title": "Transparent Regen Funding, One Voice at a Time",
     "hero_subtitle": "Browse campaigns, watch transparency videos, fund by voice, with blockchain-verified receipts and field agent verification.",
     "explore_btn": "Explore Campaigns",
     "stat_conversations": "Conversations",

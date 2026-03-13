@@ -72,7 +72,7 @@ export default function ProjectFooter({ config }) {
             <span className="text-gray-700">&middot;</span>
             <span>
               Powered by{' '}
-              <Link to="/" className="text-indigo-400 hover:text-indigo-300 transition">TrustVoice</Link>
+              <Link to="/" className="text-indigo-400 hover:text-indigo-300 transition">VBV</Link>
             </span>
           </div>
           <p className="text-[11px] text-gray-700 max-w-md text-center sm:text-right leading-relaxed">

@@ -60,25 +60,25 @@ export default function FunderDashboard({ user }) {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard accent="#6366F1" icon={HiOutlineWallet} label="Total Donated">
+        <StatCard accent="#10B981" icon={HiOutlineWallet} label="Total Donated">
           {Object.entries(totalsByFx).map(([cur, amt]) => (
-            <span key={cur} className="block text-xl font-bold" style={{ color: '#6366F1' }}>
+            <span key={cur} className="block text-xl font-bold" style={{ color: '#10B981' }}>
               {Number(amt).toLocaleString('en-US', { maximumFractionDigits: 2 })} {cur}
             </span>
           ))}
-          {Object.keys(totalsByFx).length === 0 && <span className="text-xl font-bold text-indigo-600">$0</span>}
+          {Object.keys(totalsByFx).length === 0 && <span className="text-xl font-bold text-emerald-600">$0</span>}
         </StatCard>
         <StatCard accent="#059669" icon={HiOutlineBanknotes} label="Donations">
           <span className="text-xl font-bold text-gray-900">{donations.length}</span>
         </StatCard>
         {taxSummary && (
           <>
-            <StatCard accent="#A855F7" icon={HiOutlineSparkles} label={`Tax Year ${currentYear}`}>
+            <StatCard accent="#14B8A6" icon={HiOutlineSparkles} label={`Tax Year ${currentYear}`}>
               <span className="text-xl font-bold text-emerald-600">
                 ${Number(taxSummary.total_deductible || taxSummary.total_amount || 0).toLocaleString()}
               </span>
             </StatCard>
-            <StatCard accent="#7C3AED" icon={HiOutlineDocumentText} label="Receipts">
+            <StatCard accent="#0D9488" icon={HiOutlineDocumentText} label="Receipts">
               <span className="text-xl font-bold text-gray-900">{taxSummary.receipt_count || taxSummary.donation_count || 0}</span>
             </StatCard>
           </>
@@ -88,11 +88,11 @@ export default function FunderDashboard({ user }) {
       {/* Receipt modal */}
       {activeReceipt && (
         <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 shadow-md p-6 mb-6 overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-emerald-500 to-transparent" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-green-500 via-emerald-500 to-transparent" />
           <svg className="absolute top-2 right-12 w-20 h-20 pointer-events-none" viewBox="0 0 80 80" fill="none">
-            <rect x="46" y="10" width="22" height="28" rx="3" stroke="#A855F7" strokeWidth="0.5" opacity="0.05" />
-            <path d="M52 20 L62 20" stroke="#A855F7" strokeWidth="0.4" opacity="0.04" />
-            <path d="M52 26 L58 26" stroke="#A855F7" strokeWidth="0.4" opacity="0.03" />
+            <rect x="46" y="10" width="22" height="28" rx="3" stroke="#14B8A6" strokeWidth="0.5" opacity="0.05" />
+            <path d="M52 20 L62 20" stroke="#14B8A6" strokeWidth="0.4" opacity="0.04" />
+            <path d="M52 26 L58 26" stroke="#14B8A6" strokeWidth="0.4" opacity="0.03" />
           </svg>
           <div className="flex justify-between items-start mb-4">
             <h2 className="font-semibold text-gray-900">Receipt Details</h2>
@@ -112,7 +112,7 @@ export default function FunderDashboard({ user }) {
               {activeReceipt.nft_token_id && <Row label="NFT Token" value={`#${activeReceipt.nft_token_id}`} />}
               {activeReceipt.blockchain_tx && (
                 <Row label="Blockchain TX" value={
-                  <a href={activeReceipt.blockchain_tx} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline font-mono text-xs">
+                  <a href={activeReceipt.blockchain_tx} target="_blank" rel="noreferrer" className="text-emerald-600 hover:underline font-mono text-xs">
                     {activeReceipt.blockchain_tx.slice(0, 20)}…
                   </a>
                 } />
@@ -135,7 +135,7 @@ export default function FunderDashboard({ user }) {
       {/* Recent donations */}
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-900">Recent Funding</h2>
-        <Link to="/portal/donations" className="text-sm text-indigo-600 hover:underline">View all →</Link>
+        <Link to="/portal/donations" className="text-sm text-emerald-600 hover:underline">View all →</Link>
       </div>
 
       {loading ? (
@@ -144,16 +144,16 @@ export default function FunderDashboard({ user }) {
         <div className="text-center py-16">
           <HiOutlineBanknotes className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-400 mb-4">You haven't made any donations yet.</p>
-          <Link to="/campaigns" className="text-indigo-600 font-semibold hover:underline text-sm">Explore campaigns →</Link>
+          <Link to="/campaigns" className="text-emerald-600 font-semibold hover:underline text-sm">Explore campaigns →</Link>
         </div>
       ) : (
         <div className="space-y-3">
           {donations.slice(0, 5).map((d) => (
             <div key={d.id} className="group relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 overflow-hidden transition-all hover:shadow-md hover:border-transparent">
-              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-indigo-500/20 via-violet-500/20 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-emerald-500/20 via-green-500/20 to-transparent" />
               <svg className="absolute bottom-0 right-0 w-12 h-12 pointer-events-none" viewBox="0 0 50 50" fill="none">
-                <path d="M50 0v50H0" stroke="#6366F1" strokeWidth="0.5" opacity="0.06" />
-                <circle cx="50" cy="50" r="1.5" fill="#6366F1" opacity="0.08" />
+                <path d="M50 0v50H0" stroke="#10B981" strokeWidth="0.5" opacity="0.06" />
+                <circle cx="50" cy="50" r="1.5" fill="#10B981" opacity="0.08" />
               </svg>
               <div>
                 <p className="font-medium text-gray-900">
@@ -167,7 +167,7 @@ export default function FunderDashboard({ user }) {
               <div className="flex items-center gap-2">
                 <StatusBadge status={d.status} />
                 <button onClick={() => viewReceipt(d.id)} disabled={receiptLoading}
-                  className="text-xs text-indigo-600 hover:underline py-1 px-2">
+                  className="text-xs text-emerald-600 hover:underline py-1 px-2">
                   Receipt
                 </button>
               </div>
@@ -215,7 +215,7 @@ function StatusBadge({ status }) {
   const colors = {
     completed: 'bg-green-50 text-green-600',
     pending: 'bg-yellow-50 text-yellow-600',
-    processing: 'bg-indigo-50 text-indigo-600',
+    processing: 'bg-emerald-50 text-emerald-600',
     failed: 'bg-red-50 text-red-600',
     refunded: 'bg-gray-50 text-gray-600',
   };

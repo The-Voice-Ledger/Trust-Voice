@@ -39,7 +39,7 @@ const SECTION_MAP = {
  *
  * Reads the slug from the URL, looks up config in the registry,
  * then renders a complete standalone website with its own navbar,
- * sections, and footer. Bypasses the global TrustVoice layout.
+ * sections, and footer. Bypasses the global VBV layout.
  */
 export default function ProjectLanding() {
   const { slug } = useParams();
@@ -57,7 +57,7 @@ export default function ProjectLanding() {
             to="/"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
           >
-            Back to TrustVoice
+            Back to VBV
           </Link>
         </div>
       </div>

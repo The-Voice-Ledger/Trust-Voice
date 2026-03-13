@@ -196,34 +196,34 @@ export default function Landing() {
   return (
     <div className="relative">
       {/* ════════ HERO ════════ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-950 via-violet-950 to-purple-950 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-950 via-green-950 to-stone-950 text-white">
         {/* SVG decorative layers — subtle tech texture */}
         <HexGrid className="absolute inset-0 text-white opacity-20" />
-        <CircuitTrace className="absolute inset-0 w-full h-full text-violet-300 opacity-25" />
-        <DataParticles className="absolute inset-0 w-full h-full text-violet-400 opacity-30" />
-        <GlowOrb className="absolute -top-32 -right-32 w-[500px] h-[500px]" color="#6D28D9" />
-        <GlowOrb className="absolute -bottom-32 -left-32 w-[400px] h-[400px]" color="#7C3AED" />
-        <PulseRing className="absolute top-20 right-20 w-40 h-40 text-violet-400 hidden lg:block" />
-        <PulseRing className="absolute bottom-10 left-16 w-32 h-32 text-purple-400 hidden lg:block" />
+        <CircuitTrace className="absolute inset-0 w-full h-full text-emerald-300 opacity-25" />
+        <DataParticles className="absolute inset-0 w-full h-full text-emerald-400 opacity-30" />
+        <GlowOrb className="absolute -top-32 -right-32 w-[500px] h-[500px]" color="#D97706" />
+        <GlowOrb className="absolute -bottom-32 -left-32 w-[400px] h-[400px]" color="#059669" />
+        <PulseRing className="absolute top-20 right-20 w-40 h-40 text-emerald-400 hidden lg:block" />
+        <PulseRing className="absolute bottom-10 left-16 w-32 h-32 text-amber-400 hidden lg:block" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-24 sm:py-32 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/[0.07] backdrop-blur-xl rounded-full px-5 py-2 text-sm font-medium mb-8 border border-white/[0.08] shadow-lg shadow-violet-500/10">
-            <HiOutlineMicrophone className="w-4 h-4 text-violet-300" />
-            <span className="text-violet-200">{t('landing.badge')}</span>
+          <div className="inline-flex items-center gap-2 bg-white/[0.07] backdrop-blur-xl rounded-full px-5 py-2 text-sm font-medium mb-8 border border-white/[0.08] shadow-lg shadow-emerald-500/10">
+            <HiOutlineMicrophone className="w-4 h-4 text-emerald-300" />
+            <span className="text-emerald-200">{t('landing.badge')}</span>
           </div>
           <h1 className="hero-heading text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
-            <span className="bg-gradient-to-r from-white via-violet-200 to-pink-200 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-white via-emerald-200 to-amber-200 bg-clip-text text-transparent">
               {t('landing.hero_title')}
             </span>
           </h1>
-          <p className="text-base sm:text-lg text-violet-200/70 max-w-2xl mx-auto mb-10">
+          <p className="text-base sm:text-lg text-emerald-200/70 max-w-2xl mx-auto mb-10">
             {t('landing.hero_subtitle')}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center w-full sm:w-auto">
             <Link
               to="/campaigns"
-              className="group w-full sm:w-auto text-center px-6 py-3 rounded-xl bg-white text-indigo-700 font-semibold text-sm shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/40 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+              className="group w-full sm:w-auto text-center px-6 py-3 rounded-xl bg-white text-emerald-700 font-semibold text-sm shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-amber-500/40 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
             >
               {t('landing.explore_btn')}
               <HiOutlineArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -250,7 +250,7 @@ export default function Landing() {
             Icon={HiOutlineChartBarSquare}
             color="amber"
           />
-          <StatCard value={featured.length > 0 ? `${featured.length}+` : '-'} label={t('landing.stat_active_campaigns')} Icon={HiOutlineRocketLaunch} color="teal" />
+          <StatCard value={featured.length > 0 ? `${featured.length}+` : '-'} label={t('landing.stat_active_campaigns')} Icon={HiOutlineRocketLaunch} color="green" />
         </div>
       </section>
 
@@ -262,7 +262,7 @@ export default function Landing() {
 
       {/* ════════ HOW IT WORKS ════════ */}
       <section className="relative bg-gradient-to-b from-gray-50/90 to-white border-y border-gray-100 overflow-hidden">
-        <TopographyBg className="absolute inset-0 text-indigo-400 opacity-70" />
+        <TopographyBg className="absolute inset-0 text-emerald-400 opacity-70" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20">
           <div className="text-center mb-14">
             <span className="section-label mb-4">Process</span>
@@ -271,7 +271,7 @@ export default function Landing() {
           </div>
           <div className="relative">
             {/* Connector line — desktop only */}
-            <div className="hidden lg:block absolute top-8 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-indigo-200 via-violet-200 to-indigo-200 rounded-full" />
+            <div className="hidden lg:block absolute top-8 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-emerald-200 via-amber-200 to-emerald-200 rounded-full" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               <StepCard step="1" Icon={HiOutlineMicrophone} title={t('landing.step1_title')} desc={t('landing.step1_desc')} />
               <StepCard step="2" Icon={HiOutlineEye} title={t('landing.step2_title')} desc={t('landing.step2_desc')} />
@@ -300,7 +300,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <BespokeFeatureCard
               to="/campaigns" title={t('landing.feat_campaigns')} desc={t('landing.feat_campaigns_desc')}
-              accentFrom="#6366F1" accentTo="#818CF8" svgType="globe" Icon={HiOutlineGlobeAlt}
+              accentFrom="#10B981" accentTo="#34D399" svgType="globe" Icon={HiOutlineGlobeAlt}
             />
             <BespokeFeatureCard
               to="/analytics" title={t('landing.feat_analytics')} desc={t('landing.feat_analytics_desc')}
@@ -316,11 +316,11 @@ export default function Landing() {
             />
             <BespokeFeatureCard
               to="/register-ngo" title={t('landing.feat_ngo')} desc={t('landing.feat_ngo_desc')}
-              accentFrom="#7C3AED" accentTo="#8B5CF6" svgType="building" Icon={HiOutlineBuildingOffice2} hasMic
+              accentFrom="#059669" accentTo="#065F46" svgType="building" Icon={HiOutlineBuildingOffice2} hasMic
             />
             <BespokeFeatureCard
               to="/create-campaign" title={t('landing.feat_create')} desc={t('landing.feat_create_desc')}
-              accentFrom="#A855F7" accentTo="#C084FC" svgType="rocket" Icon={HiOutlineRocketLaunch} hasMic
+              accentFrom="#D97706" accentTo="#B45309" svgType="rocket" Icon={HiOutlineRocketLaunch} hasMic
             />
             <BespokeFeatureCard
               to="/field-agent" title={t('landing.feat_field')} desc={t('landing.feat_field_desc')}
@@ -335,7 +335,7 @@ export default function Landing() {
       <TrustPipeline />
 
       {/* ════════ FOR TESTERS — CTA ════════ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-indigo-700 via-violet-600 to-purple-500 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-800 via-green-700 to-stone-700 text-white">
         <HexGrid className="absolute inset-0 text-white" />
         <CircuitTrace className="absolute inset-0 w-full h-full text-white" />
         <GlowOrb className="absolute top-0 right-1/4 w-[300px] h-[300px]" color="#ffffff" />
@@ -345,7 +345,7 @@ export default function Landing() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto px-4 sm:px-0">
             <Link
               to="/register-ngo"
-              className="w-full sm:w-auto text-center px-8 py-4 rounded-2xl bg-white text-indigo-700 font-bold hover:bg-indigo-50 transition shadow-lg shadow-violet-900/20"
+              className="w-full sm:w-auto text-center px-8 py-4 rounded-2xl bg-white text-emerald-700 font-bold hover:bg-emerald-50 transition shadow-lg shadow-stone-900/20"
             >
               {t('landing.tester_register')}
             </Link>
@@ -365,10 +365,10 @@ export default function Landing() {
 /* ── Sub-components ──────────────────────── */
 
 const STAT_ACCENTS = {
-  blue: { from: '#6366F1', bespoke: 'chat' },
-  emerald: { from: '#059669', bespoke: 'badge' },
+  blue: { from: '#059669', bespoke: 'chat' },
+  emerald: { from: '#065F46', bespoke: 'badge' },
   amber: { from: '#D97706', bespoke: 'chart' },
-  teal: { from: '#A855F7', bespoke: 'rocket' },
+  green: { from: '#B45309', bespoke: 'rocket' },
 };
 
 function StatCard({ value, label, Icon, color = 'blue' }) {
@@ -382,7 +382,7 @@ function StatCard({ value, label, Icon, color = 'blue' }) {
   );
 }
 
-const STEP_COLORS = ['#6366F1', '#A855F7', '#7C3AED', '#E11D48'];
+const STEP_COLORS = ['#059669', '#D97706', '#065F46', '#B45309'];
 const STEP_BESPS = ['microphone', 'eye', 'creditcard', 'camera'];
 
 function StepCard({ step, Icon, title, desc }) {
@@ -399,7 +399,7 @@ function StepCard({ step, Icon, title, desc }) {
 }
 
 /* ─── Hero Video Showcase ─── */
-const HERO_VIDEO_URL = 'https://violet-rainy-toad-577.mypinata.cloud/ipfs/bafybeicgwgrqh62sqefihbeixhsqwfovi6slyl7e6payyp2agns6xiz2su';
+const HERO_VIDEO_URL = 'https://violet-rainy-toad-577.mypinata.cloud/ipfs/bafybeifg3wzwwf44m5b46ltbyojb3n7khb3wuoxwvrpxjccnnoc5dumxee';
 
 function HeroVideo() {
   const { t } = useTranslation();
@@ -437,7 +437,7 @@ function HeroVideo() {
         <SectionAccent className="mt-4 max-w-xs mx-auto" />
       </div>
 
-      <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-indigo-200/40 border border-gray-100 bg-black group">
+      <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-emerald-300/40 border border-gray-100 bg-black group">
         <video
           ref={videoRef}
           autoPlay
@@ -452,7 +452,7 @@ function HeroVideo() {
         {/* Loading spinner */}
         {!loaded && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-            <div className="w-10 h-10 border-4 border-indigo-300 border-t-indigo-600 rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-emerald-300 border-t-emerald-600 rounded-full animate-spin" />
           </div>
         )}
 
@@ -465,12 +465,12 @@ function HeroVideo() {
             aria-label={playing ? 'Pause' : 'Play'}
           >
             {playing ? (
-              <svg className="w-7 h-7 text-indigo-700" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-7 h-7 text-emerald-700" fill="currentColor" viewBox="0 0 24 24">
                 <rect x="6" y="4" width="4" height="16" rx="1" />
                 <rect x="14" y="4" width="4" height="16" rx="1" />
               </svg>
             ) : (
-              <HiOutlinePlayCircle className="w-9 h-9 text-indigo-700" />
+              <HiOutlinePlayCircle className="w-9 h-9 text-emerald-700" />
             )}
           </button>
         </div>
@@ -488,7 +488,7 @@ function HeroVideo() {
             </>
           ) : (
             <>
-              <HiOutlineSpeakerWave className="w-5 h-5 text-indigo-600" />
+              <HiOutlineSpeakerWave className="w-5 h-5 text-emerald-600" />
               <span className="hidden sm:inline">{t('landing.video_mute', 'Mute')}</span>
             </>
           )}
@@ -751,15 +751,15 @@ function MediaCard({ campaign, t }) {
 }
 
 const MEDIA_CARD_ACCENTS = {
-  water: { from: '#C084FC', to: '#6366F1' },
+  water: { from: '#34D399', to: '#10B981' },
   education: { from: '#D97706', to: '#EA580C' },
   health: { from: '#E11D48', to: '#DC2626' },
   infrastructure: { from: '#475569', to: '#374151' },
   food: { from: '#65A30D', to: '#16A34A' },
-  environment: { from: '#059669', to: '#A855F7' },
+  environment: { from: '#059669', to: '#16A34A' },
   shelter: { from: '#EA580C', to: '#B45309' },
   children: { from: '#E11D48', to: '#F43F5E' },
-  _default: { from: '#6366F1', to: '#A855F7' },
+  _default: { from: '#10B981', to: '#14B8A6' },
 };
 
 function fmt(n) {
@@ -830,7 +830,7 @@ function FeaturedProjectBanner() {
         <div className="text-center mt-8">
           <Link
             to="/projects"
-            className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-50 text-indigo-700 font-semibold hover:bg-indigo-100 transition-all"
+            className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100 transition-all"
           >
             View All Projects
             <HiOutlineArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

@@ -74,8 +74,8 @@ export default function DonationForm({ campaignId, donorId, onSuccess }) {
               onClick={() => { setAmount(String(v)); setCurrency('USD'); }}
               className={`px-4 py-2 rounded-lg text-sm font-semibold border transition
                 ${String(v) === amount && currency === 'USD'
-                  ? 'bg-indigo-600 text-white border-indigo-600'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-indigo-300'}`}
+                  ? 'bg-emerald-600 text-white border-emerald-600'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-emerald-300'}`}
             >
               ${v}
             </button>
@@ -90,7 +90,7 @@ export default function DonationForm({ campaignId, donorId, onSuccess }) {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
-            className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
           />
           <select
             value={currency}
@@ -113,8 +113,8 @@ export default function DonationForm({ campaignId, donorId, onSuccess }) {
               onClick={() => setMethod(m)}
               className={`flex-1 py-2 rounded-lg text-sm font-medium border transition
                 ${m === method
-                  ? 'bg-indigo-600 text-white border-indigo-600'
-                  : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'}`}
+                  ? 'bg-emerald-600 text-white border-emerald-600'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-300'}`}
             >
               {t(`fund.method_${m}`)}
             </button>
@@ -132,7 +132,7 @@ export default function DonationForm({ campaignId, donorId, onSuccess }) {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="+254712345678"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
           />
         </div>
       )}
@@ -145,7 +145,7 @@ export default function DonationForm({ campaignId, donorId, onSuccess }) {
           onChange={(e) => setMessage(e.target.value)}
           rows={2}
           maxLength={500}
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
         />
       </div>
 
@@ -155,7 +155,7 @@ export default function DonationForm({ campaignId, donorId, onSuccess }) {
           type="checkbox"
           checked={anonymous}
           onChange={(e) => setAnonymous(e.target.checked)}
-          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
         />
         {t('fund.anonymous')}
       </label>
@@ -165,7 +165,7 @@ export default function DonationForm({ campaignId, donorId, onSuccess }) {
       <button
         type="submit"
         disabled={loading || !amount}
-        className="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 disabled:opacity-50 transition"
+        className="w-full py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-50 transition"
       >
         {loading ? t('fund.processing') : t('fund.submit')}
       </button>

@@ -125,7 +125,7 @@ export default function PortalVerify() {
         <p className="text-gray-500 text-sm mb-6">Your field report has been recorded. It will be reviewed and linked to the campaign.</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button onClick={() => { setSuccess(false); setStep(0); setPhotos([]); setForm({ campaign_id: '', observations: '', beneficiary_count: '', testimonials: '' }); setGps({ lat: '', lng: '', accuracy: null }); }}
-            className="px-5 py-2.5 rounded-xl bg-violet-600 text-white font-semibold hover:bg-violet-700 transition text-sm">
+            className="px-5 py-2.5 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition text-sm">
             New Verification
           </button>
           <Link to="/portal"
@@ -151,7 +151,7 @@ export default function PortalVerify() {
       {/* Progress */}
       <div className="flex gap-1 mb-8">
         {STEPS.map((_, i) => (
-          <div key={i} className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-violet-600' : 'bg-gray-200'}`} />
+          <div key={i} className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-green-600' : 'bg-gray-200'}`} />
         ))}
       </div>
 
@@ -164,7 +164,7 @@ export default function PortalVerify() {
 
       {/* Form card */}
       <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-6 mb-6 overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-emerald-500 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-green-500 via-emerald-500 to-transparent" />
 
         {/* Step 1: Photos */}
         {step === 0 && (
@@ -182,7 +182,7 @@ export default function PortalVerify() {
               ))}
               {photos.length < 5 && (
                 <button onClick={() => fileRef.current?.click()}
-                  className="aspect-square rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-violet-400 hover:text-violet-500 transition">
+                  className="aspect-square rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-green-400 hover:text-green-500 transition">
                   <HiOutlineCamera className="w-7 h-7" />
                   <span className="text-xs mt-1">Add Photo</span>
                 </button>
@@ -199,7 +199,7 @@ export default function PortalVerify() {
           <div className="space-y-4">
             <p className="text-sm text-gray-500">Capture or enter your current GPS location for verification.</p>
             <button onClick={getLocation}
-              className="w-full py-4 rounded-xl border-2 border-dashed border-violet-300 bg-violet-50 text-violet-700 font-semibold hover:bg-violet-100 transition flex items-center justify-center gap-2">
+              className="w-full py-4 rounded-xl border-2 border-dashed border-green-300 bg-green-50 text-green-700 font-semibold hover:bg-green-100 transition flex items-center justify-center gap-2">
               <HiOutlineMapPin className="w-5 h-5" /> {gps.lat ? 'Refresh Location' : 'Capture GPS'}
             </button>
             {gps.lat && (
@@ -246,7 +246,7 @@ export default function PortalVerify() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Observations *</label>
               <textarea value={form.observations} onChange={(e) => set('observations', e.target.value)}
                 rows={4} placeholder="Describe what you observed on site…"
-                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-violet-500 focus:border-transparent" />
+                className="w-full rounded-lg border border-gray-200 px-3 py-3 text-sm resize-none focus:ring-2 focus:ring-green-500 focus:border-transparent" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Beneficiary Count</label>
@@ -275,8 +275,8 @@ export default function PortalVerify() {
             <ReviewRow label="Campaign" value={campaigns.find((c) => String(c.id) === form.campaign_id)?.title || form.campaign_id} />
             <ReviewRow label="Observations" value={form.observations} />
             <ReviewRow label="Beneficiaries" value={form.beneficiary_count || '-'} />
-            <div className="bg-violet-50 border border-violet-200 rounded-lg p-3 mt-4">
-              <p className="text-sm text-violet-700 font-medium">Your verification builds trust and may earn you rewards.</p>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4">
+              <p className="text-sm text-green-700 font-medium">Your verification builds trust and may earn you rewards.</p>
             </div>
           </div>
         )}
@@ -290,7 +290,7 @@ export default function PortalVerify() {
         </button>
         {step < STEPS.length - 1 ? (
           <button onClick={() => setStep((s) => s + 1)} disabled={!canNext()}
-            className="px-5 py-3 rounded-xl text-sm font-semibold bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50 transition">
+            className="px-5 py-3 rounded-xl text-sm font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition">
             Next →
           </button>
         ) : (

@@ -66,7 +66,7 @@ export default function ProjectsDashboard() {
           <p className="text-sm text-gray-500 mt-0.5">{campaigns.length} campaign{campaigns.length !== 1 ? 's' : ''}</p>
         </div>
         <Link to="/portal/create"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-semibold hover:from-indigo-700 hover:to-violet-700 transition shadow-lg shadow-indigo-300/30">
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 text-white text-sm font-semibold hover:from-emerald-700 hover:to-green-700 transition shadow-lg shadow-emerald-300/30">
           <HiOutlinePlusCircle className="w-4 h-4" /> New Campaign
         </Link>
       </div>
@@ -94,10 +94,10 @@ function CampaignCard({ c, ms, tr }) {
 
   return (
     <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-violet-500 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-green-500 to-transparent" />
       <svg className="absolute top-2 right-2 w-20 h-20 pointer-events-none" viewBox="0 0 80 80" fill="none">
-        <path d="M45 35 L57 10 L69 35" stroke="#6366F1" strokeWidth="0.5" opacity="0.04" />
-        <circle cx="57" cy="10" r="2" fill="#6366F1" opacity="0.04" />
+        <path d="M45 35 L57 10 L69 35" stroke="#10B981" strokeWidth="0.5" opacity="0.04" />
+        <circle cx="57" cy="10" r="2" fill="#10B981" opacity="0.04" />
       </svg>
 
       <div className="p-4 sm:p-5">
@@ -105,9 +105,9 @@ function CampaignCard({ c, ms, tr }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1">
               <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full ring-1 ${badge.cls}`}>{badge.label}</span>
-              {c.category && <span className="bg-indigo-50 text-indigo-600 text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize">{c.category}</span>}
+              {c.category && <span className="bg-emerald-50 text-emerald-600 text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize">{c.category}</span>}
             </div>
-            <Link to={`/campaign/${c.id}`} className="text-lg font-bold text-gray-900 hover:text-indigo-600 transition line-clamp-1">{c.title}</Link>
+            <Link to={`/campaign/${c.id}`} className="text-lg font-bold text-gray-900 hover:text-emerald-600 transition line-clamp-1">{c.title}</Link>
             {c.ngo_name && <p className="text-xs text-gray-400 mt-0.5">by {c.ngo_name}</p>}
           </div>
         </div>
@@ -125,7 +125,7 @@ function CampaignCard({ c, ms, tr }) {
           <div className="flex gap-1 mb-4">
             {milestoneList.map((m, i) => {
               const s = m.status?.toLowerCase();
-              const color = s === 'released' ? 'bg-emerald-500' : s === 'verified' ? 'bg-blue-500' : s === 'active' ? 'bg-indigo-400' : s === 'evidence_submitted' || s === 'under_review' ? 'bg-amber-400' : 'bg-gray-200';
+              const color = s === 'released' ? 'bg-emerald-500' : s === 'verified' ? 'bg-blue-500' : s === 'active' ? 'bg-emerald-400' : s === 'evidence_submitted' || s === 'under_review' ? 'bg-amber-400' : 'bg-gray-200';
               return (
                 <div key={i} className="flex-1 group relative">
                   <div className={`h-2 rounded-full ${color} transition`} />
@@ -139,10 +139,10 @@ function CampaignCard({ c, ms, tr }) {
         )}
 
         <div className="flex flex-wrap gap-2">
-          <Link to={`/portal/projects/${c.id}/edit`} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold hover:bg-indigo-100 transition">
+          <Link to={`/portal/projects/${c.id}/edit`} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 transition">
             <HiOutlineCog6Tooth className="w-3.5 h-3.5" /> Edit
           </Link>
-          <Link to={`/portal/projects/${c.id}/milestones`} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-violet-50 text-violet-700 text-xs font-semibold hover:bg-violet-100 transition">
+          <Link to={`/portal/projects/${c.id}/milestones`} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-50 text-green-700 text-xs font-semibold hover:bg-green-100 transition">
             <HiOutlineCheckCircle className="w-3.5 h-3.5" /> Milestones
           </Link>
           <Link to={`/portal/projects/${c.id}/financials`} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 transition">
@@ -172,7 +172,7 @@ function Empty() {
     <div className="text-center py-20">
       <HiOutlineDocumentText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
       <p className="text-gray-500 mb-4">You haven't created any campaigns yet.</p>
-      <Link to="/portal/create" className="text-indigo-600 font-semibold hover:underline">Create your first campaign →</Link>
+      <Link to="/portal/create" className="text-emerald-600 font-semibold hover:underline">Create your first campaign →</Link>
     </div>
   );
 }

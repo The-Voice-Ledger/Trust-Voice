@@ -16,14 +16,19 @@ export default function NgoProfile() {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [campaignsError, setCampaignsError] = useState(false);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
+      setCampaignsError(false);
       try {
         const [ngoData, campsData] = await Promise.all([
           getNgo(id),
-          getNgoCampaigns(id).catch(() => []),
+          getNgoCampaigns(id).catch(() => {
+            setCampaignsError(true);
+            return [];
+          }),
         ]);
         setNgo(ngoData);
         setCampaigns(Array.isArray(campsData) ? campsData : []);
@@ -43,15 +48,15 @@ export default function NgoProfile() {
   const focusAreas = ngo.focus_areas ? ngo.focus_areas.split(',').map((a) => a.trim()).filter(Boolean) : [];
 
   return (
-    <PageBg pattern="topography" colorA="#059669" colorB="#6366F1">
+    <PageBg pattern="topography" colorA="#059669" colorB="#10B981">
     <div className="max-w-3xl mx-auto px-4 py-6">
-      <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline mb-4 py-2">
+      <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-emerald-600 hover:underline mb-4 py-2">
         <HiOutlineArrowLeft className="w-4 h-4" /> {t('common.back')}
       </Link>
 
       {/* Header card */}
       <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-5 sm:p-6 mb-6 overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-teal-500 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-green-500 to-transparent" />
         <svg className="absolute -top-1 -right-1 w-24 h-24 pointer-events-none" viewBox="0 0 96 96" fill="none">
           <rect x="50" y="10" width="30" height="36" rx="3" stroke="#059669" strokeWidth="0.5" opacity="0.06" />
           <path d="M56 22 L74 22" stroke="#059669" strokeWidth="0.4" opacity="0.04" />
@@ -114,13 +119,13 @@ export default function NgoProfile() {
       {/* Mission */}
       {ngo.mission_statement && (
         <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 mb-6 overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-purple-500 to-transparent" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-green-500 via-green-500 to-transparent" />
           <h3 className="text-sm font-semibold text-gray-800 mb-2">Mission</h3>
           <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{ngo.mission_statement}</p>
           {focusAreas.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-3">
               {focusAreas.map((area) => (
-                <span key={area} className="px-2.5 py-0.5 bg-violet-50 border border-violet-200/50 text-violet-700 text-[11px] font-medium rounded-full capitalize">
+                <span key={area} className="px-2.5 py-0.5 bg-green-50 border border-green-200/50 text-green-700 text-[11px] font-medium rounded-full capitalize">
                   {area}
                 </span>
               ))}
@@ -132,7 +137,7 @@ export default function NgoProfile() {
       {/* Intro video */}
       {(ngo.intro_video_url || ngo.intro_video_ipfs_hash) && (
         <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 mb-6 overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-violet-500 to-transparent" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-green-500 to-transparent" />
           <h3 className="text-sm font-semibold text-gray-800 mb-3">About Us</h3>
           <div className="rounded-xl overflow-hidden bg-black aspect-video">
             <video
@@ -146,12 +151,16 @@ export default function NgoProfile() {
 
       {/* Campaigns by this NGO */}
       <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 mb-6 overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-indigo-500 via-violet-500 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-green-500 to-transparent" />
         <h3 className="text-sm font-semibold text-gray-800 mb-3">
           Campaigns ({campaigns.length})
         </h3>
         {campaigns.length === 0 ? (
-          <p className="text-sm text-gray-400">No active campaigns yet.</p>
+          campaignsError ? (
+            <p className="text-sm text-amber-600">Could not load campaigns — is the backend running?</p>
+          ) : (
+            <p className="text-sm text-gray-400">No active campaigns yet.</p>
+          )
         ) : (
           <div className="space-y-3">
             {campaigns.map((c) => {
@@ -162,13 +171,13 @@ export default function NgoProfile() {
                 <Link
                   key={c.id}
                   to={`/campaign/${c.id}`}
-                  className="group block rounded-xl border border-gray-100 hover:border-indigo-200 p-3 transition hover:shadow-sm"
+                  className="group block rounded-xl border border-gray-100 hover:border-emerald-200 p-3 transition hover:shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div>
-                      <h4 className="text-sm font-semibold text-gray-800 group-hover:text-indigo-600 transition">{c.title}</h4>
+                      <h4 className="text-sm font-semibold text-gray-800 group-hover:text-emerald-600 transition">{c.title}</h4>
                       {c.category && (
-                        <span className="text-[10px] text-indigo-600 bg-indigo-50 rounded-full px-2 py-0.5 capitalize">{c.category}</span>
+                        <span className="text-[10px] text-emerald-600 bg-emerald-50 rounded-full px-2 py-0.5 capitalize">{c.category}</span>
                       )}
                     </div>
                     <span className={`shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full ${

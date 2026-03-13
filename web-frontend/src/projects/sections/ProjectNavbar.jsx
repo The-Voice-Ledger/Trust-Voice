@@ -72,7 +72,7 @@ export default function ProjectNavbar({ config }) {
               {link.label}
             </button>
           ))}
-          {/* Separator + TrustVoice home */}
+          {/* Separator + VBV home */}
           <span className={`mx-1 text-[11px] ${scrolled ? 'text-gray-300' : 'text-white/20'}`}>|</span>
           <Link
             to="/"
@@ -82,7 +82,7 @@ export default function ProjectNavbar({ config }) {
                 : 'text-indigo-300/70 hover:text-white hover:bg-white/[0.08]'
             }`}
           >
-            TrustVoice
+            VBV
             <svg className="w-3 h-3 opacity-60" viewBox="0 0 12 12" fill="none"><path d="M3 9L9 3M9 3H4.5M9 3V7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </Link>
         </div>
@@ -137,7 +137,7 @@ export default function ProjectNavbar({ config }) {
                 scrolled ? 'text-indigo-600 hover:bg-indigo-50' : 'text-indigo-300 hover:bg-white/5'
               }`}
             >
-              TrustVoice Home
+              VBV Home
               <svg className="w-3.5 h-3.5 opacity-60" viewBox="0 0 12 12" fill="none"><path d="M3 9L9 3M9 3H4.5M9 3V7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </Link>
           </div>

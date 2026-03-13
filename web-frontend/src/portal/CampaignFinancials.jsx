@@ -72,7 +72,7 @@ export default function CampaignFinancials() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center justify-between mb-6">
-        <Link to="/portal/projects" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:underline">
+        <Link to="/portal/projects" className="inline-flex items-center gap-1 text-sm text-emerald-600 hover:underline">
           <HiOutlineArrowLeft className="w-4 h-4" /> My Projects
         </Link>
       </div>
@@ -86,16 +86,16 @@ export default function CampaignFinancials() {
 
       {/* Treasury summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Stat accent="#6366F1" label="Total Raised" value={`$${fmt(campaign?.current_usd_total || campaign?.raised_amount_usd)}`} />
+        <Stat accent="#10B981" label="Total Raised" value={`$${fmt(campaign?.current_usd_total || campaign?.raised_amount_usd)}`} />
         <Stat accent="#059669" label="Goal" value={`$${fmt(campaign?.goal_amount_usd)}`} />
-        <Stat accent="#A855F7" label="Released" value={`$${fmt(treasury?.total_released_usd)}`} />
+        <Stat accent="#14B8A6" label="Released" value={`$${fmt(treasury?.total_released_usd)}`} />
         <Stat accent="#D97706" label="In Escrow" value={`$${fmt(treasury?.escrow_balance_usd || ((campaign?.current_usd_total || 0) - (treasury?.total_released_usd || 0)))}`} />
       </div>
 
       {/* Donations */}
       <div className="mb-8">
         <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <HiOutlineDocumentText className="w-5 h-5 text-indigo-500" /> Donations ({donations.length})
+          <HiOutlineDocumentText className="w-5 h-5 text-emerald-500" /> Donations ({donations.length})
         </h2>
         {donations.length === 0 ? (
           <p className="text-center py-8 text-gray-400 text-sm">No donations yet</p>
@@ -103,7 +103,7 @@ export default function CampaignFinancials() {
           <div className="space-y-2">
             {donations.map((d) => (
               <div key={d.id} className="relative rounded-xl bg-white/80 backdrop-blur-sm border border-gray-100 p-3 flex items-center justify-between overflow-hidden hover:shadow-sm transition">
-                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-indigo-500/20 via-violet-500/20 to-transparent" />
+                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-emerald-500/20 via-green-500/20 to-transparent" />
                 <div>
                   <p className="text-sm font-medium text-gray-900">{d.amount} {d.currency}</p>
                   <p className="text-xs text-gray-400">{d.donor_name || `Donor #${d.donor_id || '?'}`} · {d.payment_method} · {d.created_at ? new Date(d.created_at).toLocaleDateString() : ''}</p>
@@ -122,26 +122,26 @@ export default function CampaignFinancials() {
             <HiOutlineBanknotes className="w-5 h-5 text-emerald-500" /> Payouts ({payouts.length})
           </h2>
           <button onClick={() => setShowPayout(!showPayout)}
-            className="text-sm text-indigo-600 hover:underline font-medium">
+            className="text-sm text-emerald-600 hover:underline font-medium">
             {showPayout ? 'Cancel' : '+ Request Payout'}
           </button>
         </div>
 
         {showPayout && (
           <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-5 mb-4 overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-indigo-500 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-emerald-500 to-transparent" />
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
                 <input type="number" min={1} value={payoutForm.amount}
                   onChange={(e) => setPayoutForm((p) => ({ ...p, amount: e.target.value }))}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none" />
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 outline-none" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
                 <select value={payoutForm.currency}
                   onChange={(e) => setPayoutForm((p) => ({ ...p, currency: e.target.value }))}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none">
+                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 outline-none">
                   <option value="USD">USD</option>
                   <option value="KES">KES</option>
                   <option value="ZAR">ZAR</option>
@@ -153,7 +153,7 @@ export default function CampaignFinancials() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
               <select value={payoutForm.payment_method}
                 onChange={(e) => setPayoutForm((p) => ({ ...p, payment_method: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none">
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 outline-none">
                 <option value="bank">Bank Transfer</option>
                 <option value="mpesa">M-Pesa</option>
                 <option value="crypto">Crypto</option>
@@ -164,7 +164,7 @@ export default function CampaignFinancials() {
               <textarea rows={2} value={payoutForm.notes}
                 onChange={(e) => setPayoutForm((p) => ({ ...p, notes: e.target.value }))}
                 placeholder="Purpose of this payout…"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm resize-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 outline-none" />
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm resize-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 outline-none" />
             </div>
             <button onClick={handlePayout} disabled={requesting || !payoutForm.amount}
               className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 text-white font-semibold text-sm hover:from-emerald-700 hover:to-green-700 transition disabled:opacity-50">
@@ -179,7 +179,7 @@ export default function CampaignFinancials() {
           <div className="space-y-2">
             {payouts.map((p) => (
               <div key={p.id} className="relative rounded-xl bg-white/80 backdrop-blur-sm border border-gray-100 p-3 flex items-center justify-between overflow-hidden hover:shadow-sm transition">
-                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-emerald-500/20 via-violet-500/20 to-transparent" />
+                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-emerald-500/20 via-green-500/20 to-transparent" />
                 <div>
                   <p className="text-sm font-medium text-gray-900">{p.amount} {p.currency}</p>
                   <p className="text-xs text-gray-400">{p.payment_method} · {p.created_at ? new Date(p.created_at).toLocaleDateString() : ''}</p>
@@ -213,7 +213,7 @@ function StatusBadge({ status }) {
     completed: 'bg-green-50 text-green-600',
     approved: 'bg-green-50 text-green-600',
     pending: 'bg-yellow-50 text-yellow-600',
-    processing: 'bg-indigo-50 text-indigo-600',
+    processing: 'bg-emerald-50 text-emerald-600',
     failed: 'bg-red-50 text-red-600',
     rejected: 'bg-red-50 text-red-600',
   };

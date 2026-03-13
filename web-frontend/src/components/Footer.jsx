@@ -57,13 +57,13 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-gray-100 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-600 to-green-700 flex items-center justify-center">
               <HiOutlineMicrophone className="w-3.5 h-3.5 text-white" />
             </div>
-            <span className="text-sm font-bold text-gray-800 tracking-tight font-display">TrustVoice</span>
+            <span className="text-sm font-bold text-gray-800 tracking-tight font-display">VBV</span>
           </div>
           <p className="text-xs text-gray-400">
-            © {new Date().getFullYear()} TrustVoice
+            © {new Date().getFullYear()} VBV
           </p>
         </div>
       </div>
@@ -73,8 +73,8 @@ export default function Footer() {
 
 function FooterLink({ to, Icon, children }) {
   return (
-    <Link to={to} className="flex items-center gap-2 text-sm text-gray-500 hover:text-indigo-600 transition group">
-      <Icon className="w-4 h-4 text-gray-400 group-hover:text-indigo-500 transition" />
+    <Link to={to} className="flex items-center gap-2 text-sm text-gray-500 hover:text-emerald-600 transition group">
+      <Icon className="w-4 h-4 text-gray-400 group-hover:text-emerald-500 transition" />
       {children}
     </Link>
   );
