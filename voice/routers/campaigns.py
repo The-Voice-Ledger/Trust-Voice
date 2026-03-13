@@ -48,12 +48,15 @@ def enrich_campaign_response(campaign: Campaign, db: Session = None) -> dict:
         "updated_at": campaign.updated_at,
     }
     
-    # Add NGO name and donation count if we have a database session
+    # Add NGO details and donation count if we have a database session
     if db:
         if campaign.ngo_id:
             ngo = db.query(NGOOrganization).filter(NGOOrganization.id == campaign.ngo_id).first()
             if ngo:
                 campaign_dict["ngo_name"] = ngo.name
+                campaign_dict["ngo_website_url"] = ngo.website_url
+                campaign_dict["ngo_country"] = ngo.country
+                campaign_dict["ngo_verification_status"] = getattr(ngo, 'verification_status', None)
         
         # Add donation count
         campaign_dict["donation_count"] = len(campaign.donations) if campaign.donations else 0
@@ -71,7 +74,14 @@ class CampaignCreate(BaseModel):
     description: str
     goal_amount_usd: float = Field(..., gt=0)
     status: Optional[str] = Field("active", pattern="^(active|paused|completed)$")
+    category: Optional[str] = None  # water, education, health, etc.
     location_gps: Optional[str] = None
+    location_name: Optional[str] = None
+    location_country: Optional[str] = None
+    location_region: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    currency: Optional[str] = None  # primary currency (informational)
     
     class Config:
         json_schema_extra = {
@@ -80,6 +90,7 @@ class CampaignCreate(BaseModel):
                 "title": "Clean Water for Rural Kenya",
                 "description": "Install 10 water wells in drought-affected villages",
                 "goal_amount_usd": 50000.0,
+                "category": "water",
                 "status": "active",
                 "location_gps": "-1.286389,36.817223"
             }
@@ -91,7 +102,10 @@ class CampaignUpdate(BaseModel):
     description: Optional[str] = None
     goal_amount_usd: Optional[float] = Field(None, gt=0)
     status: Optional[str] = Field(None, pattern="^(active|paused|completed)$")
+    category: Optional[str] = None
     location_gps: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
 
 
 class CampaignResponse(BaseModel):
@@ -110,6 +124,9 @@ class CampaignResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     ngo_name: Optional[str] = None  # NGO organization name (fetched dynamically)
+    ngo_website_url: Optional[str] = None  # NGO website URL
+    ngo_country: Optional[str] = None  # NGO country
+    ngo_verification_status: Optional[str] = None  # VERIFIED / PENDING / SUSPENDED
     donation_count: Optional[int] = 0  # Number of donations to this campaign
     
     class Config:
@@ -130,11 +147,15 @@ def create_campaign(campaign: CampaignCreate, db: Session = Depends(get_db)):
             detail="Must provide exactly one of: ngo_id (NGO campaign) or creator_user_id (individual campaign)"
         )
     
-    # Verify NGO exists (if NGO campaign)
+    # Verify NGO exists and is approved (if NGO campaign)
     if campaign.ngo_id:
         ngo = db.query(NGOOrganization).filter(NGOOrganization.id == campaign.ngo_id).first()
         if not ngo:
             raise HTTPException(status_code=404, detail=f"NGO with id {campaign.ngo_id} not found")
+        if not ngo.is_active:
+            raise HTTPException(status_code=403, detail="This NGO account has been deactivated")
+        if hasattr(ngo, 'verification_status') and ngo.verification_status and ngo.verification_status != 'VERIFIED':
+            raise HTTPException(status_code=403, detail="Only verified NGOs can create campaigns. Your organisation is still pending approval.")
     
     # Verify user exists (if individual campaign)
     if campaign.creator_user_id:
@@ -152,7 +173,12 @@ def create_campaign(campaign: CampaignCreate, db: Session = Depends(get_db)):
         goal_amount_usd=campaign.goal_amount_usd,
         raised_amount_usd=0.0,
         status=campaign.status,
-        location_gps=campaign.location_gps
+        category=campaign.category,
+        location_gps=campaign.location_gps,
+        location_country=campaign.location_country,
+        location_region=campaign.location_region,
+        start_date=campaign.start_date,
+        end_date=campaign.end_date,
     )
     
     db.add(db_campaign)
@@ -175,6 +201,7 @@ class PaginatedCampaignResponse(BaseModel):
 def list_campaigns(
     status: Optional[str] = None,
     ngo_id: Optional[int] = None,
+    creator_user_id: Optional[int] = None,
     category: Optional[str] = None,
     search: Optional[str] = None,
     sort: Optional[str] = "newest",
@@ -205,6 +232,9 @@ def list_campaigns(
     
     if ngo_id:
         query = query.filter(Campaign.ngo_id == ngo_id)
+    
+    if creator_user_id:
+        query = query.filter(Campaign.creator_user_id == creator_user_id)
     
     if category:
         query = query.filter(Campaign.category.ilike(category))

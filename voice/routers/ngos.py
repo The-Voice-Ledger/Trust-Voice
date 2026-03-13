@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, HttpUrl
 from datetime import datetime
 
 from database.db import get_db
-from database.models import NGOOrganization
+from database.models import NGOOrganization, Campaign
 
 router = APIRouter(prefix="/ngos", tags=["NGOs"])
 
@@ -47,10 +47,24 @@ class NGOResponse(BaseModel):
     id: int
     name: str
     description: Optional[str]
+    mission_statement: Optional[str] = None
+    focus_areas: Optional[str] = None
     website_url: Optional[str]
+    registration_number: Optional[str] = None
+    organization_type: Optional[str] = None
+    year_established: Optional[int] = None
+    country: Optional[str] = None
+    region: Optional[str] = None
     contact_email: Optional[str]
+    admin_phone: Optional[str] = None
+    logo_url: Optional[str] = None
+    intro_video_url: Optional[str] = None
+    intro_video_ipfs_hash: Optional[str] = None
     blockchain_wallet_address: Optional[str]
     stripe_account_id: Optional[str]
+    verification_status: Optional[str] = None
+    verified_at: Optional[datetime] = None
+    is_active: Optional[bool] = None
     created_at: datetime
     updated_at: datetime
     
@@ -148,3 +162,36 @@ def delete_ngo(ngo_id: int, db: Session = Depends(get_db)):
     db.commit()
     
     return None
+
+
+@router.get("/{ngo_id}/campaigns")
+def get_ngo_campaigns(ngo_id: int, db: Session = Depends(get_db)):
+    """
+    List all campaigns belonging to an NGO.
+    Returns basic campaign info for the NGO profile page.
+    """
+    ngo = db.query(NGOOrganization).filter(NGOOrganization.id == ngo_id).first()
+    if not ngo:
+        raise HTTPException(status_code=404, detail=f"NGO with id {ngo_id} not found")
+    
+    campaigns = db.query(Campaign).filter(
+        Campaign.ngo_id == ngo_id,
+        Campaign.status.in_(['active', 'completed'])
+    ).order_by(Campaign.created_at.desc()).all()
+    
+    result = []
+    for c in campaigns:
+        result.append({
+            "id": c.id,
+            "title": c.title,
+            "description": c.description,
+            "goal_amount_usd": float(c.goal_amount_usd) if c.goal_amount_usd else 0,
+            "raised_amount_usd": float(c.raised_amount_usd) if c.raised_amount_usd else 0,
+            "current_usd_total": c.get_current_usd_total() if hasattr(c, 'get_current_usd_total') else float(c.raised_amount_usd or 0),
+            "status": c.status,
+            "category": c.category,
+            "donation_count": len(c.donations) if c.donations else 0,
+            "created_at": c.created_at,
+        })
+    
+    return result

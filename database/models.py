@@ -293,17 +293,29 @@ class NGOOrganization(Base):
     # Basic Info
     name = Column(String(255), nullable=False)
     description = Column(Text)  # What the NGO does
+    mission_statement = Column(Text)  # Official mission
+    focus_areas = Column(Text)  # Comma-separated: water,education,health
     website_url = Column(String(255))  # NGO website
     registration_number = Column(String(100))  # Government registration
+    organization_type = Column(String(100))  # ngo, foundation, charity, etc.
+    year_established = Column(Integer)
     country = Column(String(100))
+    region = Column(String(200))
     contact_email = Column(String(255))
     admin_phone = Column(String(20))
+    
+    # Media
+    logo_url = Column(String(500))
+    intro_video_url = Column(String(500))  # External video link
+    intro_video_ipfs_hash = Column(String(100))  # IPFS-hosted intro video
     
     # Financial
     blockchain_wallet_address = Column(String(66))  # Where funds are sent
     stripe_account_id = Column(String(100))  # Stripe Connect account
     
-    # Status
+    # Verification
+    verification_status = Column(String(20), default='PENDING')  # PENDING, VERIFIED, SUSPENDED
+    verified_at = Column(DateTime)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

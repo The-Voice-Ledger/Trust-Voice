@@ -22,7 +22,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Import routers
-from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin, auth, registrations, ngo_registrations, miniapp_voice, analytics, field_agent, milestones
+from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin, auth, registrations, ngo_registrations, miniapp_voice, analytics, field_agent, milestones, project_updates
 from voice.routers.websocket import router as websocket_router
 from voice.routers.agent_router import router as agent_router
 
@@ -72,6 +72,7 @@ app.include_router(miniapp_voice.router, prefix="/api")
 app.include_router(agent_router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 app.include_router(milestones.router, prefix="/api")
+app.include_router(project_updates.router, prefix="/api")
 app.include_router(websocket_router)  # WebSocket routes at root (/ws/donations, /ws/campaign/{id})
 
 # Register Telegram webhook router if available (for production deployment)

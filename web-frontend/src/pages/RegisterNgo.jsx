@@ -62,7 +62,28 @@ export default function RegisterNgo() {
     setLoading(true);
     setError(null);
     try {
-      await submitNgoRegistration(form);
+      // Map frontend field names → backend schema field names
+      const payload = {
+        organization_name: form.organization_name,
+        registration_number: form.registration_number,
+        organization_type: form.organization_type,
+        year_established: form.year_established ? parseInt(form.year_established) : undefined,
+        submitted_by_name: form.contact_person_name,
+        submitted_by_telegram_id: form.telegram_user_id || undefined,
+        email: form.contact_email,
+        phone_number: form.phone_number,
+        website: form.website_url || undefined,
+        country: form.country || undefined,
+        region: form.city || undefined,
+        address: form.address || undefined,
+        mission_statement: form.mission_statement,
+        focus_areas: form.focus_areas.join(','),
+        bank_name: form.bank_name || undefined,
+        account_number: form.bank_account_number || undefined,
+        account_name: form.bank_branch || undefined,   // repurpose account_name for branch info
+        swift_code: form.mpesa_paybill ? `MPESA:${form.mpesa_paybill}` : undefined,  // store M-Pesa in swift_code
+      };
+      await submitNgoRegistration(payload);
       setSuccess(true);
     } catch (err) {
       setError(err.message);

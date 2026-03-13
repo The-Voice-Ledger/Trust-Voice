@@ -5,6 +5,7 @@ import { getCampaign, listCampaigns } from '../api/campaigns';
 import DonationForm from '../components/DonationForm';
 import useAuthStore from '../stores/authStore';
 import ProgressBar from '../components/ProgressBar';
+import MilestoneTracker from '../components/MilestoneTracker';
 import {
   HiOutlineBanknotes, HiOutlineCheckCircle, HiOutlineArrowLeft,
   HiOutlineShieldCheck, HiOutlineLockClosed, HiOutlineFingerPrint,
@@ -124,6 +125,9 @@ export default function DonateCheckout() {
           </svg>
         </div>
       )}
+
+      {/* ── Milestone Tracker (if milestone-gated) ── */}
+      {campaign && <MilestoneTracker campaignId={campaign.id} />}
 
       {/* ── Funding Form Card ────────────────── */}
       {campaign ? (

@@ -249,18 +249,23 @@ def approve_ngo_registration(
             detail="Only admins can approve registrations"
         )
     
-    # Create NGO organization
+    # Create NGO organization from pending registration data
     ngo = NGOOrganization(
         name=pending.organization_name,
         registration_number=pending.registration_number,
-        description=pending.mission_statement,
-        website=pending.website,
-        email=pending.email,
-        phone_number=pending.phone_number,
+        organization_type=pending.organization_type,
+        description=f"{pending.organization_name} — {pending.mission_statement[:120] if pending.mission_statement else ''}",
+        mission_statement=pending.mission_statement,
+        focus_areas=pending.focus_areas,
+        year_established=pending.year_established,
+        website_url=pending.website,
+        contact_email=pending.email,
+        admin_phone=pending.phone_number,
         country=pending.country,
         region=pending.region,
         verification_status='VERIFIED',
-        verified_at=datetime.utcnow()
+        verified_at=datetime.utcnow(),
+        is_active=True,
     )
     
     db.add(ngo)

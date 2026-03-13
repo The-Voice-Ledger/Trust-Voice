@@ -10,14 +10,17 @@ export default function VideoPlayer({ videoData, className = '' }) {
   // Build video URL — support multiple field names
   const videoUrl = videoData.video_url
     || videoData.url
+    || videoData.gateway_url
     || (videoData.ipfs_cid ? `https://gateway.pinata.cloud/ipfs/${videoData.ipfs_cid}` : null)
-    || (videoData.cid ? `https://gateway.pinata.cloud/ipfs/${videoData.cid}` : null);
+    || (videoData.cid ? `https://gateway.pinata.cloud/ipfs/${videoData.cid}` : null)
+    || (videoData.ipfs_hash ? `https://gateway.pinata.cloud/ipfs/${videoData.ipfs_hash}` : null);
 
   if (!videoUrl) return null;
 
+  const cid = videoData.ipfs_cid || videoData.cid || videoData.ipfs_hash;
   const sources = [
     videoUrl,
-    ...(videoData.alternative_urls || []),
+    ...(videoData.alternative_urls || videoData.alternative_gateways || []),
   ];
 
   return (
@@ -36,7 +39,7 @@ export default function VideoPlayer({ videoData, className = '' }) {
       </video>
 
       {/* Metadata bar */}
-      {(videoData.upload_date || videoData.uploaded_at || videoData.location_verified || videoData.ipfs_cid) && (
+      {(videoData.upload_date || videoData.uploaded_at || videoData.location_verified || cid) && (
         <div className="px-4 py-2 bg-gray-900 text-gray-400 text-xs flex items-center justify-between">
           <span>
             {videoData.upload_date || videoData.uploaded_at
@@ -50,9 +53,9 @@ export default function VideoPlayer({ videoData, className = '' }) {
               </span>
             )}
             {videoData.file_size_mb && <span>{videoData.file_size_mb.toFixed(1)} MB</span>}
-            {videoData.ipfs_cid && (
-              <span className="font-mono truncate max-w-[120px]" title={videoData.ipfs_cid}>
-                IPFS: {videoData.ipfs_cid.slice(0, 12)}…
+            {cid && (
+              <span className="font-mono truncate max-w-[120px]" title={cid}>
+                IPFS: {cid.slice(0, 12)}…
               </span>
             )}
           </div>

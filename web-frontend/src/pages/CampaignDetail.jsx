@@ -1,12 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { getCampaign, getCampaignVideo } from '../api/campaigns';
+import { getCampaign, getCampaignVideo, getProjectUpdates, getCampaignTreasury } from '../api/campaigns';
 import ProgressBar from '../components/ProgressBar';
+import MilestoneTracker from '../components/MilestoneTracker';
 import VideoPlayer from '../components/VideoPlayer';
 import DonationForm from '../components/DonationForm';
 import useAuthStore from '../stores/authStore';
-import { HiOutlineArrowLeft, HiOutlineMapPin, HiOutlineCheckCircle, HiOutlineFilm, HiOutlineSparkles } from '../components/icons';
+import { getProjectByCampaignId } from '../projects/projectRegistry';
+import {
+  HiOutlineArrowLeft, HiOutlineMapPin, HiOutlineCheckCircle, HiOutlineFilm,
+  HiOutlineSparkles, HiOutlineDocumentText, HiOutlineShieldCheck,
+  HiOutlineBanknotes, HiOutlineArrowTopRightOnSquare, HiOutlineGlobeAlt,
+  HiOutlineCheckBadge, HiOutlineBuildingOffice2,
+} from '../components/icons';
 import { PageBg } from '../components/SvgDecorations';
 
 export default function CampaignDetail() {
@@ -15,6 +22,8 @@ export default function CampaignDetail() {
   const user = useAuthStore((s) => s.user);
   const [campaign, setCampaign] = useState(null);
   const [video, setVideo] = useState(null);
+  const [updates, setUpdates] = useState([]);
+  const [treasury, setTreasury] = useState(null);
   const [showDonate, setShowDonate] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -25,7 +34,15 @@ export default function CampaignDetail() {
       try {
         const c = await getCampaign(id);
         setCampaign(c);
-        try { setVideo(await getCampaignVideo(id)); } catch { /* no video */ }
+        // Fetch supplementary data in parallel — all public endpoints
+        const [videoRes, updatesRes, treasuryRes] = await Promise.all([
+          getCampaignVideo(id).catch(() => null),
+          getProjectUpdates(id).catch(() => []),
+          getCampaignTreasury(id).catch(() => null),
+        ]);
+        if (videoRes) setVideo(videoRes.video || videoRes);
+        setUpdates(Array.isArray(updatesRes) ? updatesRes : []);
+        setTreasury(treasuryRes);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -41,6 +58,8 @@ export default function CampaignDetail() {
   const pct = campaign.goal_amount_usd > 0
     ? Math.min(100, ((campaign.current_usd_total || campaign.raised_amount_usd) / campaign.goal_amount_usd) * 100)
     : 0;
+
+  const linkedProject = getProjectByCampaignId(campaign.id);
 
   return (
     <PageBg pattern="topography" colorA="#6366F1" colorB="#A855F7">
@@ -58,9 +77,49 @@ export default function CampaignDetail() {
         )}
         <h1 className="page-header-accent text-2xl sm:text-3xl text-gray-900">{campaign.title}</h1>
         {campaign.ngo_name && (
-          <p className="text-gray-500 mt-1">by {campaign.ngo_name}</p>
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            <Link to={`/ngo/${campaign.ngo_id}`} className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-indigo-600 transition font-medium">
+              <HiOutlineBuildingOffice2 className="w-4 h-4" />
+              {campaign.ngo_name}
+            </Link>
+            {campaign.ngo_verification_status === 'VERIFIED' && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0.5">
+                <HiOutlineCheckBadge className="w-3 h-3" /> Verified
+              </span>
+            )}
+            {campaign.ngo_website_url && (
+              <a
+                href={campaign.ngo_website_url.startsWith('http') ? campaign.ngo_website_url : `https://${campaign.ngo_website_url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] text-gray-400 hover:text-indigo-500 transition"
+              >
+                <HiOutlineGlobeAlt className="w-3 h-3" />
+                {campaign.ngo_website_url.replace(/^https?:\/\//, '')}
+              </a>
+            )}
+          </div>
         )}
       </div>
+
+      {/* Project Landing Page link */}
+      {linkedProject && (
+        <Link
+          to={`/project/${linkedProject.slug}`}
+          className="group flex items-center gap-3 mb-6 px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/60 hover:border-emerald-300 transition-all hover:shadow-md"
+        >
+          <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-emerald-600/10 text-emerald-600 shrink-0">
+            <HiOutlineArrowTopRightOnSquare className="w-5 h-5" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-emerald-800 leading-tight">
+              {linkedProject.name} - {linkedProject.tagline}
+            </p>
+            <p className="text-[11px] text-emerald-600/70 mt-0.5">Visit the full project page</p>
+          </div>
+          <span className="text-emerald-400 group-hover:translate-x-0.5 transition-transform">›</span>
+        </Link>
+      )}
 
       {/* Video */}
       {video ? (
@@ -105,6 +164,105 @@ export default function CampaignDetail() {
           </p>
         )}
       </div>
+
+      {/* Milestone Tracker (if campaign uses milestones) */}
+      <MilestoneTracker campaignId={campaign.id} />
+
+      {/* Treasury Transparency */}
+      {treasury && (
+        <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 mb-6 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-teal-500 to-transparent" />
+          <svg className="absolute -top-1 -right-1 w-20 h-20 pointer-events-none" viewBox="0 0 80 80" fill="none">
+            <rect x="50" y="8" width="18" height="24" rx="2" stroke="#10B981" strokeWidth="0.5" opacity="0.06" />
+            <line x1="54" y1="14" x2="64" y2="14" stroke="#10B981" strokeWidth="0.4" opacity="0.05" />
+            <line x1="54" y1="20" x2="64" y2="20" stroke="#10B981" strokeWidth="0.4" opacity="0.05" />
+            <line x1="54" y1="26" x2="60" y2="26" stroke="#10B981" strokeWidth="0.4" opacity="0.05" />
+          </svg>
+          <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-1.5 mb-3">
+            <HiOutlineBanknotes className="w-4 h-4 text-emerald-600" /> Treasury Transparency
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+            <div>
+              <p className="text-lg font-bold text-emerald-600">${fmt(treasury.total_raised_usd)}</p>
+              <p className="text-[11px] text-gray-400 uppercase tracking-wide">Total Raised</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-indigo-600">${fmt(treasury.total_released_usd)}</p>
+              <p className="text-[11px] text-gray-400 uppercase tracking-wide">Released</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-amber-600">${fmt(treasury.funds_held_usd)}</p>
+              <p className="text-[11px] text-gray-400 uppercase tracking-wide">Held in Treasury</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold text-gray-500">${fmt(treasury.total_fees_collected_usd)}</p>
+              <p className="text-[11px] text-gray-400 uppercase tracking-wide">Platform Fees</p>
+            </div>
+          </div>
+          {treasury.total_milestone_target_usd > 0 && (
+            <div className="mt-3">
+              <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 transition-all"
+                  style={{ width: `${Math.min(100, (treasury.total_released_usd / treasury.total_milestone_target_usd) * 100)}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-gray-400 mt-1 text-right">
+                {Math.round((treasury.total_released_usd / treasury.total_milestone_target_usd) * 100)}% of milestone targets released
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Project Updates from NGO */}
+      {updates.length > 0 && (
+        <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 mb-6 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500 via-purple-500 to-transparent" />
+          <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-1.5 mb-3">
+            <HiOutlineDocumentText className="w-4 h-4 text-violet-600" /> Project Updates
+          </h3>
+          <div className="space-y-4">
+            {updates.map((u) => (
+              <div key={u.id} className="border-l-2 border-violet-200 pl-3">
+                <div className="flex items-start justify-between gap-2">
+                  <h4 className="text-sm font-medium text-gray-800">{u.title}</h4>
+                  {u.verified ? (
+                    <span className="shrink-0 inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0.5">
+                      <HiOutlineShieldCheck className="w-3 h-3" /> Verified
+                    </span>
+                  ) : (
+                    <span className="shrink-0 text-[10px] font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5">
+                      Unverified
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-600 mt-1 whitespace-pre-line leading-relaxed">{u.body}</p>
+                {u.author_name && (
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    Posted by {u.author_name} &middot; {u.created_at ? new Date(u.created_at).toLocaleDateString() : ''}
+                  </p>
+                )}
+                {u.media_ipfs_hashes && u.media_ipfs_hashes.length > 0 && (
+                  <div className="flex gap-1.5 mt-2 flex-wrap">
+                    {u.media_ipfs_hashes.map((hash, i) => (
+                      <a
+                        key={i}
+                        href={`https://gateway.pinata.cloud/ipfs/${hash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] text-indigo-600 underline"
+                      >
+                        Media {i + 1}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Description */}
       <div className="prose prose-sm max-w-none text-gray-700 mb-8 whitespace-pre-line">

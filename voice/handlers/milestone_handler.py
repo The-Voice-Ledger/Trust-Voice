@@ -22,6 +22,11 @@ from database.models import (
     MilestoneStatus, PlatformFee, ProjectUpdate,
 )
 
+try:
+    from services.milestone_treasury_service import milestone_treasury
+except Exception:
+    milestone_treasury = None  # Blockchain layer optional
+
 logger = logging.getLogger(__name__)
 
 PLATFORM_DEFAULT_FEE = Decimal("0.0600")  # 6 %
@@ -121,17 +126,32 @@ async def create_milestones(
         campaign.platform_fee_rate = PLATFORM_DEFAULT_FEE
     db.commit()
 
+    # Record on-chain (non-blocking — failures don't break the flow)
+    chain_results = []
+    if milestone_treasury and milestone_treasury.is_configured():
+        for c_item in created:
+            tx = milestone_treasury.record_create(
+                campaign_id=campaign_id,
+                milestone_id=c_item["id"],
+                target_usd=Decimal(str(c_item["target_amount_usd"])),
+            )
+            if tx.get("success"):
+                chain_results.append(tx["tx_hash"])
+
     logger.info(
         f"Created {len(created)} milestones for campaign {campaign_id}, "
         f"total target ${total_target}"
     )
 
-    return {
+    result = {
         "success": True,
         "campaign_id": campaign_id,
         "milestones": created,
         "total_target_usd": float(total_target),
     }
+    if chain_results:
+        result["chain_tx_hashes"] = chain_results
+    return result
 
 
 # ── Get milestones ─────────────────────────────────────────────
@@ -168,6 +188,29 @@ async def get_milestones(
         released = m.released_amount_usd or Decimal("0")
         total_target += target
         total_released += released
+
+        # Fetch verification data for this milestone (public transparency)
+        verifications_raw = (
+            db.query(MilestoneVerification)
+            .filter(MilestoneVerification.milestone_id == m.id)
+            .order_by(MilestoneVerification.created_at.desc())
+            .all()
+        )
+        verifications_list = []
+        for v in verifications_raw:
+            agent = db.query(User).filter(User.id == v.field_agent_id).first() if v.field_agent_id else None
+            verifications_list.append({
+                "id": v.id,
+                "trust_score": v.trust_score,
+                "status": v.status,
+                "agent_notes": v.agent_notes,
+                "agent_name": (agent.full_name or agent.telegram_username) if agent else None,
+                "gps_latitude": v.gps_latitude,
+                "gps_longitude": v.gps_longitude,
+                "photos": v.photos or [],
+                "created_at": str(v.created_at) if v.created_at else None,
+            })
+
         items.append({
             "id": m.id,
             "sequence": m.sequence,
@@ -177,6 +220,15 @@ async def get_milestones(
             "released_amount_usd": float(released),
             "status": m.status,
             "due_date": str(m.due_date) if m.due_date else None,
+            # Evidence from NGO/project owner
+            "evidence_notes": m.evidence_notes,
+            "evidence_ipfs_hashes": m.evidence_ipfs_hashes or [],
+            "evidence_submitted_at": str(m.evidence_submitted_at) if m.evidence_submitted_at else None,
+            # On-chain record
+            "chain_tx_hash": m.chain_tx_hash,
+            "released_at": str(m.released_at) if m.released_at else None,
+            # Field agent verifications
+            "verifications": verifications_list,
         })
 
     return {
@@ -239,12 +291,24 @@ async def submit_milestone_evidence(
     milestone.status = MilestoneStatus.EVIDENCE_SUBMITTED.value
     db.commit()
 
+    # Record evidence on-chain
+    chain_tx = None
+    if milestone_treasury and milestone_treasury.is_configured():
+        ipfs_ref = (ipfs_hashes[0] if ipfs_hashes else "")
+        tx = milestone_treasury.record_evidence(
+            campaign_id=milestone.campaign_id,
+            milestone_id=milestone_id,
+            ipfs_hash=ipfs_ref,
+        )
+        if tx.get("success"):
+            chain_tx = tx["tx_hash"]
+
     logger.info(
         f"Evidence submitted for milestone {milestone_id} "
         f"(campaign {milestone.campaign_id})"
     )
 
-    return {
+    result = {
         "success": True,
         "milestone_id": milestone_id,
         "status": milestone.status,
@@ -253,6 +317,9 @@ async def submit_milestone_evidence(
             "A field agent will be assigned to verify."
         ),
     }
+    if chain_tx:
+        result["chain_tx_hash"] = chain_tx
+    return result
 
 
 # ── Verify milestone (field agent) ────────────────────────────
@@ -324,12 +391,24 @@ async def verify_milestone(
 
     db.commit()
 
+    # Record verification on-chain
+    chain_tx = None
+    if milestone_treasury and milestone_treasury.is_configured() and trust_score >= 80:
+        tx = milestone_treasury.record_verify(
+            campaign_id=milestone.campaign_id,
+            milestone_id=milestone_id,
+            field_agent_address="",  # No wallet for now
+            trust_score=trust_score,
+        )
+        if tx.get("success"):
+            chain_tx = tx["tx_hash"]
+
     logger.info(
         f"Milestone {milestone_id} verified by agent {user.id}, "
         f"score={trust_score}, status={milestone.status}"
     )
 
-    return {
+    result = {
         "success": True,
         "milestone_id": milestone_id,
         "trust_score": trust_score,
@@ -337,6 +416,9 @@ async def verify_milestone(
         "auto_approved": trust_score >= 80,
         "message": message,
     }
+    if chain_tx:
+        result["chain_tx_hash"] = chain_tx
+    return result
 
 
 # ── Release funds ──────────────────────────────────────────────
@@ -405,6 +487,20 @@ async def release_milestone_funds(
     milestone.platform_fee_usd = fee
     milestone.status = MilestoneStatus.RELEASED.value
     milestone.released_at = datetime.utcnow()
+
+    # Record fund release on-chain
+    chain_tx = None
+    if milestone_treasury and milestone_treasury.is_configured():
+        tx = milestone_treasury.record_release(
+            campaign_id=campaign.id,
+            milestone_id=milestone_id,
+            gross_usd=gross,
+            fee_usd=fee,
+        )
+        if tx.get("success"):
+            chain_tx = tx["tx_hash"]
+            milestone.chain_tx_hash = chain_tx  # store on the milestone row
+
     db.commit()
 
     logger.info(
@@ -412,7 +508,7 @@ async def release_milestone_funds(
         f"fee=${fee} ({float(fee_rate)*100:.1f}%), net=${net}"
     )
 
-    return {
+    result = {
         "success": True,
         "milestone_id": milestone_id,
         "milestone_title": milestone.title,
@@ -426,6 +522,10 @@ async def release_milestone_funds(
             f"{float(fee_rate)*100:.1f}%)."
         ),
     }
+    if chain_tx:
+        result["chain_tx_hash"] = chain_tx
+        result["explorer_url"] = f"https://sepolia.basescan.org/tx/{chain_tx}"
+    return result
 
 
 # ── Treasury overview ──────────────────────────────────────────

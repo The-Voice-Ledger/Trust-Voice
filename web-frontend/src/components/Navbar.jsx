@@ -5,7 +5,7 @@ import useAuthStore from '../stores/authStore';
 import LanguageToggle from './LanguageToggle';
 import {
   HiOutlineGlobeAlt, HiOutlineChartBar, HiOutlineBanknotes,
-  HiOutlineBuildingOffice2, HiOutlinePlusCircle, HiOutlineCamera,
+  HiOutlineBuildingOffice2, HiOutlineCamera,
   HiOutlineCog6Tooth, HiOutlineUser, HiOutlineArrowRightOnRectangle,
   HiOutlineArrowLeftOnRectangle, HiOutlineBars3, HiOutlineXMark,
   HiOutlineWallet, HiOutlineChevronDown, HiOutlineEllipsisHorizontal,
@@ -22,11 +22,9 @@ const PRIMARY_ITEMS = [
 
 /* Secondary nav — hidden in "More" dropdown on desktop */
 const SECONDARY_ITEMS = [
+  { to: '/portal', key: 'nav.portal', Icon: HiOutlineCog6Tooth },
   { to: '/analytics', key: 'nav.analytics', Icon: HiOutlineChartBar },
   { to: '/register-ngo', key: 'nav.register_ngo', Icon: HiOutlineBuildingOffice2 },
-  { to: '/create-campaign', key: 'nav.create_campaign', Icon: HiOutlinePlusCircle },
-  { to: '/field-agent', key: 'nav.field_agent', Icon: HiOutlineCamera },
-  { to: '/admin', key: 'nav.admin', Icon: HiOutlineCog6Tooth },
 ];
 
 const ALL_ITEMS = [...PRIMARY_ITEMS, ...SECONDARY_ITEMS];
@@ -138,15 +136,15 @@ export default function Navbar() {
           {user ? (
             <div className="hidden sm:flex items-center gap-2">
               <Link
-                to="/dashboard"
+                to="/portal"
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  isActive('/dashboard')
+                  isActive('/portal')
                     ? 'bg-gradient-to-r from-indigo-50 to-violet-50 text-indigo-700'
                     : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
                 <HiOutlineWallet className="w-4 h-4" />
-                <span className="font-display">{t('nav.dashboard')}</span>
+                <span className="font-display">{t('nav.portal')}</span>
               </Link>
               <div className="flex items-center gap-2 pl-2 border-l border-gray-200/60">
                 <span className="flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-gradient-to-r from-gray-50 to-gray-100 px-2.5 py-1.5 rounded-lg border border-gray-200/50">
@@ -200,10 +198,10 @@ export default function Navbar() {
             <hr className="border-gray-100 my-2" />
             {user ? (
               <>
-                <Link to="/dashboard"
+                <Link to="/portal"
                   className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-600 hover:bg-gray-50 font-display">
                   <HiOutlineWallet className="w-5 h-5" />
-                  {t('nav.dashboard')}
+                  {t('nav.portal')}
                 </Link>
                 <button onClick={logout}
                   className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50 font-display">

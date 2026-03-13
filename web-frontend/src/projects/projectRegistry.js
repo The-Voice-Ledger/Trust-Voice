@@ -16,6 +16,7 @@ const PROJECTS = {
     name: 'Ukulima',
     tagline: 'Moringa Oasis Zimbabwe',
     poweredBy: 'TrustVoice',
+    campaignId: 28,          // Links to TrustVoice campaign id
 
     /* -- Theme -- */
     theme: {
@@ -334,6 +335,12 @@ export function getProject(slug) {
 
 export function getAllProjectSlugs() {
   return Object.keys(PROJECTS);
+}
+
+/** Find a project by its linked campaign id (returns null if none) */
+export function getProjectByCampaignId(campaignId) {
+  const id = Number(campaignId);
+  return Object.values(PROJECTS).find((p) => p.campaignId === id) || null;
 }
 
 export default PROJECTS;

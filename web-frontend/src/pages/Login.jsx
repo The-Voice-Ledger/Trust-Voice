@@ -102,16 +102,39 @@ export default function Login() {
         </button>
       </form>
 
-      {/* Demo hint */}
+      {/* Demo quick-login buttons */}
       <div className="mt-6 p-3.5 bg-indigo-50/60 border border-indigo-100 rounded-xl">
-        <div className="flex items-start gap-2">
+        <div className="flex items-start gap-2 mb-3">
           <HiOutlineInformationCircle className="w-4 h-4 text-indigo-500 mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="text-xs font-semibold text-indigo-700 mb-1">Demo Credentials</p>
-            <p className="text-xs text-indigo-500">
-              Username: <span className="font-mono bg-indigo-100 px-1 rounded">@demo_user</span> · PIN: <span className="font-mono bg-indigo-100 px-1 rounded">1234</span>
-            </p>
-          </div>
+          <p className="text-xs font-semibold text-indigo-700">Demo Logins <span className="font-normal text-indigo-400">(PIN 1234)</span></p>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { user: 'demo_user',  label: 'Funder',      color: 'indigo' },
+            { user: 'demo_ngo',   label: 'NGO Admin',    color: 'emerald' },
+            { user: 'demo_admin', label: 'Platform Admin', color: 'violet' },
+            { user: 'demo_agent', label: 'Field Agent',  color: 'amber' },
+          ].map(({ user: u, label, color }) => (
+            <button
+              key={u}
+              type="button"
+              disabled={loading}
+              onClick={async () => {
+                setIdentifier(u);
+                setPin('1234');
+                try {
+                  await login({ identifier: u, pin: '1234' });
+                  navigate('/portal');
+                } catch { /* error shown by store */ }
+              }}
+              className={`text-xs font-medium px-2.5 py-2 rounded-lg border transition-all
+                bg-${color}-50 border-${color}-200 text-${color}-700
+                hover:bg-${color}-100 disabled:opacity-50`}
+            >
+              {label}
+              <span className="block text-[10px] font-mono opacity-60">@{u}</span>
+            </button>
+          ))}
         </div>
       </div>
 

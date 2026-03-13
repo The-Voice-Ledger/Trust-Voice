@@ -39,6 +39,9 @@ export function IconArrowTrendingUp({ className }) {
 export function IconArrowTrendingDown({ className }) {
   return <O className={className}><path d="M2.25 6L9 12.75l4-4L21.75 18M21.75 18h-6M21.75 18v-6" /></O>;
 }
+export function IconArrowTopRightOnSquare({ className }) {
+  return <O className={className}><path d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></O>;
+}
 export function IconChevronDown({ className }) {
   return <O className={className}><path d="M6 9l6 6 6-6" /></O>;
 }
@@ -239,6 +242,7 @@ export {
   IconArrowRightOnRectangle as HiOutlineArrowRightOnRectangle,
   IconArrowTrendingUp as HiOutlineArrowTrendingUp,
   IconArrowTrendingDown as HiOutlineArrowTrendingDown,
+  IconArrowTopRightOnSquare as HiOutlineArrowTopRightOnSquare,
   IconChevronDown as HiOutlineChevronDown,
   IconBars3 as HiOutlineBars3,
   IconXMark as HiOutlineXMark,
