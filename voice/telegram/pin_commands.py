@@ -20,7 +20,7 @@ from telegram.ext import (
     filters
 )
 
-from database.db import get_db
+from database.db import get_db_session
 from database.models import User, UserRole
 from services.auth_service import hash_pin, verify_pin, is_weak_pin
 
@@ -36,7 +36,7 @@ async def set_pin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     """
     user_id = update.effective_user.id
     
-    with get_db() as db:
+    with get_db_session() as db:
         user = db.query(User).filter_by(telegram_user_id=str(user_id)).first()
         
         if not user:
@@ -73,7 +73,7 @@ async def set_pin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         "🔐 Set Your 4-Digit PIN\n\n"
         "This PIN lets you login to the web interface at:\n"
         "https://trustvoice.app\n\n"
-        "**PIN Requirements:**\n"
+        "PIN Requirements:\n"
         "• Exactly 4 digits (0-9)\n"
         "• Avoid weak PINs:\n"
         "  ❌ 1234, 0000, 1111\n"
@@ -161,7 +161,7 @@ async def handle_pin_confirmation(update: Update, context: ContextTypes.DEFAULT_
     user_id = update.effective_user.id
     
     try:
-        with get_db() as db:
+        with get_db_session() as db:
             user = db.query(User).filter_by(telegram_user_id=str(user_id)).first()
             
             if not user:
@@ -178,8 +178,8 @@ async def handle_pin_confirmation(update: Update, context: ContextTypes.DEFAULT_
             await update.effective_user.send_message(
                 "✅ PIN set successfully!\n\n"
                 "🌐 You can now login to the web interface:\n\n"
-                "**Web Login:**\n"
-                f"Username: `{username}`\n"
+                "Web Login:\n"
+                f"Username: {username}\n"
                 "PIN: [The 4 digits you just set]\n\n"
                 "🔒 Keep your PIN secure. Don't share it.\n"
                 "To change it later, use /change_pin",
@@ -206,7 +206,7 @@ async def change_pin_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     """
     user_id = update.effective_user.id
     
-    with get_db() as db:
+    with get_db_session() as db:
         user = db.query(User).filter_by(telegram_user_id=str(user_id)).first()
         
         if not user:
@@ -257,7 +257,7 @@ async def handle_old_pin_entry(update: Update, context: ContextTypes.DEFAULT_TYP
     # Verify old PIN
     user_id = update.effective_user.id
     
-    with get_db() as db:
+    with get_db_session() as db:
         user = db.query(User).filter_by(telegram_user_id=str(user_id)).first()
         
         if not user or not user.pin_hash:
