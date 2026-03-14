@@ -7,18 +7,10 @@
 
 const BASE = '/api';
 
-let _token = null;
-
-export function setToken(token) {
-  _token = token;
-}
-
-export function getToken() {
-  return _token;
-}
-
-export function clearToken() {
-  _token = null;
+// Get token from Zustand store
+let _getToken = null;
+export function setTokenGetter(getter) {
+  _getToken = getter;
 }
 
 async function request(method, path, { body, formData, params } = {}) {
@@ -30,7 +22,8 @@ async function request(method, path, { body, formData, params } = {}) {
   }
 
   const headers = {};
-  if (_token) headers['Authorization'] = `Bearer ${_token}`;
+  const token = _getToken ? _getToken() : null;
+  if (token) headers['Authorization'] = `Bearer ${token}`;
 
   let fetchBody;
   if (formData) {
