@@ -1,7 +1,7 @@
 """
-VBV LiveKit Voice Agent (v1.4+ API)
+VBV LiveKit Voice Agent
 
-Real-time conversational AI agent powered by LiveKit.
+Real-time conversational AI agent for VBV platform using LiveKit Cloud.
 Uses Deepgram Nova-2 for streaming STT, OpenAI GPT-4o-mini for LLM,
 OpenAI TTS for speech, and Silero for voice activity detection.
 
@@ -20,19 +20,25 @@ Usage:
     python -m voice.livekit_agent dev
 """
 
-import json
-import logging
-import os
-from typing import Annotated
-
 # Fix multiprocessing and threading issues on Railway
+import os
 os.environ["PYTHONMULTIPROCESSING"] = "0"
 os.environ["LIVEKIT_WORKERS"] = "1"
 
 # Disable OpenTelemetry to prevent thread creation issues
+# MUST be set BEFORE OpenTelemetry imports
 os.environ["OTEL_SDK_DISABLED"] = "true"
 os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = ""
 os.environ["LIVEKIT_OTEL_ENABLED"] = "false"
+
+# Additional Railway-specific fixes
+os.environ["PYTHONUNBUFFERED"] = "1"
+os.environ["NO_PROXY"] = "*"
+os.environ["PYTHONPATH"] = "/opt/venv/lib/python3.12/site-packages"
+
+import json
+import logging
+from typing import Annotated
 
 from livekit import agents
 from livekit.agents import (
