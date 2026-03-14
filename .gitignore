@@ -31,6 +31,7 @@ pip-delete-this-directory.txt
 .service_pids
 logs/
 *.log
+admin-scripts/
 
 # Database
 *.db
