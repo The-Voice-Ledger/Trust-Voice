@@ -4,6 +4,11 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import './i18n'
 import App from './App.jsx'
+import useAuthStore from './stores/authStore'
+import { setTokenGetter } from './api/client'
+
+// ── Connect API client to Zustand store ───
+setTokenGetter(() => useAuthStore.getState().token);
 
 // ── Capture uncaught runtime errors so they show on screen ───
 const errBox = () => {
