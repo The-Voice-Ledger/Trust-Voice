@@ -27,7 +27,7 @@ LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET", "")
 
 class TokenRequest(BaseModel):
     """Request body for generating a LiveKit room token."""
-    user_id: Optional[str] = "web_anonymous"
+    user_id: Optional[str | int] = "web_anonymous"  # Accept both string and int
     user_name: Optional[str] = "Guest"
     user_role: Optional[str] = "DONOR"
 
@@ -54,15 +54,17 @@ async def create_livekit_token(req: TokenRequest):
         )
 
     # Each user gets a unique room for their voice session
-    room_name = f"vbv-voice-{req.user_id}-{int(time.time())}"
-    participant_identity = req.user_id or "web_anonymous"
+    # Convert user_id to string for LiveKit compatibility
+    user_id_str = str(req.user_id) if req.user_id is not None else "web_anonymous"
+    room_name = f"vbv-voice-{user_id_str}-{int(time.time())}"
+    participant_identity = user_id_str
 
     # Metadata passed to the agent so it knows who it's talking to
     import json
     metadata = json.dumps({
         "name": req.user_name,
         "role": req.user_role,
-        "user_id": req.user_id,
+        "user_id": user_id_str,
     })
 
     token = (
