@@ -20,6 +20,25 @@ Usage:
     python -m voice.livekit_agent dev
 """
 
+# Fix multiprocessing and threading issues on Railway
+import os
+os.environ["PYTHONMULTIPROCESSING"] = "0"
+os.environ["LIVEKIT_WORKERS"] = "1"
+
+# Disable OpenTelemetry to prevent thread creation issues
+os.environ["OTEL_SDK_DISABLED"] = "true"
+os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = ""
+os.environ["LIVEKIT_OTEL_ENABLED"] = "false"
+
+# Additional Railway-specific fixes
+os.environ["PYTHONUNBUFFERED"] = "1"
+os.environ["NO_PROXY"] = "*"
+os.environ["PYTHONPATH"] = "/opt/venv/lib/python3.12/site-packages"
+
+# Rust/Tokio thread limits for Railway
+os.environ["TOKIO_WORKER_THREADS"] = "1"
+os.environ["RAYON_NUM_THREADS"] = "1"
+os.environ["NUMBA_NUM_THREADS"] = "1"
 
 # Detect if running on Railway
 IS_RAILWAY = os.environ.get("RAILWAY_ENVIRONMENT") == "production" or os.environ.get("RAILWAY_SERVICE_NAME") is not None
