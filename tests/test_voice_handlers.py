@@ -450,7 +450,7 @@ class TestInitiateVoiceDonation:
 
         fake_pi = {"id": "pi_test123", "client_secret": "cs_test_secret"}
 
-        with patch("voice.handlers.donation_handler.create_payment_intent",
+        with patch("services.stripe_service.create_payment_intent",
                    return_value=fake_pi):
             result = await initiate_voice_donation(
                 db=db_session, telegram_user_id="tg_donor",
@@ -478,7 +478,7 @@ class TestInitiateVoiceDonation:
 
         fake_stk = {"success": True, "CheckoutRequestID": "ws_CO_123"}
 
-        with patch("voice.handlers.donation_handler.mpesa_stk_push",
+        with patch("services.mpesa.mpesa_stk_push",
                    return_value=fake_stk):
             result = await initiate_voice_donation(
                 db=db_session, telegram_user_id="tg_donor",
@@ -506,7 +506,7 @@ class TestInitiateVoiceDonation:
         seed["campaign"].status = "completed"
         db_session.commit()
 
-        with patch("voice.handlers.donation_handler.create_payment_intent",
+        with patch("services.stripe_service.create_payment_intent",
                    return_value={"id": "pi_x", "client_secret": "cs_x"}):
             result = await initiate_voice_donation(
                 db=db_session, telegram_user_id="tg_donor",
@@ -521,7 +521,7 @@ class TestInitiateVoiceDonation:
 
         fake_pi = {"id": "pi_auto", "client_secret": "cs_auto"}
 
-        with patch("voice.handlers.donation_handler.create_payment_intent",
+        with patch("services.stripe_service.create_payment_intent",
                    return_value=fake_pi):
             result = await initiate_voice_donation(
                 db=db_session, telegram_user_id="tg_admin",  # admin has no Donor record
@@ -541,7 +541,7 @@ class TestInitiateVoiceDonation:
 
         fake_stk = {"success": True, "CheckoutRequestID": "ws_auto"}
 
-        with patch("voice.handlers.donation_handler.mpesa_stk_push",
+        with patch("services.mpesa.mpesa_stk_push",
                    return_value=fake_stk):
             result = await initiate_voice_donation(
                 db=db_session, telegram_user_id="tg_donor",
@@ -555,7 +555,7 @@ class TestInitiateVoiceDonation:
         """If Stripe fails, donation should be rolled back."""
         from voice.handlers.donation_handler import initiate_voice_donation
 
-        with patch("voice.handlers.donation_handler.create_payment_intent",
+        with patch("services.stripe_service.create_payment_intent",
                    return_value={"error": "card_declined"}):
             result = await initiate_voice_donation(
                 db=db_session, telegram_user_id="tg_donor",

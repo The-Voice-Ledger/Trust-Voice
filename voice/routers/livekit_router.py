@@ -4,6 +4,7 @@ LiveKit Router -- Token generation for real-time voice sessions.
 Provides a token endpoint that the frontend calls to join a
 LiveKit room for real-time voice interaction with the AI agent.
 """
+from __future__ import annotations
 
 import os
 import logging
@@ -22,12 +23,14 @@ router = APIRouter(prefix="/livekit", tags=["livekit"])
 # ── Config ──────────────────────────────────────────────────────
 LIVEKIT_URL = os.getenv("LIVEKIT_URL", "")
 LIVEKIT_API_KEY = os.getenv("LIVEKIT_API_KEY", "")
+
+
 LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET", "")
 
 
 class TokenRequest(BaseModel):
     """Request body for generating a LiveKit room token."""
-    user_id: Optional[str | int] = "web_anonymous"  # Accept both string and int
+    user_id: Optional[str] = "web_anonymous"
     user_name: Optional[str] = "Guest"
     user_role: Optional[str] = "DONOR"
 

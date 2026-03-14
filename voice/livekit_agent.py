@@ -20,6 +20,8 @@ Usage:
     python -m voice.livekit_agent dev
 """
 
+from __future__ import annotations
+
 # Fix multiprocessing and threading issues on Railway
 import os
 os.environ["PYTHONMULTIPROCESSING"] = "0"
@@ -42,12 +44,6 @@ os.environ["NUMBA_NUM_THREADS"] = "1"
 
 # Detect if running on Railway
 IS_RAILWAY = os.environ.get("RAILWAY_ENVIRONMENT") == "production" or os.environ.get("RAILWAY_SERVICE_NAME") is not None
-
-# Import noise_cancellation only if not on Railway
-if not IS_RAILWAY:
-    from livekit.plugins import noise_cancellation
-else:
-    noise_cancellation = None
 
 import json
 import logging
@@ -1155,9 +1151,7 @@ async def vbv_voice_session(ctx: JobContext):
             context_addendum=context_addendum,
         ),
         room=ctx.room,
-        room_input_options=room_io.RoomInputOptions(
-            noise_cancellation=noise_cancellation.BVC() if noise_cancellation else None,
-        ),
+        room_input_options=room_io.RoomInputOptions(),
     )
 
     # ── Tier 3: Push proactive action cards ──

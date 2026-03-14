@@ -21,11 +21,61 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-# ── Mock out heavy optional deps that aren't in venv-livekit ───
-#    donate_to_campaign and milestone tools do deferred imports from
-#    voice.handlers, which transitively pull in stripe, redis, etc.
-#    We stub these base libraries so the real handler modules can import
-#    without installing every service SDK.
+# ── Mock out heavy optional deps not available in venv (Python 3.9) ──
+#    The livekit-agents SDK requires Python 3.10+ (uses TypeAlias).
+#    We stub the entire livekit tree so voice.livekit_agent can import.
+#    stripe and redis are also stubbed (used transitively by handlers).
+
+def _function_tool(**kwargs):
+    """Stub for livekit.agents.function_tool — just returns the function."""
+    def decorator(fn):
+        return fn
+    if len(kwargs) == 0:
+        return decorator
+    return decorator
+
+if sys.version_info < (3, 10):
+    # Core livekit modules — only stub when running in Python 3.9 (venv)
+    # where the real livekit SDK can't load (uses TypeAlias from 3.10+).
+    _lk = ModuleType("livekit")
+    _lk_agents = ModuleType("livekit.agents")
+
+    class _StubAgent:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+    _lk_agents.Agent = _StubAgent
+    _lk_agents.AgentServer = MagicMock()
+    _lk_agents.AgentSession = MagicMock()
+    _lk_agents.JobContext = MagicMock()
+    _lk_agents.RunContext = MagicMock()
+    _lk_agents.cli = MagicMock()
+    _lk_agents.function_tool = _function_tool
+    _lk_agents.room_io = MagicMock()
+    _lk.agents = _lk_agents
+
+    # Plugin modules
+    _lk_plugins = ModuleType("livekit.plugins")
+    _lk_plugins_dg = ModuleType("livekit.plugins.deepgram")
+    _lk_plugins_dg.STT = MagicMock()
+    _lk_plugins_oai = ModuleType("livekit.plugins.openai")
+    _lk_plugins_oai.LLM = MagicMock()
+    _lk_plugins_oai.TTS = MagicMock()
+    _lk_plugins_silero = ModuleType("livekit.plugins.silero")
+    _lk_plugins_silero.VAD = MagicMock()
+    _lk_plugins.deepgram = _lk_plugins_dg
+    _lk_plugins.openai = _lk_plugins_oai
+    _lk_plugins.silero = _lk_plugins_silero
+
+    for name, mod in {
+        "livekit": _lk,
+        "livekit.agents": _lk_agents,
+        "livekit.plugins": _lk_plugins,
+        "livekit.plugins.deepgram": _lk_plugins_dg,
+        "livekit.plugins.openai": _lk_plugins_oai,
+        "livekit.plugins.silero": _lk_plugins_silero,
+    }.items():
+        sys.modules[name] = mod
+
 if "stripe" not in sys.modules:
     _stripe = ModuleType("stripe")
     _stripe.Event = type("Event", (), {})
@@ -836,8 +886,8 @@ class TestVBVAssistant:
         from voice.livekit_agent import VBVAssistant
 
         agent = VBVAssistant(user_name="Alice", user_role="DONOR")
-        assert "Alice" in agent._instructions
-        assert "DONOR" in agent._instructions
+        assert "Alice" in agent.instructions
+        assert "DONOR" in agent.instructions
 
     def test_context_addendum(self):
         from voice.livekit_agent import VBVAssistant
@@ -847,12 +897,12 @@ class TestVBVAssistant:
             user_role="SYSTEM_ADMIN",
             context_addendum="3 pending payouts, 2 milestones to verify.",
         )
-        assert "SESSION CONTEXT" in agent._instructions
-        assert "3 pending payouts" in agent._instructions
+        assert "SESSION CONTEXT" in agent.instructions
+        assert "3 pending payouts" in agent.instructions
 
     def test_tools_registered(self):
         from voice.livekit_agent import VBVAssistant, ALL_TOOLS
 
         agent = VBVAssistant()
         # Agent should have all tools
-        assert len(agent._tools) == len(ALL_TOOLS)
+        assert len(agent.tools) == len(ALL_TOOLS)
