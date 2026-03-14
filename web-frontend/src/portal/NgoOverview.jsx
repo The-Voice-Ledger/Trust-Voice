@@ -27,8 +27,12 @@ export default function NgoOverview({ user }) {
       setLoading(true);
       try {
         const params = {};
-        if (user.ngo_id) params.ngoId = user.ngo_id;
-        else params.creatorUserId = user.id;
+        const role = (user.role || '').toUpperCase();
+        const isAdmin = role === 'SYSTEM_ADMIN' || role === 'SUPER_ADMIN';
+        if (!isAdmin) {
+          if (user.ngo_id) params.ngoId = user.ngo_id;
+          else params.creatorUserId = user.id;
+        }
         const res = await listCampaigns({ ...params, pageSize: 50 });
         const items = res.items || res;
         setCampaigns(items);

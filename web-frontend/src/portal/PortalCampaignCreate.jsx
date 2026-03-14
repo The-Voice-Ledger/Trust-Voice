@@ -42,8 +42,10 @@ export default function PortalCampaignCreate() {
     video_url: '',
   });
 
-  // Gate: must have ngo_id
-  if (!user?.ngo_id) {
+  const isAdmin = ['SYSTEM_ADMIN', 'SUPER_ADMIN'].includes((user?.role || '').toUpperCase());
+
+  // Gate: must have ngo_id (admins are exempt — they can pick an NGO)
+  if (!user?.ngo_id && !isAdmin) {
     return (
       <div className="max-w-lg mx-auto px-4 py-20 text-center">
         <HiOutlineRocketLaunch className="w-12 h-12 text-gray-300 mx-auto mb-4" />

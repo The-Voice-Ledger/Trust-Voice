@@ -1,5 +1,6 @@
 /**
- * ProjectsDashboard — lists all campaigns owned by the current NGO user.
+ * ProjectsDashboard — lists campaigns for the current user/NGO,
+ * or ALL campaigns for SYSTEM_ADMIN / SUPER_ADMIN.
  *
  * This is the /portal/projects page; essentially a portal-native version
  * of MyProjects.jsx, with links pointing to portal sub-routes.
@@ -37,8 +38,13 @@ export default function ProjectsDashboard() {
       setLoading(true);
       try {
         const params = {};
-        if (user.ngo_id) params.ngoId = user.ngo_id;
-        else params.creatorUserId = user.id;
+        const role = (user.role || '').toUpperCase();
+        const isAdmin = role === 'SYSTEM_ADMIN' || role === 'SUPER_ADMIN';
+        // Admins see ALL campaigns; others see only their own
+        if (!isAdmin) {
+          if (user.ngo_id) params.ngoId = user.ngo_id;
+          else params.creatorUserId = user.id;
+        }
         const res = await listCampaigns({ ...params, pageSize: 50 });
         const items = res.items || res;
         setCampaigns(items);
@@ -62,7 +68,7 @@ export default function ProjectsDashboard() {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Projects</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{['SYSTEM_ADMIN','SUPER_ADMIN'].includes((user.role||'').toUpperCase()) ? 'All Projects' : 'My Projects'}</h1>
           <p className="text-sm text-gray-500 mt-0.5">{campaigns.length} campaign{campaigns.length !== 1 ? 's' : ''}</p>
         </div>
         <Link to="/portal/create"

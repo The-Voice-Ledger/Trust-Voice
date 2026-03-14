@@ -42,6 +42,7 @@ const NGO_NAV = [
 
 const ADMIN_NAV = [
   { to: '/portal',              icon: HiOutlineChartBarSquare, label: 'Dashboard',   end: true },
+  { to: '/portal/projects',     icon: HiOutlineDocumentText, label: 'All Projects'         },
   { to: '/portal/admin/ngos',   icon: HiOutlineBuildingOffice2, label: 'NGO Approvals'     },
   { to: '/portal/admin/users',  icon: HiOutlineUserGroup,    label: 'User Approvals'       },
   { to: '/portal/admin/payouts', icon: HiOutlineBanknotes,   label: 'Payouts'              },
