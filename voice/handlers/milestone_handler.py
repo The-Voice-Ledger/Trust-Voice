@@ -46,16 +46,12 @@ def _resolve_user(user_id: str, db: Session) -> Optional[User]:
 
 
 def _owns_campaign(user: User, campaign: Campaign, db: Session) -> bool:
-    """Check if user is the campaign owner (direct or via NGO)."""
+    """Check if user is the campaign owner (direct or via NGO membership)."""
     if campaign.creator_user_id and campaign.creator_user_id == user.id:
         return True
-    if campaign.ngo_id:
-        from database.models import NGOOrganization
-        ngo = db.query(NGOOrganization).filter(
-            NGOOrganization.id == campaign.ngo_id,
-            NGOOrganization.admin_user_id == user.id,
-        ).first()
-        return ngo is not None
+    # User belongs to the same NGO that owns the campaign
+    if campaign.ngo_id and user.ngo_id == campaign.ngo_id:
+        return True
     return False
 
 

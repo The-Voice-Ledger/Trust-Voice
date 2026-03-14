@@ -10,9 +10,10 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from database.models import Campaign, Donor, Donation, User
-from services.mpesa import mpesa_stk_push
-from services.stripe_service import create_payment_intent
-from voice.session_manager import SessionManager, ConversationState, DonationStep
+# NOTE: stripe, mpesa, redis (session_manager) are lazily imported
+# inside functions so this module can load in venv-livekit which
+# lacks those packages.  See _initiate_mpesa_payment,
+# _initiate_stripe_payment, and the SearchConversation class.
 
 logger = logging.getLogger(__name__)
 
@@ -206,7 +207,8 @@ async def _initiate_mpesa_payment(
         
         logger.info(f"Initiating M-Pesa STK Push: {phone}, {amount_kes} KES for donation {donation.id}")
         
-        # Call M-Pesa service
+        # Call M-Pesa service (lazy import — not in venv-livekit)
+        from services.mpesa import mpesa_stk_push
         result = mpesa_stk_push(
             phone_number=phone,
             amount=amount_kes,
@@ -272,7 +274,8 @@ async def _initiate_stripe_payment(
         
         logger.info(f"Creating Stripe payment intent: ${amount_usd} for donation {donation.id}")
         
-        # Create Stripe payment intent
+        # Create Stripe payment intent (lazy import — not in venv-livekit)
+        from services.stripe_service import create_payment_intent
         result = create_payment_intent(
             amount=amount_cents,
             currency="usd",
@@ -452,6 +455,7 @@ async def start_conversational_donation(
     """
     from voice.workflows.donation_flow import DonationConversation
     from voice.workflows.search_flow import SearchConversation
+    from voice.session_manager import SessionManager, ConversationState, DonationStep
     
     try:
         # Check if user mentioned a campaign reference in the transcript
@@ -465,7 +469,6 @@ async def start_conversational_donation(
             # Check if it mentions "campaign" with a reference
             if "campaign" in transcript_lower or "number" in transcript_lower:
                 # Get campaign IDs from search session
-                from voice.session_manager import SessionManager
                 search_session = SessionManager.get_session(user_id)
                 
                 if search_session and search_session["data"].get("campaign_ids"):

@@ -13,12 +13,14 @@ import {
   useSession,
   useAgent,
   useVoiceAssistant,
+  useTextStream,
   SessionProvider,
   BarVisualizer,
   RoomAudioRenderer,
   TrackToggle,
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
+import ActionCards from './ActionCards';
 // NOTE: We do NOT import @livekit/components-styles globally — its CSS
 // resets conflict with Tailwind 4. Custom styles are in the <style> block below.
 
@@ -81,9 +83,12 @@ export default function LiveVoicePanel({ userId, userName, userRole, onClose }) 
 function VoicePanelInner({ session, onClose, userName }) {
   const agent = useAgent(session);
   const { state: agentState, audioTrack, agentTranscriptions } = useVoiceAssistant();
+  const { textStreams: actionStreams } = useTextStream('vbv.action');
   const [isStarted, setIsStarted] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
+  const [showActions, setShowActions] = useState(true);
   const transcriptRef = useRef(null);
+  const actionsRef = useRef(null);
 
   // Color palette for current state
   const colors = STATE_COLORS[agentState] || STATE_COLORS.disconnected;
@@ -98,6 +103,16 @@ function VoicePanelInner({ session, onClose, userName }) {
       transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
     }
   }, [transcriptions]);
+
+  // Auto-scroll action cards and auto-show when new cards arrive
+  useEffect(() => {
+    if (actionsRef.current) {
+      actionsRef.current.scrollTop = actionsRef.current.scrollHeight;
+    }
+    if (actionStreams.length > 0) {
+      setShowActions(true);
+    }
+  }, [actionStreams]);
 
   // ── Connect / Disconnect ──────────────────────────────────
   const [startError, setStartError] = useState(null);
@@ -360,6 +375,27 @@ function VoicePanelInner({ session, onClose, userName }) {
                     {seg.text}
                   </p>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Action Cards (from voice agent data channel) ── */}
+        {isStarted && actionStreams.length > 0 && (
+          <div className="w-full">
+            <button
+              onClick={() => setShowActions((v) => !v)}
+              className="w-full flex items-center justify-center gap-1.5 text-[11px] text-white/30 hover:text-white/50 transition-colors mb-2"
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1">
+                <rect x="1" y="2" width="10" height="8" rx="1.5" />
+                <path d="M4 5h4M4 7h3" />
+              </svg>
+              {showActions ? 'Hide actions' : `Show actions (${actionStreams.length})`}
+            </button>
+            {showActions && (
+              <div ref={actionsRef} className="max-h-56 overflow-y-auto scrollbar-thin">
+                <ActionCards textStreams={actionStreams} />
               </div>
             )}
           </div>
