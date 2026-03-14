@@ -22,7 +22,12 @@ Usage:
 
 import json
 import logging
+import os
 from typing import Annotated
+
+# Fix multiprocessing issues on Railway
+os.environ["PYTHONMULTIPROCESSING"] = "0"
+os.environ["LIVEKIT_WORKERS"] = "1"
 
 from livekit import agents
 from livekit.agents import (
