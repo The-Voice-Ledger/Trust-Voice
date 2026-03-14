@@ -985,7 +985,7 @@ def _load_ambient_context(user_id: str, role: str) -> dict:
     role_upper = (role or "").upper()
 
     try:
-        from database.models import User, Donor, Donation, Campaign, ProjectMilestone, Payout
+        from database.models import User, Donor, Donation, Campaign, ProjectMilestone, Payout, MilestoneStatus
 
         # Resolve user
         user = None
@@ -1038,10 +1038,10 @@ def _load_ambient_context(user_id: str, role: str) -> dict:
         if role_upper in ("SYSTEM_ADMIN", "SUPER_ADMIN"):
             pending_payouts = db.query(Payout).filter(Payout.status == "pending").count()
             pending_milestones = db.query(ProjectMilestone).filter(
-                ProjectMilestone.status == "EVIDENCE_SUBMITTED"
+                ProjectMilestone.status == MilestoneStatus.EVIDENCE_SUBMITTED.value
             ).count()
             funded_milestones = db.query(ProjectMilestone).filter(
-                ProjectMilestone.status == "VERIFIED"
+                ProjectMilestone.status == MilestoneStatus.VERIFIED.value
             ).count()
 
             if pending_payouts or pending_milestones or funded_milestones:
@@ -1079,7 +1079,7 @@ def _load_ambient_context(user_id: str, role: str) -> dict:
         # ── FIELD_AGENT: pending verifications
         if role_upper == "FIELD_AGENT":
             pending_verify = db.query(ProjectMilestone).filter(
-                ProjectMilestone.status == "EVIDENCE_SUBMITTED"
+                ProjectMilestone.status == MilestoneStatus.EVIDENCE_SUBMITTED.value
             ).count()
             if pending_verify:
                 context_lines.append(f"{pending_verify} milestone(s) have evidence submitted and need verification.")
