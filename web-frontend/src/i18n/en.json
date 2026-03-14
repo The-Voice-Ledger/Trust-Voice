@@ -261,6 +261,15 @@
     "error_mic": "Microphone access denied.",
     "error_silence": "No speech detected. Try again."
   },
+  "assistant": {
+    "title": "VBV Assistant",
+    "subtitle_short": "Voice & text AI assistant",
+    "welcome": "How can I help?",
+    "welcome_voice_cta": "Tap the orb to start a voice conversation",
+    "welcome_or_type": "or type below",
+    "placeholder": "Type a message or tap the mic…",
+    "disclaimer": "AI assistant. Verify important information independently."
+  },
   "common": {
     "loading": "Loading…",
     "error": "Something went wrong.",

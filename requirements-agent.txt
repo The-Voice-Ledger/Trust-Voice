@@ -1,0 +1,32 @@
+# LiveKit Voice Agent dependencies (Python 3.11+)
+# Separate from main requirements.txt because the agent uses
+# livekit-agents v1.4.5 which has different dependency chains.
+
+# ── Core LiveKit agent framework ─────────────────
+livekit==1.1.2
+livekit-agents==1.4.5
+livekit-api==1.1.0
+livekit-blingfire==1.1.0
+livekit-protocol==1.1.2
+
+# ── LiveKit plugins (STT/LLM/TTS/VAD/NC) ────────
+livekit-plugins-deepgram==1.4.5
+livekit-plugins-openai==1.4.5
+livekit-plugins-silero==1.4.5
+livekit-plugins-noise-cancellation==0.2.5
+
+# ── LLM ──────────────────────────────────────────
+openai==2.28.0
+
+# ── Database access (agent tools query the DB) ───
+SQLAlchemy==2.0.48
+psycopg2-binary==2.9.11
+
+# ── Audio (required by voice/__init__.py) ────────
+soundfile==0.13.1
+pydub==0.25.1
+
+# ── Utilities ────────────────────────────────────
+python-dotenv==1.2.2
+pydantic==2.12.5
+numpy==2.4.3

@@ -23,6 +23,9 @@ export default function MobileBottomNav() {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
+  // Hide bottom nav on /assistant — its own input bar occupies this space
+  if (location.pathname === '/assistant') return null;
+
   // Replace dashboard with login if not authenticated
   const items = NAV_ITEMS.map((item) => {
     if (item.authOnly && !user) {

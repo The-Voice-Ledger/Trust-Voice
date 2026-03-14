@@ -1,0 +1,29 @@
+# LiveKit Voice Agent Service
+# Runs the real-time voice AI agent that connects to LiveKit Cloud.
+# Uses Python 3.12, separate from the main web service.
+
+FROM python:3.12-slim
+
+# System deps for audio processing + psycopg2
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    libsndfile1 \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install Python deps
+COPY requirements-agent.txt .
+RUN pip install --no-cache-dir -r requirements-agent.txt
+
+# Copy application code
+COPY voice/ voice/
+COPY database/ database/
+COPY utils/ utils/
+COPY services/ services/
+
+# The agent uses `python -m voice.livekit_agent dev` locally,
+# but in production we use `start` instead of `dev` (no hot-reload).
+CMD ["python", "-m", "voice.livekit_agent", "start"]

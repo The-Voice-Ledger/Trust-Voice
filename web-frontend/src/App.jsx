@@ -127,12 +127,27 @@ function StandardLayout({ children }) {
   )
 }
 
+/* Assistant layout — no footer, full viewport height for chat */
+function AssistantLayout() {
+  return (
+    <div className="h-[100dvh] flex flex-col bg-gradient-to-b from-stone-50 via-emerald-50/30 to-amber-50/20">
+      <Navbar />
+      <main className="flex-1 min-h-0">
+        <Assistant />
+      </main>
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <GlobalErrorBoundary>
     <Routes>
       {/* Project pages — their own layout */}
       <Route path="/project/:slug" element={<ProjectLanding />} />
+
+      {/* Assistant — own layout, no footer */}
+      <Route path="/assistant" element={<AssistantLayout />} />
 
       {/* Portal — role-based sidebar layout */}
       <Route path="/portal" element={<PortalLayout />}>
@@ -170,7 +185,6 @@ export default function App() {
               <Route path="/fund/:campaignId" element={<DonateCheckout />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/register-ngo" element={<RegisterNgo />} />
-              <Route path="/assistant" element={<Assistant />} />
               <Route path="/projects" element={<ProjectsIndex />} />
               <Route path="/login" element={<Login />} />
               {/* Redirects: old standalone pages → portal equivalents */}
