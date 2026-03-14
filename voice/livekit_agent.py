@@ -25,9 +25,14 @@ import logging
 import os
 from typing import Annotated
 
-# Fix multiprocessing issues on Railway
+# Fix multiprocessing and threading issues on Railway
 os.environ["PYTHONMULTIPROCESSING"] = "0"
 os.environ["LIVEKIT_WORKERS"] = "1"
+
+# Disable OpenTelemetry to prevent thread creation issues
+os.environ["OTEL_SDK_DISABLED"] = "true"
+os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = ""
+os.environ["LIVEKIT_OTEL_ENABLED"] = "false"
 
 from livekit import agents
 from livekit.agents import (
