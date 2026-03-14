@@ -893,6 +893,150 @@ class PlatformFee(Base):
         )
 
 
+# ── Video Transparency Models ────────────────────────────────────
+
+
+class VideoCategory(enum.Enum):
+    """Three-act transparency structure + field agent verification."""
+    WHY = "why"                  # Act 1: Why we need this (campaign launch)
+    PROGRESS = "progress"        # Act 2: What we are doing (during execution)
+    COMPLETION = "completion"    # Act 3: What we did (milestone closeout)
+    VERIFICATION = "verification"  # Field agent independent verification
+
+
+class VideoStatus(enum.Enum):
+    """Processing pipeline status."""
+    PROCESSING = "processing"
+    READY = "ready"
+    FLAGGED = "flagged"
+    REJECTED = "rejected"
+
+
+class TransparencyVideo(Base):
+    """
+    Universal video evidence model for the three-act transparency framework.
+
+    Act 1 — "Why We Need This" (campaign launch):
+        Creator uploads a pitch video explaining the need.
+        parent_type='campaign', category='why'
+
+    Act 2 — "What We Are Doing" (progress stream):
+        Creator/field agents post progress updates during execution.
+        parent_type='milestone' or 'campaign', category='progress'
+
+    Act 3 — "What We Did" (closeout):
+        Final evidence video when milestone/campaign completes.
+        parent_type='milestone' or 'campaign', category='completion'
+
+    Field Agent Verification Track:
+        Independent video evidence from verified field agents.
+        parent_type='milestone' or 'campaign', category='verification'
+    """
+    __tablename__ = "transparency_videos"
+
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36), default=lambda: str(uuid.uuid4()), unique=True, nullable=False, index=True)
+
+    # Three-act category
+    category = Column(
+        String(20), nullable=False, index=True
+    )  # why, progress, completion, verification
+
+    # Polymorphic parent — links to campaign or milestone
+    parent_type = Column(String(20), nullable=False, index=True)  # 'campaign' or 'milestone'
+    parent_id = Column(Integer, nullable=False, index=True)
+
+    # Metadata
+    title = Column(String(255), nullable=True)
+    description = Column(Text, nullable=True)
+    uploaded_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # Storage
+    storage_url = Column(String(500), nullable=False)      # Primary URL (local or R2)
+    thumbnail_url = Column(String(500), nullable=True)
+    content_hash_sha256 = Column(String(64), nullable=True)  # Integrity hash
+    ipfs_cid = Column(String(100), nullable=True)            # IPFS CID if pinned
+    blockchain_tx_hash = Column(String(66), nullable=True)   # On-chain anchor
+
+    # Technical
+    duration_seconds = Column(Integer, nullable=True)
+    resolution = Column(String(20), nullable=True)           # e.g. "1920x1080"
+    file_size_bytes = Column(Integer, nullable=True)
+    mime_type = Column(String(50), default="video/mp4")
+
+    # Status & moderation
+    status = Column(
+        String(20), default=VideoStatus.READY.value, nullable=False
+    )
+    flag_reason = Column(Text, nullable=True)
+    flagged_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+
+    # Location evidence (GPS from device)
+    gps_latitude = Column(Float, nullable=True)
+    gps_longitude = Column(Float, nullable=True)
+
+    # Engagement
+    view_count = Column(Integer, default=0)
+
+    # Extra metadata (device info, encoding, etc.)
+    metadata_json = Column(JSON, nullable=True)
+
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    uploader = relationship("User", foreign_keys=[uploaded_by], backref="uploaded_videos")
+    flagger = relationship("User", foreign_keys=[flagged_by])
+
+    __table_args__ = (
+        Index("ix_video_parent", "parent_type", "parent_id"),
+        Index("ix_video_category_parent", "category", "parent_type", "parent_id"),
+    )
+
+    def __repr__(self):
+        return (
+            f"<TransparencyVideo(id={self.id}, category={self.category}, "
+            f"parent={self.parent_type}:{self.parent_id}, status={self.status})>"
+        )
+
+    @property
+    def file_size_mb(self):
+        if self.file_size_bytes:
+            return self.file_size_bytes / (1024 * 1024)
+        return None
+
+    def to_dict(self):
+        """Serialize for API responses."""
+        return {
+            "id": self.id,
+            "uuid": self.uuid,
+            "category": self.category,
+            "parent_type": self.parent_type,
+            "parent_id": self.parent_id,
+            "title": self.title,
+            "description": self.description,
+            "uploaded_by": self.uploaded_by,
+            "uploader_name": self.uploader.full_name if self.uploader else None,
+            "storage_url": self.storage_url,
+            "thumbnail_url": self.thumbnail_url,
+            "content_hash_sha256": self.content_hash_sha256,
+            "ipfs_cid": self.ipfs_cid,
+            "blockchain_tx_hash": self.blockchain_tx_hash,
+            "duration_seconds": self.duration_seconds,
+            "resolution": self.resolution,
+            "file_size_bytes": self.file_size_bytes,
+            "file_size_mb": self.file_size_mb,
+            "mime_type": self.mime_type,
+            "status": self.status,
+            "gps_latitude": self.gps_latitude,
+            "gps_longitude": self.gps_longitude,
+            "view_count": self.view_count,
+            "metadata_json": self.metadata_json,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
 class ConversationEvent(Base):
     """Track conversation events for analytics"""
     __tablename__ = "conversation_events"

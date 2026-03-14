@@ -22,7 +22,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Import routers
-from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin, auth, registrations, ngo_registrations, miniapp_voice, analytics, field_agent, milestones, project_updates
+from voice.routers import campaigns, donors, ngos, donations, webhooks, payouts, admin, auth, registrations, ngo_registrations, miniapp_voice, analytics, field_agent, milestones, project_updates, videos
 from voice.routers.websocket import router as websocket_router
 from voice.routers.agent_router import router as agent_router
 from voice.routers.livekit_router import router as livekit_router
@@ -74,6 +74,7 @@ app.include_router(agent_router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 app.include_router(milestones.router, prefix="/api")
 app.include_router(project_updates.router, prefix="/api")
+app.include_router(videos.router, prefix="/api")
 app.include_router(livekit_router, prefix="/api")
 app.include_router(websocket_router)  # WebSocket routes at root (/ws/donations, /ws/campaign/{id})
 
@@ -224,6 +225,11 @@ import pathlib
 from fastapi.responses import FileResponse
 
 _base_dir = pathlib.Path(__file__).parent
+
+# Serve uploaded videos at /uploads/videos
+_uploads_video_dir = _base_dir / "uploads" / "videos"
+_uploads_video_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads/videos", StaticFiles(directory=str(_uploads_video_dir)), name="uploaded-videos")
 
 # Serve admin dashboard at /admin (must come before root mount)
 _admin_dir = _base_dir / "frontend"

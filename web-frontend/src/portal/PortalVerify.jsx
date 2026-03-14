@@ -1,20 +1,22 @@
 /**
  * PortalVerify — field agent verification wizard inside the portal.
  *
- * 4-step wizard: photos → location → details → review → submit.
+ * 5-step wizard: photos → video → location → details → review → submit.
  * Adapted from FieldAgent.jsx for the portal sidebar layout.
+ * Now includes video evidence upload (Act: verification).
  */
 import { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { uploadPhoto, submitVerification, getPendingCampaigns } from '../api/fieldAgent';
+import { uploadVideo } from '../api/videos';
 import useAuthStore from '../stores/authStore';
 import {
   HiOutlineCheckCircle, HiOutlineXMark, HiOutlineMapPin,
-  HiOutlineCamera, HiOutlineArrowLeft,
+  HiOutlineCamera, HiOutlineArrowLeft, HiOutlineFilm,
 } from '../components/icons';
 
-const STEPS = ['photos', 'location', 'details', 'review'];
+const STEPS = ['photos', 'video', 'location', 'details', 'review'];
 
 export default function PortalVerify() {
   const { t } = useTranslation();
@@ -28,6 +30,9 @@ export default function PortalVerify() {
 
   // Form data
   const [photos, setPhotos] = useState([]);
+  const [videoFile, setVideoFile] = useState(null);
+  const [videoPreview, setVideoPreview] = useState(null);
+  const [videoUploaded, setVideoUploaded] = useState(false);
   const [gps, setGps] = useState({ lat: '', lng: '', accuracy: null });
   const [campaigns, setCampaigns] = useState([]);
   const [form, setForm] = useState({
@@ -38,6 +43,7 @@ export default function PortalVerify() {
   });
 
   const fileRef = useRef(null);
+  const videoRef = useRef(null);
 
   useEffect(() => {
     getPendingCampaigns(userId)
@@ -76,8 +82,9 @@ export default function PortalVerify() {
 
   const canNext = () => {
     if (step === 0) return photos.length >= 1;
-    if (step === 1) return gps.lat && gps.lng;
-    if (step === 2) return form.campaign_id && form.observations.length >= 5;
+    if (step === 1) return true; // video is optional
+    if (step === 2) return gps.lat && gps.lng;
+    if (step === 3) return form.campaign_id && form.observations.length >= 5;
     return true;
   };
 
@@ -107,6 +114,24 @@ export default function PortalVerify() {
         testimonials: form.testimonials || undefined,
       });
 
+      // Upload verification video if provided (best-effort, non-blocking)
+      if (videoFile && !videoUploaded) {
+        try {
+          await uploadVideo({
+            file: videoFile,
+            category: 'verification',
+            parentType: 'campaign',
+            parentId: parseInt(form.campaign_id),
+            title: `Field verification: ${form.observations.slice(0, 80)}`,
+            description: form.observations,
+            gpsLatitude: parseFloat(gps.lat) || undefined,
+            gpsLongitude: parseFloat(gps.lng) || undefined,
+          });
+        } catch (videoErr) {
+          console.warn('Video upload failed (verification still submitted):', videoErr);
+        }
+      }
+
       setSuccess(true);
     } catch (err) {
       setError(err.message);
@@ -124,7 +149,7 @@ export default function PortalVerify() {
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Verification Submitted!</h1>
         <p className="text-gray-500 text-sm mb-6">Your field report has been recorded. It will be reviewed and linked to the campaign.</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <button onClick={() => { setSuccess(false); setStep(0); setPhotos([]); setForm({ campaign_id: '', observations: '', beneficiary_count: '', testimonials: '' }); setGps({ lat: '', lng: '', accuracy: null }); }}
+          <button onClick={() => { setSuccess(false); setStep(0); setPhotos([]); setVideoFile(null); setVideoPreview(null); setVideoUploaded(false); setForm({ campaign_id: '', observations: '', beneficiary_count: '', testimonials: '' }); setGps({ lat: '', lng: '', accuracy: null }); }}
             className="px-5 py-2.5 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition text-sm">
             New Verification
           </button>
@@ -194,8 +219,54 @@ export default function PortalVerify() {
           </div>
         )}
 
-        {/* Step 2: GPS */}
+        {/* Step 2: Video (optional) */}
         {step === 1 && (
+          <div>
+            <p className="text-sm text-gray-500 mb-4">
+              Record or upload a short video showing the project site. This provides powerful visual evidence. <span className="text-gray-400">(Optional — you can skip this step)</span>
+            </p>
+            {!videoFile ? (
+              <button
+                onClick={() => videoRef.current?.click()}
+                className="w-full py-10 rounded-xl border-2 border-dashed border-purple-300 bg-purple-50 text-purple-600 font-semibold hover:bg-purple-100 transition flex flex-col items-center justify-center gap-2"
+              >
+                <HiOutlineFilm className="w-8 h-8" />
+                <span>Record or Select Video</span>
+                <span className="text-xs font-normal text-purple-400">MP4, WebM, MOV — max 100MB</span>
+              </button>
+            ) : (
+              <div className="relative rounded-xl overflow-hidden bg-black mb-3">
+                <video src={videoPreview} controls playsInline preload="metadata" className="w-full aspect-video" />
+                <button
+                  onClick={() => { if (videoPreview) URL.revokeObjectURL(videoPreview); setVideoFile(null); setVideoPreview(null); }}
+                  className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                >
+                  <HiOutlineXMark className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+            {videoFile && (
+              <p className="text-xs text-gray-400">{videoFile.name} — {(videoFile.size / 1024 / 1024).toFixed(1)} MB</p>
+            )}
+            <input
+              ref={videoRef}
+              type="file"
+              accept="video/*"
+              capture="environment"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) {
+                  setVideoFile(f);
+                  setVideoPreview(URL.createObjectURL(f));
+                }
+              }}
+              className="hidden"
+            />
+          </div>
+        )}
+
+        {/* Step 3: GPS */}
+        {step === 2 && (
           <div className="space-y-4">
             <p className="text-sm text-gray-500">Capture or enter your current GPS location for verification.</p>
             <button onClick={getLocation}
@@ -229,8 +300,8 @@ export default function PortalVerify() {
           </div>
         )}
 
-        {/* Step 3: Details */}
-        {step === 2 && (
+        {/* Step 4: Details */}
+        {step === 3 && (
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Campaign *</label>
@@ -262,8 +333,8 @@ export default function PortalVerify() {
           </div>
         )}
 
-        {/* Step 4: Review */}
-        {step === 3 && (
+        {/* Step 5: Review */}
+        {step === 4 && (
           <div className="space-y-4">
             <h3 className="font-semibold text-gray-900">Review your verification</h3>
             <div className="flex gap-2 overflow-x-auto pb-2">
@@ -272,6 +343,7 @@ export default function PortalVerify() {
               ))}
             </div>
             <ReviewRow label="GPS" value={`${gps.lat}, ${gps.lng}`} />
+            <ReviewRow label="Video" value={videoFile ? `${videoFile.name} (${(videoFile.size / 1024 / 1024).toFixed(1)} MB)` : 'None'} />
             <ReviewRow label="Campaign" value={campaigns.find((c) => String(c.id) === form.campaign_id)?.title || form.campaign_id} />
             <ReviewRow label="Observations" value={form.observations} />
             <ReviewRow label="Beneficiaries" value={form.beneficiary_count || '-'} />

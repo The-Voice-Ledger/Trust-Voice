@@ -16,10 +16,12 @@ import {
   getCampaign, getCampaignMilestones, getCampaignTreasury,
   createMilestones, submitMilestoneEvidence,
 } from '../api/campaigns';
+import { getParentVideos } from '../api/videos';
+import VideoUploadWidget from '../components/VideoUploadWidget';
 import {
   HiOutlineArrowLeft, HiOutlineCheckCircle, HiOutlineClock,
   HiOutlineShieldCheck, HiOutlineLockClosed, HiOutlinePlusCircle,
-  HiOutlineDocumentText, HiOutlineXMark,
+  HiOutlineDocumentText, HiOutlineXMark, HiOutlineFilm,
 } from '../components/icons';
 
 const STATUS_MAP = {
@@ -52,6 +54,10 @@ export default function MilestoneManager() {
   const [evidenceNotes, setEvidenceNotes] = useState('');
   const [submittingEvidence, setSubmittingEvidence] = useState(false);
 
+  // Video uploads per milestone
+  const [milestoneVideos, setMilestoneVideos] = useState({}); // { milestoneId: count }
+  const [showVideoUpload, setShowVideoUpload] = useState(null); // milestone id
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -63,6 +69,16 @@ export default function MilestoneManager() {
       setCampaign(c);
       setData(ms);
       setTreasury(tr);
+      // Fetch video counts per milestone
+      if (ms?.milestones?.length) {
+        const videoCounts = {};
+        await Promise.all(
+          ms.milestones.map((m) =>
+            getParentVideos('milestone', m.id).then((r) => { videoCounts[m.id] = r.count || 0; }).catch(() => {})
+          ),
+        );
+        setMilestoneVideos(videoCounts);
+      }
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
   }, [id]);
@@ -157,6 +173,16 @@ export default function MilestoneManager() {
         </div>
       </div>
 
+      {/* Campaign-level video upload — "Why We Need This" (Act 1) */}
+      <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 mb-6 overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500 via-blue-400 to-transparent" />
+        <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-1.5 mb-3">
+          <HiOutlineFilm className="w-4 h-4 text-blue-600" /> Campaign Videos
+        </h3>
+        <p className="text-xs text-gray-500 mb-3">Upload a pitch video explaining why this campaign matters, or add progress/completion videos.</p>
+        <VideoUploadWidget parentType="campaign" parentId={parseInt(id)} onUploaded={() => load()} compact />
+      </div>
+
       {/* Milestones list or create prompt */}
       {milestones.length === 0 && !showCreate ? (
         <div className="text-center py-16">
@@ -224,10 +250,36 @@ export default function MilestoneManager() {
                             </div>
                           </div>
                         ) : (
-                          <button onClick={() => setEvidenceFor(m.id)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 transition">
-                            <HiOutlineDocumentText className="w-3.5 h-3.5" /> Submit Evidence
-                          </button>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <button onClick={() => setEvidenceFor(m.id)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold hover:bg-emerald-100 transition">
+                              <HiOutlineDocumentText className="w-3.5 h-3.5" /> Submit Evidence
+                            </button>
+                            <button onClick={() => setShowVideoUpload(showVideoUpload === m.id ? null : m.id)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition">
+                              <HiOutlineFilm className="w-3.5 h-3.5" /> Upload Video
+                              {milestoneVideos[m.id] > 0 && (
+                                <span className="ml-0.5 bg-blue-200 text-blue-700 rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
+                                  {milestoneVideos[m.id]}
+                                </span>
+                              )}
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Video upload widget */}
+                        {showVideoUpload === m.id && (
+                          <div className="mt-3">
+                            <VideoUploadWidget
+                              parentType="milestone"
+                              parentId={m.id}
+                              compact
+                              onUploaded={(v) => {
+                                setMilestoneVideos((prev) => ({ ...prev, [m.id]: (prev[m.id] || 0) + 1 }));
+                                setShowVideoUpload(null);
+                              }}
+                            />
+                          </div>
                         )}
                       </div>
                     )}

@@ -231,6 +231,15 @@ export function IconBookmarkAdded({ className }) {
 export function IconPushPin({ className }) {
   return <F className={className}><path d="M16 9V4h1a1 1 0 100-2H7a1 1 0 100 2h1v5a2 2 0 01-2 2v2h5.5v7l1 1 1-1v-7H19v-2a2 2 0 01-2-2z" /></F>;
 }
+export function IconCloudArrowUp({ className }) {
+  return <O className={className}><path d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5A4.5 4.5 0 013.5 13.77a5.25 5.25 0 0110.233-2.33A3 3 0 0116.5 15m-1.5 4.5H6.75z" /><path d="M16.5 19.5a4.5 4.5 0 001.152-8.853A6.004 6.004 0 0012 6a6.004 6.004 0 00-5.652 4.647A4.5 4.5 0 006.75 19.5" /></O>;
+}
+export function IconPlay({ className }) {
+  return <O className={className}><path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" /></O>;
+}
+export function IconFlag({ className }) {
+  return <O className={className}><path d="M3 3v18m0-18l9 3 9-3v12l-9 3-9-3" /></O>;
+}
 
 /* ═══════════════════════════════════════════
    ALIASES (match old import names exactly)
@@ -296,4 +305,7 @@ export {
   IconAttachMoney as MdOutlineAttachMoney,
   IconBookmarkAdded as MdOutlineBookmarkAdded,
   IconPushPin as MdOutlinePushPin,
+  IconCloudArrowUp as HiOutlineCloudArrowUp,
+  IconPlay as HiOutlinePlay,
+  IconFlag as HiOutlineFlag,
 };

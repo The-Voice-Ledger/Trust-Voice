@@ -5,6 +5,7 @@ import { getCampaign, getCampaignVideo, getProjectUpdates, getCampaignTreasury }
 import ProgressBar from '../components/ProgressBar';
 import MilestoneTracker from '../components/MilestoneTracker';
 import VideoPlayer from '../components/VideoPlayer';
+import VideoTimeline from '../components/VideoTimeline';
 import DonationForm from '../components/DonationForm';
 import useAuthStore from '../stores/authStore';
 import { getProjectByCampaignId } from '../projects/projectRegistry';
@@ -121,15 +122,20 @@ export default function CampaignDetail() {
         </Link>
       )}
 
-      {/* Video */}
-      {video ? (
-        <VideoPlayer videoData={video} className="mb-6" />
-      ) : (
-        <div className="bg-gray-50 border border-dashed border-gray-200 rounded-xl p-8 text-center text-gray-400 text-sm mb-6 flex flex-col items-center gap-2">
-          <HiOutlineFilm className="w-8 h-8 text-gray-300" />
-          {t('campaign.no_video')}
-        </div>
-      )}
+      {/* Video Transparency Timeline (three-act framework) */}
+      <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 mb-6 overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-blue-500 via-amber-500 to-emerald-500" />
+        <h3 className="text-sm font-semibold text-gray-800 flex items-center gap-1.5 mb-3">
+          <HiOutlineFilm className="w-4 h-4 text-emerald-600" /> Transparency Videos
+        </h3>
+        <VideoTimeline campaignId={campaign.id} compact />
+        {/* Fallback: show legacy campaign video if no timeline videos exist */}
+        {video && (
+          <div className="mt-4">
+            <VideoPlayer videoData={video} />
+          </div>
+        )}
+      </div>
 
       {/* Progress */}
         <div className="relative rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-100 p-4 sm:p-5 mb-6 overflow-hidden">
