@@ -359,7 +359,7 @@ def approve_payout(
                 status_code=403,
                 detail="You can only approve payouts for your NGO"
             )
-    elif current_user.role not in [UserRole.SUPER_ADMIN, UserRole.NGO_ADMIN]:
+    elif current_user.role not in [UserRole.SUPER_ADMIN, UserRole.SYSTEM_ADMIN, UserRole.NGO_ADMIN]:
         raise HTTPException(
             status_code=403,
             detail="Admin access required to approve payouts"
@@ -410,7 +410,7 @@ def reject_payout(
                 status_code=403,
                 detail="You can only reject payouts for your NGO"
             )
-    elif current_user.role not in [UserRole.SUPER_ADMIN, UserRole.NGO_ADMIN]:
+    elif current_user.role not in [UserRole.SUPER_ADMIN, UserRole.SYSTEM_ADMIN, UserRole.NGO_ADMIN]:
         raise HTTPException(
             status_code=403,
             detail="Admin access required to reject payouts"

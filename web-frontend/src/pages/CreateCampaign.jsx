@@ -30,7 +30,9 @@ export default function CreateCampaign() {
     );
   }
 
-  if (!user.ngo_id) {
+  const isAdmin = ['SYSTEM_ADMIN', 'SUPER_ADMIN'].includes((user.role || '').toUpperCase());
+
+  if (!user.ngo_id && !isAdmin) {
     return (
       <PageBg pattern="isometric" colorA="#0D9488" colorB="#10B981">
         <div className="max-w-lg mx-auto px-4 py-20 text-center">

@@ -33,10 +33,14 @@ export default function MyProjects() {
     (async () => {
       setLoading(true);
       try {
-        // Fetch campaigns owned by current user (by creator_user_id) or by NGO
+        // Admins see ALL campaigns; others see only their own
         const params = {};
-        if (user.ngo_id) params.ngoId = user.ngo_id;
-        else params.creatorUserId = user.id;
+        const role = (user.role || '').toUpperCase();
+        const isAdmin = role === 'SYSTEM_ADMIN' || role === 'SUPER_ADMIN';
+        if (!isAdmin) {
+          if (user.ngo_id) params.ngoId = user.ngo_id;
+          else params.creatorUserId = user.id;
+        }
         const res = await listCampaigns({ ...params, pageSize: 50 });
         const items = res.items || res;
         setCampaigns(items);
