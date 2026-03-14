@@ -26,7 +26,6 @@ os.environ["PYTHONMULTIPROCESSING"] = "0"
 os.environ["LIVEKIT_WORKERS"] = "1"
 
 # Disable OpenTelemetry to prevent thread creation issues
-# MUST be set BEFORE OpenTelemetry imports
 os.environ["OTEL_SDK_DISABLED"] = "true"
 os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = ""
 os.environ["LIVEKIT_OTEL_ENABLED"] = "false"
@@ -35,6 +34,20 @@ os.environ["LIVEKIT_OTEL_ENABLED"] = "false"
 os.environ["PYTHONUNBUFFERED"] = "1"
 os.environ["NO_PROXY"] = "*"
 os.environ["PYTHONPATH"] = "/opt/venv/lib/python3.12/site-packages"
+
+# Rust/Tokio thread limits for Railway
+os.environ["TOKIO_WORKER_THREADS"] = "1"
+os.environ["RAYON_NUM_THREADS"] = "1"
+os.environ["NUMBA_NUM_THREADS"] = "1"
+
+# Detect if running on Railway
+IS_RAILWAY = os.environ.get("RAILWAY_ENVIRONMENT") == "production" or os.environ.get("RAILWAY_SERVICE_NAME") is not None
+
+# Import noise_cancellation only if not on Railway
+if not IS_RAILWAY:
+    from livekit.plugins import noise_cancellation
+else:
+    noise_cancellation = None
 
 import json
 import logging
@@ -51,7 +64,7 @@ from livekit.agents import (
     function_tool,
     room_io,
 )
-from livekit.plugins import deepgram, noise_cancellation, openai, silero
+from livekit.plugins import deepgram, openai, silero
 
 from dotenv import load_dotenv
 
@@ -362,7 +375,7 @@ async def vbv_voice_session(ctx: JobContext):
         agent=VBVAssistant(user_name=user_name, user_role=user_role),
         room=ctx.room,
         room_input_options=room_io.RoomInputOptions(
-            noise_cancellation=noise_cancellation.BVC(),
+            noise_cancellation=noise_cancellation.BVC() if noise_cancellation else None,
         ),
     )
 
