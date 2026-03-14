@@ -9,7 +9,7 @@ cd "$(dirname "$0")/.."
 
 # Read PIDs from file if it exists
 if [ -f .service_pids ]; then
-    read API_PID NGROK_PID TELEGRAM_BOT_PID CELERY_PID < .service_pids
+    read API_PID NGROK_PID TELEGRAM_BOT_PID CELERY_PID LIVEKIT_PID VITE_PID < .service_pids
     echo "📋 Found service PIDs from startup"
 else
     echo "⚠️  No .service_pids file found, will search for processes"
@@ -17,6 +17,8 @@ else
     NGROK_PID=""
     TELEGRAM_BOT_PID=""
     CELERY_PID=""
+    LIVEKIT_PID=""
+    VITE_PID=""
 fi
 
 # Stop FastAPI server
@@ -27,11 +29,11 @@ if [ -n "$API_PID" ] && ps -p $API_PID > /dev/null 2>&1; then
     echo "   ✅ FastAPI server stopped (PID: $API_PID)"
 else
     # Fallback: kill by port
-    if lsof -ti:8001 > /dev/null 2>&1; then
-        lsof -ti:8001 | xargs kill -9
-        echo "   ✅ FastAPI server stopped (port 8001)"
+    if lsof -ti:8000 > /dev/null 2>&1; then
+        lsof -ti:8000 | xargs kill -9
+        echo "   ✅ FastAPI server stopped (port 8000)"
     else
-        echo "   ℹ️  No FastAPI server running on port 8001"
+        echo "   ℹ️  No FastAPI server running on port 8000"
     fi
 fi
 
@@ -124,6 +126,42 @@ fi
 
 # Clean up PID file
 rm -f .service_pids
+
+# Stop LiveKit voice agent
+echo ""
+echo "8️⃣  Stopping LiveKit voice agent..."
+LK_STOPPED=false
+if [ -n "$LIVEKIT_PID" ] && ps -p $LIVEKIT_PID > /dev/null 2>&1; then
+    kill $LIVEKIT_PID
+    echo "   ✅ LiveKit agent stopped (PID: $LIVEKIT_PID)"
+    LK_STOPPED=true
+fi
+if [ "$LK_STOPPED" = false ]; then
+    if pgrep -f "voice.livekit_agent" > /dev/null; then
+        pkill -f "voice.livekit_agent"
+        echo "   ✅ LiveKit agent stopped (by process name)"
+    else
+        echo "   ℹ️  No LiveKit agent running"
+    fi
+fi
+
+# Stop Vite dev server
+echo ""
+echo "9️⃣  Stopping Vite dev server..."
+VITE_STOPPED=false
+if [ -n "$VITE_PID" ] && ps -p $VITE_PID > /dev/null 2>&1; then
+    kill $VITE_PID
+    echo "   ✅ Vite dev server stopped (PID: $VITE_PID)"
+    VITE_STOPPED=true
+fi
+if [ "$VITE_STOPPED" = false ]; then
+    if lsof -ti:5173 > /dev/null 2>&1; then
+        lsof -ti:5173 | xargs kill -9
+        echo "   ✅ Vite dev server stopped (port 5173)"
+    else
+        echo "   ℹ️  No Vite dev server running"
+    fi
+fi
 
 # Clean up old log files (optional)
 echo ""

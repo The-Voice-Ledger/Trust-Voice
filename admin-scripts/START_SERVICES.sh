@@ -90,8 +90,8 @@ fi
 # Start FastAPI server
 echo ""
 echo "4️⃣  Starting FastAPI server..."
-# Kill any existing uvicorn processes on port 8001
-lsof -ti:8001 | xargs kill -9 2>/dev/null || true
+# Kill any existing uvicorn processes on port 8000
+lsof -ti:8000 | xargs kill -9 2>/dev/null || true
 sleep 1
 
 # Export all .env variables for uvicorn process
@@ -101,17 +101,17 @@ set +a
 
 nohup uvicorn main:app \
     --host 0.0.0.0 \
-    --port 8001 \
+    --port 8000 \
     --reload \
     > logs/trustvoice_api.log 2>&1 &
 API_PID=$!
 sleep 3
 
-if ps -p $API_PID > /dev/null && curl -s http://localhost:8001/docs > /dev/null 2>&1; then
+if ps -p $API_PID > /dev/null && curl -s http://localhost:8000/docs > /dev/null 2>&1; then
     echo "   ✅ FastAPI server started (PID: $API_PID)"
     echo "   📋 Logs: logs/trustvoice_api.log"
-    echo "   🌐 API docs: http://localhost:8001/docs"
-    echo "   📱 Mini apps: http://localhost:8001/index.html"
+    echo "   🌐 API docs: http://localhost:8000/docs"
+    echo "   📱 Mini apps: http://localhost:8000/index.html"
 else
     echo "   ❌ Failed to start FastAPI server"
     echo "   📋 Check logs: tail -f logs/trustvoice_api.log"
@@ -264,16 +264,55 @@ else
     echo "   ℹ️  Telegram bot disabled (set START_TELEGRAM_BOT=true in .env to enable)"
 fi
 
-# Save PIDs to file for shutdown
-if [ -n "$TELEGRAM_BOT_PID" ] && [ -n "$CELERY_PID" ]; then
-    echo "$API_PID $NGROK_PID $TELEGRAM_BOT_PID $CELERY_PID" > .service_pids
-elif [ -n "$TELEGRAM_BOT_PID" ]; then
-    echo "$API_PID $NGROK_PID $TELEGRAM_BOT_PID" > .service_pids
-elif [ -n "$CELERY_PID" ]; then
-    echo "$API_PID $NGROK_PID $CELERY_PID" > .service_pids
+# Start LiveKit voice agent worker
+LIVEKIT_PID=""
+echo ""
+echo "9️⃣  Starting LiveKit voice agent..."
+if [ -f "$PROJECT_DIR/venv-livekit/bin/activate" ]; then
+    lsof -ti:8089 | xargs kill -9 2>/dev/null || true
+    nohup "$PROJECT_DIR/venv-livekit/bin/python" -m voice.livekit_agent dev \
+        > logs/livekit_agent.log 2>&1 &
+    LIVEKIT_PID=$!
+    sleep 3
+    if ps -p $LIVEKIT_PID > /dev/null; then
+        echo "   ✅ LiveKit agent started (PID: $LIVEKIT_PID)"
+        echo "   📋 Logs: logs/livekit_agent.log"
+    else
+        echo "   ⚠️  Failed to start LiveKit agent"
+        echo "   📋 Check logs: tail -f logs/livekit_agent.log"
+        LIVEKIT_PID=""
+    fi
 else
-    echo "$API_PID $NGROK_PID" > .service_pids
+    echo "   ⚠️  venv-livekit not found, skipping LiveKit agent"
 fi
+
+# Start Vite dev server for React frontend
+VITE_PID=""
+echo ""
+echo "🔟  Starting Vite dev server (React frontend)..."
+lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+sleep 1
+if [ -d "$PROJECT_DIR/web-frontend" ] && [ -f "$PROJECT_DIR/web-frontend/package.json" ]; then
+    cd "$PROJECT_DIR/web-frontend"
+    nohup npx vite --host > "$PROJECT_DIR/logs/vite_dev.log" 2>&1 &
+    VITE_PID=$!
+    cd "$PROJECT_DIR"
+    sleep 3
+    if ps -p $VITE_PID > /dev/null; then
+        echo "   ✅ Vite dev server started (PID: $VITE_PID)"
+        echo "   📋 Logs: logs/vite_dev.log"
+        echo "   🌐 Frontend: http://localhost:5173"
+    else
+        echo "   ⚠️  Failed to start Vite dev server"
+        echo "   📋 Check logs: tail -f logs/vite_dev.log"
+        VITE_PID=""
+    fi
+else
+    echo "   ⚠️  web-frontend not found, skipping Vite"
+fi
+
+# Save PIDs to file for shutdown
+echo "$API_PID $NGROK_PID $TELEGRAM_BOT_PID $CELERY_PID $LIVEKIT_PID $VITE_PID" > .service_pids
 
 echo ""
 echo "===================================="
@@ -287,7 +326,7 @@ if redis-cli ping > /dev/null 2>&1; then
 else
     echo "   • Redis:         Not running (optional)"
 fi
-echo "   • FastAPI:       PID $API_PID (http://localhost:8001)"
+echo "   • FastAPI:       PID $API_PID (http://localhost:8000)"
 if [ "$NGROK_URL" != "ERROR" ] && [ -n "$NGROK_URL" ]; then
     echo "   • ngrok:         PID $NGROK_PID ($NGROK_URL)"
 fi
@@ -296,6 +335,12 @@ if [ -n "$TELEGRAM_BOT_PID" ]; then
 fi
 if [ -n "$CELERY_PID" ]; then
     echo "   • Celery Worker: PID $CELERY_PID"
+fi
+if [ -n "$LIVEKIT_PID" ]; then
+    echo "   • LiveKit Agent: PID $LIVEKIT_PID"
+fi
+if [ -n "$VITE_PID" ]; then
+    echo "   • Vite Frontend: PID $VITE_PID (http://localhost:5173)"
 fi
 echo ""
 echo "📋 Logs:"
@@ -307,10 +352,16 @@ fi
 if [ -n "$CELERY_PID" ]; then
     echo "   • Celery:  tail -f logs/celery_worker.log"
 fi
+if [ -n "$LIVEKIT_PID" ]; then
+    echo "   • LiveKit: tail -f logs/livekit_agent.log"
+fi
+if [ -n "$VITE_PID" ]; then
+    echo "   • Vite:    tail -f logs/vite_dev.log"
+fi
 echo ""
 echo "🔗 Quick Links:"
-echo "   • API Docs:      http://localhost:8001/docs"
-echo "   • Mini Apps Menu: http://localhost:8001/index.html"
+echo "   • API Docs:      http://localhost:8000/docs"
+echo "   • Mini Apps Menu: http://localhost:8000/index.html"
 echo "   • ngrok Dashboard: http://localhost:4040"
 if [ "$NGROK_URL" != "ERROR" ] && [ -n "$NGROK_URL" ]; then
     echo "   • Public API:    $NGROK_URL/docs"

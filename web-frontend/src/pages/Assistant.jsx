@@ -1,10 +1,9 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, lazy, Suspense, Component } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { textAgent, voiceAgent } from '../api/voice';
+import { textAgent } from '../api/voice';
 import useAuthStore from '../stores/authStore';
 import useVoiceStore from '../stores/voiceStore';
-import voiceManager from '../voice/VoiceManager';
 import Markdown from 'react-markdown';
 import ProgressBar from '../components/ProgressBar';
 import {
@@ -18,6 +17,45 @@ import {
   HiOutlineMicrophone,
 } from '../components/icons';
 import HexIcon from '../components/HexIcon';
+
+// Lazy-load LiveVoicePanel so its heavy LiveKit deps don't block the
+// initial render or inject global CSS that conflicts with Tailwind.
+const LiveVoicePanel = lazy(() => import('../components/LiveVoicePanel'));
+
+// ── Error boundary — prevents white-screen crashes ─────────────
+class VoicePanelErrorBoundary extends Component {
+  state = { hasError: false, error: null };
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(err, info) {
+    console.error('[VoicePanelErrorBoundary]', err, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-950/95 backdrop-blur-xl">
+          <div className="text-center space-y-4 max-w-sm px-6">
+            <div className="w-12 h-12 mx-auto rounded-full bg-red-500/20 flex items-center justify-center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F87171" strokeWidth="2" strokeLinecap="round">
+                <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
+              </svg>
+            </div>
+            <p className="text-white/80 text-sm">Voice session encountered an error</p>
+            <p className="text-white/30 text-xs font-mono">{this.state.error?.message}</p>
+            <button
+              onClick={() => this.setState({ hasError: false, error: null })}
+              className="px-4 py-2 rounded-lg bg-white/10 text-white/70 text-sm hover:bg-white/15 transition-colors"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // ── Chat message store (local, per-session) ────────────────────
 function useChat() {
@@ -44,12 +82,11 @@ export default function Assistant() {
   const language = useVoiceStore((s) => s.language);
   const { messages, conversationId, setConversationId, loading, setLoading, addMessage, clear } = useChat();
   const [input, setInput] = useState('');
-  const [voiceStatus, setVoiceStatus] = useState('idle'); // idle | recording | processing
   const [autoSpeak, setAutoSpeak] = useState(true);
+  const [liveVoiceOpen, setLiveVoiceOpen] = useState(false);
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
   const audioRef = useRef(null);
-  const recordStartRef = useRef(0);  // timestamp when recording started
 
   const userId = user?.id || user?.telegram_user_id || 'web_anonymous';
   const [searchParams, setSearchParams] = useSearchParams();
@@ -141,71 +178,11 @@ export default function Assistant() {
     }
   };
 
-  // ── Voice recording (toggle: tap to start, tap to stop) ────
-  const MIN_RECORD_MS = 600; // minimum recording duration in ms
-
-  const toggleVoice = useCallback(async () => {
-    // If already recording → stop and process
-    if (voiceStatus === 'recording') {
-      const elapsed = Date.now() - recordStartRef.current;
-      if (elapsed < MIN_RECORD_MS) {
-        // Too short — keep recording, don't stop yet
-        return;
-      }
-      setVoiceStatus('processing');
-
-      try {
-        const blob = await voiceManager.stopRecording();
-        if (!blob || blob.size < 1000) {
-          // Blob too small to be valid audio
-          setVoiceStatus('idle');
-          return;
-        }
-
-        setLoading(true);
-        const res = await voiceAgent(blob, userId, language, conversationId);
-        if (res.conversation_id) setConversationId(res.conversation_id);
-
-        // Show user's transcribed message
-        if (res.transcription) {
-          addMessage({ role: 'user', text: res.transcription, isVoice: true });
-        }
-
-        addMessage({
-          role: 'assistant',
-          text: res.response_text,
-          responseType: res.response_type || 'text',
-          data: res.data || {},
-          audioUrl: res.audio_url,
-          toolsUsed: res.tools_used || [],
-        });
-
-        // Play TTS
-        await playAudio(res.audio_url);
-      } catch (err) {
-        addMessage({ role: 'assistant', text: err.message || 'Voice processing failed.', responseType: 'error' });
-      } finally {
-        setVoiceStatus('idle');
-        setLoading(false);
-      }
-      return;
-    }
-
-    // Not recording → start
-    try {
-      stopAudio();
-      setVoiceStatus('recording');
-      recordStartRef.current = Date.now();
-      await voiceManager.startRecording();
-    } catch {
-      setVoiceStatus('idle');
-    }
-  }, [voiceStatus, userId, language, conversationId, addMessage, setConversationId, setLoading, playAudio, stopAudio]);
-
-  const cancelVoice = useCallback(() => {
-    voiceManager.stopRecording();
-    setVoiceStatus('idle');
-  }, []);
+  // ── Open LiveKit voice panel ──────────────────────────────────
+  const openVoice = useCallback(() => {
+    stopAudio();
+    setLiveVoiceOpen(true);
+  }, [stopAudio]);
 
   // ── Render ───────────────────────────────────────────────────
   return (
@@ -295,48 +272,20 @@ export default function Assistant() {
         {/* Subtle top gradient */}
         <div className="absolute -top-px left-0 right-0 h-px bg-gradient-to-r from-emerald-500/15 via-green-500/15 to-transparent" />
 
-        {/* Voice recording overlay */}
-        {voiceStatus === 'recording' && (
-          <div className="mb-3 mt-2 relative flex items-center gap-3 bg-red-50/80 backdrop-blur-sm border border-red-200 rounded-2xl px-4 py-3 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-transparent pointer-events-none" />
-            <div className="relative w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-            <span className="relative text-sm font-medium text-red-700 flex-1">{t('voice.listening', 'Listening... tap mic to send')}</span>
-            <button onClick={cancelVoice} className="relative text-xs text-red-500 font-medium hover:underline">{t('common.cancel', 'Cancel')}</button>
-          </div>
-        )}
-        {voiceStatus === 'processing' && (
-          <div className="mb-3 mt-2 relative flex items-center gap-3 bg-amber-50/80 backdrop-blur-sm border border-amber-200 rounded-2xl px-4 py-3 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 to-transparent pointer-events-none" />
-            <div className="relative w-4 h-4 border-2 border-amber-300 border-t-amber-600 rounded-full animate-spin" />
-            <span className="relative text-sm font-medium text-amber-700">{t('voice.processing', 'Processing...')}</span>
-          </div>
-        )}
-
         <div className="relative flex items-end gap-2 mt-2">
-          {/* Voice button with ring decoration */}
+          {/* Voice button — opens LiveKit voice panel */}
           <div className="relative flex-shrink-0">
             <svg className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] pointer-events-none" viewBox="0 0 56 56" fill="none">
-              <circle cx="28" cy="28" r="26" stroke={voiceStatus === 'recording' ? '#EF4444' : '#10B981'} strokeWidth="0.4" strokeDasharray="2 4"
-                opacity={voiceStatus === 'recording' ? '0.4' : '0.15'}>
+              <circle cx="28" cy="28" r="26" stroke="#10B981" strokeWidth="0.4" strokeDasharray="2 4" opacity="0.15">
                 <animateTransform attributeName="transform" type="rotate" values="0 28 28;360 28 28" dur="12s" repeatCount="indefinite" />
               </circle>
             </svg>
             <button
-              onClick={(e) => { e.preventDefault(); if (!loading && voiceStatus !== 'processing') toggleVoice(); }}
-              disabled={loading || voiceStatus === 'processing'}
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 ${
-                voiceStatus === 'recording'
-                  ? 'bg-red-500 text-white shadow-lg shadow-red-200/60 scale-110 ring-4 ring-red-100'
-                  : voiceStatus === 'processing'
-                    ? 'bg-amber-500 text-white cursor-wait shadow-md'
-                    : 'bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-md shadow-emerald-200/50 hover:shadow-lg hover:scale-105 active:scale-95'
-              }`}
-              aria-label={voiceStatus === 'recording' ? 'Tap to send' : 'Tap to speak'}
+              onClick={openVoice}
+              className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-200 bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-md shadow-emerald-200/50 hover:shadow-lg hover:scale-105 active:scale-95"
+              aria-label="Start voice conversation"
             >
-              {voiceStatus === 'recording'
-                ? <HiOutlineXMark className="w-5 h-5" />
-                : <HiOutlineMicrophone className="w-5 h-5" />
-              }
+              <HiOutlineMicrophone className="w-5 h-5" />
             </button>
           </div>
 
@@ -368,6 +317,27 @@ export default function Assistant() {
           {t('assistant.disclaimer', 'AI assistant. Verify important information independently')}
         </p>
       </div>
+
+      {/* ── Live Voice Panel (full-screen overlay) ──────────── */}
+      {liveVoiceOpen && (
+        <VoicePanelErrorBoundary>
+          <Suspense fallback={
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/95 backdrop-blur-xl">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                <p className="text-white/40 text-xs">Loading voice session…</p>
+              </div>
+            </div>
+          }>
+            <LiveVoicePanel
+              userId={userId}
+              userName={user?.full_name || user?.username || 'Guest'}
+              userRole={user?.role || 'DONOR'}
+              onClose={() => setLiveVoiceOpen(false)}
+            />
+          </Suspense>
+        </VoicePanelErrorBoundary>
+      )}
     </div>
   );
 }
@@ -527,14 +497,14 @@ function ChatMessage({ msg, onPlayAudio }) {
           <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl rounded-tl-md px-4 py-3 shadow-sm border border-gray-100/80 overflow-hidden">
             {/* Top accent */}
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-emerald-500/20 via-green-500/20 to-transparent" />
-            <Markdown
-              className="relative text-sm text-gray-700 leading-relaxed prose prose-sm prose-gray max-w-none
+            <div className="relative text-sm text-gray-700 leading-relaxed prose prose-sm prose-gray max-w-none
                 prose-p:my-1 prose-ol:my-1 prose-ul:my-1 prose-li:my-0.5
                 prose-strong:text-gray-900 prose-strong:font-semibold
-                prose-a:text-emerald-600 prose-a:no-underline hover:prose-a:underline"
-            >
-              {msg.text}
-            </Markdown>
+                prose-a:text-emerald-600 prose-a:no-underline hover:prose-a:underline">
+              <Markdown>
+                {msg.text}
+              </Markdown>
+            </div>
             {/* Replay audio button */}
             {msg.audioUrl && (
               <button

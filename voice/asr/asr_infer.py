@@ -164,9 +164,16 @@ def transcribe_with_whisper_api(
         # Whisper verbose_json includes segments with avg_logprob and no_speech_prob
         asr_confidence = None
         if hasattr(response, 'segments') and response.segments:
-            avg_logprobs = [s.get('avg_logprob', s.avg_logprob if hasattr(s, 'avg_logprob') else -1) 
-                          for s in response.segments 
-                          if hasattr(s, 'avg_logprob') or (isinstance(s, dict) and 'avg_logprob' in s)]
+            avg_logprobs = []
+            for s in response.segments:
+                if isinstance(s, dict):
+                    lp = s.get('avg_logprob', -1)
+                elif hasattr(s, 'avg_logprob'):
+                    lp = s.avg_logprob
+                else:
+                    continue
+                if lp is not None:
+                    avg_logprobs.append(lp)
             if avg_logprobs:
                 import math
                 # Convert avg log probability to a 0-1 confidence score

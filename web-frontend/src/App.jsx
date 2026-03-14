@@ -1,3 +1,4 @@
+import { Component } from 'react'
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import MobileBottomNav from './components/MobileBottomNav'
@@ -27,6 +28,87 @@ import PortalAdminSection from './portal/PortalAdminSection'
 import PortalVerify from './portal/PortalVerify'
 import PortalHistory from './portal/PortalHistory'
 
+/* ── Global Error Boundary ─────────────────────────────────── */
+class GlobalErrorBoundary extends Component {
+  state = { hasError: false, error: null, errorInfo: null };
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    this.setState({ errorInfo });
+    console.error('[GlobalErrorBoundary]', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: '#0a0a0a', color: '#fff', fontFamily: 'system-ui, sans-serif',
+          padding: '2rem'
+        }}>
+          <div style={{ maxWidth: '36rem', textAlign: 'center' }}>
+            <div style={{
+              width: 56, height: 56, margin: '0 auto 1.5rem', borderRadius: '50%',
+              background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F87171" strokeWidth="2" strokeLinecap="round">
+                <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
+              </svg>
+            </div>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>Something went wrong</h2>
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.875rem', marginBottom: '1rem' }}>
+              The app encountered an unexpected error.
+            </p>
+            <pre style={{
+              background: 'rgba(255,255,255,0.05)', borderRadius: '0.5rem', padding: '1rem',
+              fontSize: '0.75rem', color: '#F87171', textAlign: 'left', overflow: 'auto',
+              maxHeight: '12rem', marginBottom: '1.5rem', border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+              {this.state.error?.message}\n\n{this.state.error?.stack}
+            </pre>
+            {this.state.errorInfo?.componentStack && (
+              <details style={{ textAlign: 'left', marginBottom: '1.5rem' }}>
+                <summary style={{ cursor: 'pointer', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>
+                  Component stack
+                </summary>
+                <pre style={{
+                  background: 'rgba(255,255,255,0.05)', borderRadius: '0.5rem', padding: '0.75rem',
+                  fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', overflow: 'auto', maxHeight: '10rem',
+                  marginTop: '0.5rem'
+                }}>
+                  {this.state.errorInfo.componentStack}
+                </pre>
+              </details>
+            )}
+            <button
+              onClick={() => { this.setState({ hasError: false, error: null, errorInfo: null }); }}
+              style={{
+                padding: '0.625rem 1.5rem', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.1)',
+                color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.875rem', marginRight: '0.75rem'
+              }}
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                padding: '0.625rem 1.5rem', borderRadius: '0.5rem', background: '#10B981',
+                color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.875rem'
+              }}
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 /* Redirect helper for parameterised donate routes */
 function DonateRedirect() {
   const { campaignId } = useParams();
@@ -47,6 +129,7 @@ function StandardLayout({ children }) {
 
 export default function App() {
   return (
+    <GlobalErrorBoundary>
     <Routes>
       {/* Project pages — their own layout */}
       <Route path="/project/:slug" element={<ProjectLanding />} />
@@ -102,5 +185,6 @@ export default function App() {
         }
       />
     </Routes>
+    </GlobalErrorBoundary>
   )
 }
