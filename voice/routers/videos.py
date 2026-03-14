@@ -18,7 +18,7 @@ from datetime import datetime
 from fastapi import (
     APIRouter, Depends, HTTPException, UploadFile, File, Form, Query,
 )
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_
 
@@ -38,21 +38,30 @@ VALID_CATEGORIES = {c.value for c in VideoCategory}
 VALID_PARENT_TYPES = {"campaign", "milestone"}
 ADMIN_ROLES = {"SYSTEM_ADMIN", "super_admin"}
 
+# Max durations per category (seconds)
+MAX_DURATION_BY_CATEGORY = {
+    "progress": 300,      # 5 minutes
+    "verification": 300,  # 5 minutes
+    "why": 600,           # 10 minutes
+    "completion": 600,    # 10 minutes
+}
+
 
 # ── Helpers ─────────────────────────────────────────────────────
 
 def _check_parent_exists(parent_type: str, parent_id: int, db: Session):
-    """Validate parent entity exists."""
+    """Validate parent entity exists. Returns (parent, campaign)."""
     if parent_type == "campaign":
         obj = db.query(Campaign).filter(Campaign.id == parent_id).first()
         if not obj:
             raise HTTPException(404, "Campaign not found")
-        return obj
+        return obj, obj
     elif parent_type == "milestone":
         obj = db.query(ProjectMilestone).filter(ProjectMilestone.id == parent_id).first()
         if not obj:
             raise HTTPException(404, "Milestone not found")
-        return obj
+        campaign = db.query(Campaign).filter(Campaign.id == obj.campaign_id).first()
+        return obj, campaign
     raise HTTPException(400, f"Invalid parent_type: {parent_type}")
 
 
@@ -120,6 +129,7 @@ async def upload_video(
     description: Optional[str] = Form(None),
     gps_latitude: Optional[float] = Form(None),
     gps_longitude: Optional[float] = Form(None),
+    duration_seconds: Optional[int] = Form(None),
     pin_to_ipfs: bool = Form(False),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -132,9 +142,10 @@ async def upload_video(
     - **category**: `why` | `progress` | `completion` | `verification`
     - **parent_type**: `campaign` | `milestone`
     - **parent_id**: ID of the campaign or milestone
-    - **title**: Optional title
+    - **title**: Optional title (auto-generated from date + category if blank)
     - **description**: Optional description
     - **gps_latitude/gps_longitude**: Optional GPS coordinates
+    - **duration_seconds**: Client-measured video duration
     - **pin_to_ipfs**: Pin to IPFS via Pinata (default: false)
     """
     # Validate category & parent_type
@@ -151,11 +162,41 @@ async def upload_video(
             f"Invalid video format: {content_type}. Allowed: {', '.join(ALLOWED_MIME_TYPES)}",
         )
 
+    # Server-side duration enforcement
+    max_dur = MAX_DURATION_BY_CATEGORY.get(category)
+    if max_dur and duration_seconds is not None and duration_seconds > max_dur:
+        raise HTTPException(
+            400,
+            f"{category.title()} videos must be under {max_dur // 60} minutes "
+            f"(yours is {duration_seconds // 60}:{duration_seconds % 60:02d})",
+        )
+
     _validate_gps(gps_latitude, gps_longitude)
 
     # Validate parent exists and check permissions
-    parent = _check_parent_exists(parent_type, parent_id, db)
+    parent, campaign = _check_parent_exists(parent_type, parent_id, db)
     _check_upload_permission(parent_type, parent, current_user, category, db)
+
+    # GPS proximity check against campaign location
+    gps_proximity = None
+    if gps_latitude is not None and gps_longitude is not None and campaign:
+        project_gps = getattr(campaign, 'location_gps', None)
+        gps_proximity = video_service.check_gps_proximity(
+            gps_latitude, gps_longitude, project_gps,
+        )
+        if gps_proximity.get("within_range") is False:
+            logger.warning(
+                "GPS proximity warning: video at (%.4f,%.4f) is %.1f km from project — user %d",
+                gps_latitude, gps_longitude,
+                gps_proximity.get("distance_km", 0),
+                current_user.id,
+            )
+            # Don't block, but attach warning to metadata
+
+    # Auto-generate title if user left it blank
+    if not title:
+        parent_title = getattr(parent, 'title', None)
+        title = video_service.auto_generate_title(category, parent_type, parent_title)
 
     # Store video file
     try:
@@ -166,9 +207,15 @@ async def upload_video(
             parent_type=parent_type,
             parent_id=parent_id,
             pin_to_ipfs=pin_to_ipfs,
+            duration_seconds=duration_seconds,
         )
     except ValueError as e:
         raise HTTPException(400, str(e))
+
+    # Build metadata JSON with GPS proximity result
+    metadata = {}
+    if gps_proximity:
+        metadata["gps_proximity"] = gps_proximity
 
     # Create database record
     video_record = TransparencyVideo(
@@ -187,21 +234,32 @@ async def upload_video(
         status=VideoStatus.READY.value,
         gps_latitude=gps_latitude,
         gps_longitude=gps_longitude,
+        duration_seconds=duration_seconds,
+        metadata_json=metadata if metadata else None,
     )
     db.add(video_record)
     db.commit()
     db.refresh(video_record)
 
     logger.info(
-        "Video uploaded: id=%d, category=%s, parent=%s:%d, by user=%d",
+        "Video uploaded: id=%d, category=%s, parent=%s:%d, by user=%d, duration=%s",
         video_record.id, category, parent_type, parent_id, current_user.id,
+        f"{duration_seconds}s" if duration_seconds else "unknown",
     )
 
-    return {
+    response = {
         "success": True,
         "video": video_record.to_dict(),
         "message": f"Video uploaded successfully ({result['file_size'] / 1024 / 1024:.1f} MB)",
     }
+    # Include GPS proximity warning for the uploader
+    if gps_proximity and gps_proximity.get("within_range") is False:
+        response["gps_warning"] = (
+            f"Video GPS is {gps_proximity['distance_km']} km from the project site "
+            f"(threshold: {gps_proximity['threshold_km']} km)"
+        )
+
+    return response
 
 
 # ── Retrieval ───────────────────────────────────────────────────
@@ -362,13 +420,18 @@ async def stream_video(
     video_id: int,
     db: Session = Depends(get_db),
 ):
-    """Stream video file directly."""
+    """Stream video file directly (local) or redirect to R2 URL."""
     video = db.query(TransparencyVideo).filter(
         TransparencyVideo.id == video_id
     ).first()
     if not video:
         raise HTTPException(404, "Video not found")
 
+    # If storage_url is a full URL (R2), redirect to it
+    if video.storage_url.startswith("http"):
+        return RedirectResponse(url=video.storage_url)
+
+    # Otherwise, serve from local disk
     filepath = video_service.get_video_path(video.storage_url)
     if not filepath:
         raise HTTPException(404, "Video file not found on disk")

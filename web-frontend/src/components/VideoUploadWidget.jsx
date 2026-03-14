@@ -5,12 +5,15 @@
  * - Drag-and-drop or click to select
  * - Category selection (Why / Progress / Completion / Verification)
  * - GPS capture for verification videos
+ * - Client-side duration validation (5 min max for progress)
+ * - Auto-generated title from date + category when left blank
  * - Upload progress indication
  * - Title & description fields
  *
  * Props:
  *   parentType  - 'campaign' | 'milestone'
  *   parentId    - ID of the parent entity
+ *   parentTitle - Title of the parent entity (for auto-title generation)
  *   category    - Pre-set category (optional, hides selector if set)
  *   onUploaded  - Callback when upload succeeds: (videoData) => void
  *   compact     - Smaller variant for inline use
@@ -20,19 +23,39 @@ import { uploadVideo } from '../api/videos';
 import { HiOutlineCamera, HiOutlineXMark, HiOutlineCloudArrowUp } from './icons';
 
 const CATEGORY_LABELS = {
-  why:          { label: 'Why We Need This',   color: 'bg-blue-50 text-blue-700 border-blue-200' },
-  progress:     { label: 'Progress Update',    color: 'bg-amber-50 text-amber-700 border-amber-200' },
-  completion:   { label: 'Completion Evidence', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  verification: { label: 'Field Verification', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+  why:          { label: 'Why We Need This',   color: 'bg-blue-50 text-blue-700 border-blue-200', maxMinutes: 10 },
+  progress:     { label: 'Progress Update',    color: 'bg-amber-50 text-amber-700 border-amber-200', maxMinutes: 5 },
+  completion:   { label: 'Completion Evidence', color: 'bg-emerald-50 text-emerald-700 border-emerald-200', maxMinutes: 10 },
+  verification: { label: 'Field Verification', color: 'bg-purple-50 text-purple-700 border-purple-200', maxMinutes: 5 },
 };
 
 const MAX_SIZE_MB = 100;
 
+/**
+ * Read video duration from a File object using an off-screen <video> element.
+ * @param {File} file
+ * @returns {Promise<number>} duration in seconds
+ */
+function getVideoDuration(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const el = document.createElement('video');
+    el.preload = 'metadata';
+    el.onloadedmetadata = () => {
+      URL.revokeObjectURL(url);
+      resolve(Math.round(el.duration));
+    };
+    el.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Cannot read video metadata')); };
+    el.src = url;
+  });
+}
+
 export default function VideoUploadWidget({
-  parentType, parentId, category: fixedCategory, onUploaded, compact = false,
+  parentType, parentId, parentTitle, category: fixedCategory, onUploaded, compact = false,
 }) {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [duration, setDuration] = useState(null); // seconds
   const [category, setCategory] = useState(fixedCategory || 'progress');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -41,16 +64,31 @@ export default function VideoUploadWidget({
   const [error, setError] = useState(null);
   const fileRef = useRef(null);
 
-  const handleFile = useCallback((f) => {
+  const maxMinutes = CATEGORY_LABELS[category]?.maxMinutes || 10;
+
+  const handleFile = useCallback(async (f) => {
     if (!f) return;
     if (f.size > MAX_SIZE_MB * 1024 * 1024) {
       setError(`Video must be under ${MAX_SIZE_MB}MB`);
       return;
     }
+    // Read duration client-side
+    try {
+      const dur = await getVideoDuration(f);
+      setDuration(dur);
+      const catMax = CATEGORY_LABELS[category]?.maxMinutes || 10;
+      if (dur > catMax * 60) {
+        setError(`${CATEGORY_LABELS[category]?.label || 'This'} video must be under ${catMax} minutes (yours is ${Math.floor(dur / 60)}:${String(dur % 60).padStart(2, '0')})`);
+        return;
+      }
+    } catch {
+      // Non-fatal — server will still check if needed
+      setDuration(null);
+    }
     setError(null);
     setFile(f);
     setPreview(URL.createObjectURL(f));
-  }, []);
+  }, [category]);
 
   const captureGps = () => {
     if (!navigator.geolocation) return;
@@ -71,10 +109,11 @@ export default function VideoUploadWidget({
         category,
         parentType,
         parentId,
-        title: title || undefined,
+        title: title || undefined, // server will auto-generate if empty
         description: description || undefined,
         gpsLatitude: gps.lat,
         gpsLongitude: gps.lng,
+        durationSeconds: duration,
       });
       // Clean up
       if (preview) URL.revokeObjectURL(preview);
@@ -82,6 +121,7 @@ export default function VideoUploadWidget({
       setPreview(null);
       setTitle('');
       setDescription('');
+      setDuration(null);
       onUploaded?.(result.video);
     } catch (err) {
       setError(err.message || 'Upload failed');
@@ -94,6 +134,7 @@ export default function VideoUploadWidget({
     if (preview) URL.revokeObjectURL(preview);
     setFile(null);
     setPreview(null);
+    setDuration(null);
     setError(null);
   };
 
@@ -134,7 +175,7 @@ export default function VideoUploadWidget({
         >
           <HiOutlineCamera className="w-8 h-8 mb-2" />
           <span className="text-sm font-medium">Drop video here or click to select</span>
-          <span className="text-xs mt-1">MP4, WebM, MOV — max {MAX_SIZE_MB}MB</span>
+          <span className="text-xs mt-1">MP4, WebM, MOV — max {MAX_SIZE_MB}MB, {maxMinutes} min</span>
         </div>
       ) : (
         <div className="relative rounded-xl overflow-hidden bg-black mb-4">
@@ -160,10 +201,24 @@ export default function VideoUploadWidget({
       {/* Metadata fields */}
       {file && (
         <div className="space-y-3 mt-4">
+          {/* Duration badge */}
+          {duration != null && (
+            <div className={`flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg ${
+              duration > maxMinutes * 60
+                ? 'bg-red-50 text-red-600'
+                : 'bg-emerald-50 text-emerald-600'
+            }`}>
+              ⏱ {Math.floor(duration / 60)}:{String(duration % 60).padStart(2, '0')}
+              {duration > maxMinutes * 60
+                ? ` (exceeds ${maxMinutes} min limit)`
+                : ` / ${maxMinutes} min max`}
+            </div>
+          )}
+
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Title (optional)"
+            placeholder={`Title (auto-generated if blank${parentTitle ? ` — e.g. "Progress Update — ${parentTitle}"` : ''})`}
             className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400 outline-none"
           />
           <textarea
@@ -194,7 +249,7 @@ export default function VideoUploadWidget({
           {/* Upload button */}
           <button
             onClick={handleUpload}
-            disabled={uploading}
+            disabled={uploading || (duration != null && duration > maxMinutes * 60)}
             className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 text-white font-semibold
               hover:from-emerald-700 hover:to-green-700 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
           >

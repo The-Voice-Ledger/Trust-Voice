@@ -13,11 +13,12 @@ import { api } from './client';
  * @param {string} [opts.description]
  * @param {number} [opts.gpsLatitude]
  * @param {number} [opts.gpsLongitude]
+ * @param {number} [opts.durationSeconds] - Client-measured duration (seconds)
  * @param {boolean} [opts.pinToIpfs=false]
  */
 export function uploadVideo({
   file, category, parentType, parentId,
-  title, description, gpsLatitude, gpsLongitude, pinToIpfs = false,
+  title, description, gpsLatitude, gpsLongitude, durationSeconds, pinToIpfs = false,
 }) {
   const fd = new FormData();
   fd.append('video', file);
@@ -28,6 +29,7 @@ export function uploadVideo({
   if (description) fd.append('description', description);
   if (gpsLatitude != null) fd.append('gps_latitude', String(gpsLatitude));
   if (gpsLongitude != null) fd.append('gps_longitude', String(gpsLongitude));
+  if (durationSeconds != null) fd.append('duration_seconds', String(durationSeconds));
   if (pinToIpfs) fd.append('pin_to_ipfs', 'true');
   return api.upload('/videos/upload', fd);
 }

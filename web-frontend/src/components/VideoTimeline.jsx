@@ -12,7 +12,7 @@
  *   compact    - Smaller variant (default: false)
  */
 import { useState, useEffect } from 'react';
-import { getCampaignTimeline, verifyVideoIntegrity, getVideoStreamUrl } from '../api/videos';
+import { getCampaignTimeline, verifyVideoIntegrity, flagVideo, getVideoStreamUrl } from '../api/videos';
 import VideoPlayer from './VideoPlayer';
 import {
   HiOutlineCheckCircle, HiOutlineShieldCheck, HiOutlinePlay,
@@ -40,6 +40,9 @@ export default function VideoTimeline({ campaignId, compact = false }) {
   const [activeAct, setActiveAct] = useState(null);
   const [playingVideo, setPlayingVideo] = useState(null);
   const [verifyResult, setVerifyResult] = useState({});
+  const [flagModal, setFlagModal] = useState(null);   // video to flag
+  const [flagReason, setFlagReason] = useState('');
+  const [flagging, setFlagging] = useState(false);
 
   useEffect(() => {
     if (!campaignId) return;
@@ -62,6 +65,34 @@ export default function VideoTimeline({ campaignId, compact = false }) {
       setVerifyResult((prev) => ({ ...prev, [videoId]: result }));
     } catch {
       setVerifyResult((prev) => ({ ...prev, [videoId]: { verified: false, error: true } }));
+    }
+  };
+
+  const handleFlag = async () => {
+    if (!flagModal || !flagReason.trim()) return;
+    setFlagging(true);
+    try {
+      await flagVideo(flagModal.id, flagReason.trim());
+      // Remove flagged video from view
+      setData((prev) => {
+        if (!prev) return prev;
+        const filterOut = (arr) => arr?.filter((v) => v.id !== flagModal.id) || [];
+        return {
+          ...prev,
+          act_1_why: filterOut(prev.act_1_why),
+          act_2_progress: filterOut(prev.act_2_progress),
+          act_3_completion: filterOut(prev.act_3_completion),
+          verifications: filterOut(prev.verifications),
+          total_videos: (prev.total_videos || 1) - 1,
+        };
+      });
+      if (playingVideo?.id === flagModal.id) setPlayingVideo(null);
+      setFlagModal(null);
+      setFlagReason('');
+    } catch {
+      // silent
+    } finally {
+      setFlagging(false);
     }
   };
 
@@ -150,6 +181,13 @@ export default function VideoTimeline({ campaignId, compact = false }) {
                   <HiOutlineShieldCheck className="w-4 h-4" />
                 </button>
               )}
+              <button
+                onClick={() => { setFlagModal(playingVideo); setFlagReason(''); }}
+                className="text-xs text-gray-400 hover:text-red-500 transition"
+                title="Flag this video"
+              >
+                <HiOutlineFlag className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
@@ -217,6 +255,41 @@ export default function VideoTimeline({ campaignId, compact = false }) {
         <HiOutlineShieldCheck className="w-3.5 h-3.5" />
         {data.total_videos} video{data.total_videos !== 1 ? 's' : ''} · Every file is SHA-256 hashed for tamper-proof verification
       </div>
+
+      {/* Flag modal */}
+      {flagModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setFlagModal(null)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full mx-4 p-5" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">Flag Video</h3>
+            <p className="text-xs text-gray-500 mb-3">
+              Report "{flagModal.title || 'Untitled'}" for review. Flagged videos are hidden until a moderator reviews them.
+            </p>
+            <textarea
+              value={flagReason}
+              onChange={(e) => setFlagReason(e.target.value)}
+              rows={3}
+              placeholder="Why are you flagging this video? (e.g. misleading, inappropriate, wrong location)"
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm resize-none focus:ring-2 focus:ring-red-200 focus:border-red-400 outline-none"
+              autoFocus
+            />
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => setFlagModal(null)}
+                className="flex-1 py-2 rounded-lg text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleFlag}
+                disabled={!flagReason.trim() || flagging}
+                className="flex-1 py-2 rounded-lg text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition disabled:opacity-50"
+              >
+                {flagging ? 'Flagging…' : 'Flag Video'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
