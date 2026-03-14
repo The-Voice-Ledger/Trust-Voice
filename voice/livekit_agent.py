@@ -944,13 +944,16 @@ ALL_TOOLS = READ_TOOLS + WRITE_TOOLS
 class VBVAssistant(Agent):
     """Voice-first assistant for the TrustVoice crowdfunding platform."""
 
-    def __init__(self, user_name: str = "there", user_role: str = "DONOR"):
+    def __init__(self, user_name: str = "there", user_role: str = "DONOR",
+                 context_addendum: str = ""):
         role_upper = (user_role or "DONOR").upper()
         personalized_prompt = (
             SYSTEM_PROMPT
             + f"\nCURRENT USER: {user_name}  |  ROLE: {role_upper}\n"
             + "Respond in English.\n"
         )
+        if context_addendum:
+            personalized_prompt += f"\nSESSION CONTEXT:\n{context_addendum}\n"
         super().__init__(
             instructions=personalized_prompt,
             tools=ALL_TOOLS,
@@ -961,6 +964,136 @@ class VBVAssistant(Agent):
 # ── Agent Server + Session (v1.4 API) ──────────────────────────
 
 server = AgentServer()
+
+
+def _load_ambient_context(user_id: str, role: str) -> dict:
+    """Pre-fetch user-specific context at session start.
+
+    Returns a dict with:
+      context_text: str — human-readable summary for the system prompt
+      cards: list[dict] — proactive action cards to push to the frontend
+      extra_userdata: dict — additional fields to store in session userdata
+    """
+    context_lines = []
+    cards = []
+    extra = {}
+
+    if not user_id or user_id == "web_anonymous":
+        return {"context_text": "", "cards": [], "extra_userdata": {}}
+
+    db = _get_db()
+    role_upper = (role or "").upper()
+
+    try:
+        from database.models import User, Donor, Donation, Campaign, ProjectMilestone, Payout
+
+        # Resolve user
+        user = None
+        try:
+            user = db.query(User).filter(User.id == int(user_id)).first()
+        except (ValueError, TypeError):
+            user = db.query(User).filter(User.telegram_user_id == str(user_id)).first()
+
+        if not user:
+            return {"context_text": "", "cards": [], "extra_userdata": {}}
+
+        # ── For all roles: platform snapshot
+        active_campaigns = db.query(Campaign).filter(Campaign.status == "active").count()
+        context_lines.append(f"Platform has {active_campaigns} active campaigns.")
+
+        # ── DONOR / any user: recent donations
+        donor = None
+        if user.telegram_user_id:
+            donor = db.query(Donor).filter(Donor.telegram_user_id == user.telegram_user_id).first()
+        if not donor and user.phone_number:
+            donor = db.query(Donor).filter(Donor.phone_number == user.phone_number).first()
+        if not donor and user.email:
+            donor = db.query(Donor).filter(Donor.email == user.email).first()
+
+        if donor:
+            recent = (
+                db.query(Donation)
+                .filter(Donation.donor_id == donor.id, Donation.status == "completed")
+                .order_by(Donation.created_at.desc())
+                .limit(3)
+                .all()
+            )
+            if recent:
+                total = float(donor.total_donated_usd or 0)
+                last = recent[0]
+                last_campaign = db.query(Campaign).filter(Campaign.id == last.campaign_id).first()
+                context_lines.append(
+                    f"Returning donor — lifetime total ${total:,.2f}. "
+                    f"Last donation: ${float(last.amount or 0):.2f} to "
+                    f"'{last_campaign.title if last_campaign else 'campaign'}' "
+                    f"on {last.created_at.strftime('%b %d') if last.created_at else 'N/A'}."
+                )
+                extra["is_returning_donor"] = True
+                extra["lifetime_donated_usd"] = total
+            else:
+                context_lines.append("First-time session — no completed donations yet.")
+                extra["is_returning_donor"] = False
+
+        # ── SYSTEM_ADMIN / SUPER_ADMIN: pending items
+        if role_upper in ("SYSTEM_ADMIN", "SUPER_ADMIN"):
+            pending_payouts = db.query(Payout).filter(Payout.status == "pending").count()
+            pending_milestones = db.query(ProjectMilestone).filter(
+                ProjectMilestone.status == "EVIDENCE_SUBMITTED"
+            ).count()
+            funded_milestones = db.query(ProjectMilestone).filter(
+                ProjectMilestone.status == "VERIFIED"
+            ).count()
+
+            if pending_payouts or pending_milestones or funded_milestones:
+                items = []
+                if pending_payouts:
+                    items.append(f"{pending_payouts} payout(s) awaiting approval")
+                if pending_milestones:
+                    items.append(f"{pending_milestones} milestone(s) awaiting verification")
+                if funded_milestones:
+                    items.append(f"{funded_milestones} verified milestone(s) ready for fund release")
+                context_lines.append("Admin dashboard: " + ", ".join(items) + ".")
+
+                cards.append({
+                    "type": "admin_summary",
+                    "pending_payouts": pending_payouts,
+                    "pending_milestones": pending_milestones,
+                    "funded_milestones": funded_milestones,
+                })
+
+        # ── NGO_ADMIN / CAMPAIGN_CREATOR: their campaigns
+        if role_upper in ("NGO_ADMIN", "CAMPAIGN_CREATOR") and user.ngo_id:
+            ngo_campaigns = (
+                db.query(Campaign)
+                .filter(Campaign.ngo_id == user.ngo_id, Campaign.status == "active")
+                .all()
+            )
+            if ngo_campaigns:
+                total_raised = sum(float(c.raised_amount_usd or 0) for c in ngo_campaigns)
+                total_goal = sum(float(c.goal_amount_usd or 0) for c in ngo_campaigns)
+                context_lines.append(
+                    f"Your NGO has {len(ngo_campaigns)} active campaign(s), "
+                    f"${total_raised:,.0f} raised of ${total_goal:,.0f} goal."
+                )
+
+        # ── FIELD_AGENT: pending verifications
+        if role_upper == "FIELD_AGENT":
+            pending_verify = db.query(ProjectMilestone).filter(
+                ProjectMilestone.status == "EVIDENCE_SUBMITTED"
+            ).count()
+            if pending_verify:
+                context_lines.append(f"{pending_verify} milestone(s) have evidence submitted and need verification.")
+
+    except Exception as e:
+        logger.warning(f"Ambient context load failed: {e}")
+    finally:
+        db.close()
+
+    return {
+        "context_text": "\n".join(context_lines),
+        "cards": cards,
+        "extra_userdata": extra,
+    }
 
 
 @server.rtc_session()
@@ -1000,6 +1133,11 @@ async def vbv_voice_session(ctx: JobContext):
         "role": user_role,
     }
 
+    # ── Tier 3: Ambient context pre-fetch ──
+    ambient = _load_ambient_context(user_id, user_role)
+    userdata.update(ambient.get("extra_userdata", {}))
+    context_addendum = ambient.get("context_text", "")
+
     # Create the session with audio pipeline components and userdata
     session = AgentSession(
         stt=deepgram.STT(model="nova-2", language="en-US"),
@@ -1011,14 +1149,28 @@ async def vbv_voice_session(ctx: JobContext):
 
     # Start the session with our agent + noise cancellation
     await session.start(
-        agent=VBVAssistant(user_name=user_name, user_role=user_role),
+        agent=VBVAssistant(
+            user_name=user_name,
+            user_role=user_role,
+            context_addendum=context_addendum,
+        ),
         room=ctx.room,
         room_input_options=room_io.RoomInputOptions(
             noise_cancellation=noise_cancellation.BVC() if noise_cancellation else None,
         ),
     )
 
-    # Build role-aware greeting
+    # ── Tier 3: Push proactive action cards ──
+    for card in ambient.get("cards", []):
+        try:
+            await ctx.room.local_participant.send_text(
+                json.dumps(card),
+                topic=ACTION_TOPIC,
+            )
+        except Exception as e:
+            logger.warning(f"Failed to push proactive card: {e}")
+
+    # Build role-aware greeting with ambient context
     role_upper = (user_role or "").upper()
     if role_upper in ("SYSTEM_ADMIN", "SUPER_ADMIN"):
         capabilities = (
@@ -1041,14 +1193,28 @@ async def vbv_voice_session(ctx: JobContext):
             "view project milestones, or learn how TrustVoice works"
         )
 
-    # Generate an initial greeting
-    await session.generate_reply(
-        instructions=(
-            f"Greet the user whose name is {user_name}. "
-            f"Tell them you are the TrustVoice assistant and you can help them "
-            f"{capabilities}. Keep it warm and brief, 1-2 sentences."
+    # Build greeting instructions with ambient awareness
+    greeting_parts = [
+        f"Greet the user whose name is {user_name}. ",
+        f"Tell them you are the TrustVoice assistant and you can help them {capabilities}. ",
+    ]
+
+    # Add personalized context hints for the greeting
+    if userdata.get("is_returning_donor"):
+        greeting_parts.append(
+            "Mention you remember them as a returning supporter. "
         )
-    )
+    if ambient.get("context_text"):
+        # Give the LLM ambient context to reference briefly
+        greeting_parts.append(
+            f"You have this context — feel free to briefly mention "
+            f"ONE relevant highlight: {context_addendum} "
+        )
+
+    greeting_parts.append("Keep it warm and brief, 2-3 sentences maximum.")
+
+    # Generate an initial greeting
+    await session.generate_reply(instructions="".join(greeting_parts))
 
 
 # ── Worker entry point ──────────────────────────────────────────

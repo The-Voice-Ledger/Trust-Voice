@@ -177,6 +177,38 @@ function MilestoneUpdateCard({ data }) {
   );
 }
 
+function AdminSummaryCard({ data }) {
+  const items = [];
+  if (data.pending_payouts > 0)
+    items.push({ label: 'Payouts pending', count: data.pending_payouts, color: 'text-yellow-400' });
+  if (data.pending_milestones > 0)
+    items.push({ label: 'Milestones to verify', count: data.pending_milestones, color: 'text-blue-400' });
+  if (data.funded_milestones > 0)
+    items.push({ label: 'Ready for fund release', count: data.funded_milestones, color: 'text-emerald-400' });
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="rounded-xl bg-gradient-to-br from-violet-500/10 to-indigo-500/10 border border-violet-500/20 p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#A78BFA" strokeWidth="1.5">
+          <rect x="1" y="1" width="12" height="12" rx="2" />
+          <path d="M4 5h6M4 7h4M4 9h5" />
+        </svg>
+        <span className="text-xs font-semibold text-violet-300">Admin Dashboard</span>
+      </div>
+      <div className="space-y-2">
+        {items.map((item, i) => (
+          <div key={i} className="flex items-center justify-between">
+            <span className="text-xs text-white/60">{item.label}</span>
+            <span className={`text-sm font-bold ${item.color}`}>{item.count}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ErrorCard({ data }) {
   return (
     <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3">
@@ -196,6 +228,7 @@ function ActionCard({ data }) {
     case 'campaign_list':    return <CampaignListCard data={data} />;
     case 'payout_status':    return <PayoutStatusCard data={data} />;
     case 'milestone_update': return <MilestoneUpdateCard data={data} />;
+    case 'admin_summary':    return <AdminSummaryCard data={data} />;
     case 'error':            return <ErrorCard data={data} />;
     default:                 return null;
   }
