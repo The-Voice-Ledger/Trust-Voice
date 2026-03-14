@@ -82,6 +82,26 @@ def _get_db():
     return SessionLocal()
 
 
+# ── Action-card helper (push visual cards to frontend) ──────────
+
+ACTION_TOPIC = "vbv.action"
+
+async def _send_action_card(ctx: RunContext, card: dict) -> None:
+    """Push a visual action card to the frontend via LiveKit text stream.
+
+    Card types: payment_link, campaign_card, campaign_list,
+    donation_receipt, donation_history, milestone_update, error
+    """
+    try:
+        room = ctx.session.room_io.room
+        await room.local_participant.send_text(
+            json.dumps(card),
+            topic=ACTION_TOPIC,
+        )
+    except Exception as e:
+        logger.warning(f"Failed to send action card: {e}")
+
+
 # ── Tool implementations (standalone @function_tool) ────────────
 
 @function_tool(description=(
@@ -387,15 +407,37 @@ async def donate_to_campaign(
                 "campaign_title": campaign.title,
             }
             if result.get("payment_method") == "stripe":
-                response["checkout_url"] = result.get("checkout_url", "")
+                checkout_url = result.get("checkout_url", "")
+                response["checkout_url"] = checkout_url
                 response["instructions"] = (
                     f"A secure payment link for ${amount:.2f} {currency.upper()} "
                     f"has been created for {campaign.title}. "
                     "Check the chat panel on your screen for the payment link. "
                     "Click it to complete your donation with a card."
                 )
+                # Push visual payment card to frontend
+                await _send_action_card(ctx, {
+                    "type": "payment_link",
+                    "url": checkout_url,
+                    "amount": amount,
+                    "currency": currency.upper(),
+                    "campaign_title": campaign.title,
+                    "campaign_id": campaign.id,
+                    "donation_id": str(result.get("donation_id", "")),
+                })
             else:
                 response["instructions"] = result.get("instructions", "")
+                # Push M-Pesa confirmation card
+                await _send_action_card(ctx, {
+                    "type": "donation_receipt",
+                    "amount": amount,
+                    "currency": currency.upper(),
+                    "campaign_title": campaign.title,
+                    "campaign_id": campaign.id,
+                    "payment_method": "mpesa",
+                    "status": "pending",
+                    "message": result.get("instructions", "Check your phone for the M-Pesa prompt."),
+                })
             return json.dumps(response)
 
         return json.dumps({"error": result.get("error", "Donation failed. Please try again.")})
@@ -476,11 +518,21 @@ async def check_my_donations(
                 "payment_method": d.payment_method or "N/A",
             })
 
-        return json.dumps({
+        return_data = {
+            "donations": results,
+            "total_donated_usd": round(total, 2),
+            "count": len(results),
+        }
+
+        # Push donation history card to frontend
+        await _send_action_card(ctx, {
+            "type": "donation_history",
             "donations": results,
             "total_donated_usd": round(total, 2),
             "count": len(results),
         })
+
+        return json.dumps(return_data)
     finally:
         db.close()
 
@@ -638,6 +690,16 @@ async def approve_payout(
         payout.status_message = f"Approved via voice by user {user_id}"
         db.commit()
 
+        # Push payout status card
+        await _send_action_card(ctx, {
+            "type": "payout_status",
+            "payout_id": payout.id,
+            "amount": float(payout.amount),
+            "currency": payout.currency,
+            "status": "approved",
+            "action": "approved",
+        })
+
         return json.dumps({
             "success": True,
             "payout_id": payout.id,
@@ -760,6 +822,20 @@ async def create_campaign(
         db.add(campaign)
         db.commit()
         db.refresh(campaign)
+
+        # Push campaign created card to frontend
+        await _send_action_card(ctx, {
+            "type": "campaign_card",
+            "id": campaign.id,
+            "title": campaign.title,
+            "category": category.lower(),
+            "goal_usd": float(campaign.goal_amount_usd),
+            "raised_usd": 0,
+            "progress_pct": 0,
+            "location": location_country or location_region or "N/A",
+            "status": "active",
+            "just_created": True,
+        })
 
         return json.dumps({
             "success": True,
