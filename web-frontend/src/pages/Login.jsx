@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
@@ -9,9 +9,16 @@ import { PageBg } from '../components/SvgDecorations';
 export default function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { login, loading, error } = useAuthStore();
+  const { login, loading, error, isAuthenticated } = useAuthStore();
   const [identifier, setIdentifier] = useState('');
   const [pin, setPin] = useState('');
+
+  // Redirect authenticated users away from login page
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/portal');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

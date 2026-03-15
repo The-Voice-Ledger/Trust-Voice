@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import useAuthStore from '../stores/authStore';
 import { listCampaigns } from '../api/campaigns';
 import { getAnalyticsSummary } from '../api/analytics';
 import { getAllProjectSlugs, getProject } from '../projects/projectRegistry';
@@ -178,6 +179,7 @@ const MEDIA_DEFAULT_ILLUSTRATION = (c) => (
  */
 export default function Landing() {
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuthStore();
   const [featured, setFeatured] = useState([]);
   const [stats, setStats] = useState(null);
   const [loadingFeatured, setLoadingFeatured] = useState(true);
@@ -352,6 +354,7 @@ export default function Landing() {
             <Link
               to="/login"
               className="w-full sm:w-auto text-center px-8 py-4 rounded-2xl bg-white/10 backdrop-blur text-white font-bold border border-white/20 hover:bg-white/20 transition"
+              style={{ display: isAuthenticated ? 'none' : 'block' }}
             >
               {t('landing.tester_login')}
             </Link>
