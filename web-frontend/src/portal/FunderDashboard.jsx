@@ -31,7 +31,7 @@ export default function FunderDashboard({ user }) {
       setDonations(Array.isArray(d) ? d : d?.items || d?.donations || []);
       setTaxSummary(tax);
     }).finally(() => setLoading(false));
-  }, [user, currentYear]);
+  }, [user?.donor_id, currentYear]);
 
   const totalsByFx = donations
     .filter((d) => d.status === 'completed')
@@ -54,7 +54,7 @@ export default function FunderDashboard({ user }) {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome back, {user.full_name || 'Funder'}</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome back, {user?.full_name || 'Funder'}</h1>
         <p className="text-sm text-gray-500">Your funding impact at a glance</p>
       </div>
 
