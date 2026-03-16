@@ -19,6 +19,8 @@ export default function DonationForm({ campaignId, donorId, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [paymentInitiated, setPaymentInitiated] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,9 +37,22 @@ export default function DonationForm({ campaignId, donorId, onSuccess }) {
         donor_message: message || undefined,
         is_anonymous: anonymous,
       };
-      if (method === 'mpesa') payload.phone_number = phone;
 
+      if (method === 'mpesa') {
+        payload.phone_number = phone;
+      }
+
+      // Backend creates PaymentIntent and handles everything
       const result = await createDonation(payload);
+      
+      // For Stripe, backend returns checkout URL
+      if (method === 'stripe' && result.stripe_client_secret) {
+        // Backend provides checkout URL for payment completion
+        const url = `https://trustvoice.com/donate/checkout?payment_intent=${result.stripe_client_secret}`;
+        
+        setCheckoutUrl(url);
+        setPaymentInitiated(true);
+      }    
       setSuccess(true);
       if (onSuccess) onSuccess(result);
     } catch (err) {
@@ -56,6 +71,26 @@ export default function DonationForm({ campaignId, donorId, onSuccess }) {
         <p className="text-lg font-semibold text-green-600">{t('fund.success')}</p>
         {method === 'mpesa' && (
           <p className="text-sm text-gray-500 mt-2">{t('fund.mpesa_prompt')}</p>
+        )}
+        {method === 'stripe' && paymentInitiated && (
+        <div className="text-center">
+          <p className="text-sm text-gray-500 mb-4">
+            Click the button below to complete your payment securely:
+          </p>
+          <a
+            href={checkoutUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+          >
+            Complete Payment
+          </a>
+        </div>
+      )}
+        {method === 'stripe' && !paymentInitiated && (
+          <p className="text-sm text-gray-500 mt-2">
+            Your contribution was submitted. Thank you!
+          </p>
         )}
       </div>
     );
@@ -164,7 +199,7 @@ export default function DonationForm({ campaignId, donorId, onSuccess }) {
 
       <button
         type="submit"
-        disabled={loading || !amount}
+        disabled={loading || !amount || (method === 'mpesa' && !phone)}
         className="w-full py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-50 transition"
       >
         {loading ? t('fund.processing') : t('fund.submit')}

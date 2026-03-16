@@ -354,7 +354,7 @@ export default function Landing() {
             <Link
               to="/login"
               className="w-full sm:w-auto text-center px-8 py-4 rounded-2xl bg-white/10 backdrop-blur text-white font-bold border border-white/20 hover:bg-white/20 transition"
-              style={{ display: isAuthenticated ? 'none' : 'block' }}
+              style={{ display: isAuthenticated() ? 'none' : 'block' }}
             >
               {t('landing.tester_login')}
             </Link>

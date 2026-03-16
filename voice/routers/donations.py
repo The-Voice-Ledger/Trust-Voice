@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
+import logging
 
 from database.db import get_db
 from database.models import Donation, Campaign, Donor
@@ -17,6 +18,7 @@ from voice.routers.admin import get_current_user
 from database.models import User
 
 router = APIRouter(prefix="/donations", tags=["Donations"])
+logger = logging.getLogger(__name__)
 
 
 # ============================================================================
@@ -35,9 +37,6 @@ class DonationCreate(BaseModel):
     
     # M-Pesa specific fields
     phone_number: Optional[str] = Field(None, pattern=r'^\+[1-9]\d{1,14}$')
-    
-    # Stripe specific fields
-    stripe_payment_method_id: Optional[str] = None
     
     # Crypto specific fields
     blockchain_wallet_address: Optional[str] = Field(
@@ -60,6 +59,7 @@ class DonationResponse(BaseModel):
     donor_message: Optional[str]
     is_anonymous: bool
     created_at: datetime
+    stripe_client_secret: Optional[str] = None  # Add this field
     
     class Config:
         from_attributes = True
@@ -122,12 +122,6 @@ async def create_donation(
             detail="phone_number is required for M-Pesa payments"
         )
     
-    if donation.payment_method == "stripe" and not donation.stripe_payment_method_id:
-        raise HTTPException(
-            status_code=400,
-            detail="stripe_payment_method_id is required for Stripe payments"
-        )
-    
     if donation.payment_method == "crypto" and not donation.blockchain_wallet_address:
         raise HTTPException(
             status_code=400,
@@ -170,25 +164,35 @@ async def create_donation(
         db_donation.payment_intent_id = mpesa_response.get('CheckoutRequestID')
         
     elif donation.payment_method == "stripe":
-        # Create Stripe PaymentIntent
-        from services.stripe_service import stripe_service
+        # Create Stripe PaymentIntent (like Telegram bot)
+        from services.stripe_service import create_payment_intent
         
-        payment_intent = stripe_service.create_payment_intent(
-            amount=donation.amount,
-            currency=donation.currency,
-            customer_email=donor.preferred_name if donor else None,  # Use email if available
+        # Convert amount to cents (Stripe expects smallest currency unit)
+        amount_cents = int(donation.amount * 100)
+        
+        logger.info(f"Creating Stripe payment intent: ${donation.amount} for donation {db_donation.id}")
+        
+        payment_intent = create_payment_intent(
+            amount=amount_cents,
+            currency=donation.currency.lower(),
             metadata={
-                'donation_id': db_donation.id,
-                'campaign_id': campaign.id,
-                'campaign_title': campaign.title,
-                'donor_id': donor.id if donor else None
+                "donation_id": str(db_donation.id),
+                "campaign_id": str(campaign.id),
+                "donor_id": str(donor.id),
+                "campaign_title": campaign.title
             }
         )
         
-        db_donation.status = "pending"  # Waiting for client to confirm payment
-        db_donation.payment_intent_id = payment_intent['id']
-        # Store client_secret to return to frontend for payment confirmation
-        stripe_client_secret = payment_intent.get('client_secret')
+        # Check if Stripe call succeeded (has 'id' and 'client_secret')
+        if payment_intent.get("id") and payment_intent.get("client_secret"):
+            db_donation.status = "pending"  # Waiting for client to confirm payment
+            db_donation.payment_intent_id = payment_intent["id"]
+            # Store client_secret to return to frontend for payment confirmation
+            stripe_client_secret = payment_intent.get("client_secret")
+        else:
+            db_donation.status = "failed"
+            logger.warning(f"Stripe payment failed for donation {db_donation.id}: {payment_intent}")
+            stripe_client_secret = None
         
     elif donation.payment_method == "crypto":
         # TODO: Implement blockchain transaction
@@ -209,12 +213,12 @@ async def create_donation(
         "payment_method": db_donation.payment_method,
         "payment_intent_id": db_donation.payment_intent_id,
         "transaction_hash": db_donation.transaction_hash,
-        "nft_token_id": db_donation.nft_token_id,
+        "nft_token_id": getattr(db_donation, 'receipt_nft_token_id', None),
         "donor_message": db_donation.donor_message,
         "is_anonymous": db_donation.is_anonymous,
         "status": db_donation.status,
         "created_at": db_donation.created_at,
-        "updated_at": db_donation.updated_at,
+        "updated_at": getattr(db_donation, 'updated_at', db_donation.created_at),
     }
     if donation.payment_method == "stripe" and stripe_client_secret:
         response["stripe_client_secret"] = stripe_client_secret

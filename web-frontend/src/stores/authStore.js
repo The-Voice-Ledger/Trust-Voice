@@ -20,9 +20,8 @@ const useAuthStore = create(
             return user;
           }
           
-          // Otherwise, call API
           const data = await apiLogin({ identifier, phoneNumber, pin });
-          const me = await getMe();
+          const me = await getMe();  // Get user data in same call
           set({ user: me, token: data.access_token, loading: false });
           return me;
         } catch (err) {
@@ -46,7 +45,10 @@ const useAuthStore = create(
         set({ user: null, token: null, error: null });
       },
 
-      isAuthenticated: () => !!get().token,
+      isAuthenticated: () => {
+      const state = get();
+      return !!(state.user && state.token);  // Only authenticated if both user and token exist
+    },
     }),
     {
       name: 'auth-storage', // localStorage key

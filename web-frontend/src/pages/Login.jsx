@@ -13,12 +13,17 @@ export default function Login() {
   const [identifier, setIdentifier] = useState('');
   const [pin, setPin] = useState('');
 
+  // Get auth state for redirect check
+  const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
+
   // Redirect authenticated users away from login page
   useEffect(() => {
-    if (isAuthenticated) {
+    // Only redirect if both user and token exist
+    if (user && token) {
       navigate('/portal');
     }
-  }, [isAuthenticated, navigate]);
+  }, [user, token, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

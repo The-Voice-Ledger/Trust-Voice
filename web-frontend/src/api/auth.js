@@ -32,7 +32,5 @@ export function getMe() {
 
 /** POST /api/auth/logout */
 export function logout() {
-  const { logout: logoutAction } = useAuthStore.getState();
-  logoutAction();
   return api.post('/auth/logout', {});
 }
