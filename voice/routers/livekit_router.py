@@ -30,7 +30,7 @@ LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET", "")
 
 class TokenRequest(BaseModel):
     """Request body for generating a LiveKit room token."""
-    user_id: Optional[str] = "web_anonymous"
+    user_id: Optional[str | int] = "web_anonymous"  # Accept both string and int
     user_name: Optional[str] = "Guest"
     user_role: Optional[str] = "DONOR"
 

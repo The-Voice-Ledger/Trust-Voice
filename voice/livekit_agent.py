@@ -445,6 +445,74 @@ async def donate_to_campaign(
 
 
 @function_tool(description=(
+    "Check the status of a specific donation. Use when the user wants to "
+    "check the status, confirmation, or progress of a donation they made. "
+    "Returns payment status, completion status, and any relevant details."
+))
+async def check_donation_status(
+    ctx: RunContext,
+    donation_id: Annotated[str | None, "Specific donation UUID to check. If omitted, returns the most recent donation."] = None,
+) -> str:
+    """Check the status of a donation."""
+    from voice.handlers.donation_handler import get_donation_status
+    import uuid
+
+    userdata = ctx.userdata
+    user_id = userdata.get("user_id")
+
+    if not user_id or user_id == "web_anonymous":
+        return "Please log in to check donation status."
+
+    try:
+        db = get_db()
+        
+        donation_uuid = None
+        if donation_id:
+            try:
+                donation_uuid = uuid.UUID(donation_id)
+            except ValueError:
+                return "Invalid donation ID format. Please provide a valid donation UUID."
+        
+        result = await get_donation_status(db, user_id, donation_uuid)
+        
+        if "error" in result:
+            return result["error"]
+        
+        # Format the response
+        donation = result.get("donation")
+        if not donation:
+            return "No donation found."
+        
+        response = f"Donation Status:\n"
+        response += f"• Amount: ${donation.get('amount', 0)} {donation.get('currency', 'USD')}\n"
+        response += f"• Campaign: {donation.get('campaign_title', 'Unknown')}\n"
+        response += f"• Status: {donation.get('status', 'Unknown')}\n"
+        response += f"• Payment Method: {donation.get('payment_method', 'Unknown')}\n"
+        
+        if donation.get('payment_intent_id'):
+            response += f"• Payment ID: {donation.get('payment_intent_id')}\n"
+        
+        if donation.get('created_at'):
+            response += f"• Date: {donation.get('created_at')}\n"
+        
+        if donation.get('status') == 'pending':
+            response += "\nYour donation is still being processed. Please check back later."
+        elif donation.get('status') == 'completed':
+            response += "\nYour donation has been completed successfully. Thank you!"
+        elif donation.get('status') == 'failed':
+            response += "\nYour donation failed. Please try again or contact support."
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"check_donation_status error: {e}", exc_info=True)
+        return f"Something went wrong: {str(e)}"
+    finally:
+        if 'db' in locals():
+            db.close()
+
+
+@function_tool(description=(
     "Check the user's donation history. Use when the user asks about "
     "their past donations, contribution history, or wants a summary "
     "of what they have donated."
@@ -919,6 +987,7 @@ READ_TOOLS = [
     get_platform_stats,
     get_project_milestones,
     get_help,
+    check_donation_status,
 ]
 
 WRITE_TOOLS = [
