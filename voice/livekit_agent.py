@@ -916,6 +916,498 @@ async def create_campaign(
         db.close()
 
 
+@function_tool(description=(
+    "Register a new NGO organization on the platform. Use when the user wants to "
+    "register their NGO, create a new organization, or sign up as an NGO. "
+    "The registration will be reviewed and approved by an admin."
+))
+async def register_ngo(
+    ctx: RunContext,
+    name: Annotated[str, "NGO organization name"],
+    description: Annotated[str, "NGO description and mission statement"],
+    website: Annotated[str | None, "NGO website URL (optional)"] = None,
+    country: Annotated[str | None, "Country where the NGO operates"] = None,
+) -> str:
+    """Register a new NGO organization."""
+    from voice.handlers.ngo_handlers import handle_register_ngo
+
+    userdata = ctx.userdata
+    user_id = userdata.get("user_id")
+
+    if not user_id or user_id == "web_anonymous":
+        return "Please log in to register an NGO organization."
+
+    try:
+        db = get_db()
+        
+        # Prepare registration data
+        entities = {
+            "organization_name": name,
+            "description": description,
+            "website": website or "",
+            "country": country or "",
+        }
+        
+        # Call the NGO registration handler
+        result = await handle_register_ngo(
+            entities=entities, user_id=user_id, db=db, context={}
+        )
+        
+        if "error" in result:
+            return f"Registration failed: {result['error']}"
+        
+        # Format success response
+        response = f"NGO Registration Submitted Successfully!\n\n"
+        response += f"• Organization: {name}\n"
+        response += f"• Description: {description[:100]}{'...' if len(description) > 100 else ''}\n"
+        
+        if website:
+            response += f"• Website: {website}\n"
+        
+        if country:
+            response += f"• Country: {country}\n"
+        
+        response += f"\nYour registration is now pending admin review. "
+        response += f"You'll receive a notification once it's approved. "
+        response += f"This typically takes 1-2 business days.\n\n"
+        response += f"Registration ID: {result.get('registration_id', 'N/A')}"
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"register_ngo error: {e}", exc_info=True)
+        return f"Something went wrong: {str(e)}"
+    finally:
+        if 'db' in locals():
+            db.close()
+
+
+@function_tool(description=(
+    "View campaigns managed by the current user. Use when the user wants to "
+    "see their own campaigns, manage their projects, or check campaign performance. "
+    "For NGO admins and campaign creators only."
+))
+async def view_my_campaigns(ctx: RunContext) -> str:
+    """View campaigns owned by the current user."""
+    from database.models import User, NGOOrganization, Campaign
+
+    userdata = ctx.userdata
+    user_id = userdata.get("user_id")
+
+    if not user_id or user_id == "web_anonymous":
+        return "Please log in to view your campaigns."
+
+    try:
+        db = get_db()
+        
+        # Find user
+        user = None
+        try:
+            uid = int(user_id)
+            user = db.query(User).filter(User.id == uid).first()
+        except (ValueError, TypeError):
+            user = db.query(User).filter(User.telegram_user_id == str(user_id)).first()
+
+        if not user:
+            return "User account not found."
+
+        # Find NGO linked to user
+        ngo = (
+            db.query(NGOOrganization)
+            .filter(NGOOrganization.admin_user_id == user.id)
+            .first()
+        )
+        
+        if not ngo:
+            return "No NGO linked to your account. Please register an NGO first."
+
+        # Get campaigns for this NGO
+        campaigns = (
+            db.query(Campaign)
+            .filter(Campaign.ngo_id == ngo.id)
+            .all()
+        )
+
+        if not campaigns:
+            return f"No campaigns found for {ngo.name}. Create your first campaign to get started."
+
+        # Format response
+        response = f"Your Campaigns ({len(campaigns)} campaigns for {ngo.name}):\n\n"
+        
+        for i, campaign in enumerate(campaigns, 1):
+            goal_usd = float(campaign.goal_amount_usd or 0)
+            raised_usd = float(campaign.raised_amount_usd or 0)
+            progress_pct = int((raised_usd / max(goal_usd, 1)) * 100)
+            
+            response += f"{i}. {campaign.title}\n"
+            response += f"   Status: {campaign.status}\n"
+            response += f"   Goal: ${goal_usd:,.0f}\n"
+            response += f"   Raised: ${raised_usd:,.0f} ({progress_pct}%)\n"
+            
+            if campaign.status == 'active':
+                response += f"   🟢 Active and accepting donations\n"
+            elif campaign.status == 'completed':
+                response += f"   ✅ Goal reached\n"
+            elif campaign.status == 'pending':
+                response += f"   ⏳ Pending approval\n"
+            
+            response += "\n"
+
+        return response
+
+    except Exception as e:
+        logger.error(f"view_my_campaigns error: {e}", exc_info=True)
+        return f"Something went wrong: {str(e)}"
+    finally:
+        if 'db' in locals():
+            db.close()
+
+
+@function_tool(description=(
+    "Submit an impact verification report for a campaign. Use when the user "
+    "is a field agent and wants to report on campaign progress, verify "
+    "milestone completion, or document observed impact. "
+    "Only available to field agents."
+))
+async def submit_field_report(
+    ctx: RunContext,
+    campaign_id: Annotated[int, "Campaign ID to report on"],
+    description: Annotated[str, "Field report describing observed impact and findings"],
+    verification_status: Annotated[str, "Verification result: 'verified', 'partial', or 'unverified'"] = "verified",
+) -> str:
+    """Submit impact verification report for a campaign."""
+    from voice.handlers.ngo_handlers import handle_field_report
+    from database.models import User, Campaign
+
+    userdata = ctx.userdata
+    user_id = userdata.get("user_id")
+    user_role = userdata.get("role", "DONOR")
+
+    if not user_id or user_id == "web_anonymous":
+        return "Please log in to submit field reports."
+
+    # Check if user is a field agent
+    if user_role not in ["FIELD_AGENT", "SYSTEM_ADMIN", "SUPER_ADMIN"]:
+        return "Only field agents can submit verification reports."
+
+    try:
+        db = get_db()
+        
+        # Verify campaign exists
+        campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+        if not campaign:
+            return f"Campaign with ID {campaign_id} not found."
+
+        # Prepare report data
+        entities = {
+            "campaign_id": campaign_id,
+            "description": description,
+            "verification_status": verification_status,
+        }
+        
+        # Submit field report
+        result = await handle_field_report(
+            entities=entities, user_id=user_id, db=db, context={}
+        )
+        
+        if "error" in result:
+            return f"Field report submission failed: {result['error']}"
+        
+        # Format success response
+        response = f"Field Report Submitted Successfully!\n\n"
+        response += f"• Campaign: {campaign.title}\n"
+        response += f"• Campaign ID: {campaign_id}\n"
+        response += f"• Verification Status: {verification_status.upper()}\n"
+        response += f"• Report: {description[:200]}{'...' if len(description) > 200 else ''}\n\n"
+        
+        if verification_status == "verified":
+            response += f"✅ Your verification confirms the campaign's impact. "
+            response += f"This will help release milestone funds to the campaign."
+        elif verification_status == "partial":
+            response += f"⚠️ Your verification indicates partial completion. "
+            response += f"Additional verification may be needed."
+        else:
+            response += f"❌ Your verification indicates issues with the campaign. "
+            response += f"This will be reviewed by administrators."
+        
+        response += f"\n\nReport ID: {result.get('report_id', 'N/A')}"
+        
+        return response
+
+    except Exception as e:
+        logger.error(f"submit_field_report error: {e}", exc_info=True)
+        return f"Something went wrong: {str(e)}"
+    finally:
+        if 'db' in locals():
+            db.close()
+
+
+@function_tool(description=(
+    "Request withdrawal of funds from a campaign. Use when the user is a "
+    "campaign owner and wants to withdraw available funds for project expenses. "
+    "Only the campaign owner can withdraw funds."
+))
+async def withdraw_funds(
+    ctx: RunContext,
+    campaign_id: Annotated[int, "Campaign ID to withdraw from"],
+    amount: Annotated[float | None, "Amount to withdraw in USD. If omitted, withdraws the full available balance."] = None,
+) -> str:
+    """Request withdrawal of funds from a campaign."""
+    from voice.handlers.ngo_handlers import handle_withdraw_funds
+    from database.models import User, Campaign, NGOOrganization
+
+    userdata = ctx.userdata
+    user_id = userdata.get("user_id")
+
+    if not user_id or user_id == "web_anonymous":
+        return "Please log in to withdraw funds."
+
+    try:
+        db = get_db()
+        
+        # Find user
+        user = None
+        try:
+            uid = int(user_id)
+            user = db.query(User).filter(User.id == uid).first()
+        except (ValueError, TypeError):
+            user = db.query(User).filter(User.telegram_user_id == str(user_id)).first()
+
+        if not user:
+            return "User account not found."
+
+        # Verify campaign exists and user owns it
+        campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+        if not campaign:
+            return f"Campaign with ID {campaign_id} not found."
+
+        # Check if user owns the campaign (through NGO)
+        ngo = None
+        if hasattr(campaign, 'ngo_id') and campaign.ngo_id:
+            ngo = db.query(NGOOrganization).filter(NGOOrganization.id == campaign.ngo_id).first()
+        
+        if not ngo or ngo.admin_user_id != user.id:
+            return "You can only withdraw funds from campaigns you own."
+
+        # Prepare withdrawal request
+        entities = {
+            "campaign_id": campaign_id,
+            "amount": amount,
+        }
+        
+        # Process withdrawal
+        result = await handle_withdraw_funds(
+            entities=entities, user_id=user_id, db=db, context={}
+        )
+        
+        if "error" in result:
+            return f"Withdrawal failed: {result['error']}"
+        
+        # Format success response
+        available_balance = result.get('available_balance', 0)
+        withdrawal_amount = result.get('withdrawal_amount', amount)
+        
+        response = f"Withdrawal Request Submitted Successfully!\n\n"
+        response += f"• Campaign: {campaign.title}\n"
+        response += f"• Available Balance: ${available_balance:,.2f}\n"
+        response += f"• Withdrawal Amount: ${withdrawal_amount:,.2f}\n"
+        
+        if withdrawal_amount < available_balance:
+            response += f"• Remaining Balance: ${available_balance - withdrawal_amount:,.2f}\n"
+        
+        response += f"\nYour withdrawal will be processed within 1-2 business days. "
+        response += f"You'll receive a notification once it's completed.\n\n"
+        response += f"Withdrawal ID: {result.get('withdrawal_id', 'N/A')}"
+        
+        return response
+
+    except Exception as e:
+        logger.error(f"withdraw_funds error: {e}", exc_info=True)
+        return f"Something went wrong: {str(e)}"
+    finally:
+        if 'db' in locals():
+            db.close()
+
+
+@function_tool(description=(
+    "Change the user's preferred language for voice interactions. "
+    "Use when the user wants to switch languages between English and Amharic."
+))
+async def change_language(
+    ctx: RunContext,
+    language: Annotated[str, "Language code: 'en' for English, 'am' for Amharic"],
+) -> str:
+    """Change user's preferred language."""
+    from database.models import User
+
+    userdata = ctx.userdata
+    user_id = userdata.get("user_id")
+
+    if not user_id or user_id == "web_anonymous":
+        return "Please log in to change language preferences."
+
+    if language not in ["en", "am"]:
+        return "Supported languages are 'en' (English) and 'am' (Amharic)."
+
+    try:
+        db = get_db()
+        
+        # Find user
+        user = None
+        try:
+            uid = int(user_id)
+            user = db.query(User).filter(User.id == uid).first()
+        except (ValueError, TypeError):
+            user = db.query(User).filter(User.telegram_user_id == str(user_id)).first()
+
+        if not user:
+            return "User account not found."
+
+        # Update language preference
+        user.language_preference = language
+        db.commit()
+        
+        language_name = "English" if language == "en" else "Amharic"
+        response = f"Language changed successfully to {language_name}!\n\n"
+        response += f"Your voice interactions will now be in {language_name}. "
+        response += f"If you want to switch back, just ask me to change language again."
+        
+        return response
+
+    except Exception as e:
+        logger.error(f"change_language error: {e}", exc_info=True)
+        return f"Something went wrong: {str(e)}"
+    finally:
+        if 'db' in locals():
+            db.close()
+
+
+@function_tool(description=(
+    "Get the milestones for a campaign/project. Use when the user wants to "
+    "see project progress, milestone details, or what needs to be completed."
+))
+async def get_project_milestones(
+    ctx: RunContext,
+    campaign_id: Annotated[int, "Campaign ID to get milestones for"],
+) -> str:
+    """Get milestones for a campaign."""
+    from database.models import Campaign, Milestone
+
+    try:
+        db = get_db()
+        
+        # Verify campaign exists
+        campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+        if not campaign:
+            return f"Campaign with ID {campaign_id} not found."
+
+        # Get milestones
+        milestones = (
+            db.query(Milestone)
+            .filter(Milestone.campaign_id == campaign_id)
+            .order_by(Milestone.target_amount_usd)
+            .all()
+        )
+
+        if not milestones:
+            return f"No milestones found for campaign: {campaign.title}"
+
+        # Format response
+        response = f"Milestones for {campaign.title}:\n\n"
+        
+        for i, milestone in enumerate(milestones, 1):
+            target = float(milestone.target_amount_usd or 0)
+            released = float(milestone.released_amount_usd or 0)
+            progress_pct = int((released / max(target, 1)) * 100)
+            
+            response += f"{i}. {milestone.title}\n"
+            response += f"   Target: ${target:,.0f}\n"
+            response += f"   Released: ${released:,.0f} ({progress_pct}%)\n"
+            response += f"   Status: {milestone.status}\n"
+            
+            if milestone.status == 'pending':
+                response += f"   ⏳ Awaiting evidence submission\n"
+            elif milestone.status == 'verified':
+                response += f"   ✅ Verified - Funds released\n"
+            elif milestone.status == 'completed':
+                response += f"   🎯 Completed\n"
+            
+            response += "\n"
+
+        return response
+
+    except Exception as e:
+        logger.error(f"get_project_milestones error: {e}", exc_info=True)
+        return f"Something went wrong: {str(e)}"
+    finally:
+        if 'db' in locals():
+            db.close()
+
+
+@function_tool(description=(
+    "Get the treasury overview for a campaign. Use when the user wants to "
+    "see financial details, total raised, allocated funds, and available balance."
+))
+async def get_project_treasury(
+    ctx: RunContext,
+    campaign_id: Annotated[int, "Campaign ID to get treasury overview for"],
+) -> str:
+    """Get treasury overview for a campaign."""
+    from database.models import Campaign, Milestone, Donation
+
+    try:
+        db = get_db()
+        
+        # Verify campaign exists
+        campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+        if not campaign:
+            return f"Campaign with ID {campaign_id} not found."
+
+        # Calculate financial summary
+        total_raised = float(campaign.raised_amount_usd or 0)
+        total_allocated = 0
+        total_released = 0
+        
+        # Get milestone allocations
+        milestones = db.query(Milestone).filter(Milestone.campaign_id == campaign_id).all()
+        for milestone in milestones:
+            total_allocated += float(milestone.target_amount_usd or 0)
+            total_released += float(milestone.released_amount_usd or 0)
+
+        available_balance = total_raised - total_released
+
+        # Format response
+        response = f"Treasury Overview for {campaign.title}:\n\n"
+        response += f"💰 Total Raised: ${total_raised:,.2f}\n"
+        response += f"📊 Total Allocated to Milestones: ${total_allocated:,.2f}\n"
+        response += f"💸 Total Released to Milestones: ${total_released:,.2f}\n"
+        response += f"💳 Available Balance: ${available_balance:,.2f}\n\n"
+        
+        response += f"📈 Fundraising Progress:\n"
+        goal = float(campaign.goal_amount_usd or 1)
+        progress_pct = int((total_raised / goal) * 100)
+        response += f"   Goal: ${goal:,.0f}\n"
+        response += f"   Raised: ${total_raised:,.0f} ({progress_pct}%)\n\n"
+        
+        response += f"🎯 Milestone Status:\n"
+        response += f"   Total Milestones: {len(milestones)}\n"
+        
+        completed_milestones = len([m for m in milestones if m.status == 'completed'])
+        response += f"   Completed: {completed_milestones}\n"
+        
+        if available_balance > 0:
+            response += f"\n💡 {available_balance:,.2f} is available for new milestones or withdrawals."
+        
+        return response
+
+    except Exception as e:
+        logger.error(f"get_project_treasury error: {e}", exc_info=True)
+        return f"Something went wrong: {str(e)}"
+    finally:
+        if 'db' in locals():
+            db.close()
+
+
 # ── System prompt ───────────────────────────────────────────────
 
 SYSTEM_PROMPT = (
@@ -988,6 +1480,7 @@ READ_TOOLS = [
     get_project_milestones,
     get_help,
     check_donation_status,
+    get_project_treasury,
 ]
 
 WRITE_TOOLS = [
@@ -999,6 +1492,11 @@ WRITE_TOOLS = [
     approve_payout,
     reject_payout,
     create_campaign,
+    register_ngo,
+    view_my_campaigns,
+    submit_field_report,
+    withdraw_funds,
+    change_language,
 ]
 
 ALL_TOOLS = READ_TOOLS + WRITE_TOOLS
