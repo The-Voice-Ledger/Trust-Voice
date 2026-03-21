@@ -295,9 +295,22 @@ async def _initiate_stripe_payment(
             donation.payment_intent_id = payment_intent["id"]
             db.commit()
             
-            # Generate checkout URL (this would be your hosted checkout page)
-            # For now, return the client secret for frontend integration
-            checkout_url = f"https://trustvoice.com/donate/checkout?payment_intent={payment_intent['client_secret']}"
+            # Create Stripe Checkout Session
+            from services.stripe_service import create_checkout_session
+            
+            checkout_session = create_checkout_session(
+                amount=amount_usd,
+                currency="usd",
+                success_url="https://trustvoice.com/donation/success",
+                cancel_url="https://trustvoice.com/donation/cancel",
+                metadata={
+                    "donation_id": str(donation.id),
+                    "campaign_id": str(campaign.id),
+                    "campaign_title": campaign.title
+                }
+            )
+            
+            checkout_url = checkout_session["url"]
             
             instructions = (
                 f"💳 Card Payment Ready\n\n"
