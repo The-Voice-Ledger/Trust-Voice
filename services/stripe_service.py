@@ -186,6 +186,82 @@ class StripeService:
             logger.error(f"Stripe: Confirmation failed: {str(e)}")
             raise Exception(f"Failed to confirm Stripe payment: {str(e)}")
     
+    def create_checkout_session(
+        self,
+        amount: float,
+        currency: str,
+        success_url: Optional[str] = None,
+        cancel_url: Optional[str] = None,
+        metadata: Optional[Dict] = None
+    ) -> Dict:
+        """
+        Create a Stripe Checkout Session directly.
+        
+        Args:
+            amount: Amount in currency units (e.g., 100.00 for $100)
+            currency: Three-letter currency code (USD, EUR, etc.)
+            success_url: URL to redirect after successful payment
+            cancel_url: URL to redirect after cancelled payment
+            metadata: Optional metadata to attach to the session
+        
+        Returns:
+            Dict with Checkout Session data including URL
+        """
+        # Convert amount to cents
+        amount_cents = int(amount * 100)
+        
+        # Mock mode
+        if self.is_mock:
+            logger.info(f"Stripe Mock: Creating checkout session for {amount} {currency}")
+            return {
+                'id': f'cs_mock_{int(os.urandom(4).hex(), 16)}',
+                'object': 'checkout.session',
+                'url': f'https://checkout.stripe.com/c/pay/cs_mock_{int(os.urandom(4).hex(), 16)}',
+                'amount': amount_cents,
+                'currency': currency.lower(),
+                'metadata': metadata or {}
+            }
+        
+        # Real API call
+        try:
+            session_params = {
+                'payment_method_types': ['card'],
+                'mode': 'payment',
+                'line_items': [{
+                    'price_data': {
+                        'currency': currency.lower(),
+                        'product_data': {
+                            'name': 'Donation',
+                        },
+                        'unit_amount': amount_cents,
+                    },
+                    'quantity': 1,
+                }],
+                'success_url': success_url or 'https://trustvoice.com/donation/success',
+                'cancel_url': cancel_url or 'https://trustvoice.com/donation/cancel',
+            }
+            
+            # Add metadata if provided
+            if metadata:
+                session_params['metadata'] = metadata
+            
+            checkout_session = stripe.checkout.Session.create(**session_params)
+            
+            logger.info(f"Stripe: Checkout Session created - {checkout_session.id}")
+            
+            return {
+                'id': checkout_session.id,
+                'object': checkout_session.object,
+                'url': checkout_session.url,
+                'amount': checkout_session.amount_total,
+                'currency': checkout_session.currency,
+                'metadata': checkout_session.metadata
+            }
+            
+        except stripe.error.StripeError as e:
+            logger.error(f"Stripe: Checkout Session creation failed: {str(e)}")
+            raise Exception(f"Failed to create Stripe checkout session: {str(e)}")
+    
     def create_payout(
         self,
         amount: float,
@@ -440,5 +516,25 @@ def create_payment_intent(
         amount=amount,
         currency=currency,
         customer_email=customer_email,
+        metadata=metadata
+    )
+
+
+def create_checkout_session(
+    amount: float,
+    currency: str,
+    success_url: Optional[str] = None,
+    cancel_url: Optional[str] = None,
+    metadata: Optional[Dict] = None
+) -> Dict:
+    """
+    Wrapper function for checkout session creation.
+    Calls StripeService.create_checkout_session().
+    """
+    return stripe_service.create_checkout_session(
+        amount=amount,
+        currency=currency,
+        success_url=success_url,
+        cancel_url=cancel_url,
         metadata=metadata
     )

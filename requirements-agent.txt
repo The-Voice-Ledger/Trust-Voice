@@ -30,3 +30,5 @@ pydub==0.25.1
 python-dotenv==1.2.2
 pydantic==2.12.5
 numpy==2.4.3
+
+stripe==7.9.0

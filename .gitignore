@@ -8,6 +8,7 @@ env/
 ENV/
 .venv/
 venv-livekit/
+venv-livekit
 
 # Python
 __pycache__/
