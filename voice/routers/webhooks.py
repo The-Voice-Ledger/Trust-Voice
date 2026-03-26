@@ -241,6 +241,7 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
                     from sqlalchemy.orm.attributes import flag_modified
                     flag_modified(campaign, "raised_amounts")
                 
+                donation.completed_at = datetime.utcnow()
                 db.commit()
                 logger.info(f"Stripe: Payment completed - {payment_intent.id}")
             else:
@@ -251,9 +252,80 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
                 for d in all_donations:
                     logger.info(f"  Donation {d.id}: payment_intent_id={d.payment_intent_id}, status={d.status}")
         
+        elif event.type == 'checkout.session.completed':
+            checkout_session = event.data.object
+            
+            logger.info(f"Stripe: Checkout session completed: {checkout_session.id}")
+            logger.info(f"Stripe: Looking for donation with checkout session ID: {checkout_session.id}")
+            
+            # Find donation by checkout session ID (stored in payment_intent_id for checkout sessions)
+            donation = db.query(Donation).filter(
+                Donation.payment_intent_id == checkout_session.id
+            ).first()
+            
+            if donation:
+                logger.info(f"Stripe: Found donation {donation.id}, updating status to completed")
+                donation.status = 'completed'
+                
+                # Update campaign total using atomic operations (same as M-Pesa)
+                campaign = db.query(Campaign).filter(
+                    Campaign.id == donation.campaign_id
+                ).first()
+                
+                if campaign:
+                    # Initialize raised_amounts if needed
+                    if not campaign.raised_amounts:
+                        campaign.raised_amounts = {}
+                    
+                    currency = donation.currency
+                    
+                    # Convert to USD
+                    from services.currency_service import currency_service
+                    try:
+                        amount_usd = currency_service.convert_to_usd(
+                            float(donation.amount),
+                            donation.currency
+                        )
+                    except Exception as e:
+                        logger.error(f"Currency conversion error: {e}")
+                        amount_usd = float(donation.amount)
+                    
+                    # Convert to Decimal for database compatibility
+                    from decimal import Decimal
+                    amount_usd_decimal = Decimal(str(amount_usd))
+                    
+                    # Atomic increment for USD total
+                    from sqlalchemy import update
+                    db.execute(
+                        update(Campaign)
+                        .where(Campaign.id == campaign.id)
+                        .values(raised_amount_usd=Campaign.raised_amount_usd + amount_usd_decimal)
+                    )
+                    
+                    # Update per-currency bucket
+                    current_currency_amount = campaign.raised_amounts.get(currency, 0.0)
+                    campaign.raised_amounts[currency] = current_currency_amount + float(donation.amount)
+                    
+                    # Mark as modified
+                    from sqlalchemy.orm.attributes import flag_modified
+                    flag_modified(campaign, "raised_amounts")
+                
+                donation.completed_at = datetime.utcnow()
+                db.commit()
+                logger.info(f"Stripe: Checkout session payment completed - {checkout_session.id}")
+            else:
+                logger.warning(f"Stripe: Donation not found for checkout session ID: {checkout_session.id}")
+                # Let's check all donations for debugging
+                all_donations = db.query(Donation).all()
+                logger.info(f"Stripe: Total donations in database: {len(all_donations)}")
+                for d in all_donations:
+                    logger.info(f"  Donation {d.id}: payment_intent_id={d.payment_intent_id}, status={d.status}")
+        
         elif event.type == 'payment_intent.payment_failed':
             payment_intent = event.data.object
+            logger.info(f"Stripe: Payment failed - {payment_intent.id}")
             
+            # Find and update donation status
             donation = db.query(Donation).filter(
                 Donation.payment_intent_id == payment_intent.id
             ).first()
@@ -261,19 +333,10 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
             if donation:
                 donation.status = 'failed'
                 db.commit()
-                logger.warning(f"Stripe: Payment failed - {payment_intent.id}")
+                logger.info(f"Stripe: Donation {donation.id} marked as failed")
         
-        elif event.type == 'payment_intent.canceled':
-            payment_intent = event.data.object
-            
-            donation = db.query(Donation).filter(
-                Donation.payment_intent_id == payment_intent.id
-            ).first()
-            
-            if donation:
-                donation.status = 'failed'
-                db.commit()
-                logger.info(f"Stripe: Payment canceled - {payment_intent.id}")
+        else:
+            logger.info(f"Stripe: Unhandled event type: {event.type}")
         
         return {"status": "success"}
         
