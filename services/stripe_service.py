@@ -477,6 +477,20 @@ class StripeService:
         
         # Real verification
         try:
+            logger.info(f"Stripe: Verifying webhook signature...")
+            logger.info(f"Stripe: Webhook secret present: {bool(self.webhook_secret)}")
+            logger.info(f"Stripe: Signature header: {signature[:50]}..." if signature else "Stripe: No signature header")
+            
+            # TEMPORARY: Bypass signature verification for testing
+            # REMOVE THIS IN PRODUCTION!
+            if os.getenv('BYPASS_WEBHOOK_SIGNATURE', 'false').lower() == 'true':
+                logger.warning("🚨 WEBHOOK SIGNATURE VERIFICATION BYPASSED - TESTING ONLY!")
+                import json
+                return stripe.Event.construct_from(
+                    json.loads(payload),
+                    stripe.api_key
+                )
+            
             event = stripe.Webhook.construct_event(
                 payload,
                 signature,

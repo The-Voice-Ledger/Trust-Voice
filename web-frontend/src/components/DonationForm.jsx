@@ -1,17 +1,3 @@
-/**
- * DonationForm — Reusable donation component
- * 
- * This component handles all donation methods (Stripe, M-Pesa, Crypto)
- * and can be used by both web frontend and LiveKit voice system.
- * 
- * Features:
- * - Unified API integration
- * - Consistent payment flow
- * - Reusable across the app
- * - Proper error handling
- * - Success/failure states
- */
-
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createDonation, getDonorByTelegram } from '../api/donations';
