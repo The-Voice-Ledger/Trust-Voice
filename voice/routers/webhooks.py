@@ -146,6 +146,16 @@ async def mpesa_callback(request: Request, db: Session = Depends(get_db)):
         return {"ResultCode": 0, "ResultDesc": "Accepted"}
 
 
+@router.post("/webhook")
+async def webhook_redirect(request: Request, db: Session = Depends(get_db)):
+    """
+    Redirect webhook requests to the correct endpoint.
+    This handles legacy webhook URLs that point to /webhook instead of /webhooks/stripe.
+    """
+    logger.info("🔄 Redirecting webhook from /webhook to /webhooks/stripe")
+    return await stripe_webhook(request, db)
+
+
 @router.post("/stripe")
 async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     """
