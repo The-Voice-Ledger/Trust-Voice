@@ -177,12 +177,15 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
         if event.type == 'payment_intent.succeeded':
             payment_intent = event.data.object
             
+            logger.info(f"Stripe: Looking for donation with payment_intent_id: {payment_intent.id}")
+            
             # Find donation by payment_intent ID (stored in payment_intent_id)
             donation = db.query(Donation).filter(
                 Donation.payment_intent_id == payment_intent.id
             ).first()
             
             if donation:
+                logger.info(f"Stripe: Found donation {donation.id}, updating status to completed")
                 donation.status = 'completed'
                 
                 # Update campaign total using atomic operations (same as M-Pesa)
@@ -208,12 +211,16 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
                         logger.error(f"Currency conversion error: {e}")
                         amount_usd = float(donation.amount)
                     
+                    # Convert to Decimal for database compatibility
+                    from decimal import Decimal
+                    amount_usd_decimal = Decimal(str(amount_usd))
+                    
                     # Atomic increment for USD total
                     from sqlalchemy import update
                     db.execute(
                         update(Campaign)
                         .where(Campaign.id == campaign.id)
-                        .values(raised_amount_usd=Campaign.raised_amount_usd + amount_usd)
+                        .values(raised_amount_usd=Campaign.raised_amount_usd + amount_usd_decimal)
                     )
                     
                     # Update per-currency bucket
@@ -226,6 +233,13 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
                 
                 db.commit()
                 logger.info(f"Stripe: Payment completed - {payment_intent.id}")
+            else:
+                logger.warning(f"Stripe: Donation not found for payment_intent_id: {payment_intent.id}")
+                # Let's check all donations for debugging
+                all_donations = db.query(Donation).all()
+                logger.info(f"Stripe: Total donations in database: {len(all_donations)}")
+                for d in all_donations:
+                    logger.info(f"  Donation {d.id}: payment_intent_id={d.payment_intent_id}, status={d.status}")
         
         elif event.type == 'payment_intent.payment_failed':
             payment_intent = event.data.object

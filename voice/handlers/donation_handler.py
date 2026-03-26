@@ -291,11 +291,7 @@ async def _initiate_stripe_payment(
         if result.get("id") and result.get("client_secret"):
             payment_intent = result
             
-            # Update donation with Stripe info
-            donation.payment_intent_id = payment_intent["id"]
-            db.commit()
-            
-            # Create Stripe Checkout Session
+            # Create Stripe Checkout Session first
             from services.stripe_service import create_checkout_session
             
             checkout_session = create_checkout_session(
@@ -309,6 +305,10 @@ async def _initiate_stripe_payment(
                     "campaign_title": campaign.title
                 }
             )
+            
+            # Update donation with Checkout Session ID for webhook matching
+            donation.payment_intent_id = checkout_session["id"]  # Store checkout session ID
+            db.commit()
             
             checkout_url = checkout_session["url"]
             

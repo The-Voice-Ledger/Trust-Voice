@@ -59,7 +59,8 @@ class DonationResponse(BaseModel):
     donor_message: Optional[str]
     is_anonymous: bool
     created_at: datetime
-    stripe_client_secret: Optional[str] = None  # Add this field
+    stripe_client_secret: Optional[str] = None  # For legacy support
+    stripe_checkout_url: Optional[str] = None  # Direct checkout URL
     
     class Config:
         from_attributes = True
@@ -164,17 +165,20 @@ async def create_donation(
         db_donation.payment_intent_id = mpesa_response.get('CheckoutRequestID')
         
     elif donation.payment_method == "stripe":
-        # Create Stripe PaymentIntent (like Telegram bot)
-        from services.stripe_service import create_payment_intent
+        # Create Stripe Checkout Session (like LiveKit voice)
+        from services.stripe_service import create_checkout_session
         
-        # Convert amount to cents (Stripe expects smallest currency unit)
-        amount_cents = int(donation.amount * 100)
+        # Use current frontend URLs for success/failure
+        success_url = f"https://web-production-dd7cf.up.railway.app/app/portal"
+        cancel_url = f"https://web-production-dd7cf.up.railway.app/app/donate/checkout"
         
-        logger.info(f"Creating Stripe payment intent: ${donation.amount} for donation {db_donation.id}")
+        logger.info(f"Creating Stripe checkout session: ${donation.amount} for donation {db_donation.id}")
         
-        payment_intent = create_payment_intent(
-            amount=amount_cents,
+        checkout_session = create_checkout_session(
+            amount=donation.amount,
             currency=donation.currency.lower(),
+            success_url=success_url,
+            cancel_url=cancel_url,
             metadata={
                 "donation_id": str(db_donation.id),
                 "campaign_id": str(campaign.id),
@@ -183,16 +187,16 @@ async def create_donation(
             }
         )
         
-        # Check if Stripe call succeeded (has 'id' and 'client_secret')
-        if payment_intent.get("id") and payment_intent.get("client_secret"):
-            db_donation.status = "pending"  # Waiting for client to confirm payment
-            db_donation.payment_intent_id = payment_intent["id"]
-            # Store client_secret to return to frontend for payment confirmation
-            stripe_client_secret = payment_intent.get("client_secret")
+        # Check if Stripe call succeeded (has 'id' and 'url')
+        if checkout_session.get("id") and checkout_session.get("url"):
+            db_donation.status = "pending"  # Waiting for user to complete payment
+            db_donation.payment_intent_id = checkout_session["id"]
+            # Store checkout URL to return to frontend
+            stripe_checkout_url = checkout_session.get("url")
         else:
             db_donation.status = "failed"
-            logger.warning(f"Stripe payment failed for donation {db_donation.id}: {payment_intent}")
-            stripe_client_secret = None
+            logger.warning(f"Stripe checkout failed for donation {db_donation.id}: {checkout_session}")
+            stripe_checkout_url = None
         
     elif donation.payment_method == "crypto":
         # TODO: Implement blockchain transaction
@@ -202,6 +206,10 @@ async def create_donation(
     
     db.flush()
     db.refresh(db_donation)
+    
+    # CRITICAL: Commit transaction to save donation to database
+    db.commit()
+    logger.info(f"✅ Donation created and committed: {db_donation.id}")
     
     # Build response — include client_secret for Stripe payments
     response = {
@@ -220,8 +228,8 @@ async def create_donation(
         "created_at": db_donation.created_at,
         "updated_at": getattr(db_donation, 'updated_at', db_donation.created_at),
     }
-    if donation.payment_method == "stripe" and stripe_client_secret:
-        response["stripe_client_secret"] = stripe_client_secret
+    if donation.payment_method == "stripe" and stripe_checkout_url:
+        response["stripe_checkout_url"] = stripe_checkout_url
     
     return response
 

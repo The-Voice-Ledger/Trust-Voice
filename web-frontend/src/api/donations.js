@@ -1,5 +1,10 @@
 import { api } from './client';
 
+/** GET /api/donors/telegram/:telegramId - get donor by Telegram ID */
+export function getDonorByTelegram(telegramId) {
+  return api.get(`/donors/telegram/${telegramId}`);
+}
+
 /** POST /api/donations/ — create donation & initiate payment */
 export function createDonation(data) {
   return api.post('/donations/', data);
