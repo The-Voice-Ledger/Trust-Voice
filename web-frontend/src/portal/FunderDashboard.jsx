@@ -8,13 +8,15 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getDonorDonations, getReceipt, verifyReceipt, getTaxSummary, getDonorByTelegram } from '../api/donations';
+import useAuthStore from '../stores/authStore';
 import {
   HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineXMark,
   HiOutlineBanknotes, HiOutlineDocumentText, HiOutlineWallet,
   HiOutlineSparkles,
 } from '../components/icons';
 
-export default function FunderDashboard({ user }) {
+export default function FunderDashboard() {
+  const user = useAuthStore((s) => s.user);
   const [donations, setDonations] = useState([]);
   const [taxSummary, setTaxSummary] = useState(null);
   const [loading, setLoading] = useState(true);
