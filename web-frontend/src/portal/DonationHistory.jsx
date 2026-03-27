@@ -6,19 +6,19 @@
  */
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getDonorDonations, getReceipt, verifyReceipt, getTaxSummary, getDonorByTelegram } from '../api/donations';
+import { getDonorDonations, getReceipt, verifyReceipt, getTaxSummary, getDonorByTelegram, getCampaignDetails } from '../api/donations';
 import useAuthStore from '../stores/authStore';
 import {
-  HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineXMark,
   HiOutlineBanknotes, HiOutlineDocumentText, HiOutlineWallet,
-  HiOutlineSparkles, HiOutlineClock, HiOutlineMagnifyingGlass,
-  IconChevronDown, IconArrowTrendingUp, IconArrowTrendingDown,
-  IconArrowLeft, IconArrowRight,
+  HiOutlineMagnifyingGlass, HiOutlineClock, HiOutlineCheckCircle,
+  HiOutlineXCircle, HiOutlineXMark
 } from '../components/icons';
+import { IconArrowLeft, IconArrowRight, IconArrowTrendingUp, IconArrowTrendingDown, IconChevronDown } from '../components/icons';
 
 export default function DonationHistory() {
   const user = useAuthStore((s) => s.user);
   const [donations, setDonations] = useState([]);
+  const [campaigns, setCampaigns] = useState({}); // Store campaign data by ID
   const [filteredDonations, setFilteredDonations] = useState([]);
   const [taxSummary, setTaxSummary] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -63,8 +63,23 @@ export default function DonationHistory() {
       getDonorDonations(donorId).catch(() => []),
       getTaxSummary(currentYear, donorId).catch(() => null),
     ]).then(([d, tax]) => {
-      setDonations(Array.isArray(d) ? d : d?.items || d?.donations || []);
+      const donationsData = Array.isArray(d) ? d : d?.items || d?.donations || [];
+      setDonations(donationsData);
       setTaxSummary(tax);
+      
+      // Fetch campaign details for unique campaign IDs
+      const uniqueCampaignIds = [...new Set(donationsData.map(donation => donation.campaign_id))];
+      const campaignPromises = uniqueCampaignIds.map(campaignId => 
+        getCampaignDetails(campaignId).catch(() => ({ id: campaignId, title: null, ngo_name: null }))
+      );
+      
+      Promise.all(campaignPromises).then(campaignData => {
+        const campaignsMap = {};
+        campaignData.forEach(campaign => {
+          campaignsMap[campaign.id] = campaign;
+        });
+        setCampaigns(campaignsMap);
+      });
     }).finally(() => setLoading(false));
   }, [donorId, currentYear]);
 
@@ -80,12 +95,21 @@ export default function DonationHistory() {
 
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter(d => 
-        d.campaign_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        d.ngo_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        d.payment_method?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        d.id.toString().includes(searchTerm)
-      );
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(d => {
+        const campaign = campaigns[d.campaign_id];
+        const campaignTitle = campaign?.title || '';
+        const ngoName = campaign?.ngo_name || '';
+        
+        return (
+          campaignTitle.toLowerCase().includes(searchLower) ||
+          ngoName.toLowerCase().includes(searchLower) ||
+          d.payment_method?.toLowerCase().includes(searchLower) ||
+          d.id.toString().includes(searchTerm) ||
+          d.amount?.toString().includes(searchTerm) ||
+          `${d.amount} ${d.currency}`.toLowerCase().includes(searchLower)
+        );
+      });
     }
 
     // Apply sorting
@@ -221,7 +245,7 @@ export default function DonationHistory() {
               <HiOutlineMagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search donations..."
+                placeholder="Search by campaign, NGO, amount, or payment method..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -317,10 +341,10 @@ export default function DonationHistory() {
                       <span className="ml-2 text-xs text-gray-400">via {donation.payment_method}</span>
                     </p>
                     <p className="text-xs text-gray-400">
-                      {donation.campaign_title || 'Campaign #' + donation.campaign_id} · {new Date(donation.created_at).toLocaleDateString()}
+                      {campaigns[donation.campaign_id]?.title || 'Campaign #' + donation.campaign_id} · {new Date(donation.created_at).toLocaleDateString()}
                     </p>
-                    {donation.ngo_name && (
-                      <p className="text-xs text-gray-400">{donation.ngo_name}</p>
+                    {campaigns[donation.campaign_id]?.ngo_name && (
+                      <p className="text-xs text-gray-400">{campaigns[donation.campaign_id].ngo_name}</p>
                     )}
                   </div>
                   
@@ -389,8 +413,8 @@ export default function DonationHistory() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
                         <div>
-                          <div className="font-medium">{donation.campaign_title || 'Campaign #' + donation.campaign_id}</div>
-                          <div className="text-xs text-gray-400">{donation.ngo_name || 'Individual Campaign'}</div>
+                          <div className="font-medium">{campaigns[donation.campaign_id]?.title || 'Campaign #' + donation.campaign_id}</div>
+                          <div className="text-xs text-gray-400">{campaigns[donation.campaign_id]?.ngo_name || 'Individual Campaign'}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

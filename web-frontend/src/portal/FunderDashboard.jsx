@@ -7,7 +7,7 @@
  */
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getDonorDonations, getReceipt, verifyReceipt, getTaxSummary, getDonorByTelegram } from '../api/donations';
+import { getDonorDonations, getReceipt, verifyReceipt, getTaxSummary, getDonorByTelegram, getCampaignDetails } from '../api/donations';
 import useAuthStore from '../stores/authStore';
 import {
   HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineXMark,
@@ -18,6 +18,7 @@ import {
 export default function FunderDashboard() {
   const user = useAuthStore((s) => s.user);
   const [donations, setDonations] = useState([]);
+  const [campaigns, setCampaigns] = useState({}); // Store campaign data by ID
   const [taxSummary, setTaxSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [donorId, setDonorId] = useState(null);
@@ -51,8 +52,23 @@ export default function FunderDashboard() {
       getDonorDonations(donorId).catch(() => []),
       getTaxSummary(currentYear, donorId).catch(() => null),
     ]).then(([d, tax]) => {
-      setDonations(Array.isArray(d) ? d : d?.items || d?.donations || []);
+      const donationsData = Array.isArray(d) ? d : d?.items || d?.donations || [];
+      setDonations(donationsData);
       setTaxSummary(tax);
+      
+      // Fetch campaign details for unique campaign IDs
+      const uniqueCampaignIds = [...new Set(donationsData.map(donation => donation.campaign_id))];
+      const campaignPromises = uniqueCampaignIds.map(campaignId => 
+        getCampaignDetails(campaignId).catch(() => ({ id: campaignId, title: null, ngo_name: null }))
+      );
+      
+      Promise.all(campaignPromises).then(campaignData => {
+        const campaignsMap = {};
+        campaignData.forEach(campaign => {
+          campaignsMap[campaign.id] = campaign;
+        });
+        setCampaigns(campaignsMap);
+      });
     }).finally(() => setLoading(false));
   }, [donorId, currentYear]);
 
@@ -184,7 +200,7 @@ export default function FunderDashboard() {
                   <span className="ml-2 text-xs text-gray-400">via {d.payment_method}</span>
                 </p>
                 <p className="text-xs text-gray-400">
-                  Campaign #{d.campaign_id} · {new Date(d.created_at).toLocaleDateString()}
+                  {campaigns[d.campaign_id]?.title || 'Campaign #' + d.campaign_id} · {new Date(d.created_at).toLocaleDateString()}
                 </p>
               </div>
               <div className="flex items-center gap-2">

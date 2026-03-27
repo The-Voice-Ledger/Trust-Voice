@@ -13,7 +13,7 @@ from datetime import datetime
 import logging
 
 from database.db import get_db
-from database.models import Donation, Campaign, Donor
+from database.models import Donation, Campaign, Donor, NGOOrganization
 from voice.routers.admin import get_current_user
 from database.models import User
 
@@ -59,8 +59,6 @@ class DonationResponse(BaseModel):
     donor_message: Optional[str]
     is_anonymous: bool
     created_at: datetime
-    stripe_client_secret: Optional[str] = None  # For legacy support
-    stripe_checkout_url: Optional[str] = None  # Direct checkout URL
     
     class Config:
         from_attributes = True
@@ -273,6 +271,27 @@ def get_donor_donations(
     ).offset(skip).limit(limit).all()
     
     return donations
+
+
+@router.get("/campaign/{campaign_id}")
+def get_campaign_details(
+    campaign_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get campaign details including title and NGO name.
+    
+    Useful for displaying campaign information in donation history.
+    """
+    campaign = db.query(Campaign).outerjoin(NGOOrganization, Campaign.ngo_id == NGOOrganization.id).filter(Campaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    
+    return {
+        "id": campaign.id,
+        "title": campaign.title,
+        "ngo_name": campaign.ngo.name if campaign.ngo else None
+    }
 
 
 @router.get("/campaign/{campaign_id}", response_model=List[DonationResponse])

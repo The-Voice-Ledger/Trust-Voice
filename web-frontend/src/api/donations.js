@@ -20,6 +20,11 @@ export function getDonorDonations(donorId, { skip = 0, limit = 50 } = {}) {
   return api.get(`/donations/donor/${donorId}`, { skip, limit });
 }
 
+/** GET /api/donations/campaign/:campaignId */
+export function getCampaignDetails(campaignId) {
+  return api.get(`/donations/campaign/${campaignId}`);
+}
+
 /** GET /api/donations/:id/receipt */
 export function getReceipt(donationId) {
   return api.get(`/donations/${donationId}/receipt`);
