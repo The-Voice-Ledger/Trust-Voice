@@ -7,7 +7,7 @@
  */
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getDonorDonations, getReceipt, verifyReceipt, getTaxSummary } from '../api/donations';
+import { getDonorDonations, getReceipt, verifyReceipt, getTaxSummary, getDonorByTelegram } from '../api/donations';
 import {
   HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineXMark,
   HiOutlineBanknotes, HiOutlineDocumentText, HiOutlineWallet,
@@ -18,20 +18,41 @@ export default function FunderDashboard({ user }) {
   const [donations, setDonations] = useState([]);
   const [taxSummary, setTaxSummary] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [donorId, setDonorId] = useState(null);
   const [activeReceipt, setActiveReceipt] = useState(null);
   const [receiptLoading, setReceiptLoading] = useState(false);
   const currentYear = new Date().getFullYear();
 
+  // Detect donor ID from user's telegram ID
   useEffect(() => {
-    if (!user?.donor_id) { setLoading(false); return; }
+    const detectDonorId = async () => {
+      if (!user?.telegram_user_id) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const donor = await getDonorByTelegram(user.telegram_user_id);
+        setDonorId(donor.id);
+      } catch (err) {
+        console.error('Could not detect donor from logged-in user:', err);
+        setLoading(false);
+      }
+    };
+    
+    detectDonorId();
+  }, [user]);
+
+  useEffect(() => {
+    if (!donorId) { setLoading(false); return; }
     Promise.all([
-      getDonorDonations(user.donor_id).catch(() => []),
-      getTaxSummary(currentYear, user.donor_id).catch(() => null),
+      getDonorDonations(donorId).catch(() => []),
+      getTaxSummary(currentYear, donorId).catch(() => null),
     ]).then(([d, tax]) => {
       setDonations(Array.isArray(d) ? d : d?.items || d?.donations || []);
       setTaxSummary(tax);
     }).finally(() => setLoading(false));
-  }, [user?.donor_id, currentYear]);
+  }, [donorId, currentYear]);
 
   const totalsByFx = donations
     .filter((d) => d.status === 'completed')
