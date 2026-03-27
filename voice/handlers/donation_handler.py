@@ -292,13 +292,16 @@ async def _initiate_stripe_payment(
             payment_intent = result
             
             # Create Stripe Checkout Session first
-            from services.stripe_service import create_checkout_session
+            from services.stripe_service import create_checkout_session, get_base_url
+            
+            # Get dynamic base URL
+            base_url = get_base_url()
             
             checkout_session = create_checkout_session(
                 amount=amount_usd,
                 currency="usd",
-                success_url="https://trustvoice.com/donation/success",
-                cancel_url="https://trustvoice.com/donation/cancel",
+                success_url=f"{base_url}/app/portal",
+                cancel_url=f"{base_url}/app/portal",
                 metadata={
                     "donation_id": str(donation.id),
                     "campaign_id": str(campaign.id),

@@ -166,19 +166,18 @@ async def create_donation(
         
     elif donation.payment_method == "stripe":
         # Create Stripe Checkout Session (like LiveKit voice)
-        from services.stripe_service import create_checkout_session
+        from services.stripe_service import create_checkout_session, get_base_url
         
-        # Use current frontend URLs for success/failure
-        success_url = f"https://web-production-dd7cf.up.railway.app/app/portal"
-        cancel_url = f"https://web-production-dd7cf.up.railway.app/app/donate/checkout"
+        # Get dynamic base URL
+        base_url = get_base_url()
         
         logger.info(f"Creating Stripe checkout session: ${donation.amount} for donation {db_donation.id}")
         
         checkout_session = create_checkout_session(
             amount=donation.amount,
             currency=donation.currency.lower(),
-            success_url=success_url,
-            cancel_url=cancel_url,
+            success_url=f"{base_url}/app/portal",
+            cancel_url=f"{base_url}/app/portal",
             metadata={
                 "donation_id": str(db_donation.id),
                 "campaign_id": str(campaign.id),
@@ -458,11 +457,14 @@ async def mint_tax_receipt_nft(
             ngo = db.query(NGOOrganization).filter(NGOOrganization.id == campaign.ngo_id).first()
         
         # Create NFT metadata following OpenSea standard
+        from services.stripe_service import get_base_url
+        base_url = get_base_url()
+        
         receipt_metadata = {
             "name": f"TrustVoice Donation Receipt #{donation_id}",
             "description": f"Official tax-deductible donation receipt for ${donation.amount} {donation.currency} to {campaign.title}",
             "image": "ipfs://QmTrustVoiceReceiptTemplateImage",  # TODO: Design receipt image
-            "external_url": f"https://trustvoice.org/receipts/{donation_id}",
+            "external_url": f"{base_url}/app/receipts/{donation_id}",
             "attributes": [
                 {"trait_type": "Donor_Name", "value": donor.preferred_name if donor else "Anonymous"},
                 {"trait_type": "Campaign_Name", "value": campaign.title},
