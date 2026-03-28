@@ -68,18 +68,23 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
-def decode_access_token(token: str) -> Optional[dict]:
+def decode_access_token(token: str, verify_exp: bool = True) -> Optional[dict]:
     """
     Decode and verify a JWT token.
     
     Args:
         token: JWT token string
+        verify_exp: Whether to verify expiration (default: True)
     
     Returns:
         Decoded token data or None if invalid
     """
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if verify_exp:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        else:
+            # Decode without verifying expiration
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_exp": False})
         return payload
     except jwt.ExpiredSignatureError:
         return None

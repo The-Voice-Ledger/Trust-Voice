@@ -30,6 +30,11 @@ export function getMe() {
   return api.get('/auth/me');
 }
 
+/** POST /api/auth/refresh */
+export function refreshToken() {
+  return api.post('/auth/refresh');
+}
+
 /** POST /api/auth/logout */
 export function logout() {
   return api.post('/auth/logout', {});
