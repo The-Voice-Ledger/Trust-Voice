@@ -279,6 +279,11 @@ def approve_ngo_registration(
     pending.ngo_id = ngo.id
     pending.updated_at = datetime.utcnow()
     
+    # CRITICAL: Assign ngo_id to the user who submitted the registration
+    submitting_user = db.query(User).filter(User.id == pending.submitted_by_telegram_id).first()
+    if submitting_user:
+        submitting_user.ngo_id = ngo.id
+    
     db.commit()
     db.refresh(pending)
     
