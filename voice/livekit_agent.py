@@ -464,7 +464,7 @@ async def check_donation_status(
         return "Please log in to check donation status."
 
     try:
-        db = get_db()
+        db = _get_db()
         
         donation_uuid = None
         if donation_id:
@@ -938,7 +938,7 @@ async def register_ngo(
         return "Please log in to register an NGO organization."
 
     try:
-        db = get_db()
+        db = _get_db()
         
         # Prepare registration data
         entities = {
@@ -998,7 +998,7 @@ async def view_my_campaigns(ctx: RunContext) -> str:
         return "Please log in to view your campaigns."
 
     try:
-        db = get_db()
+        db = _get_db()
         
         # Find user
         user = None
@@ -1091,7 +1091,7 @@ async def submit_field_report(
         return "Only field agents can submit verification reports."
 
     try:
-        db = get_db()
+        db = _get_db()
         
         # Verify campaign exists
         campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
@@ -1163,7 +1163,7 @@ async def withdraw_funds(
         return "Please log in to withdraw funds."
 
     try:
-        db = get_db()
+        db = _get_db()
         
         # Find user
         user = None
@@ -1250,7 +1250,7 @@ async def change_language(
         return "Supported languages are 'en' (English) and 'am' (Amharic)."
 
     try:
-        db = get_db()
+        db = _get_db()
         
         # Find user
         user = None
@@ -1294,7 +1294,7 @@ async def get_project_milestones(
     from database.models import Campaign, Milestone
 
     try:
-        db = get_db()
+        db = _get_db()
         
         # Verify campaign exists
         campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
@@ -1356,7 +1356,7 @@ async def get_project_treasury(
     from database.models import Campaign, Milestone, Donation
 
     try:
-        db = get_db()
+        db = _get_db()
         
         # Verify campaign exists
         campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
