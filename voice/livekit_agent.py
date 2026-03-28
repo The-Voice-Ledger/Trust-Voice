@@ -919,14 +919,30 @@ async def create_campaign(
 @function_tool(description=(
     "Register a new NGO organization on the platform. Use when the user wants to "
     "register their NGO, create a new organization, or sign up as an NGO. "
-    "The registration will be reviewed and approved by an admin."
+    "The registration will be reviewed and approved by an admin. "
+    "Required fields: organization name, email, country, description/mission. "
+    "Optional fields: website, phone, registration number, organization type, "
+    "focus areas, year established, staff size, region, address, banking details."
 ))
 async def register_ngo(
     ctx: RunContext,
     name: Annotated[str, "NGO organization name"],
     description: Annotated[str, "NGO description and mission statement"],
+    email: Annotated[str, "Contact email for the NGO"],
+    country: Annotated[str, "Country where the NGO operates"],
     website: Annotated[str | None, "NGO website URL (optional)"] = None,
-    country: Annotated[str | None, "Country where the NGO operates"] = None,
+    phone_number: Annotated[str | None, "Contact phone number (optional)"] = None,
+    registration_number: Annotated[str | None, "Official registration number (optional)"] = None,
+    organization_type: Annotated[str | None, "Organization type (optional)"] = None,
+    focus_areas: Annotated[str | None, "Focus areas (optional)"] = None,
+    year_established: Annotated[int | None, "Year established (optional)"] = None,
+    staff_size: Annotated[str | None, "Staff size (optional)"] = None,
+    region: Annotated[str | None, "Region/state (optional)"] = None,
+    address: Annotated[str | None, "Physical address (optional)"] = None,
+    bank_name: Annotated[str | None, "Bank name (optional)"] = None,
+    account_number: Annotated[str | None, "Bank account number (optional)"] = None,
+    account_name: Annotated[str | None, "Bank account name (optional)"] = None,
+    swift_code: Annotated[str | None, "Bank SWIFT code (optional)"] = None,
 ) -> str:
     """Register a new NGO organization."""
     from voice.handlers.ngo_handlers import handle_register_ngo
@@ -940,12 +956,35 @@ async def register_ngo(
     try:
         db = _get_db()
         
+        # Validate mandatory fields before proceeding
+        if not name or not name.strip():
+            return "NGO organization name is required. Please provide the name of your organization."
+        if not email or not email.strip():
+            return "Contact email is required. Please provide a valid email address."
+        if not country or not country.strip():
+            return "Country is required. Please specify the country where your NGO operates."
+        if not description or not description.strip():
+            return "Mission statement/description is required. Please describe your NGO's mission and activities."
+        
         # Prepare registration data
         entities = {
-            "organization_name": name,
-            "description": description,
-            "website": website or "",
-            "country": country or "",
+            "organization_name": name.strip(),
+            "mission_statement": description.strip(),  # Handler expects mission_statement
+            "email": email.strip(),  # Use provided email parameter
+            "country": country.strip(),  # Required field
+            "website": website.strip() if website else "",
+            "phone_number": phone_number.strip() if phone_number else "",
+            "registration_number": registration_number.strip() if registration_number else "",
+            "organization_type": organization_type.strip() if organization_type else "",
+            "focus_areas": focus_areas.strip() if focus_areas else "",
+            "year_established": year_established,
+            "staff_size": staff_size.strip() if staff_size else "",
+            "region": region.strip() if region else "",
+            "address": address.strip() if address else "",
+            "bank_name": bank_name.strip() if bank_name else "",
+            "account_number": account_number.strip() if account_number else "",
+            "account_name": account_name.strip() if account_name else "",
+            "swift_code": swift_code.strip() if swift_code else "",
         }
         
         # Call the NGO registration handler
@@ -953,24 +992,56 @@ async def register_ngo(
             entities=entities, user_id=user_id, db=db, context={}
         )
         
-        if "error" in result:
-            return f"Registration failed: {result['error']}"
+        # Handle different response cases from handler
+        if not result.get("success", False):
+            # Handle failure cases
+            message = result.get("message", "Registration failed")
+            
+            if result.get("needs_clarification"):
+                # Handle missing required fields
+                missing_fields = result.get("missing_entities", [])
+                if missing_fields:
+                    return f"To complete your NGO registration, I need: {', '.join(missing_fields)}. Please provide these details."
+                else:
+                    return f"Registration failed: {message}"
+            else:
+                # Handle other failures (duplicate, system error, etc.)
+                return f"Registration failed: {message}"
         
-        # Format success response
+        # Handle success case
+        application_id = result.get("data", {}).get("application_id", "N/A")
         response = f"NGO Registration Submitted Successfully!\n\n"
         response += f"• Organization: {name}\n"
+        response += f"• Email: {email}\n"
+        response += f"• Country: {country}\n"
         response += f"• Description: {description[:100]}{'...' if len(description) > 100 else ''}\n"
         
+        # Add optional fields if provided
         if website:
             response += f"• Website: {website}\n"
-        
-        if country:
-            response += f"• Country: {country}\n"
+        if phone_number:
+            response += f"• Phone: {phone_number}\n"
+        if registration_number:
+            response += f"• Registration Number: {registration_number}\n"
+        if organization_type:
+            response += f"• Organization Type: {organization_type}\n"
+        if focus_areas:
+            response += f"• Focus Areas: {focus_areas}\n"
+        if year_established:
+            response += f"• Year Established: {year_established}\n"
+        if staff_size:
+            response += f"• Staff Size: {staff_size}\n"
+        if region:
+            response += f"• Region: {region}\n"
+        if address:
+            response += f"• Address: {address}\n"
+        if bank_name:
+            response += f"• Bank: {bank_name}\n"
         
         response += f"\nYour registration is now pending admin review. "
         response += f"You'll receive a notification once it's approved. "
         response += f"This typically takes 1-2 business days.\n\n"
-        response += f"Registration ID: {result.get('registration_id', 'N/A')}"
+        response += f"Application ID: {application_id}"
         
         return response
         
