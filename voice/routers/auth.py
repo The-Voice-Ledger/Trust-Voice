@@ -68,7 +68,9 @@ class LoginResponse(BaseModel):
                     "telegram_username": "john_doe",
                     "role": "CAMPAIGN_CREATOR",
                     "email": "john@example.com",
-                    "is_approved": True
+                    "is_approved": True,
+                    "phone_verified": False,
+                    "ngo_id": 42
                 }
             }
         }
@@ -83,6 +85,7 @@ class UserInfoResponse(BaseModel):
     role: str
     is_approved: bool
     phone_verified: bool
+    ngo_id: Optional[int] = None  # NGO ID if user is NGO admin
     
     class Config:
         json_schema_extra = {
@@ -93,7 +96,8 @@ class UserInfoResponse(BaseModel):
                 "email": "john@example.com",
                 "role": "CAMPAIGN_CREATOR",
                 "is_approved": True,
-                "phone_verified": False
+                "phone_verified": False,
+                "ngo_id": 42
             }
         }
 
@@ -248,7 +252,8 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
             "email": user.email,
             "role": user.role.value if hasattr(user.role, 'value') else str(user.role),
             "is_approved": user.is_approved,
-            "phone_verified": user.phone_verified_at is not None
+            "phone_verified": user.phone_verified_at is not None,
+            "ngo_id": user.ngo_id
         }
     )
 
@@ -277,7 +282,8 @@ def get_me(current_user: User = Depends(get_current_user)):
         email=current_user.email,
         role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
         is_approved=current_user.is_approved,
-        phone_verified=current_user.phone_verified_at is not None
+        phone_verified=current_user.phone_verified_at is not None,
+        ngo_id=current_user.ngo_id  # Include NGO ID if user has one
     )
 
 
