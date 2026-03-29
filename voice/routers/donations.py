@@ -268,7 +268,7 @@ def get_donor_donations(
     
     donations = db.query(Donation).filter(
         Donation.donor_id == donor_id
-    ).offset(skip).limit(limit).all()
+    ).order_by(Donation.created_at.desc()).offset(skip).limit(limit).all()
     
     return donations
 

@@ -37,6 +37,14 @@ export default function PortalCampaignCreate() {
         setNgoStatus(status);
         setCheckingNgo(false);
       } catch (err) {
+        // If token expired, wait a moment for refresh to complete and retry
+        if (err.message === 'Invalid or expired token') {
+          console.log('Token expired during NGO check, waiting for refresh...');
+          setTimeout(() => {
+            checkNgoStatus(); // Retry after refresh
+          }, 1000);
+          return; // Don't set checkingNgo to false yet
+        }
         console.error('Failed to check NGO status:', err);
         setCheckingNgo(false);
       }
@@ -72,26 +80,6 @@ export default function PortalCampaignCreate() {
     return (
       <div className="max-w-lg mx-auto px-4 py-20 text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
-        <p className="mt-4 text-gray-500">Checking your NGO status...</p>
-        <button
-          onClick={() => {
-            const checkNgoStatus = async () => {
-              try {
-                const { getUserNgoStatus } = await import('../api/userStatus');
-                const status = await getUserNgoStatus();
-                setNgoStatus(status);
-                setCheckingNgo(false);
-              } catch (err) {
-                console.error('Failed to check NGO status:', err);
-                setCheckingNgo(false);
-              }
-            };
-            checkNgoStatus();
-          }}
-          className="mt-4 px-4 py-2 text-sm text-emerald-600 hover:text-emerald-700 transition"
-        >
-          Retry
-        </button>
       </div>
     );
   }
