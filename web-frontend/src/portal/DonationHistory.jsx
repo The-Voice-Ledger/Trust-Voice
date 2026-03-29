@@ -265,7 +265,7 @@ export default function DonationHistory() {
               <option value="completed">Completed</option>
               <option value="pending">Pending</option>
               <option value="failed">Failed</option>
-              <option value="processing">Processing</option>
+              <option value="refunded">Refunded</option>
             </select>
           </div>
         </div>
@@ -321,10 +321,21 @@ export default function DonationHistory() {
           <div className="text-center py-16">
             <HiOutlineBanknotes className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-400 mb-4">
-              {filteredDonations.length === 0 ? 'You haven\'t made any donations yet.' : 'No donations match your filters.'}
+              {donations.length === 0 ? 'You haven\'t made any donations yet.' : 'No donations match your filters.'}
             </p>
-            {filteredDonations.length === 0 && (
+            {donations.length === 0 && (
               <Link to="/campaigns" className="text-emerald-600 font-semibold hover:underline text-sm">Explore campaigns →</Link>
+            )}
+            {donations.length > 0 && filteredDonations.length === 0 && (
+              <button 
+                onClick={() => {
+                  setStatusFilter('all');
+                  setSearchTerm('');
+                }}
+                className="text-emerald-600 font-semibold hover:underline text-sm"
+              >
+                Clear filters →
+              </button>
             )}
           </div>
         ) : (
@@ -572,7 +583,6 @@ function StatusBadge({ status }) {
   const colors = {
     completed: 'bg-green-50 text-green-600',
     pending: 'bg-yellow-50 text-yellow-600',
-    processing: 'bg-emerald-50 text-emerald-600',
     failed: 'bg-red-50 text-red-600',
     refunded: 'bg-gray-50 text-gray-600',
   };
