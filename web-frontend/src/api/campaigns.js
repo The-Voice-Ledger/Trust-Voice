@@ -1,5 +1,10 @@
 import { api } from './client';
 
+/** POST /api/campaigns/ — create new campaign */
+export function createCampaign(data) {
+  return api.post('/campaigns/', data);
+}
+
 /** GET /api/campaigns?page=&page_size=&status=&category=&search=&sort=&creator_user_id= */
 export function listCampaigns({ page = 1, pageSize = 12, status, category, search, sort, creatorUserId, ngoId } = {}) {
   return api.get('/campaigns/', {

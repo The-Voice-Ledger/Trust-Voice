@@ -6,10 +6,12 @@
  * After creation, navigates to the campaign editor for further setup.
  */
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { createCampaign } from '../api/campaigns';
+import { getUserNgoStatus } from '../api/userStatus';
+import useAuthStore from '../stores/authStore';
 import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
-import useAuthStore from '../stores/authStore';
 import {
   HiOutlineMapPin, HiOutlineFilm, HiOutlineVideoCameraSlash,
   HiOutlineRocketLaunch, HiOutlineCheckCircle, HiOutlineArrowLeft,
@@ -32,7 +34,6 @@ export default function PortalCampaignCreate() {
   useEffect(() => {
     const checkNgoStatus = async () => {
       try {
-        const { getUserNgoStatus } = await import('../api/userStatus');
         const status = await getUserNgoStatus();
         setNgoStatus(status);
         setCheckingNgo(false);
@@ -125,7 +126,7 @@ export default function PortalCampaignCreate() {
         ngo_id: form.ngo_id || undefined,
       };
 
-      const campaign = await api.post('/campaigns/', payload);
+      const campaign = await createCampaign(payload);
 
       // Upload video if provided
       if (form.video_file && campaign?.id) {
