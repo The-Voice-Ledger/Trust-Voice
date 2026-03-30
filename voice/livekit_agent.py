@@ -66,6 +66,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Import conversation analytics for tracking
+from voice.conversation.analytics import ConversationAnalytics
+
 logger = logging.getLogger("vbv-livekit-agent")
 logger.setLevel(logging.INFO)
 
@@ -105,6 +108,7 @@ async def _send_action_card(ctx: RunContext, card: dict) -> None:
     "wants to find, browse, list, or discover campaigns."
 ))
 async def search_campaigns(
+    ctx: RunContext,
     category: Annotated[str | None, "Campaign category (education, health, water, environment, food, shelter, economic, community)"] = None,
     location: Annotated[str | None, "Location or region to filter by (e.g. Kenya, Nairobi)"] = None,
     keyword: Annotated[str | None, "Free-text keyword to search in titles and descriptions"] = None,
@@ -113,7 +117,25 @@ async def search_campaigns(
     from sqlalchemy import or_, func
     from database.models import Campaign
 
+    userdata = ctx.userdata
+    user_id = userdata.get("user_id")
+    session_id = userdata.get("session_id", "unknown")
+
+    # Track funnel step: campaign selection
     db = _get_db()
+    try:
+        ConversationAnalytics.track_event(
+            user_id=user_id,
+            session_id=session_id,
+            event_type="step_completed",
+            current_step="campaign_selection",
+            conversation_state="donating",
+            event_data={"category": category, "location": location, "keyword": keyword},
+            db=db
+        )
+    except Exception as e:
+        logger.warning(f"Failed to track campaign selection step: {e}")
+    
     try:
         q = db.query(Campaign).filter(Campaign.status == "active")
         if category:
@@ -148,8 +170,10 @@ async def search_campaigns(
                 "location": c.location_country or c.location_region or "N/A",
                 "raised_usd": round(raised, 2),
                 "goal_usd": round(goal, 2),
-                "progress_pct": pct,
+                "percentage": pct,
+                "description": (c.description or "")[:200] + "..." if len(c.description or "") > 200 else (c.description or ""),
             })
+
         return json.dumps({"campaigns": results})
     finally:
         db.close()
@@ -325,6 +349,24 @@ async def donate_to_campaign(
 
     userdata = ctx.userdata
     user_id = userdata.get("user_id")
+    session_id = userdata.get("session_id", "unknown")
+
+    # Track funnel step: amount entry
+    db = _get_db()
+    try:
+        ConversationAnalytics.track_event(
+            user_id=user_id,
+            session_id=session_id,
+            event_type="step_completed",
+            current_step="amount_entry",
+            conversation_state="donating",
+            event_data={"campaign_id": campaign_id, "amount": amount, "currency": currency},
+            db=db
+        )
+    except Exception as e:
+        logger.warning(f"Failed to track amount entry step: {e}")
+    finally:
+        db.close()
 
     if not user_id or user_id == "web_anonymous":
         return json.dumps({"error": "You need to be signed in to donate. Please log in first."})
@@ -421,6 +463,23 @@ async def donate_to_campaign(
                     "campaign_id": campaign.id,
                     "donation_id": str(result.get("donation_id", "")),
                 })
+
+                # Track funnel step: payment method selection
+                try:
+                    db = _get_db()
+                    ConversationAnalytics.track_event(
+                        user_id=user_id,
+                        session_id=session_id,
+                        event_type="step_completed",
+                        current_step="payment_method",
+                        conversation_state="donating",
+                        event_data={"payment_method": payment_method or "auto_detected"},
+                        db=db
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to track payment method step: {e}")
+                finally:
+                    db.close()
             else:
                 response["instructions"] = result.get("instructions", "")
                 # Push M-Pesa confirmation card
@@ -1751,7 +1810,7 @@ async def vbv_voice_session(ctx: JobContext):
     participant = await ctx.wait_for_participant()
     logger.info(f"Participant joined: {participant.identity}")
 
-    # Extract user metadata set in the JWT
+    # Extract user metadata set in JWT
     metadata = {}
     if participant.metadata:
         try:
@@ -1763,11 +1822,34 @@ async def vbv_voice_session(ctx: JobContext):
     user_role = metadata.get("role", "DONOR")
     user_id = metadata.get("user_id", "web_anonymous")
 
+    # Track conversation start in analytics
+    db = _get_db()
+    try:
+        ConversationAnalytics.track_event(
+            user_id=user_id,
+            session_id=ctx.room.name,
+            event_type="conversation_started",
+            conversation_state="donating",
+            db=db
+        )
+        
+        # Update daily metrics
+        ConversationAnalytics.update_daily_metrics(
+            conversation_type="donating",
+            metric_type="started",
+            db=db
+        )
+    except Exception as e:
+        logger.warning(f"Failed to track conversation start: {e}")
+    finally:
+        db.close()
+
     # Build userdata dict — passed to all tools via RunContext
     userdata = {
         "user_id": user_id,
         "name": user_name,
         "role": user_role,
+        "session_id": ctx.room.name,
     }
 
     # ── Tier 3: Ambient context pre-fetch ──
@@ -1784,16 +1866,65 @@ async def vbv_voice_session(ctx: JobContext):
         userdata=userdata,
     )
 
-    # Start the session with our agent + noise cancellation
-    await session.start(
-        agent=VBVAssistant(
-            user_name=user_name,
-            user_role=user_role,
-            context_addendum=context_addendum,
-        ),
-        room=ctx.room,
-        room_input_options=room_io.RoomInputOptions(),
-    )
+    # Start the session and track completion when it ends
+    try:
+        # Start session with our agent + noise cancellation
+        await session.start(
+            agent=VBVAssistant(
+                user_name=user_name,
+                user_role=user_role,
+                context_addendum=context_addendum,
+            ),
+            room=ctx.room,
+            room_input_options=room_io.RoomInputOptions(),
+        )
+
+        # Track conversation completion when session ends normally
+        db = _get_db()
+        try:
+            ConversationAnalytics.track_event(
+                user_id=user_id,
+                session_id=ctx.room.name,
+                event_type="conversation_completed",
+                conversation_state="donating",
+                db=db
+            )
+            
+            # Update daily metrics
+            ConversationAnalytics.update_daily_metrics(
+                conversation_type="donating",
+                metric_type="completed",
+                db=db
+            )
+        except Exception as e:
+            logger.warning(f"Failed to track conversation completion: {e}")
+        finally:
+            db.close()
+
+    except Exception as e:
+        # Track conversation abandonment when session ends with error
+        db = _get_db()
+        try:
+            ConversationAnalytics.track_event(
+                user_id=user_id,
+                session_id=ctx.room.name,
+                event_type="conversation_abandoned",
+                conversation_state="donating",
+                db=db
+            )
+            
+            # Update daily metrics
+            ConversationAnalytics.update_daily_metrics(
+                conversation_type="donating",
+                metric_type="abandoned",
+                db=db
+            )
+        except Exception as e:
+            logger.warning(f"Failed to track conversation abandonment: {e}")
+        finally:
+            db.close()
+        
+        logger.error(f"Session error: {e}")
 
     # ── Tier 3: Push proactive action cards ──
     for card in ambient.get("cards", []):
