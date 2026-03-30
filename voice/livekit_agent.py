@@ -1144,7 +1144,8 @@ async def view_my_campaigns(ctx: RunContext) -> str:
         # Find NGO linked to user
         ngo = (
             db.query(NGOOrganization)
-            .filter(NGOOrganization.admin_user_id == user.id)
+            .join(NGOOrganization.admin_users)
+            .filter(User.id == user.id)
             .first()
         )
         
@@ -1876,7 +1877,7 @@ async def vbv_voice_session(ctx: JobContext):
                 context_addendum=context_addendum,
             ),
             room=ctx.room,
-            room_input_options=room_io.RoomInputOptions(),
+            room_options=room_io.RoomOptions(),
         )
 
         # Track conversation completion when session ends normally
