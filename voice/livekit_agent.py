@@ -1422,7 +1422,7 @@ async def get_project_milestones(
     campaign_id: Annotated[int, "Campaign ID to get milestones for"],
 ) -> str:
     """Get milestones for a campaign."""
-    from database.models import Campaign, Milestone
+    from database.models import Campaign, ProjectMilestone
 
     try:
         db = _get_db()
@@ -1434,9 +1434,9 @@ async def get_project_milestones(
 
         # Get milestones
         milestones = (
-            db.query(Milestone)
-            .filter(Milestone.campaign_id == campaign_id)
-            .order_by(Milestone.target_amount_usd)
+            db.query(ProjectMilestone)
+            .filter(ProjectMilestone.campaign_id == campaign_id)
+            .order_by(ProjectMilestone.target_amount_usd)
             .all()
         )
 
