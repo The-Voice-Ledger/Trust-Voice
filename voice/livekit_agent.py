@@ -1315,9 +1315,15 @@ async def withdraw_funds(
         # Check if user owns the campaign (through NGO)
         ngo = None
         if hasattr(campaign, 'ngo_id') and campaign.ngo_id:
-            ngo = db.query(NGOOrganization).filter(NGOOrganization.id == campaign.ngo_id).first()
+            ngo = (
+                db.query(NGOOrganization)
+                .join(NGOOrganization.admin_users)
+                .filter(User.id == user_id)
+                .filter(NGOOrganization.id == campaign.ngo_id)
+                .first()
+            )
         
-        if not ngo or ngo.admin_user_id != user.id:
+        if not ngo:
             return "You can only withdraw funds from campaigns you own."
 
         # Prepare withdrawal request
