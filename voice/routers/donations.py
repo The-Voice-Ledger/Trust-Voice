@@ -59,6 +59,7 @@ class DonationResponse(BaseModel):
     donor_message: Optional[str]
     is_anonymous: bool
     created_at: datetime
+    stripe_checkout_url: Optional[str] = None  # Added for Stripe payment completion
     
     class Config:
         from_attributes = True
@@ -147,6 +148,7 @@ async def create_donation(
     # Note: In production, these would be actual API calls
     # For now, we'll use mock/stub implementations
     stripe_client_secret = None
+    stripe_checkout_url = None  # Initialize variable to ensure it's available later
     
     if donation.payment_method == "mpesa":
         # Initiate M-Pesa STK Push
@@ -190,10 +192,12 @@ async def create_donation(
             db_donation.payment_intent_id = checkout_session["id"]
             # Store checkout URL to return to frontend
             stripe_checkout_url = checkout_session.get("url")
+            logger.info(f"✅ Stripe checkout successful. URL: {stripe_checkout_url}")
         else:
             db_donation.status = "failed"
             logger.warning(f"Stripe checkout failed for donation {db_donation.id}: {checkout_session}")
             stripe_checkout_url = None
+            logger.info(f"❌ Set stripe_checkout_url to None")
         
     elif donation.payment_method == "crypto":
         # TODO: Implement blockchain transaction
@@ -226,7 +230,10 @@ async def create_donation(
         "updated_at": getattr(db_donation, 'updated_at', db_donation.created_at),
     }
     if donation.payment_method == "stripe" and stripe_checkout_url:
+        logger.info(f"✅ Adding stripe_checkout_url to response: {stripe_checkout_url}")
         response["stripe_checkout_url"] = stripe_checkout_url
+    else:
+        logger.info(f"❌ Not adding stripe_checkout_url. Method: {donation.payment_method}, URL: {stripe_checkout_url}")
     
     return response
 
