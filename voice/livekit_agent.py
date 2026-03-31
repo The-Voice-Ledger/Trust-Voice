@@ -1883,7 +1883,7 @@ async def vbv_voice_session(ctx: JobContext):
                 context_addendum=context_addendum,
             ),
             room=ctx.room,
-            room_options=room_io.RoomOptions(),
+            room_input_options=room_io.RoomInputOptions(),
         )
 
         # Track conversation completion when session ends normally
