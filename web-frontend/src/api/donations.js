@@ -1,5 +1,10 @@
 import { api } from './client';
 
+/** GET /api/donors/telegram/:telegramId - get donor by Telegram ID */
+export function getDonorByTelegram(telegramId) {
+  return api.get(`/donors/telegram/${telegramId}`);
+}
+
 /** POST /api/donations/ — create donation & initiate payment */
 export function createDonation(data) {
   return api.post('/donations/', data);
@@ -13,6 +18,11 @@ export function getDonation(id) {
 /** GET /api/donations/donor/:donorId */
 export function getDonorDonations(donorId, { skip = 0, limit = 50 } = {}) {
   return api.get(`/donations/donor/${donorId}`, { skip, limit });
+}
+
+/** GET /api/donations/campaign/:campaignId */
+export function getCampaignDetails(campaignId) {
+  return api.get(`/donations/campaign/${campaignId}`);
 }
 
 /** GET /api/donations/:id/receipt */

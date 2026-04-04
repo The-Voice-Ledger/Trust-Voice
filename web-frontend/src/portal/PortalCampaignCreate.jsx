@@ -5,11 +5,13 @@
  * Gated on the user having a verified NGO (ngo_id).
  * After creation, navigates to the campaign editor for further setup.
  */
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { createCampaign } from '../api/campaigns';
+import { getUserNgoStatus } from '../api/userStatus';
+import useAuthStore from '../stores/authStore';
 import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
-import useAuthStore from '../stores/authStore';
 import {
   HiOutlineMapPin, HiOutlineFilm, HiOutlineVideoCameraSlash,
   HiOutlineRocketLaunch, HiOutlineCheckCircle, HiOutlineArrowLeft,
@@ -25,6 +27,36 @@ export default function PortalCampaignCreate() {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [ngoStatus, setNgoStatus] = useState(null);
+  const [checkingNgo, setCheckingNgo] = useState(true);
+
+  // Check NGO status on component mount
+  useEffect(() => {
+    const checkNgoStatus = async () => {
+      try {
+        const status = await getUserNgoStatus();
+        setNgoStatus(status);
+        setCheckingNgo(false);
+      } catch (err) {
+        // If token expired, wait a moment for refresh to complete and retry
+        if (err.message === 'Invalid or expired token') {
+          console.log('Token expired during NGO check, waiting for refresh...');
+          setTimeout(() => {
+            checkNgoStatus(); // Retry after refresh
+          }, 1000);
+          return; // Don't set checkingNgo to false yet
+        }
+        console.error('Failed to check NGO status:', err);
+        setCheckingNgo(false);
+      }
+    };
+
+    if (user) {
+      checkNgoStatus();
+    } else {
+      setCheckingNgo(false);
+    }
+  }, [user]);
   const [success, setSuccess] = useState(null);
 
   const [form, setForm] = useState({
@@ -37,15 +69,24 @@ export default function PortalCampaignCreate() {
     location_gps: '',
     start_date: '',
     end_date: '',
-    ngo_id: user?.ngo_id || '',
+    ngo_id: ngoStatus?.ngo?.id || user?.ngo_id || '',
     video_file: null,
     video_url: '',
   });
 
   const isAdmin = ['SYSTEM_ADMIN', 'SUPER_ADMIN'].includes((user?.role || '').toUpperCase());
 
-  // Gate: must have ngo_id (admins are exempt — they can pick an NGO)
-  if (!user?.ngo_id && !isAdmin) {
+  // Show loading while checking NGO status
+  if (checkingNgo) {
+    return (
+      <div className="max-w-lg mx-auto px-4 py-20 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+      </div>
+    );
+  }
+
+  // Gate: must have approved NGO (admins are exempt — they can pick an NGO)
+  if (!ngoStatus?.has_ngo && !isAdmin) {
     return (
       <div className="max-w-lg mx-auto px-4 py-20 text-center">
         <HiOutlineRocketLaunch className="w-12 h-12 text-gray-300 mx-auto mb-4" />
@@ -85,7 +126,7 @@ export default function PortalCampaignCreate() {
         ngo_id: form.ngo_id || undefined,
       };
 
-      const campaign = await api.post('/campaigns/', payload);
+      const campaign = await createCampaign(payload);
 
       // Upload video if provided
       if (form.video_file && campaign?.id) {

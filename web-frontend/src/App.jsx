@@ -25,6 +25,7 @@ import PortalCampaignCreate from './portal/PortalCampaignCreate'
 import MilestoneManager from './portal/MilestoneManager'
 import CampaignFinancials from './portal/CampaignFinancials'
 import FunderDashboard from './portal/FunderDashboard'
+import DonationHistory from './portal/DonationHistory'
 import PortalAdminSection from './portal/PortalAdminSection'
 import PortalVerify from './portal/PortalVerify'
 import PortalHistory from './portal/PortalHistory'
@@ -161,7 +162,7 @@ export default function App() {
         <Route path="projects/:id/financials" element={<CampaignFinancials />} />
         <Route path="create" element={<PortalCampaignCreate />} />
         {/* Funder */}
-        <Route path="donations" element={<FunderDashboard />} />
+        <Route path="donations" element={<DonationHistory />} />
         <Route path="receipts" element={<FunderDashboard />} />
         {/* Admin — each sub-route renders the correct CRUD section */}
         <Route path="admin/ngos" element={<PortalAdminSection />} />

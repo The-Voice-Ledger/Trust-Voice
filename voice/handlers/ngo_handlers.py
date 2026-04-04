@@ -248,7 +248,15 @@ async def handle_withdraw_funds(
                     if parsed_id:
                         campaign_uuid = parsed_id
             
-            # Fallback: try direct UUID parsing
+            # Fallback: try direct integer ID parsing first (from AI agent)
+            if not campaign_uuid and campaign_id:
+                try:
+                    # AI agent passes integer campaign IDs
+                    campaign_uuid = int(campaign_id)
+                except (ValueError, TypeError):
+                    pass
+            
+            # Final fallback: try UUID parsing
             if not campaign_uuid and campaign_id:
                 try:
                     campaign_uuid = uuid.UUID(str(campaign_id))

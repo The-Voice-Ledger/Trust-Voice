@@ -140,14 +140,15 @@ class ConversationAnalytics:
                     conversation_type=conversation_type
                 )
                 db.add(metrics)
+                db.flush()  # Ensure the record is created with default values
             
             # Increment counter
             if metric_type == "started":
-                metrics.started_count += 1
+                metrics.started_count = (metrics.started_count or 0) + 1
             elif metric_type == "completed":
-                metrics.completed_count += 1
+                metrics.completed_count = (metrics.completed_count or 0) + 1
             elif metric_type == "abandoned":
-                metrics.abandoned_count += 1
+                metrics.abandoned_count = (metrics.abandoned_count or 0) + 1
             
             metrics.updated_at = datetime.utcnow()
             

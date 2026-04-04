@@ -72,7 +72,7 @@ async def set_pin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     await update.message.reply_text(
         "🔐 Set Your 4-Digit PIN\n\n"
         "This PIN lets you login to the web interface at:\n"
-        "https://trustvoice.app\n\n"
+        "https://web-production-dd7cf.up.railway.app\n\n"
         "PIN Requirements:\n"
         "• Exactly 4 digits (0-9)\n"
         "• Avoid weak PINs:\n"

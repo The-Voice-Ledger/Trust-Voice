@@ -54,6 +54,7 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int = 900  # 15 minutes in seconds
+    refresh_token: Optional[str] = None  # For future refresh implementation
     user: dict
     
     class Config:
@@ -68,7 +69,9 @@ class LoginResponse(BaseModel):
                     "telegram_username": "john_doe",
                     "role": "CAMPAIGN_CREATOR",
                     "email": "john@example.com",
-                    "is_approved": True
+                    "is_approved": True,
+                    "phone_verified": False,
+                    "ngo_id": 42
                 }
             }
         }
@@ -83,6 +86,7 @@ class UserInfoResponse(BaseModel):
     role: str
     is_approved: bool
     phone_verified: bool
+    ngo_id: Optional[int] = None  # NGO ID if user is NGO admin
     
     class Config:
         json_schema_extra = {
@@ -93,7 +97,8 @@ class UserInfoResponse(BaseModel):
                 "email": "john@example.com",
                 "role": "CAMPAIGN_CREATOR",
                 "is_approved": True,
-                "phone_verified": False
+                "phone_verified": False,
+                "ngo_id": 42
             }
         }
 
@@ -102,10 +107,40 @@ class UserInfoResponse(BaseModel):
 # Helper Functions
 # ============================================================================
 
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
-) -> User:
+def get_current_user_for_refresh(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
+    """
+    Get current user from JWT token for refresh endpoint.
+    
+    Allows expired tokens to get a fresh token.
+    """
+    try:
+        # Decode token without checking expiration
+        payload = decode_access_token(credentials.credentials, verify_exp=False)
+        user_id = payload.get("user_id")
+        
+        if user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token: missing user_id"
+            )
+        
+        user = db.query(User).filter(User.id == user_id).first()
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found"
+            )
+        
+        return user
+    except Exception as e:
+        # If token is completely invalid (not just expired)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token"
+        )
+
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)) -> User:
     """
     Dependency to get current user from JWT token.
     
@@ -248,7 +283,8 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
             "email": user.email,
             "role": user.role.value if hasattr(user.role, 'value') else str(user.role),
             "is_approved": user.is_approved,
-            "phone_verified": user.phone_verified_at is not None
+            "phone_verified": user.phone_verified_at is not None,
+            "ngo_id": user.ngo_id
         }
     )
 
@@ -277,7 +313,56 @@ def get_me(current_user: User = Depends(get_current_user)):
         email=current_user.email,
         role=current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
         is_approved=current_user.is_approved,
-        phone_verified=current_user.phone_verified_at is not None
+        phone_verified=current_user.phone_verified_at is not None,
+        ngo_id=current_user.ngo_id  # Include NGO ID if user has one
+    )
+
+
+@router.post("/refresh", response_model=LoginResponse)
+def refresh_token(current_user: User = Depends(get_current_user_for_refresh), db: Session = Depends(get_db)):
+    """
+    Refresh JWT token for authenticated user.
+    
+    Allows expired tokens to get a fresh token.
+    Returns new token with fresh expiry.
+    
+    **Usage:**
+    - Call when token is about to expire (e.g., 5 minutes before expiry)
+    - Call when getting 401 responses (automatic retry)
+    
+    **Error Cases:**
+    - 401: Invalid token (not just expired)
+    - 401: User not found
+    """
+    # Generate new JWT token (15 minutes expiry)
+    token_data = {
+        "user_id": current_user.id,
+        "telegram_user_id": current_user.telegram_user_id,
+        "telegram_username": current_user.telegram_username,
+        "email": current_user.email,
+        "role": current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role)
+    }
+    
+    access_token = create_access_token(
+        data=token_data,
+        expires_delta=timedelta(minutes=15)
+    )
+    
+    # Return new token and user info
+    return LoginResponse(
+        access_token=access_token,
+        token_type="bearer",
+        expires_in=900,  # 15 minutes
+        user={
+            "id": current_user.id,
+            "telegram_user_id": current_user.telegram_user_id,
+            "telegram_username": current_user.telegram_username,
+            "email": current_user.email,
+            "role": current_user.role.value if hasattr(current_user.role, 'value') else str(current_user.role),
+            "is_approved": current_user.is_approved,
+            "phone_verified": current_user.phone_verified_at is not None,
+            "ngo_id": current_user.ngo_id
+        }
     )
 
 

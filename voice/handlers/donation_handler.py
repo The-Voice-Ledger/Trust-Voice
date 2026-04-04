@@ -291,24 +291,27 @@ async def _initiate_stripe_payment(
         if result.get("id") and result.get("client_secret"):
             payment_intent = result
             
-            # Update donation with Stripe info
-            donation.payment_intent_id = payment_intent["id"]
-            db.commit()
+            # Create Stripe Checkout Session first
+            from services.stripe_service import create_checkout_session, get_base_url
             
-            # Create Stripe Checkout Session
-            from services.stripe_service import create_checkout_session
+            # Get dynamic base URL
+            base_url = get_base_url()
             
             checkout_session = create_checkout_session(
                 amount=amount_usd,
                 currency="usd",
-                success_url="https://trustvoice.com/donation/success",
-                cancel_url="https://trustvoice.com/donation/cancel",
+                success_url=f"{base_url}/app/portal",
+                cancel_url=f"{base_url}/app/portal",
                 metadata={
                     "donation_id": str(donation.id),
                     "campaign_id": str(campaign.id),
                     "campaign_title": campaign.title
                 }
             )
+            
+            # Update donation with Checkout Session ID for webhook matching
+            donation.payment_intent_id = checkout_session["id"]  # Store checkout session ID
+            db.commit()
             
             checkout_url = checkout_session["url"]
             

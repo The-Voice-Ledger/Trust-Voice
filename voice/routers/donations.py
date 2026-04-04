@@ -13,7 +13,7 @@ from datetime import datetime
 import logging
 
 from database.db import get_db
-from database.models import Donation, Campaign, Donor
+from database.models import Donation, Campaign, Donor, NGOOrganization
 from voice.routers.admin import get_current_user
 from database.models import User
 
@@ -59,7 +59,7 @@ class DonationResponse(BaseModel):
     donor_message: Optional[str]
     is_anonymous: bool
     created_at: datetime
-    stripe_client_secret: Optional[str] = None  # Add this field
+    stripe_checkout_url: Optional[str] = None  # Added for Stripe payment completion
     
     class Config:
         from_attributes = True
@@ -148,6 +148,7 @@ async def create_donation(
     # Note: In production, these would be actual API calls
     # For now, we'll use mock/stub implementations
     stripe_client_secret = None
+    stripe_checkout_url = None  # Initialize variable to ensure it's available later
     
     if donation.payment_method == "mpesa":
         # Initiate M-Pesa STK Push
@@ -164,17 +165,19 @@ async def create_donation(
         db_donation.payment_intent_id = mpesa_response.get('CheckoutRequestID')
         
     elif donation.payment_method == "stripe":
-        # Create Stripe PaymentIntent (like Telegram bot)
-        from services.stripe_service import create_payment_intent
+        # Create Stripe Checkout Session (like LiveKit voice)
+        from services.stripe_service import create_checkout_session, get_base_url
         
-        # Convert amount to cents (Stripe expects smallest currency unit)
-        amount_cents = int(donation.amount * 100)
+        # Get dynamic base URL
+        base_url = get_base_url()
         
-        logger.info(f"Creating Stripe payment intent: ${donation.amount} for donation {db_donation.id}")
+        logger.info(f"Creating Stripe checkout session: ${donation.amount} for donation {db_donation.id}")
         
-        payment_intent = create_payment_intent(
-            amount=amount_cents,
+        checkout_session = create_checkout_session(
+            amount=donation.amount,
             currency=donation.currency.lower(),
+            success_url=f"{base_url}/app/portal",
+            cancel_url=f"{base_url}/app/portal",
             metadata={
                 "donation_id": str(db_donation.id),
                 "campaign_id": str(campaign.id),
@@ -183,16 +186,18 @@ async def create_donation(
             }
         )
         
-        # Check if Stripe call succeeded (has 'id' and 'client_secret')
-        if payment_intent.get("id") and payment_intent.get("client_secret"):
-            db_donation.status = "pending"  # Waiting for client to confirm payment
-            db_donation.payment_intent_id = payment_intent["id"]
-            # Store client_secret to return to frontend for payment confirmation
-            stripe_client_secret = payment_intent.get("client_secret")
+        # Check if Stripe call succeeded (has 'id' and 'url')
+        if checkout_session.get("id") and checkout_session.get("url"):
+            db_donation.status = "pending"  # Waiting for user to complete payment
+            db_donation.payment_intent_id = checkout_session["id"]
+            # Store checkout URL to return to frontend
+            stripe_checkout_url = checkout_session.get("url")
+            logger.info(f"✅ Stripe checkout successful. URL: {stripe_checkout_url}")
         else:
             db_donation.status = "failed"
-            logger.warning(f"Stripe payment failed for donation {db_donation.id}: {payment_intent}")
-            stripe_client_secret = None
+            logger.warning(f"Stripe checkout failed for donation {db_donation.id}: {checkout_session}")
+            stripe_checkout_url = None
+            logger.info(f"❌ Set stripe_checkout_url to None")
         
     elif donation.payment_method == "crypto":
         # TODO: Implement blockchain transaction
@@ -202,6 +207,10 @@ async def create_donation(
     
     db.flush()
     db.refresh(db_donation)
+    
+    # CRITICAL: Commit transaction to save donation to database
+    db.commit()
+    logger.info(f"✅ Donation created and committed: {db_donation.id}")
     
     # Build response — include client_secret for Stripe payments
     response = {
@@ -220,8 +229,11 @@ async def create_donation(
         "created_at": db_donation.created_at,
         "updated_at": getattr(db_donation, 'updated_at', db_donation.created_at),
     }
-    if donation.payment_method == "stripe" and stripe_client_secret:
-        response["stripe_client_secret"] = stripe_client_secret
+    if donation.payment_method == "stripe" and stripe_checkout_url:
+        logger.info(f"✅ Adding stripe_checkout_url to response: {stripe_checkout_url}")
+        response["stripe_checkout_url"] = stripe_checkout_url
+    else:
+        logger.info(f"❌ Not adding stripe_checkout_url. Method: {donation.payment_method}, URL: {stripe_checkout_url}")
     
     return response
 
@@ -263,9 +275,30 @@ def get_donor_donations(
     
     donations = db.query(Donation).filter(
         Donation.donor_id == donor_id
-    ).offset(skip).limit(limit).all()
+    ).order_by(Donation.created_at.desc()).offset(skip).limit(limit).all()
     
     return donations
+
+
+@router.get("/campaign/{campaign_id}")
+def get_campaign_details(
+    campaign_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Get campaign details including title and NGO name.
+    
+    Useful for displaying campaign information in donation history.
+    """
+    campaign = db.query(Campaign).outerjoin(NGOOrganization, Campaign.ngo_id == NGOOrganization.id).filter(Campaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    
+    return {
+        "id": campaign.id,
+        "title": campaign.title,
+        "ngo_name": campaign.ngo.name if campaign.ngo else None
+    }
 
 
 @router.get("/campaign/{campaign_id}", response_model=List[DonationResponse])
@@ -450,11 +483,14 @@ async def mint_tax_receipt_nft(
             ngo = db.query(NGOOrganization).filter(NGOOrganization.id == campaign.ngo_id).first()
         
         # Create NFT metadata following OpenSea standard
+        from services.stripe_service import get_base_url
+        base_url = get_base_url()
+        
         receipt_metadata = {
             "name": f"TrustVoice Donation Receipt #{donation_id}",
             "description": f"Official tax-deductible donation receipt for ${donation.amount} {donation.currency} to {campaign.title}",
             "image": "ipfs://QmTrustVoiceReceiptTemplateImage",  # TODO: Design receipt image
-            "external_url": f"https://trustvoice.org/receipts/{donation_id}",
+            "external_url": f"{base_url}/app/receipts/{donation_id}",
             "attributes": [
                 {"trait_type": "Donor_Name", "value": donor.preferred_name if donor else "Anonymous"},
                 {"trait_type": "Campaign_Name", "value": campaign.title},

@@ -7,6 +7,10 @@
 
 const BASE = '/api';
 
+// Track if refresh is in progress to prevent infinite loops
+let isRefreshing = false;
+let refreshPromise = null; // Track ongoing refresh promise
+
 // Get token from Zustand store
 let _getToken = null;
 export function setTokenGetter(getter) {
@@ -34,6 +38,91 @@ async function request(method, path, { body, formData, params } = {}) {
   }
 
   const res = await fetch(url.toString(), { method, headers, body: fetchBody });
+
+  // Handle 401 Unauthorized - try token refresh (but not for refresh endpoint itself)
+  if (res.status === 401 && path !== '/auth/refresh' && !isRefreshing) {
+    console.log('Token expired, attempting refresh...');
+    isRefreshing = true; // Set flag to prevent multiple refresh attempts
+    
+    try {
+      // If refresh is already in progress, wait for it
+      if (refreshPromise) {
+        const refreshData = await refreshPromise;
+        if (refreshData && refreshData.access_token) {
+          console.log('Using existing refresh result...');
+          
+          // Retry with new token from existing refresh
+          const newHeaders = { ...headers };
+          newHeaders['Authorization'] = `Bearer ${refreshData.access_token}`;
+          
+          const retryRes = await fetch(url.toString(), { method, headers: newHeaders, body: fetchBody });
+          
+          if (!retryRes.ok) {
+            const err = await retryRes.json().catch(() => ({ detail: retryRes.statusText }));
+            const e = new Error(err.detail || 'Request failed');
+            e.status = retryRes.status;
+            e.data = err;
+            throw e;
+          }
+          
+          if (retryRes.status === 204) return null;
+          return retryRes.json();
+        }
+      }
+      
+      // Start new refresh
+      refreshPromise = (async () => {
+        const { refreshToken } = await import('./auth');
+        return await refreshToken();
+      })();
+      
+      const refreshData = await refreshPromise;
+      
+      if (refreshData && refreshData.access_token) {
+        console.log('Token refreshed successfully, retrying request...');
+        
+        // Update auth store with new token
+        try {
+          const authStore = await import('../stores/authStore');
+          const store = authStore.default.getState();
+          if (store.user) {
+            authStore.default.setState({ 
+              token: refreshData.access_token, 
+              user: refreshData.user 
+            });
+          }
+        } catch (storeError) {
+          console.warn('Could not update auth store:', storeError);
+        }
+        
+        // Retry with new token
+        const newHeaders = { ...headers };
+        newHeaders['Authorization'] = `Bearer ${refreshData.access_token}`;
+        
+        const retryRes = await fetch(url.toString(), { method, headers: newHeaders, body: fetchBody });
+        
+        if (!retryRes.ok) {
+          const err = await retryRes.json().catch(() => ({ detail: retryRes.statusText }));
+          const e = new Error(err.detail || 'Request failed');
+          e.status = retryRes.status;
+          e.data = err;
+          throw e;
+        }
+        
+        if (retryRes.status === 204) return null;
+        return retryRes.json();
+      } else {
+        console.log('Token refresh failed, logging out...');
+        throw new Error('Session expired. Please login again.');
+      }
+    } catch (refreshError) {
+      console.error('Token refresh failed:', refreshError);
+      throw new Error('Session expired. Please login again.');
+    } finally {
+      isRefreshing = false; // Reset flag
+      refreshPromise = null; // Clear promise
+    }
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));

@@ -189,7 +189,7 @@ def test_admin_approval():
                     telegram_username=pending.telegram_username,
                     telegram_first_name=pending.telegram_first_name,
                     telegram_last_name=pending.telegram_last_name,
-                    email=f"{pending.telegram_username}@test.trustvoice.app",
+                    email=f"{pending.telegram_username}@web-production-dd7cf.up.railway.app",
                     role=pending.requested_role,  # String value
                     pin_hash=pending.pin_hash,
                     pin_set_at=datetime.utcnow(),

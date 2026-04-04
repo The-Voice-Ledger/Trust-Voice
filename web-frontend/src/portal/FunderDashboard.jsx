@@ -7,31 +7,70 @@
  */
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getDonorDonations, getReceipt, verifyReceipt, getTaxSummary } from '../api/donations';
+import { getDonorDonations, getReceipt, verifyReceipt, getTaxSummary, getDonorByTelegram, getCampaignDetails } from '../api/donations';
+import useAuthStore from '../stores/authStore';
 import {
   HiOutlineCheckCircle, HiOutlineXCircle, HiOutlineXMark,
   HiOutlineBanknotes, HiOutlineDocumentText, HiOutlineWallet,
   HiOutlineSparkles,
 } from '../components/icons';
 
-export default function FunderDashboard({ user }) {
+export default function FunderDashboard() {
+  const user = useAuthStore((s) => s.user);
   const [donations, setDonations] = useState([]);
+  const [campaigns, setCampaigns] = useState({}); // Store campaign data by ID
   const [taxSummary, setTaxSummary] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [donorId, setDonorId] = useState(null);
   const [activeReceipt, setActiveReceipt] = useState(null);
   const [receiptLoading, setReceiptLoading] = useState(false);
   const currentYear = new Date().getFullYear();
 
+  // Detect donor ID from user's telegram ID
   useEffect(() => {
-    if (!user?.donor_id) { setLoading(false); return; }
+    const detectDonorId = async () => {
+      if (!user?.telegram_user_id) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const donor = await getDonorByTelegram(user.telegram_user_id);
+        setDonorId(donor.id);
+      } catch (err) {
+        console.error('Could not detect donor from logged-in user:', err);
+        setLoading(false);
+      }
+    };
+    
+    detectDonorId();
+  }, [user]);
+
+  useEffect(() => {
+    if (!donorId) { setLoading(false); return; }
     Promise.all([
-      getDonorDonations(user.donor_id).catch(() => []),
-      getTaxSummary(currentYear, user.donor_id).catch(() => null),
+      getDonorDonations(donorId).catch(() => []),
+      getTaxSummary(currentYear, donorId).catch(() => null),
     ]).then(([d, tax]) => {
-      setDonations(Array.isArray(d) ? d : d?.items || d?.donations || []);
+      const donationsData = Array.isArray(d) ? d : d?.items || d?.donations || [];
+      setDonations(donationsData);
       setTaxSummary(tax);
+      
+      // Fetch campaign details for unique campaign IDs
+      const uniqueCampaignIds = [...new Set(donationsData.map(donation => donation.campaign_id))];
+      const campaignPromises = uniqueCampaignIds.map(campaignId => 
+        getCampaignDetails(campaignId).catch(() => ({ id: campaignId, title: null, ngo_name: null }))
+      );
+      
+      Promise.all(campaignPromises).then(campaignData => {
+        const campaignsMap = {};
+        campaignData.forEach(campaign => {
+          campaignsMap[campaign.id] = campaign;
+        });
+        setCampaigns(campaignsMap);
+      });
     }).finally(() => setLoading(false));
-  }, [user?.donor_id, currentYear]);
+  }, [donorId, currentYear]);
 
   const totalsByFx = donations
     .filter((d) => d.status === 'completed')
@@ -161,7 +200,7 @@ export default function FunderDashboard({ user }) {
                   <span className="ml-2 text-xs text-gray-400">via {d.payment_method}</span>
                 </p>
                 <p className="text-xs text-gray-400">
-                  Campaign #{d.campaign_id} · {new Date(d.created_at).toLocaleDateString()}
+                  {campaigns[d.campaign_id]?.title || 'Campaign #' + d.campaign_id} · {new Date(d.created_at).toLocaleDateString()}
                 </p>
               </div>
               <div className="flex items-center gap-2">

@@ -158,6 +158,7 @@ export default function DonateCheckout() {
                 campaignId={campaign.id}
                 donorId={user?.donor_id}
                 onSuccess={() => setDonated(true)}
+                onError={(err) => console.error('Donation error:', err)}
               />
             )}
           </div>

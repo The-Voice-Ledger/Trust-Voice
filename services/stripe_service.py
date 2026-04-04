@@ -14,9 +14,33 @@ Stripe Flow:
 import os
 import stripe
 from typing import Dict, Optional
+from urllib.parse import urlparse
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def get_base_url() -> str:
+    """
+    Dynamically detect the base URL based on environment.
+    
+    Returns:
+        Base URL without trailing slash
+    """
+    # Check for explicit base URL in environment
+    if os.getenv('BASE_URL'):
+        return os.getenv('BASE_URL').rstrip('/')
+    
+    # Check for Railway production URL
+    if os.getenv('RAILWAY_PUBLIC_URL'):
+        return os.getenv('RAILWAY_PUBLIC_URL').rstrip('/')
+    
+    # Check for Railway service URL
+    if os.getenv('RAILWAY_SERVICE_URL'):
+        return os.getenv('RAILWAY_SERVICE_URL').rstrip('/')
+    
+    # Default to localhost for development
+    return 'http://localhost:5173'
 
 
 class StripeService:
@@ -224,6 +248,9 @@ class StripeService:
         
         # Real API call
         try:
+            # Get dynamic base URL
+            base_url = get_base_url()
+            
             session_params = {
                 'payment_method_types': ['card'],
                 'mode': 'payment',
@@ -237,8 +264,8 @@ class StripeService:
                     },
                     'quantity': 1,
                 }],
-                'success_url': success_url or 'https://trustvoice.com/donation/success',
-                'cancel_url': cancel_url or 'https://trustvoice.com/donation/cancel',
+                'success_url': success_url or f'{base_url}/app/portal',
+                'cancel_url': cancel_url or f'{base_url}/app/portal',
             }
             
             # Add metadata if provided

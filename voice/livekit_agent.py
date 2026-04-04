@@ -66,6 +66,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Import conversation analytics for tracking
+from voice.conversation.analytics import ConversationAnalytics
+
 logger = logging.getLogger("vbv-livekit-agent")
 logger.setLevel(logging.INFO)
 
@@ -105,6 +108,7 @@ async def _send_action_card(ctx: RunContext, card: dict) -> None:
     "wants to find, browse, list, or discover campaigns."
 ))
 async def search_campaigns(
+    ctx: RunContext,
     category: Annotated[str | None, "Campaign category (education, health, water, environment, food, shelter, economic, community)"] = None,
     location: Annotated[str | None, "Location or region to filter by (e.g. Kenya, Nairobi)"] = None,
     keyword: Annotated[str | None, "Free-text keyword to search in titles and descriptions"] = None,
@@ -113,7 +117,25 @@ async def search_campaigns(
     from sqlalchemy import or_, func
     from database.models import Campaign
 
+    userdata = ctx.userdata
+    user_id = userdata.get("user_id")
+    session_id = userdata.get("session_id", "unknown")
+
+    # Track funnel step: campaign selection
     db = _get_db()
+    try:
+        ConversationAnalytics.track_event(
+            user_id=user_id,
+            session_id=session_id,
+            event_type="step_completed",
+            current_step="campaign_selection",
+            conversation_state="donating",
+            event_data={"category": category, "location": location, "keyword": keyword},
+            db=db
+        )
+    except Exception as e:
+        logger.warning(f"Failed to track campaign selection step: {e}")
+    
     try:
         q = db.query(Campaign).filter(Campaign.status == "active")
         if category:
@@ -148,8 +170,10 @@ async def search_campaigns(
                 "location": c.location_country or c.location_region or "N/A",
                 "raised_usd": round(raised, 2),
                 "goal_usd": round(goal, 2),
-                "progress_pct": pct,
+                "percentage": pct,
+                "description": (c.description or "")[:200] + "..." if len(c.description or "") > 200 else (c.description or ""),
             })
+
         return json.dumps({"campaigns": results})
     finally:
         db.close()
@@ -325,6 +349,24 @@ async def donate_to_campaign(
 
     userdata = ctx.userdata
     user_id = userdata.get("user_id")
+    session_id = userdata.get("session_id", "unknown")
+
+    # Track funnel step: amount entry
+    db = _get_db()
+    try:
+        ConversationAnalytics.track_event(
+            user_id=user_id,
+            session_id=session_id,
+            event_type="step_completed",
+            current_step="amount_entry",
+            conversation_state="donating",
+            event_data={"campaign_id": campaign_id, "amount": amount, "currency": currency},
+            db=db
+        )
+    except Exception as e:
+        logger.warning(f"Failed to track amount entry step: {e}")
+    finally:
+        db.close()
 
     if not user_id or user_id == "web_anonymous":
         return json.dumps({"error": "You need to be signed in to donate. Please log in first."})
@@ -421,6 +463,23 @@ async def donate_to_campaign(
                     "campaign_id": campaign.id,
                     "donation_id": str(result.get("donation_id", "")),
                 })
+
+                # Track funnel step: payment method selection
+                try:
+                    db = _get_db()
+                    ConversationAnalytics.track_event(
+                        user_id=user_id,
+                        session_id=session_id,
+                        event_type="step_completed",
+                        current_step="payment_method",
+                        conversation_state="donating",
+                        event_data={"payment_method": payment_method or "auto_detected"},
+                        db=db
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to track payment method step: {e}")
+                finally:
+                    db.close()
             else:
                 response["instructions"] = result.get("instructions", "")
                 # Push M-Pesa confirmation card
@@ -464,7 +523,7 @@ async def check_donation_status(
         return "Please log in to check donation status."
 
     try:
-        db = get_db()
+        db = _get_db()
         
         donation_uuid = None
         if donation_id:
@@ -919,14 +978,30 @@ async def create_campaign(
 @function_tool(description=(
     "Register a new NGO organization on the platform. Use when the user wants to "
     "register their NGO, create a new organization, or sign up as an NGO. "
-    "The registration will be reviewed and approved by an admin."
+    "The registration will be reviewed and approved by an admin. "
+    "Required fields: organization name, email, country, description/mission. "
+    "Optional fields: website, phone, registration number, organization type, "
+    "focus areas, year established, staff size, region, address, banking details."
 ))
 async def register_ngo(
     ctx: RunContext,
     name: Annotated[str, "NGO organization name"],
     description: Annotated[str, "NGO description and mission statement"],
+    email: Annotated[str, "Contact email for the NGO"],
+    country: Annotated[str, "Country where the NGO operates"],
     website: Annotated[str | None, "NGO website URL (optional)"] = None,
-    country: Annotated[str | None, "Country where the NGO operates"] = None,
+    phone_number: Annotated[str | None, "Contact phone number (optional)"] = None,
+    registration_number: Annotated[str | None, "Official registration number (optional)"] = None,
+    organization_type: Annotated[str | None, "Organization type (optional)"] = None,
+    focus_areas: Annotated[str | None, "Focus areas (optional)"] = None,
+    year_established: Annotated[int | None, "Year established (optional)"] = None,
+    staff_size: Annotated[str | None, "Staff size (optional)"] = None,
+    region: Annotated[str | None, "Region/state (optional)"] = None,
+    address: Annotated[str | None, "Physical address (optional)"] = None,
+    bank_name: Annotated[str | None, "Bank name (optional)"] = None,
+    account_number: Annotated[str | None, "Bank account number (optional)"] = None,
+    account_name: Annotated[str | None, "Bank account name (optional)"] = None,
+    swift_code: Annotated[str | None, "Bank SWIFT code (optional)"] = None,
 ) -> str:
     """Register a new NGO organization."""
     from voice.handlers.ngo_handlers import handle_register_ngo
@@ -938,14 +1013,37 @@ async def register_ngo(
         return "Please log in to register an NGO organization."
 
     try:
-        db = get_db()
+        db = _get_db()
+        
+        # Validate mandatory fields before proceeding
+        if not name or not name.strip():
+            return "NGO organization name is required. Please provide the name of your organization."
+        if not email or not email.strip():
+            return "Contact email is required. Please provide a valid email address."
+        if not country or not country.strip():
+            return "Country is required. Please specify the country where your NGO operates."
+        if not description or not description.strip():
+            return "Mission statement/description is required. Please describe your NGO's mission and activities."
         
         # Prepare registration data
         entities = {
-            "organization_name": name,
-            "description": description,
-            "website": website or "",
-            "country": country or "",
+            "organization_name": name.strip(),
+            "mission_statement": description.strip(),  # Handler expects mission_statement
+            "email": email.strip(),  # Use provided email parameter
+            "country": country.strip(),  # Required field
+            "website": website.strip() if website else "",
+            "phone_number": phone_number.strip() if phone_number else "",
+            "registration_number": registration_number.strip() if registration_number else "",
+            "organization_type": organization_type.strip() if organization_type else "",
+            "focus_areas": focus_areas.strip() if focus_areas else "",
+            "year_established": year_established,
+            "staff_size": staff_size.strip() if staff_size else "",
+            "region": region.strip() if region else "",
+            "address": address.strip() if address else "",
+            "bank_name": bank_name.strip() if bank_name else "",
+            "account_number": account_number.strip() if account_number else "",
+            "account_name": account_name.strip() if account_name else "",
+            "swift_code": swift_code.strip() if swift_code else "",
         }
         
         # Call the NGO registration handler
@@ -953,24 +1051,56 @@ async def register_ngo(
             entities=entities, user_id=user_id, db=db, context={}
         )
         
-        if "error" in result:
-            return f"Registration failed: {result['error']}"
+        # Handle different response cases from handler
+        if not result.get("success", False):
+            # Handle failure cases
+            message = result.get("message", "Registration failed")
+            
+            if result.get("needs_clarification"):
+                # Handle missing required fields
+                missing_fields = result.get("missing_entities", [])
+                if missing_fields:
+                    return f"To complete your NGO registration, I need: {', '.join(missing_fields)}. Please provide these details."
+                else:
+                    return f"Registration failed: {message}"
+            else:
+                # Handle other failures (duplicate, system error, etc.)
+                return f"Registration failed: {message}"
         
-        # Format success response
+        # Handle success case
+        application_id = result.get("data", {}).get("application_id", "N/A")
         response = f"NGO Registration Submitted Successfully!\n\n"
         response += f"• Organization: {name}\n"
+        response += f"• Email: {email}\n"
+        response += f"• Country: {country}\n"
         response += f"• Description: {description[:100]}{'...' if len(description) > 100 else ''}\n"
         
+        # Add optional fields if provided
         if website:
             response += f"• Website: {website}\n"
-        
-        if country:
-            response += f"• Country: {country}\n"
+        if phone_number:
+            response += f"• Phone: {phone_number}\n"
+        if registration_number:
+            response += f"• Registration Number: {registration_number}\n"
+        if organization_type:
+            response += f"• Organization Type: {organization_type}\n"
+        if focus_areas:
+            response += f"• Focus Areas: {focus_areas}\n"
+        if year_established:
+            response += f"• Year Established: {year_established}\n"
+        if staff_size:
+            response += f"• Staff Size: {staff_size}\n"
+        if region:
+            response += f"• Region: {region}\n"
+        if address:
+            response += f"• Address: {address}\n"
+        if bank_name:
+            response += f"• Bank: {bank_name}\n"
         
         response += f"\nYour registration is now pending admin review. "
         response += f"You'll receive a notification once it's approved. "
         response += f"This typically takes 1-2 business days.\n\n"
-        response += f"Registration ID: {result.get('registration_id', 'N/A')}"
+        response += f"Application ID: {application_id}"
         
         return response
         
@@ -998,7 +1128,7 @@ async def view_my_campaigns(ctx: RunContext) -> str:
         return "Please log in to view your campaigns."
 
     try:
-        db = get_db()
+        db = _get_db()
         
         # Find user
         user = None
@@ -1014,7 +1144,8 @@ async def view_my_campaigns(ctx: RunContext) -> str:
         # Find NGO linked to user
         ngo = (
             db.query(NGOOrganization)
-            .filter(NGOOrganization.admin_user_id == user.id)
+            .join(NGOOrganization.admin_users)
+            .filter(User.id == user.id)
             .first()
         )
         
@@ -1091,7 +1222,7 @@ async def submit_field_report(
         return "Only field agents can submit verification reports."
 
     try:
-        db = get_db()
+        db = _get_db()
         
         # Verify campaign exists
         campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
@@ -1163,7 +1294,7 @@ async def withdraw_funds(
         return "Please log in to withdraw funds."
 
     try:
-        db = get_db()
+        db = _get_db()
         
         # Find user
         user = None
@@ -1184,9 +1315,15 @@ async def withdraw_funds(
         # Check if user owns the campaign (through NGO)
         ngo = None
         if hasattr(campaign, 'ngo_id') and campaign.ngo_id:
-            ngo = db.query(NGOOrganization).filter(NGOOrganization.id == campaign.ngo_id).first()
+            ngo = (
+                db.query(NGOOrganization)
+                .join(NGOOrganization.admin_users)
+                .filter(User.id == user_id)
+                .filter(NGOOrganization.id == campaign.ngo_id)
+                .first()
+            )
         
-        if not ngo or ngo.admin_user_id != user.id:
+        if not ngo:
             return "You can only withdraw funds from campaigns you own."
 
         # Prepare withdrawal request
@@ -1250,7 +1387,7 @@ async def change_language(
         return "Supported languages are 'en' (English) and 'am' (Amharic)."
 
     try:
-        db = get_db()
+        db = _get_db()
         
         # Find user
         user = None
@@ -1291,10 +1428,10 @@ async def get_project_milestones(
     campaign_id: Annotated[int, "Campaign ID to get milestones for"],
 ) -> str:
     """Get milestones for a campaign."""
-    from database.models import Campaign, Milestone
+    from database.models import Campaign, ProjectMilestone
 
     try:
-        db = get_db()
+        db = _get_db()
         
         # Verify campaign exists
         campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
@@ -1303,9 +1440,9 @@ async def get_project_milestones(
 
         # Get milestones
         milestones = (
-            db.query(Milestone)
-            .filter(Milestone.campaign_id == campaign_id)
-            .order_by(Milestone.target_amount_usd)
+            db.query(ProjectMilestone)
+            .filter(ProjectMilestone.campaign_id == campaign_id)
+            .order_by(ProjectMilestone.target_amount_usd)
             .all()
         )
 
@@ -1356,7 +1493,7 @@ async def get_project_treasury(
     from database.models import Campaign, Milestone, Donation
 
     try:
-        db = get_db()
+        db = _get_db()
         
         # Verify campaign exists
         campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
@@ -1680,7 +1817,7 @@ async def vbv_voice_session(ctx: JobContext):
     participant = await ctx.wait_for_participant()
     logger.info(f"Participant joined: {participant.identity}")
 
-    # Extract user metadata set in the JWT
+    # Extract user metadata set in JWT
     metadata = {}
     if participant.metadata:
         try:
@@ -1692,11 +1829,34 @@ async def vbv_voice_session(ctx: JobContext):
     user_role = metadata.get("role", "DONOR")
     user_id = metadata.get("user_id", "web_anonymous")
 
+    # Track conversation start in analytics
+    db = _get_db()
+    try:
+        ConversationAnalytics.track_event(
+            user_id=user_id,
+            session_id=ctx.room.name,
+            event_type="conversation_started",
+            conversation_state="donating",
+            db=db
+        )
+        
+        # Update daily metrics
+        ConversationAnalytics.update_daily_metrics(
+            conversation_type="donating",
+            metric_type="started",
+            db=db
+        )
+    except Exception as e:
+        logger.warning(f"Failed to track conversation start: {e}")
+    finally:
+        db.close()
+
     # Build userdata dict — passed to all tools via RunContext
     userdata = {
         "user_id": user_id,
         "name": user_name,
         "role": user_role,
+        "session_id": ctx.room.name,
     }
 
     # ── Tier 3: Ambient context pre-fetch ──
@@ -1713,16 +1873,65 @@ async def vbv_voice_session(ctx: JobContext):
         userdata=userdata,
     )
 
-    # Start the session with our agent + noise cancellation
-    await session.start(
-        agent=VBVAssistant(
-            user_name=user_name,
-            user_role=user_role,
-            context_addendum=context_addendum,
-        ),
-        room=ctx.room,
-        room_input_options=room_io.RoomInputOptions(),
-    )
+    # Start the session and track completion when it ends
+    try:
+        # Start session with our agent + noise cancellation
+        await session.start(
+            agent=VBVAssistant(
+                user_name=user_name,
+                user_role=user_role,
+                context_addendum=context_addendum,
+            ),
+            room=ctx.room,
+            room_input_options=room_io.RoomInputOptions(),
+        )
+
+        # Track conversation completion when session ends normally
+        db = _get_db()
+        try:
+            ConversationAnalytics.track_event(
+                user_id=user_id,
+                session_id=ctx.room.name,
+                event_type="conversation_completed",
+                conversation_state="donating",
+                db=db
+            )
+            
+            # Update daily metrics
+            ConversationAnalytics.update_daily_metrics(
+                conversation_type="donating",
+                metric_type="completed",
+                db=db
+            )
+        except Exception as e:
+            logger.warning(f"Failed to track conversation completion: {e}")
+        finally:
+            db.close()
+
+    except Exception as e:
+        # Track conversation abandonment when session ends with error
+        db = _get_db()
+        try:
+            ConversationAnalytics.track_event(
+                user_id=user_id,
+                session_id=ctx.room.name,
+                event_type="conversation_abandoned",
+                conversation_state="donating",
+                db=db
+            )
+            
+            # Update daily metrics
+            ConversationAnalytics.update_daily_metrics(
+                conversation_type="donating",
+                metric_type="abandoned",
+                db=db
+            )
+        except Exception as e:
+            logger.warning(f"Failed to track conversation abandonment: {e}")
+        finally:
+            db.close()
+        
+        logger.error(f"Session error: {e}")
 
     # ── Tier 3: Push proactive action cards ──
     for card in ambient.get("cards", []):
