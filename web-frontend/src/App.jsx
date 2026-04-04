@@ -1,4 +1,4 @@
-import { Component } from 'react'
+import { Component, Suspense, lazy } from 'react'
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import MobileBottomNav from './components/MobileBottomNav'
@@ -14,6 +14,7 @@ import Assistant from './pages/Assistant'
 import ProjectLanding from './projects/ProjectLanding'
 import ProjectsIndex from './pages/ProjectsIndex'
 import NgoProfile from './pages/NgoProfile'
+const MoringaOasisInvestor = lazy(() => import('./projects/MoringaOasisInvestor'))
 
 /* Portal imports */
 import PortalLayout from './portal/PortalLayout'
@@ -145,6 +146,7 @@ export default function App() {
     <Routes>
       {/* Project pages — their own layout */}
       <Route path="/project/:slug" element={<ProjectLanding />} />
+      <Route path="/project/:slug/oasis" element={<Suspense fallback={null}><MoringaOasisInvestor /></Suspense>} />
 
       {/* Assistant — own layout, no footer */}
       <Route path="/assistant" element={<AssistantLayout />} />

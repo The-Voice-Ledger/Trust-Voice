@@ -37,6 +37,7 @@ const PROJECTS = {
         { label: 'The Opportunity', href: '#market' },
         { label: 'Experience', href: '#experience' },
         { label: 'The Plan', href: '#financials' },
+        { label: 'Explore the Oasis', href: '/project/ukulima/oasis' },
       ],
       ctaLabel: 'Build the Farm',
       ctaLink: '/fund',
@@ -233,6 +234,24 @@ const PROJECTS = {
       caption: 'Real people, real soil, real progress. Visitors experiencing the Moringa Oasis first-hand.',
     },
 
+    /* -- Video Showcase 3 (drone view of the farm) -- */
+    videoShowcase3: {
+      sectionLabel: 'From Above',
+      heading: 'The Oasis from the Sky',
+      url: 'https://pub-d7d5ddc508cf4600aa65de6f72991926.r2.dev/oasis/DroneView1.mp4',
+      playLabel: 'Watch the drone footage',
+      caption: 'Aerial view of the Moringa Oasis. 10 hectares of high-density Moringa production in rural Zimbabwe.',
+    },
+
+    /* -- Video Showcase 4 (ground-level walk) -- */
+    videoShowcase4: {
+      sectionLabel: 'On the Ground',
+      heading: 'Walk Through the Rows',
+      url: 'https://pub-d7d5ddc508cf4600aa65de6f72991926.r2.dev/oasis/GroundView.mp4',
+      playLabel: 'Walk the farm',
+      caption: 'Ground-level walk through the Moringa rows. Red laterite soil, drip irrigation lines, and the silvery trunks of the trees.',
+    },
+
     /* -- Experience Timeline (Live-Work-Learn) -- */
     experience: {
       sectionLabel: 'The Experience',
@@ -324,7 +343,7 @@ const PROJECTS = {
     },
 
     /* -- Sections to render (order matters) -- */
-    sections: ['hero', 'videoShowcase', 'vision', 'narrative', 'market', 'pipeline', 'pillars', 'advantages', 'videoShowcase2', 'experience', 'financials', 'cta'],
+    sections: ['hero', 'videoShowcase', 'vision', 'narrative', 'market', 'pipeline', 'pillars', 'advantages', 'videoShowcase2', 'videoShowcase3', 'videoShowcase4', 'experience', 'financials', 'cta'],
   },
 };
 

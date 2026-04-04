@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { HiOutlineBars3, HiOutlineXMark } from '../../components/icons';
 
 /**
@@ -20,11 +20,15 @@ export default function ProjectNavbar({ config }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  const navigate = useNavigate();
+
   const scrollTo = (href) => {
     setMobileOpen(false);
     if (href.startsWith('#')) {
       const el = document.querySelector(href);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      navigate(href);
     }
   };
 

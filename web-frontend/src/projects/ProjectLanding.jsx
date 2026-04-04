@@ -23,6 +23,8 @@ const SECTION_MAP = {
   hero: ProjectHero,
   videoShowcase: ProjectVideoShowcase,
   videoShowcase2: ProjectVideoShowcase,
+  videoShowcase3: ProjectVideoShowcase,
+  videoShowcase4: ProjectVideoShowcase,
   vision: ProjectVision,
   narrative: ProjectNarrative,
   market: ProjectMarket,
