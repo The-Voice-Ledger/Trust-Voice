@@ -11,9 +11,9 @@
 
 Ukulima is not just a farm. It is a vertically integrated ecosystem where growing, processing, marketing, distribution, and community all happen in the same place.
 
-The concept is simple: control the entire value chain from seed to shelf, and make the farm itself the marketing engine. Visitors arrive as curious supporters and leave as buyers, distributors, or long-term community members. Funders do not simply donate and walk away. Their contribution is a ticket into the ecosystem, making them part of the farming community with real, ongoing access to the land and its output.
+The concept is simple: control the entire value chain from seed to shelf, and make the farm itself the marketing engine. Visitors arrive as curious supporters and leave as buyers, distributors, or long-term community members. Funders do not simply donate and walk away. Their contribution is a ticket into the ecosystem, making them part of the farming community with real, ongoing access to the land and its output. 
 
-This document lays out how that works, proposes global distribution models for Moringa products, and establishes a framework that can be replicated for other curated projects on the TrustVoice platform.
+This document lays out how that works, proposes global distribution models for Moringa products, and establishes a framework that can be replicated for other curated projects on the TrustVoice platform. 
 
 ---
 

@@ -326,8 +326,8 @@ function DustParticles({ count = 200 }) {
  *  TERRAIN WITH HEIGHT VARIATION
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function Terrain() {
-  const farmTex  = useTexture(`${R2}/Oasis1.jpeg`);
-  const outerTex = useTexture(`${R2}/FarmNew1.jpeg`);
+  const farmTex  = useTexture(`${R2}/MorinaGreen.jpeg`);
+  const outerTex = useTexture(`${R2}/murrrphoto-vineyards-5943255.jpg`);
   const noise2D = useMemo(() => createNoise2D(createSeededRandom(20260404)), []);
 
   useMemo(() => {
@@ -404,11 +404,11 @@ function Terrain() {
  *  PHOTO PANORAMA BACKDROP
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function Panoramas() {
-  const t2 = useTexture(`${R2}/Oasis2.jpeg`);
-  const t3 = useTexture(`${R2}/Oasis3.jpeg`);
-  const t4 = useTexture(`${R2}/Oasis4.jpeg`);
-  const t5 = useTexture(`${R2}/Oasis5.jpeg`);
-  const t6 = useTexture(`${R2}/Oasis6.jpeg`);
+  const t2 = useTexture(`${R2}/MorinaGreen.jpeg`);
+  const t3 = useTexture(`${R2}/murrrphoto-vineyards-5943255.jpg`);
+  const t4 = useTexture(`${R2}/MorinaGreen.jpeg`);
+  const t5 = useTexture(`${R2}/murrrphoto-vineyards-5943255.jpg`);
+  const t6 = useTexture(`${R2}/MorinaGreen.jpeg`);
   useMemo(() => { [t2, t3, t4, t5, t6].forEach((t) => { t.colorSpace = THREE.SRGBColorSpace; }); }, [t2, t3, t4, t5, t6]);
 
   const panels = [

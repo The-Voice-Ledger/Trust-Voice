@@ -27,6 +27,8 @@ files = [
     "documentation/Oasis4.jpeg",
     "documentation/Oasis5.jpeg",
     "documentation/Oasis6.jpeg",
+    "documentation/MorinaGreen.jpeg",
+    "documentation/murrrphoto-vineyards-5943255.jpg",
 ]
 
 for f in files:
