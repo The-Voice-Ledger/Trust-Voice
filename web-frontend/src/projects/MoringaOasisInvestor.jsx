@@ -40,10 +40,11 @@ function createSeededRandom(seed) {
 /* ━━━━━━━  INVESTMENT DATA  ━━━━━━━ */
 const HOTSPOTS = [
   { id: 'farm', label: 'Moringa Plantation', position: [-10, 1.5, 6], milestone: 1, budget: '$110,000', detail: '10-hectare high-density Moringa oleifera plantation with solar-powered drip irrigation, borehole, and fencing. 12,000+ trees producing year-round leaf harvests.', status: 'Active', color: EMERALD, icon: 'leaf' },
-  { id: 'plant', label: 'Processing Plant', position: [0, 3.5, -2], milestone: 2, budget: '$50,000', detail: 'Industrial-grade dehydrators, hammer mill, cold-press oil expeller, capsule filler, and packaging line. Transforms raw leaf into export-ready powder, oil, capsules, and tea.', status: 'Funded', color: '#2563EB', icon: 'factory' },
-  { id: 'shop', label: 'Farm Shop & Visitor Center', position: [10, 2, 6], milestone: 2, budget: '$15,000', detail: 'On-site retail store selling Moringa products direct to visitors. Tasting bar, product education, and branded packaging. Gateway to the eco-tourism experience.', status: 'Planned', color: AMBER, icon: 'shop' },
+  { id: 'plant', label: 'Processing Plant', position: [0, 3.5, -2], milestone: 2, budget: '$170,000', detail: 'Industrial-grade dehydrators, hammer mill, cold-press oil expeller, capsule filler, QA bench, and packaging line. Transforms raw leaf into export-ready powder, oil, capsules, and tea.', status: 'Planned', color: '#2563EB', icon: 'factory' },
+  { id: 'shop', label: 'Farm Shop & Visitor Center', position: [10, 2, 6], milestone: 2, budget: '$80,000', detail: 'On-site retail store with tasting bar, cold storage, shelving, branded packaging, and visitor-ready checkout flow.', status: 'Planned', color: AMBER, icon: 'shop' },
+  { id: 'marketing', label: 'Marketing (Film)', position: [5, 1.9, 14], milestone: 2, budget: '$75,000', detail: 'Documentary production, launch films, campaign edits, and distribution-ready media assets for market traction.', status: 'Planned', color: '#EC4899', icon: 'shield' },
   { id: 'lodge', label: 'Eco-Lodge Village', position: [16, 2, -8], milestone: 3, budget: '$180,000', detail: '6 solar-powered cottages for investors, volunteers, and eco-tourists. The "Live-Work-Learn" experience, driving recurring revenue and community engagement.', status: 'Planned', color: EMERALD, icon: 'lodge' },
-  { id: 'ops', label: 'Certification & Market Access', position: [-2, 2.5, -16], milestone: 4, budget: '$45,000', detail: 'EU Organic, HACCP food safety, and Fair Trade certification. Opens access to premium European, UK, and Middle-Eastern distribution channels.', status: 'Planned', color: '#7C3AED', icon: 'shield' },
+  { id: 'ops', label: 'Certification & Market Access', position: [-2, 2.5, -16], milestone: 4, budget: '$60,000', detail: 'EU Organic, HACCP food safety, and Fair Trade certification. Opens access to premium European, UK, and Middle-Eastern distribution channels.', status: 'Planned', color: '#7C3AED', icon: 'shield' },
 ];
 
 const UNIT_ECONOMICS = {
@@ -122,8 +123,9 @@ const PROOF_ARTIFACTS = {
     { item: 'Site masterplan and irrigation concept drafted', budget: 28000, spent: 0, progress: 65, proof: 'web-frontend/src/projects/MoringaOasisInvestor.jsx' },
   ],
   2: [
-    { item: 'Processing line specification and layout design', budget: 50000, spent: 0, progress: 35, proof: 'documentation/TRANSPARENCY_TAX_RECEIPTS_DESIGN.md' },
-    { item: 'Farm shop concept, SKU and visitor flow design', budget: 15000, spent: 0, progress: 42, proof: 'documentation/business/MORINGA_VERTICAL_INTEGRATION.md' },
+    { item: 'Processing plant equipment package and layout', budget: 170000, spent: 0, progress: 35, proof: 'documentation/TRANSPARENCY_TAX_RECEIPTS_DESIGN.md' },
+    { item: 'Farm shop fit-out, POS, and tasting flow', budget: 80000, spent: 0, progress: 42, proof: 'documentation/business/MORINGA_VERTICAL_INTEGRATION.md' },
+    { item: 'Marketing (Film): documentary and launch campaign production', budget: 75000, spent: 0, progress: 30, proof: 'documentation/business/MORINGA_VERTICAL_INTEGRATION.md' },
   ],
   3: [
     { item: 'Eco-lodge architectural concept and phasing', budget: 180000, spent: 0, progress: 28, proof: 'documentation/business/MORINGA_VERTICAL_INTEGRATION.md' },

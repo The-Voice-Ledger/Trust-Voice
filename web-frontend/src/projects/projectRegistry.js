@@ -288,9 +288,11 @@ const PROJECTS = {
       heading: 'Building the Oasis',
       capex: [
         { item: 'Agri-Infrastructure', amount: '$110K', detail: 'Solar drip irrigation, borehole, and high-yield Moringa seedlings' },
-        { item: 'Processing Facility', amount: '$50K', detail: 'Industrial dehydrators, pulverizers, and cold-press oil expellers. This is where the value gets created' },
+        { item: 'Processing Plant', amount: '$170K', detail: 'Industrial dehydrators, hammer mill, cold-press oil expeller, capsule filler, QA bench, and packaging line for export-grade output' },
+        { item: 'Farm Shop & Visitor Center', amount: '$80K', detail: 'Retail build-out, tasting counter, cold storage, POS systems, shelving, and visitor-ready product presentation' },
         { item: 'Eco-Lodge', amount: '$180K', detail: '6 solar-powered cottages ($30K each) for contributors and travelers to live and learn on the farm' },
         { item: 'Operations & Certification', amount: '$60K', detail: 'EU/UK Organic certification and market access so the farm can sell globally from day one' },
+        { item: 'Marketing (Film)', amount: '$75K', detail: 'Documentary production, launch films, campaign edits, and field media assets for investor and customer acquisition' },
       ],
       projections: [
         { year: 'Year 1', label: 'Building', revenue: '$180K', ebitda: null },

@@ -8,13 +8,23 @@
  */
 import { useEffect, useRef, useState } from 'react';
 
-/* Percentage of $400K for each capex item (visual weight) */
-const CAPEX_SHARES = [
-  { pct: 27.5, color: '#059669' },  // Agri-Infrastructure $110K
-  { pct: 12.5, color: '#D97706' },  // Processing $50K
-  { pct: 45,   color: '#059669' },  // Eco-Lodge $180K
-  { pct: 15,   color: '#D97706' },  // Operations $60K
-];
+function parseAmountToNumber(amount = '') {
+  const cleaned = String(amount).replace(/[$,\s]/g, '').toUpperCase();
+  if (!cleaned) return 0;
+  if (cleaned.endsWith('K')) return Number(cleaned.slice(0, -1)) * 1000;
+  if (cleaned.endsWith('M')) return Number(cleaned.slice(0, -1)) * 1000000;
+  return Number(cleaned);
+}
+
+function deriveCapexShares(capex = [], primary = '#059669', secondary = '#D97706') {
+  const total = capex.reduce((sum, row) => sum + parseAmountToNumber(row.amount), 0);
+  if (!total) return capex.map((_, i) => ({ pct: 0, color: i % 2 === 0 ? primary : secondary }));
+  return capex.map((row, i) => {
+    const value = parseAmountToNumber(row.amount);
+    const pct = Math.round((value / total) * 1000) / 10;
+    return { pct, color: i % 2 === 0 ? primary : secondary };
+  });
+}
 
 /* Progress ring component (animated SVG circle) */
 function Ring({ pct, color, size = 64, delay = 0, visible }) {
@@ -104,6 +114,7 @@ export default function ProjectFinancials({ config }) {
   const { financials, theme } = config;
   const p = theme.primary;
   const s = theme.secondary;
+  const capexShares = deriveCapexShares(financials.capex, p, s || '#D97706');
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
 
@@ -178,7 +189,7 @@ export default function ProjectFinancials({ config }) {
             </h3>
             <div className="space-y-5">
               {financials.capex.map((row, i) => {
-                const share = CAPEX_SHARES[i] || { pct: 25, color: p };
+                const share = capexShares[i] || { pct: 0, color: p };
                 return (
                   <div
                     key={i}
