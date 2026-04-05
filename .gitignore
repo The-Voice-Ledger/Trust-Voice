@@ -98,6 +98,7 @@ media/
 
 # Documentation (generated/auto-generated)
 docs/_build/
+documentation/
 documentation/labs/
 documentation/*.md
 
