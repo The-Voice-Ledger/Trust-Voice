@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from database.models import User
 from database.db import get_db
 from voice.handlers.milestone_handler import (
     create_milestones,
@@ -21,6 +22,7 @@ from voice.handlers.milestone_handler import (
     release_milestone_funds,
     get_project_treasury,
 )
+from voice.routers.admin import get_current_user
 
 logger = logging.getLogger(__name__)
 
@@ -65,12 +67,12 @@ class ReleaseRequest(BaseModel):
 @router.post("/create")
 async def api_create_milestones(
     req: MilestonesCreateRequest,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-    # TODO: wire up real auth — for now pass user_id as header
 ):
     """Create milestones for a campaign."""
-    # Placeholder user_id — in production, extract from JWT/session
-    user_id = "system"
+    # Use authenticated user ID
+    user_id = str(current_user.id)
     result = await create_milestones(
         campaign_id=req.campaign_id,
         milestones_data=[m.model_dump() for m in req.milestones],
@@ -94,10 +96,11 @@ async def api_get_milestones(campaign_id: int, db: Session = Depends(get_db)):
 @router.post("/evidence")
 async def api_submit_evidence(
     req: EvidenceSubmitRequest,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Submit evidence for a milestone."""
-    user_id = "system"
+    user_id = str(current_user.id)
     result = await submit_milestone_evidence(
         milestone_id=req.milestone_id,
         notes=req.notes,
@@ -113,10 +116,11 @@ async def api_submit_evidence(
 @router.post("/verify")
 async def api_verify_milestone(
     req: VerifyRequest,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Field agent verifies a milestone."""
-    user_id = "system"
+    user_id = str(current_user.id)
     result = await verify_milestone(
         milestone_id=req.milestone_id,
         trust_score=req.trust_score,
@@ -135,10 +139,11 @@ async def api_verify_milestone(
 @router.post("/release")
 async def api_release_funds(
     req: ReleaseRequest,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Release funds for a verified milestone."""
-    user_id = "system"
+    user_id = str(current_user.id)
     result = await release_milestone_funds(
         milestone_id=req.milestone_id,
         user_id=user_id,

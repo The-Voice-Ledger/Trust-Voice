@@ -35,14 +35,31 @@ PLATFORM_DEFAULT_FEE = Decimal("0.0600")  # 6 %
 # ── Helpers ─────────────────────────────────────────────────────
 
 def _resolve_user(user_id: str, db: Session) -> Optional[User]:
-    """Resolve a user from UUID string or telegram_user_id."""
+    """Resolve a user from integer ID, UUID string, or telegram_user_id."""
+    
+    # Try as integer ID first (for database primary keys)
+    try:
+        int_id = int(user_id)
+        user = db.query(User).filter(User.id == int_id).first()
+        if user:
+            return user
+    except (ValueError, TypeError):
+        pass
+    
+    # Try as UUID string (for UUID-based users)
     try:
         uid = uuid.UUID(user_id)
-        return db.query(User).filter(User.id == uid).first()
+        user = db.query(User).filter(User.id == uid).first()
+        if user:
+            return user
     except (ValueError, AttributeError):
-        return db.query(User).filter(
-            User.telegram_user_id == str(user_id)
-        ).first()
+        pass
+    
+    # Try as Telegram user ID (for Telegram users)
+    user = db.query(User).filter(
+        User.telegram_user_id == str(user_id)
+    ).first()
+    return user
 
 
 def _owns_campaign(user: User, campaign: Campaign, db: Session) -> bool:
