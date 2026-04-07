@@ -32,7 +32,7 @@ router = APIRouter(prefix="/milestones", tags=["Milestones"])
 class MilestoneCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
     description: str = ""
-    target_amount: float = Field(..., gt=0)
+    target_amount_usd: float = Field(..., gt=0)
     due_date: Optional[str] = None
 
 

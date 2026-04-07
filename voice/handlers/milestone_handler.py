@@ -67,8 +67,8 @@ async def create_milestones(
     Create milestones for a campaign.
 
     milestones_data: [
-        {"title": "Land Preparation", "description": "...", "target_amount": 2000},
-        {"title": "Seedling Purchase", "description": "...", "target_amount": 3500},
+        {"title": "Land Preparation", "description": "...", "target_amount_usd": 2000},
+        {"title": "Seedling Purchase", "description": "...", "target_amount_usd": 3500},
     ]
     """
     user = _resolve_user(user_id, db)
@@ -96,7 +96,7 @@ async def create_milestones(
     created: List[Dict] = []
     total_target = Decimal("0")
     for idx, m in enumerate(milestones_data, start=1):
-        target = Decimal(str(m["target_amount"]))
+        target = Decimal(str(m["target_amount_usd"]))
         total_target += target
         ms = ProjectMilestone(
             campaign_id=campaign_id,

@@ -393,9 +393,9 @@ class TestCreateMilestones:
         result = await create_milestones(
             campaign_id=2,
             milestones_data=[
-                {"title": "Land Survey", "target_amount": 5000},
-                {"title": "Drilling", "target_amount": 10000},
-                {"title": "Testing", "target_amount": 5000},
+                {"title": "Land Survey", "target_amount_usd": 5000},
+                {"title": "Drilling", "target_amount_usd": 10000},
+                {"title": "Testing", "target_amount_usd": 5000},
             ],
             user_id="tg_admin",
             db=db_session,
@@ -417,7 +417,7 @@ class TestCreateMilestones:
 
         result = await create_milestones(
             campaign_id=1,
-            milestones_data=[{"title": "Extra", "target_amount": 1000}],
+            milestones_data=[{"title": "Extra", "target_amount_usd": 1000}],
             user_id="tg_admin", db=db_session,
         )
         assert "error" in result
