@@ -1,11 +1,12 @@
 """
 NGO Intent Handlers - Lab 6 Part 3
 
-Handles 4 NGO-related voice commands:
+Handles 5 NGO-related voice commands:
 1. create_campaign - Create new fundraising campaign
-2. withdraw_funds - Request payout (uses Lab 5 payout_handler)
-3. field_report - Submit impact verification (uses Lab 5 impact_handler)
-4. ngo_dashboard - View NGO stats and campaigns
+2. create_milestones - Create milestones for a campaign
+3. withdraw_funds - Request payout (uses Lab 5 payout_handler)
+4. field_report - Submit impact verification (uses Lab 5 impact_handler)
+5. ngo_dashboard - View NGO stats and campaigns
 """
 
 import logging
@@ -166,6 +167,162 @@ async def handle_create_campaign(
             "message": "Sorry, I had trouble creating the campaign. Please try again or contact support.",
             "needs_clarification": False,
             "missing_entities": [],
+            "data": {}
+        }
+
+
+# ============================================================================
+# HANDLER 2: CREATE MILESTONES
+# ============================================================================
+
+@register_handler("create_milestones")
+async def handle_create_milestones(
+    entities: Dict[str, Any],
+    user_id: str,
+    db: Session,
+    context: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Create milestones for a campaign.
+    
+    Required entities:
+        - campaign_id: Campaign ID to create milestones for
+        - milestones: Milestone details in format "Title:Description:Amount" separated by semicolons
+        
+    Example: "Land Preparation:Clear and prepare land:5000;Seedling Purchase:Buy seedlings:3000"
+    
+    Returns success message and milestone details.
+    """
+    try:
+        # Get user (registered UUID or guest telegram_user_id)
+        try:
+            uid = uuid.UUID(user_id)
+            user = db.query(User).filter(User.id == uid).first()
+        except (ValueError, AttributeError):
+            user = db.query(User).filter(User.telegram_user_id == user_id).first()
+        
+        if not user:
+            return {
+                "success": False,
+                "message": "User account not found. Please register first.",
+                "data": {}
+            }
+        
+        # Check user role
+        user_role = (user.role or "").upper()
+        if user_role not in ("SYSTEM_ADMIN", "SUPER_ADMIN", "NGO_ADMIN", "CAMPAIGN_CREATOR"):
+            return {
+                "success": False,
+                "message": f"Only NGO admins and campaign creators can create milestones. Your role: {user_role}",
+                "data": {}
+            }
+        
+        # Get required entities
+        campaign_id = entities.get("campaign_id")
+        milestones_str = entities.get("milestones")
+        
+        if not campaign_id:
+            return {
+                "success": False,
+                "message": "I need to know which campaign to create milestones for. Please provide a campaign ID.",
+                "data": {},
+                "needs_clarification": True,
+                "missing_entities": ["campaign_id"]
+            }
+        
+        if not milestones_str:
+            return {
+                "success": False,
+                "message": "I need the milestone details. Please provide the milestones in the format: 'Title:Description:Amount' separated by semicolons.",
+                "data": {},
+                "needs_clarification": True,
+                "missing_entities": ["milestones"]
+            }
+        
+        # Parse milestones from string format
+        milestones_data = []
+        try:
+            for milestone_str in milestones_str.split(";"):
+                if milestone_str.strip():
+                    parts = milestone_str.strip().split(":")
+                    if len(parts) >= 3:
+                        title = parts[0].strip()
+                        description = parts[1].strip()
+                        try:
+                            target_amount = float(parts[2].strip())
+                        except ValueError:
+                            return {
+                                "success": False,
+                                "message": f"Invalid target amount in milestone: '{milestone_str}'. Amount must be a number.",
+                                "data": {}
+                            }
+                        
+                        milestones_data.append({
+                            "title": title,
+                            "description": description,
+                            "target_amount_usd": target_amount
+                        })
+                    else:
+                        return {
+                            "success": False,
+                            "message": f"Invalid milestone format: '{milestone_str}'. Expected format: 'Title:Description:Amount'",
+                            "data": {}
+                        }
+        except Exception as parse_error:
+            logger.error(f"Error parsing milestones: {parse_error}")
+            return {
+                "success": False,
+                "message": f"Failed to parse milestones: {str(parse_error)}",
+                "data": {}
+            }
+        
+        if not milestones_data:
+            return {
+                "success": False,
+                "message": "No valid milestones provided. Please provide at least one milestone.",
+                "data": {}
+            }
+        
+        # Import and call milestone handler
+        from voice.handlers.milestone_handler import create_milestones as _create
+        
+        # Use appropriate user ID for milestone handler
+        if user.telegram_user_id:
+            handler_user_id = str(user.telegram_user_id)
+        else:
+            handler_user_id = str(user.id)
+        
+        result = await _create(
+            campaign_id=int(campaign_id),
+            milestones_data=milestones_data,
+            user_id=handler_user_id,
+            db=db,
+        )
+        
+        if result.get("success"):
+            milestone_list = "\n".join([f"  {i+1}. {m['title']}: ${m['target_amount_usd']}" for i, m in enumerate(milestones_data)])
+            return {
+                "success": True,
+                "message": f"Successfully created {len(milestones_data)} milestones for campaign {campaign_id}:\n{milestone_list}",
+                "data": {
+                    "campaign_id": campaign_id,
+                    "milestones_created": len(milestones_data),
+                    "total_target_usd": result.get("total_target_usd", sum(m["target_amount_usd"] for m in milestones_data)),
+                    "milestones": milestones_data
+                }
+            }
+        else:
+            return {
+                "success": False,
+                "message": result.get("error", "Failed to create milestones"),
+                "data": {}
+            }
+            
+    except Exception as e:
+        logger.error(f"Error in create_milestones handler: {e}", exc_info=True)
+        return {
+            "success": False,
+            "message": f"Error creating milestones: {str(e)}",
             "data": {}
         }
 

@@ -54,6 +54,7 @@ REQUIRED_ENTITIES: Dict[str, List[str]] = {
     
     # NGO intents
     "create_campaign": ["title", "goal_amount", "category"],  # Core campaign data
+    "create_milestones": ["campaign_id", "milestones"],  # Campaign ID and milestone details
     "withdraw_funds": ["amount"],  # How much to withdraw
     "field_report": ["campaign_id", "description"],  # Report details
     "view_my_campaigns": [],  # NGO dashboard (fixed name)

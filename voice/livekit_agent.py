@@ -795,6 +795,214 @@ async def submit_milestone_evidence(
 
 
 @function_tool(description=(
+    "Create milestones for a campaign. Use when an NGO admin or campaign creator "
+    "wants to set up project milestones for a campaign. Requires campaign ID and "
+    "list of milestone details with titles, descriptions, and target amounts."
+))
+async def create_milestones(
+    ctx: RunContext,
+    campaign_id: Annotated[int, "The campaign ID to create milestones for"],
+    milestones: Annotated[str, "List of milestone details in format: 'Title:Description:Amount' separated by semicolons. Example: 'Land Preparation:Clear and prepare land:5000;Seedling Purchase:Buy seedlings:3000'"],
+) -> str:
+    """Create milestones for a campaign via voice command."""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"DEBUG: create_milestones tool called with campaign_id={campaign_id}, milestones='{milestones}'")
+    
+    try:
+        from voice.handlers.milestone_handler import create_milestones as _create
+
+        # Debug user context
+        userdata = ctx.userdata or {}
+        livekit_user_id = userdata.get("user_id")
+        user_role = (userdata.get("role") or "").upper()
+        
+        logger.info(f"create_milestones called: livekit_user_id={livekit_user_id}, role={user_role}, campaign_id={campaign_id}")
+
+        if not livekit_user_id or livekit_user_id == "web_anonymous":
+            return json.dumps({
+                "success": False,
+                "error": "You need to be signed in to create milestones. Please log in first."
+            })
+
+        if user_role not in ("SYSTEM_ADMIN", "SUPER_ADMIN", "NGO_ADMIN", "CAMPAIGN_CREATOR"):
+            return json.dumps({
+                "success": False,
+                "error": f"Only NGO admins and campaign creators can create milestones. Your role: {user_role}"
+            })
+
+        # Parse milestones from string format or JSON format
+        milestones_data = []
+        
+        # Check if milestones is JSON format (what AI is sending)
+        if milestones.strip().startswith('{'):
+            try:
+                import json
+                milestone_obj = json.loads(milestones)
+                # Handle single milestone as JSON object
+                if isinstance(milestone_obj, dict):
+                    milestones_data.append({
+                        "title": milestone_obj.get("title", ""),
+                        "description": milestone_obj.get("description", ""),
+                        "target_amount_usd": float(milestone_obj.get("target_amount", 0))
+                    })
+                # Handle multiple milestones as JSON array
+                elif isinstance(milestone_obj, list):
+                    for item in milestone_obj:
+                        if isinstance(item, dict):
+                            milestones_data.append({
+                                "title": item.get("title", ""),
+                                "description": item.get("description", ""),
+                                "target_amount_usd": float(item.get("target_amount", 0))
+                            })
+                logger.info(f"Parsed {len(milestones_data)} milestones from JSON format")
+            except (json.JSONDecodeError, ValueError, TypeError) as parse_error:
+                logger.error(f"Failed to parse JSON milestones: {parse_error}")
+                return json.dumps({
+                    "success": False,
+                    "error": f"Invalid milestone format: {str(parse_error)}"
+                })
+        else:
+            # Parse as original string format: "Title:Description:Amount;Title2:Description2:Amount2"
+            try:
+                for milestone_str in milestones.split(";"):
+                    if milestone_str.strip():
+                        parts = milestone_str.strip().split(":")
+                        if len(parts) >= 3:
+                            title = parts[0].strip()
+                            description = parts[1].strip()
+                            try:
+                                target_amount = float(parts[2].strip())
+                            except ValueError:
+                                return json.dumps({
+                                    "success": False,
+                                    "error": f"Invalid target amount in milestone: '{milestone_str}'. Amount must be a number."
+                                })
+                            
+                            milestones_data.append({
+                                "title": title,
+                                "description": description,
+                                "target_amount_usd": target_amount
+                            })
+                        else:
+                            return json.dumps({
+                                "success": False,
+                                "error": f"Invalid milestone format: '{milestone_str}'. Expected format: 'Title:Description:Amount'"
+                            })
+                logger.info(f"Parsed {len(milestones_data)} milestones from string format")
+            except Exception as parse_error:
+                logger.error(f"Error parsing string milestones: {parse_error}")
+                return json.dumps({
+                    "success": False,
+                    "error": f"Failed to parse milestones: {str(parse_error)}"
+                })
+
+        if not milestones_data:
+            return json.dumps({
+                "success": False,
+                "error": "No valid milestones provided. Please provide at least one milestone."
+            })
+
+        # Find user using enhanced pattern that handles both UUID and Telegram ID
+        from database.models import User
+        import uuid as uuid_lib
+        db = _get_db()
+        try:
+            user = None
+            
+            # Try as UUID first (for database user IDs)
+            try:
+                uid = uuid_lib.UUID(str(livekit_user_id))
+                user = db.query(User).filter(User.id == uid).first()
+                logger.info(f"Tried UUID lookup: {uid} -> {'found' if user else 'not found'}")
+            except (ValueError, AttributeError):
+                pass
+            
+            # Try as integer ID (for numeric database IDs)
+            if not user:
+                try:
+                    uid = int(livekit_user_id)
+                    user = db.query(User).filter(User.id == uid).first()
+                    logger.info(f"Tried integer ID lookup: {uid} -> {'found' if user else 'not found'}")
+                except (ValueError, TypeError):
+                    pass
+            
+            # Try as Telegram user ID
+            if not user:
+                user = db.query(User).filter(User.telegram_user_id == str(livekit_user_id)).first()
+                logger.info(f"Tried Telegram user ID lookup: {livekit_user_id} -> {'found' if user else 'not found'}")
+
+            if not user:
+                return json.dumps({
+                    "success": False,
+                    "error": "User account not found. Please register first.",
+                    "debug_info": {
+                        "livekit_user_id": livekit_user_id,
+                        "user_role": user_role,
+                        "campaign_id": campaign_id,
+                        "lookup_attempts": ["UUID", "integer", "telegram_user_id"]
+                    }
+                })
+            
+            # Use the resolved user's telegram_user_id for milestone handler
+            # This ensures milestone handler can find the user via _resolve_user
+            if user.telegram_user_id:
+                db_user_id = str(user.telegram_user_id)
+            else:
+                db_user_id = str(user.id)  # fallback to UUID string
+            
+            logger.info(f"Calling milestone handler: campaign_id={campaign_id}, db_user_id={db_user_id}")
+            result = await _create(
+                campaign_id=campaign_id,
+                milestones_data=milestones_data,
+                user_id=db_user_id,  # Pass as string for milestone handler
+                db=db,
+            )
+            logger.info(f"Milestone handler result: {result}")
+            
+            # Format response for better user experience
+            if result.get("success"):
+                milestone_list = "\n".join([f"  {i+1}. {m['title']}: ${m['target_amount_usd']}" for i, m in enumerate(milestones_data)])
+                return json.dumps({
+                    "success": True,
+                    "message": f"Successfully created {len(milestones_data)} milestones for campaign {campaign_id}:\n{milestone_list}",
+                    "campaign_id": campaign_id,
+                    "milestones_created": len(milestones_data),
+                    "total_target_usd": result.get("total_target_usd", sum(m["target_amount_usd"] for m in milestones_data))
+                })
+            else:
+                return json.dumps({
+                    "success": False,
+                    "error": result.get("error", "Failed to create milestones"),
+                    "campaign_id": campaign_id
+                })
+                
+        except Exception as handler_error:
+            logger.error(f"Error in milestone handler: {handler_error}", exc_info=True)
+            return json.dumps({
+                "success": False,
+                "error": f"Error processing milestone creation: {str(handler_error)}",
+                "campaign_id": campaign_id
+            })
+        finally:
+            db.close()
+            
+    except ImportError as import_error:
+        logger.error(f"Failed to import milestone handler: {import_error}")
+        return json.dumps({
+            "success": False,
+            "error": "Milestone creation service temporarily unavailable"
+        })
+    except Exception as e:
+        logger.error(f"Unexpected error in create_milestones: {e}", exc_info=True)
+        return json.dumps({
+            "success": False,
+            "error": f"Unexpected error: {str(e)}"
+        })
+
+
+@function_tool(description=(
     "Verify a milestone as a field agent or admin. Use when a field "
     "agent or admin wants to confirm that a milestone has been "
     "completed after reviewing evidence. Requires milestone ID and "
@@ -1728,6 +1936,7 @@ WRITE_TOOLS = [
     approve_payout,
     reject_payout,
     create_campaign,
+    create_milestones,
     register_ngo,
     view_my_campaigns,
     submit_field_report,
@@ -2048,7 +2257,7 @@ async def vbv_voice_session(ctx: JobContext):
         )
     elif role_upper in ("NGO_ADMIN", "CAMPAIGN_CREATOR"):
         capabilities = (
-            "manage your campaigns, submit milestone evidence, "
+            "manage your campaigns, create milestones, submit milestone evidence, "
             "create new campaigns, or check platform stats"
         )
     elif role_upper == "FIELD_AGENT":
