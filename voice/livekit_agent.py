@@ -672,30 +672,126 @@ async def submit_milestone_evidence(
     notes: Annotated[str, "Description of the completed work or evidence"],
 ) -> str:
     """Submit evidence that a milestone has been completed."""
-    from voice.handlers.milestone_handler import submit_milestone_evidence as _submit
-
-    userdata = ctx.userdata
-    user_id = userdata.get("user_id")
-    user_role = (userdata.get("role") or "").upper()
-
-    if not user_id or user_id == "web_anonymous":
-        return json.dumps({"error": "You need to be signed in to submit evidence."})
-
-    if user_role not in ("SYSTEM_ADMIN", "SUPER_ADMIN", "NGO_ADMIN", "CAMPAIGN_CREATOR"):
-        return json.dumps({"error": "Only NGO admins and campaign owners can submit milestone evidence."})
-
-    db = _get_db()
+    import logging
+    logger = logging.getLogger(__name__)
+    
     try:
-        result = await _submit(
-            milestone_id=milestone_id,
-            notes=notes,
-            ipfs_hashes=None,
-            user_id=str(user_id),
-            db=db,
-        )
-        return json.dumps(result)
-    finally:
-        db.close()
+        from voice.handlers.milestone_handler import submit_milestone_evidence as _submit
+
+        # Debug user context
+        userdata = ctx.userdata or {}
+        livekit_user_id = userdata.get("user_id")
+        user_role = (userdata.get("role") or "").upper()
+        
+        logger.info(f"submit_milestone_evidence called: livekit_user_id={livekit_user_id}, role={user_role}, milestone_id={milestone_id}")
+
+        if not livekit_user_id or livekit_user_id == "web_anonymous":
+            return json.dumps({
+                "success": False,
+                "error": "You need to be signed in to submit evidence. Please log in first."
+            })
+
+        if user_role not in ("SYSTEM_ADMIN", "SUPER_ADMIN", "NGO_ADMIN", "CAMPAIGN_CREATOR"):
+            return json.dumps({
+                "success": False,
+                "error": f"Only NGO admins and campaign owners can submit milestone evidence. Your role: {user_role}"
+            })
+
+        # Find user using enhanced pattern that handles both UUID and Telegram ID
+        from database.models import User
+        import uuid as uuid_lib
+        db = _get_db()
+        try:
+            user = None
+            
+            # Try as UUID first (for database user IDs)
+            try:
+                uid = uuid_lib.UUID(str(livekit_user_id))
+                user = db.query(User).filter(User.id == uid).first()
+                logger.info(f"Tried UUID lookup: {uid} -> {'found' if user else 'not found'}")
+            except (ValueError, AttributeError):
+                pass
+            
+            # Try as integer ID (for numeric database IDs)
+            if not user:
+                try:
+                    uid = int(livekit_user_id)
+                    user = db.query(User).filter(User.id == uid).first()
+                    logger.info(f"Tried integer ID lookup: {uid} -> {'found' if user else 'not found'}")
+                except (ValueError, TypeError):
+                    pass
+            
+            # Try as Telegram user ID
+            if not user:
+                user = db.query(User).filter(User.telegram_user_id == str(livekit_user_id)).first()
+                logger.info(f"Tried Telegram user ID lookup: {livekit_user_id} -> {'found' if user else 'not found'}")
+
+            if not user:
+                return json.dumps({
+                    "success": False,
+                    "error": "User account not found. Please register first.",
+                    "debug_info": {
+                        "livekit_user_id": livekit_user_id,
+                        "user_role": user_role,
+                        "milestone_id": milestone_id,
+                        "lookup_attempts": ["UUID", "integer", "telegram_user_id"]
+                    }
+                })
+            
+            # Use the resolved user's telegram_user_id for milestone handler
+            # This ensures milestone handler can find the user via _resolve_user
+            if user.telegram_user_id:
+                db_user_id = str(user.telegram_user_id)
+            else:
+                db_user_id = str(user.id)  # fallback to UUID string
+            
+            logger.info(f"Calling milestone handler: milestone_id={milestone_id}, db_user_id={db_user_id}")
+            result = await _submit(
+                milestone_id=milestone_id,
+                notes=notes,
+                ipfs_hashes=None,
+                user_id=db_user_id,  # Pass as string for milestone handler
+                db=db,
+            )
+            logger.info(f"Milestone handler result: {result}")
+            
+            # Format response for better user experience
+            if result.get("success"):
+                return json.dumps({
+                    "success": True,
+                    "message": f"Successfully submitted evidence for milestone {milestone_id}. {result.get('message', '')}",
+                    "milestone_id": milestone_id,
+                    "status": result.get("status", "submitted")
+                })
+            else:
+                return json.dumps({
+                    "success": False,
+                    "error": result.get("error", "Failed to submit milestone evidence"),
+                    "milestone_id": milestone_id
+                })
+                
+        except Exception as handler_error:
+            logger.error(f"Error in milestone handler: {handler_error}", exc_info=True)
+            return json.dumps({
+                "success": False,
+                "error": f"Error processing milestone evidence: {str(handler_error)}",
+                "milestone_id": milestone_id
+            })
+        finally:
+            db.close()
+            
+    except ImportError as import_error:
+        logger.error(f"Failed to import milestone handler: {import_error}")
+        return json.dumps({
+            "success": False,
+            "error": "Milestone submission service temporarily unavailable"
+        })
+    except Exception as e:
+        logger.error(f"Unexpected error in submit_milestone_evidence: {e}", exc_info=True)
+        return json.dumps({
+            "success": False,
+            "error": f"Unexpected error: {str(e)}"
+        })
 
 
 @function_tool(description=(
